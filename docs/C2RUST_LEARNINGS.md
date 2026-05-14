@@ -24,3 +24,17 @@ return (*(&raw const (*atomic).value as *const core::sync::atomic::AtomicI32)).l
 ```
 
 The `&raw const` (and `&raw mut`) syntax is necessary when casting raw pointers in transpiled C code to prevent the compiler from making strict aliasing or alignment assumptions that a normal reference (`&`) would imply, avoiding Undefined Behavior.
+
+## 3. C-Variadics and VaList
+When dealing with C-style variadic functions (`...`), `c2rust` uses the unstable `#![feature(c_variadic)]` and maps arguments to `core::ffi::VaList`.
+- `c2rust` generates code that attempts to extract arguments using a generic `.arg::<T>()` method (e.g., `args.arg::<*mut ::core::ffi::c_int>()`).
+- In recent Rust nightlies, the API for `VaList` has changed. The `.arg::<T>()` method no longer exists directly on the struct.
+- **Fix:** Replace `.arg::<T>()` with `.next_arg::<T>()`. Additionally, when passing a `VaList` to another function, `c2rust` may generate `.as_va_list()`, which also no longer exists. Instead, just pass the `VaList` (or a clone of it) directly.
+
+## 4. Platform-Specific SIMD Imports (ARM Neon)
+When transpiling code that heavily uses platform-specific intrinsics (like ARM Neon), `c2rust` might fail to include the necessary architecture imports in every file.
+- **Fix:** Manually add the appropriate architecture use statements to the top of the affected transpiled files. For ARM64 Neon, this means adding:
+```rust
+use std::arch::aarch64::*;
+```
+Note: Use `std::arch` instead of `core::arch` to avoid missing feature gates like `stdarch_aarch64` that might arise if trying to import directly from `core`.
