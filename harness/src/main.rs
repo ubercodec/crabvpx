@@ -29,6 +29,10 @@ struct Args {
     /// Run extensive performance benchmarking
     #[arg(short, long)]
     benchmark: bool,
+
+    /// Number of benchmark iterations (default: 50)
+    #[arg(short, long, default_value_t = 50)]
+    runs: u32,
 }
 
 fn main() {
@@ -68,7 +72,7 @@ fn main() {
     let mut total_decode_time = Duration::ZERO;
     let mut total_frames = 0;
 
-    let benchmark_iterations = 10;
+    let benchmark_iterations = args.runs as usize;
     let mut suite_iter_times = vec![Duration::ZERO; benchmark_iterations];
 
     for file in &ivf_files {
@@ -175,7 +179,15 @@ fn main() {
             ivf_files.len(),
             DECODER_NAME
         );
+        
+        let mut raw_times = String::new();
+        for (i, t) in suite_iter_times.iter().enumerate() {
+            if i > 0 { raw_times.push(','); }
+            raw_times.push_str(&format!("{:.4}", t.as_secs_f64() * 1000.0));
+        }
+
         println!("OVERALL_SUITE_PERF: avg {:.2?}, min {:.2?}, max {:.2?}, {:.2} ms/frame", avg, min, max, avg_time_per_frame);
+        println!("RAW_ITERATION_TIMES_MS: {}", raw_times);
 
     } else {
         let avg_time_per_frame = if total_frames > 0 {

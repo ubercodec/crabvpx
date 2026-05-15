@@ -68,6 +68,7 @@ def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Run the CrabVPX test harness.")
     parser.add_argument("-b", "--benchmark", action="store_true", help="Run in benchmark mode.")
+    parser.add_argument("-r", "--runs", type=int, default=50, help="Number of iterations for benchmarking.")
     args, unknown = parser.parse_known_args()
 
     # Get root of repo correctly relative to this script
@@ -79,7 +80,7 @@ def main():
 
     harness_args = ["--dir", str(test_data_dir)]
     if args.benchmark:
-        harness_args.append("--benchmark")
+        harness_args.extend(["--benchmark", "--runs", str(args.runs)])
     harness_args.extend(unknown)
 
     print("\n--- Testing C Oracle Decoder ---", flush=True)

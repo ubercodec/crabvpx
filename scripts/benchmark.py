@@ -4,16 +4,19 @@ benchmark.py
 
 A performance comparison tool for CrabVPX. It executes the test harness for both
 the C Oracle and the Rust implementation, parses their suite-level performance
-metrics, and calculates the speed regression or improvement.
+metrics, and calculates the speed regression or improvement with statistical
+distribution analysis.
 
 Clean code standards: methods < 20 lines, idiomatic Python, PEP8 compliant.
 """
 
+import argparse
+import math
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 
 def to_ms(val_str: str, unit: str) -> float:
@@ -46,13 +49,23 @@ def parse_perf_line(line: str) -> Optional[Dict[str, float]]:
     }
 
 
-def run_harness(root_dir: Path) -> str:
+def calculate_stats(times: List[float]) -> Tuple[float, float]:
+    """Calculates average and standard deviation (sigma) for a list of times."""
+    if not times:
+        return 0.0, 0.0
+    avg = sum(times) / len(times)
+    variance = sum((t - avg) ** 2 for t in times) / len(times)
+    sigma = math.sqrt(variance)
+    return avg, sigma
+
+
+def run_harness(root_dir: Path, runs: int) -> str:
     """Executes the run_harness.py script and captures its output."""
-    print("Running performance benchmark...")
+    print(f"Running performance benchmark ({runs} runs)...")
     script_path = root_dir / "scripts" / "run_harness.py"
     try:
         proc = subprocess.run(
-            [sys.executable, str(script_path), "-b"],
+            [sys.executable, str(script_path), "-b", "--runs", str(runs)],
             capture_output=True,
             text=True,
             check=True
@@ -64,8 +77,8 @@ def run_harness(root_dir: Path) -> str:
         sys.exit(1)
 
 
-def extract_metrics(output: str) -> Dict[str, Dict[str, float]]:
-    """Extracts performance metrics for both Oracle and Rust from harness output."""
+def extract_metrics(output: str) -> Dict[str, Dict]:
+    """Extracts performance metrics and raw times from harness output."""
     results = {}
     current_decoder = None
 
@@ -77,49 +90,88 @@ def extract_metrics(output: str) -> Dict[str, Dict[str, float]]:
         elif "OVERALL_SUITE_PERF:" in line and current_decoder:
             metrics = parse_perf_line(line)
             if metrics:
-                results[current_decoder] = metrics
-
-    if "oracle" not in results or "rust" not in results:
-        print("Error: Failed to parse required performance metrics.")
-        sys.exit(1)
+                results.setdefault(current_decoder, {}).update(metrics)
+        elif "RAW_ITERATION_TIMES_MS:" in line and current_decoder:
+            times = [float(x) for x in line.split(": ")[1].split(",")]
+            avg, sigma = calculate_stats(times)
+            results.setdefault(current_decoder, {}).update({"times": times, "sigma": sigma})
 
     return results
 
 
-def print_row(label: str, oracle_val: float, rust_val: float):
+def draw_ascii_graph(oracle_times: List[float], rust_times: List[float]):
+    """Draws a simple text-based distribution graph comparing both decoders."""
+    if not oracle_times or not rust_times:
+        return
+
+    all_times = oracle_times + rust_times
+    min_t, max_t = min(all_times), max(all_times)
+    buckets = 40
+    width = (max_t - min_t) / buckets if max_t > min_t else 1.0
+
+    def get_hist(times):
+        hist = [0] * buckets
+        for t in times:
+            idx = min(int((t - min_t) / width), buckets - 1)
+            hist[idx] += 1
+        return hist
+
+    o_hist, r_hist = get_hist(oracle_times), get_hist(rust_times)
+    max_h = max(max(o_hist), max(r_hist))
+
+    print("\n Suite Performance Distribution (X: time, O: Oracle, R: Rust)")
+    for i in range(buckets):
+        t_label = min_t + i * width
+        o_bar = "O" * int(o_hist[i] / max_h * 20) if max_h > 0 else ""
+        r_bar = "R" * int(r_hist[i] / max_h * 20) if max_h > 0 else ""
+        print(f" {t_label:>6.1f} ms | {o_bar:<20} {r_bar}")
+
+
+def print_row(label: str, oracle_val: float, rust_val: float, unit: str = "ms"):
     """Prints a single row of the comparison table."""
     diff = ((rust_val - oracle_val) / oracle_val) * 100
     color = "\033[32m" if diff <= 0 else "\033[31m"
     reset = "\033[0m"
 
-    print(f" {label:<15} | {oracle_val:>7.2f} ms | {rust_val:>7.2f} ms | "
+    print(f" {label:<15} | {oracle_val:>7.2f} {unit} | {rust_val:>7.2f} {unit} | "
           f"{color}{diff:>+8.2f} %{reset}")
 
 
-def display_results(results: Dict[str, Dict[str, float]]):
-    """Formats and displays the performance comparison table."""
-    oracle = results["oracle"]
-    rust = results["rust"]
+def display_results(results: Dict[str, Dict]):
+    """Formats and displays the performance comparison table and distribution."""
+    oracle, rust = results["oracle"], results["rust"]
 
     print("\n CrabVPX Performance Analysis vs. C Oracle")
-    print("-" * 52)
+    print("-" * 55)
     print(f" {'Metric':<15} | {'C Oracle':<10} | {'CrabVPX':<10} | {'Diff (%)':<10}")
-    print("-" * 52)
+    print("-" * 55)
 
     print_row("Suite Average", oracle["avg"], rust["avg"])
+    print_row("Suite Sigma (σ)", oracle["sigma"], rust["sigma"])
     print_row("Suite Min", oracle["min"], rust["min"])
     print_row("Suite Max", oracle["max"], rust["max"])
     print_row("Per Frame", oracle["ms_per_frame"], rust["ms_per_frame"])
 
-    print("-" * 52)
+    print("-" * 55)
+    draw_ascii_graph(oracle["times"], rust["times"])
+    print("-" * 55)
     print(" Note: Positive % indicates Rust regression (slower).")
 
 
 def main():
     """Main entry point."""
+    parser = argparse.ArgumentParser(description="Analyze performance distribution.")
+    parser.add_argument("-r", "--runs", type=int, default=50, help="Number of runs.")
+    args = parser.parse_args()
+
     root_dir = Path(__file__).resolve().parent.parent
-    output = run_harness(root_dir)
+    output = run_harness(root_dir, args.runs)
     results = extract_metrics(output)
+    
+    if "oracle" not in results or "rust" not in results:
+        print("Error: Failed to parse required performance metrics.")
+        sys.exit(1)
+        
     display_results(results)
 
 
