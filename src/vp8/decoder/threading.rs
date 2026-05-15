@@ -88,13 +88,6 @@ unsafe extern "C" {
         input: *mut ::core::ffi::c_short,
         mb_dqcoeff: *mut ::core::ffi::c_short,
     );
-    fn pthread_create(
-        _: *mut pthread_t,
-        _: *const pthread_attr_t,
-        _: Option<unsafe extern "C" fn(*mut ::core::ffi::c_void) -> *mut ::core::ffi::c_void>,
-        _: *mut ::core::ffi::c_void,
-    ) -> ::core::ffi::c_int;
-    fn pthread_join(_: pthread_t, _: *mut *mut ::core::ffi::c_void) -> ::core::ffi::c_int;
     fn setjmp(_: *mut ::core::ffi::c_int) -> ::core::ffi::c_int;
     fn vpx_internal_error(
         info: *mut vpx_internal_error_info,
@@ -109,8 +102,6 @@ unsafe extern "C" {
     );
     fn vp8_setup_block_dptrs(x: *mut MACROBLOCKD);
     static mut mach_task_self_: mach_port_t;
-    fn semaphore_signal(semaphore: semaphore_t) -> kern_return_t;
-    fn semaphore_wait(semaphore: semaphore_t) -> kern_return_t;
     fn memcpy(
         __dst: *mut ::core::ffi::c_void,
         __src: *const ::core::ffi::c_void,
@@ -121,13 +112,6 @@ unsafe extern "C" {
         __c: ::core::ffi::c_int,
         __len: size_t,
     ) -> *mut ::core::ffi::c_void;
-    fn semaphore_create(
-        task: task_t,
-        semaphore: *mut semaphore_t,
-        policy: ::core::ffi::c_int,
-        value: ::core::ffi::c_int,
-    ) -> kern_return_t;
-    fn semaphore_destroy(task: task_t, semaphore: semaphore_t) -> kern_return_t;
     fn vp8_mb_init_dequantizer(pbi: *mut VP8D_COMP, xd: *mut MACROBLOCKD);
     fn vpx_memalign(align: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_malloc(size: size_t) -> *mut ::core::ffi::c_void;
@@ -418,7 +402,7 @@ pub struct _opaque_pthread_t {
 pub type __darwin_pthread_attr_t = _opaque_pthread_attr_t;
 pub type __darwin_pthread_t = *mut _opaque_pthread_t;
 pub type pthread_attr_t = __darwin_pthread_attr_t;
-pub type pthread_t = __darwin_pthread_t;
+pub type pthread_t = *mut ::core::ffi::c_void;
 pub type mach_port_t = __darwin_mach_port_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -470,7 +454,7 @@ pub type vpx_decrypt_cb = Option<
         ::core::ffi::c_int,
     ) -> (),
 >;
-pub type semaphore_t = mach_port_t;
+pub type semaphore_t = *mut ::core::ffi::c_void;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct DECODETHREAD_DATA {
@@ -1496,7 +1480,7 @@ unsafe extern "C" fn mt_decode_mb_rows(
     if last_mb_row + (*pbi).decoding_thread_count as ::core::ffi::c_int + 1 as ::core::ffi::c_int
         >= (*pc).mb_rows
     {
-        semaphore_signal((*pbi).h_event_end_decoding);
+        crate::thread_shim::vp8_semaphore_signal((*pbi).h_event_end_decoding);
     }
 }}
 unsafe extern "C" fn thread_decoding_proc(
@@ -1513,7 +1497,7 @@ unsafe extern "C" fn thread_decoding_proc(
     };
     while !(vpx_atomic_load_acquire(&raw mut (*pbi).b_multithreaded_rd) == 0 as ::core::ffi::c_int)
     {
-        if !(semaphore_wait(*(*pbi).h_event_start_decoding.offset(ithread as isize))
+        if !(crate::thread_shim::vp8_semaphore_wait(*(*pbi).h_event_start_decoding.offset(ithread as isize))
             == 0 as ::core::ffi::c_int)
         {
             continue;
@@ -1525,7 +1509,7 @@ unsafe extern "C" fn thread_decoding_proc(
         (*xd).left_context = &raw mut mb_row_left_context;
         if setjmp(&raw mut (*xd).error_info.jmp as *mut ::core::ffi::c_int) != 0 {
             (*xd).error_info.setjmp = 0 as ::core::ffi::c_int;
-            semaphore_signal((*pbi).h_event_end_decoding);
+            crate::thread_shim::vp8_semaphore_signal((*pbi).h_event_end_decoding);
         } else {
             (*xd).error_info.setjmp = 1 as ::core::ffi::c_int;
             mt_decode_mb_rows(pbi, xd, ithread + 1 as ::core::ffi::c_int);
@@ -1606,7 +1590,7 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) { u
                     as *const ::core::ffi::c_char,
             );
         }
-        if semaphore_create(
+        if crate::thread_shim::vp8_semaphore_create(
             mach_task_self_ as task_t,
             &raw mut (*pbi).h_event_end_decoding,
             SYNC_POLICY_FIFO,
@@ -1621,7 +1605,7 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) { u
         }
         ithread = 0 as ::core::ffi::c_uint;
         while ithread < (*pbi).decoding_thread_count {
-            if semaphore_create(
+            if crate::thread_shim::vp8_semaphore_create(
                 mach_task_self_ as task_t,
                 (*pbi).h_event_start_decoding.offset(ithread as isize) as *mut semaphore_t,
                 SYNC_POLICY_FIFO,
@@ -1638,9 +1622,9 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) { u
             let ref mut fresh7 = (*(*pbi).de_thread_data.offset(ithread as isize)).ptr2;
             *fresh7 = (*pbi).mb_row_di.offset(ithread as isize) as *mut MB_ROW_DEC
                 as *mut ::core::ffi::c_void;
-            if pthread_create(
+            if crate::thread_shim::vp8_pthread_create(
                 (*pbi).h_decoding_thread.offset(ithread as isize) as *mut pthread_t,
-                ::core::ptr::null::<pthread_attr_t>(),
+                ::core::ptr::null::<pthread_attr_t>() as *const ::core::ffi::c_void,
                 Some(
                     thread_decoding_proc
                         as unsafe extern "C" fn(
@@ -1652,7 +1636,7 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) { u
                     as *mut ::core::ffi::c_void,
             ) != 0
             {
-                semaphore_destroy(
+                crate::thread_shim::vp8_semaphore_destroy(
                     mach_task_self_ as task_t,
                     *(*pbi).h_event_start_decoding.offset(ithread as isize),
                 );
@@ -1666,7 +1650,7 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) { u
             != (*pbi).decoding_thread_count as ::core::ffi::c_int
         {
             if (*pbi).allocated_decoding_thread_count == 0 as ::core::ffi::c_int {
-                semaphore_destroy(mach_task_self_ as task_t, (*pbi).h_event_end_decoding);
+                crate::thread_shim::vp8_semaphore_destroy(mach_task_self_ as task_t, (*pbi).h_event_end_decoding);
             }
             vpx_internal_error(
                 &raw mut (*pbi).common.error,
@@ -2003,8 +1987,8 @@ pub unsafe extern "C" fn vp8_decoder_remove_threads(mut pbi: *mut VP8D_COMP) { u
         vpx_atomic_store_release(&raw mut (*pbi).b_multithreaded_rd, 0 as ::core::ffi::c_int);
         i = 0 as ::core::ffi::c_int;
         while i < (*pbi).allocated_decoding_thread_count {
-            semaphore_signal(*(*pbi).h_event_start_decoding.offset(i as isize));
-            pthread_join(
+            crate::thread_shim::vp8_semaphore_signal(*(*pbi).h_event_start_decoding.offset(i as isize));
+            crate::thread_shim::vp8_pthread_join(
                 *(*pbi).h_decoding_thread.offset(i as isize) as pthread_t,
                 ::core::ptr::null_mut::<*mut ::core::ffi::c_void>(),
             );
@@ -2012,14 +1996,14 @@ pub unsafe extern "C" fn vp8_decoder_remove_threads(mut pbi: *mut VP8D_COMP) { u
         }
         i = 0 as ::core::ffi::c_int;
         while i < (*pbi).allocated_decoding_thread_count {
-            semaphore_destroy(
+            crate::thread_shim::vp8_semaphore_destroy(
                 mach_task_self_ as task_t,
                 *(*pbi).h_event_start_decoding.offset(i as isize),
             );
             i += 1;
         }
         if (*pbi).allocated_decoding_thread_count != 0 {
-            semaphore_destroy(mach_task_self_ as task_t, (*pbi).h_event_end_decoding);
+            crate::thread_shim::vp8_semaphore_destroy(mach_task_self_ as task_t, (*pbi).h_event_end_decoding);
         }
         vpx_free((*pbi).h_decoding_thread as *mut ::core::ffi::c_void);
         (*pbi).h_decoding_thread = ::core::ptr::null_mut::<pthread_t>();
@@ -2132,7 +2116,7 @@ pub unsafe extern "C" fn vp8mt_decode_mb_rows(
     );
     i = 0 as ::core::ffi::c_uint;
     while i < (*pbi).decoding_thread_count {
-        semaphore_signal(*(*pbi).h_event_start_decoding.offset(i as isize));
+        crate::thread_shim::vp8_semaphore_signal(*(*pbi).h_event_start_decoding.offset(i as isize));
         i = i.wrapping_add(1);
     }
     if setjmp(&raw mut (*xd).error_info.jmp as *mut ::core::ffi::c_int) != 0 {
@@ -2140,7 +2124,7 @@ pub unsafe extern "C" fn vp8mt_decode_mb_rows(
         (*xd).corrupted = 1 as ::core::ffi::c_int;
         i = 0 as ::core::ffi::c_uint;
         while i < (*pbi).decoding_thread_count {
-            semaphore_wait((*pbi).h_event_end_decoding);
+            crate::thread_shim::vp8_semaphore_wait((*pbi).h_event_end_decoding);
             i = i.wrapping_add(1);
         }
         return -(1 as ::core::ffi::c_int);
@@ -2154,7 +2138,7 @@ pub unsafe extern "C" fn vp8mt_decode_mb_rows(
             .decoding_thread_count
             .wrapping_add(1 as ::core::ffi::c_uint)
     {
-        semaphore_wait((*pbi).h_event_end_decoding);
+        crate::thread_shim::vp8_semaphore_wait((*pbi).h_event_end_decoding);
         i = i.wrapping_add(1);
     }
     return 0 as ::core::ffi::c_int;
