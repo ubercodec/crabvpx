@@ -2,14 +2,71 @@ use crate::vp8::vp8_dx_iface::vpx_codec_vp8_dx;
 use crate::vpx::src::vpx_codec::vpx_codec_destroy;
 use crate::vpx::src::vpx_decoder::{
     vpx_codec_ctx_t, vpx_codec_dec_init_ver, vpx_codec_decode, vpx_codec_get_frame,
-    vpx_codec_iter_t, VPX_CODEC_OK, VPX_DECODER_ABI_VERSION,
+    vpx_codec_iter_t, vpx_image_t, VPX_CODEC_OK, VPX_DECODER_ABI_VERSION,
 };
+
+/// A safe wrapper around the decoded image planes.
+pub struct Image<'a> {
+    img: *const vpx_image_t,
+    _marker: core::marker::PhantomData<&'a ()>,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Plane {
+    Y,
+    U,
+    V,
+    Alpha,
+}
+
+impl<'a> Image<'a> {
+    /// Get the displayed width of the image.
+    pub fn width(&self) -> u32 {
+        unsafe { (*self.img).d_w }
+    }
+
+    /// Get the displayed height of the image.
+    pub fn height(&self) -> u32 {
+        unsafe { (*self.img).d_h }
+    }
+
+    /// Safely access a specific plane slice.
+    pub fn plane(&self, plane: Plane) -> Option<&[u8]> {
+        unsafe {
+            let idx = match plane {
+                Plane::Y => 0,
+                Plane::U => 1,
+                Plane::V => 2,
+                Plane::Alpha => 3,
+            };
+
+            let ptr = (*self.img).planes[idx];
+            if ptr.is_null() {
+                return None;
+            }
+
+            let stride = (*self.img).stride[idx];
+            if stride <= 0 {
+                return None;
+            }
+
+            let height = if idx > 0 && idx < 3 {
+                (*self.img).d_h >> (*self.img).y_chroma_shift
+            } else {
+                (*self.img).d_h
+            };
+
+            let len = (height as usize) * (stride as usize);
+            Some(core::slice::from_raw_parts(ptr as *const u8, len))
+        }
+    }
+}
 
 /// A generic Video Decoder trait that can be implemented by different codecs
 /// (e.g., VP8, VP9, AV1, H264).
 pub trait Decoder {
     /// The decoded frame representation.
-    type Frame;
+    type Frame<'a> where Self: 'a;
     /// The error representation.
     type Error;
 
@@ -20,7 +77,7 @@ pub trait Decoder {
     fn decode(&mut self, payload: &[u8]) -> Result<(), Self::Error>;
 
     /// Retrieve the next available decoded frame.
-    fn get_frame(&mut self) -> Result<Option<Self::Frame>, Self::Error>;
+    fn get_frame<'a>(&'a mut self) -> Result<Option<Self::Frame<'a>>, Self::Error>;
 }
 
 /// A safe wrapper around the unsafe VP8 `vpx_codec_ctx_t` decoder lifecycle.
@@ -47,7 +104,6 @@ impl Default for Vp8Decoder {
 impl Drop for Vp8Decoder {
     fn drop(&mut self) {
         if self.initialized {
-            // Safely destroy the underlying C context to prevent memory leaks.
             unsafe {
                 vpx_codec_destroy(
                     &raw mut self.ctx as *mut _ as *mut crate::vpx::src::vpx_codec::vpx_codec_ctx_t,
@@ -58,7 +114,7 @@ impl Drop for Vp8Decoder {
 }
 
 impl Decoder for Vp8Decoder {
-    type Frame = (); // We can expand this to a safe Image struct later.
+    type Frame<'a> = Image<'a>;
     type Error = String;
 
     fn init(&mut self) -> Result<(), Self::Error> {
@@ -101,7 +157,7 @@ impl Decoder for Vp8Decoder {
         }
     }
 
-    fn get_frame(&mut self) -> Result<Option<Self::Frame>, Self::Error> {
+    fn get_frame<'a>(&'a mut self) -> Result<Option<Self::Frame<'a>>, Self::Error> {
         if !self.initialized {
             return Err("Decoder not initialized".to_string());
         }
@@ -112,7 +168,10 @@ impl Decoder for Vp8Decoder {
         if img.is_null() {
             Ok(None)
         } else {
-            Ok(Some(()))
+            Ok(Some(Image {
+                img,
+                _marker: core::marker::PhantomData,
+            }))
         }
     }
 }

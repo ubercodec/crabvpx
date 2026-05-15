@@ -128,6 +128,6 @@ impl VideoDecoder for CrabVpxDecoder {
 
     fn get_frame(&mut self) -> Result<Option<()>, String> {
         use crabvpx::api::Decoder;
-        self.inner.get_frame()
+        self.inner.get_frame().map(|opt| opt.map(|_| ()))
     }
 }

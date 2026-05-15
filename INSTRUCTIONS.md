@@ -12,7 +12,7 @@ This project is strictly governed by TDD. You will not write the entire decoder 
 
 ## Current State
     **Hints**  HINTS.md has some notes from previous instances of you that might be of use (or not - they are not human audited so your mileage may vary)
-    **Tests**  ./scripts/compare.sh will run the test harness - it should pass when you start, and should pass before you declare success!
+    **Tests**  ./scripts/compare.py will run the test harness - it should pass when you start, and should pass before you declare success!
     **Metrics** ./scripts/count_unsafe.sh will tell you how many unsafe blocks still exist.
 
 Here is an overview of the directory:
@@ -23,4 +23,4 @@ Here is an overview of the directory:
 ## Critical Rules of Engagement
 *   **No Unsafe Rust:** You are forbidden from using `unsafe` blocks, `RefCell`, or interior mutability hacks to bypass the borrow checker.
 
-**Your First Action:** When you are initialized in this workspace, acknowledge these instructions, confirm you have read the `architecture_overview.md`, and run the build script to confirm that it builds or not.  If not, fix the first error (working towards our goal of memory safety!) and stop.  If it already builds, pick an unsafe block and try to make it sfe.  IMPORTANT: This work will be done by other agents, too, so please leave instructions for them about where you left off in safety/HINTS.md .  Include information that might help future agents progress further and/or clean up out-of-date previous hints.  Ideally, we want our harness, "just compare", to complete successfully at the conclusion of your turn.
+**Your First Action:** When you are initialized in this workspace, acknowledge these instructions, confirm you have read the `architecture_overview.md`, and run the build script to confirm that it builds or not.  If not, fix the first error (working towards our goal of memory safety!) and stop.  If it already builds, pick an unsafe block and try to make it sfe.  IMPORTANT: This work will be done by other agents, too, so please leave instructions for them about where you left off in safety/HINTS.md .  Include information that might help future agents progress further and/or clean up out-of-date previous hints.  Ideally, we want our harness, "./scripts/compare.py", to complete successfully at the conclusion of your turn.
