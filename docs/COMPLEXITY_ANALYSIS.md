@@ -31,7 +31,8 @@ Updating each file from raw `c2rust` output to compilable, "correct" Unsafe Rust
 *   **Scaling the Effort:** Doing this for the 67 VP8 decoding files is a tedious but manageable manual task. Scaling this up to 522 files for full `libvpx` would be a massive undertaking, likely requiring custom scripting or sed replacements to handle the repetitive fixes (especially atomics).
 
 ### Unsafe Usage Analysis
-A programmatic analysis of the `c2rust` generated codebase reveals the following scale of unsafety:
+A programmatic analysis of the `c2rust` generated codebase (limited to VP8 decoding
+ONLY, a followup of the entire VP8 project is pending) reveals the following scale of unsafety:
 
 - **Total Unsafe Blocks (`unsafe { ... }`):** 386
 - **Total Unsafe Functions (`unsafe fn`):** 635
