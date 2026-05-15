@@ -31,15 +31,14 @@ The core of `libvpx` relies heavily on custom memory allocators defined in `vpx_
   - Modify their initialization to use `Vec::with_capacity` or `Box::new` instead of `vpx_memalign` or `vpx_calloc`.
   - Ensure that the alignment requirements of the SIMD instructions (NEON requires specific byte alignments) are respected when allocating via Rust.
 
-### Step 3: Struct De-duplication & Threading Shims (Completed)
+### Step 3: Threading Shims (Completed)
 While auditing the codebase, it was discovered that `vpx_thread.rs` was completely unused by the VP8 decoder and was deleted (saving ~45 `unsafe` blocks). Actual VP8 multithreading relies heavily on `pthread` and `mach` semaphores embedded directly into core structs like `VP8D_COMP` and `DECODETHREAD_DATA`.
 
-Because `c2rust` operates on a per-C-file basis, it duplicated these massive struct definitions across 6 different `.rs` files.
-- **Goal:** Unify the structs and build safe Rust threading shims.
 - **Tasks:**
-  - De-duplicate `VP8D_COMP`, `MACROBLOCKD`, and `DECODETHREAD_DATA` into a single `types.rs` module.
   - Abstract `mach_port_t` and `pthread_t` pointers into an opaque, generic `*mut c_void` handle in the C structs.
   - Implement a safe Rust concurrency shim (using `std::thread` and `std::sync`) behind C-compatible `extern "C"` functions to replace the `pthread` calls.
+
+*(Note: Structural de-duplication of `VP8D_COMP` and `MACROBLOCKD` across the multiple transpiled files was attempted but abandoned. `c2rust` generates heavily interwoven, file-specific ASTs with conflicting anonymous C-enums (like `C2RustUnnamed_5`). Manually unifying these structs breaks FFI compatibility across module boundaries. We will leave the duplicated definitions in place and organically phase them out as we rewrite the core decoding functions in Step 4).*
 
 ### Step 4: Core Decoding Pipeline (The Hard Part)
 Once the perimeter is safe and memory is managed by Rust, we tackle the core logic (e.g., `decodeframe.rs`, `decodemv.rs`, `reconinter.rs`).
