@@ -9,10 +9,18 @@ pub mod ffi {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DecodedFrame {
+    pub md5: String,
+    pub width: u32,
+    pub height: u32,
+    pub bit_depth: u32,
+}
+
 pub trait VideoDecoder {
     fn init(&mut self) -> Result<(), String>;
     fn decode_frame(&mut self, payload: &[u8]) -> Result<(), String>;
-    fn get_frame(&mut self) -> Result<Option<String>, String>;
+    fn get_frame(&mut self) -> Result<Option<DecodedFrame>, String>;
 }
 
 #[cfg(not(feature = "rust"))]
@@ -30,7 +38,7 @@ impl LibVpxOracleDecoder {
         }
     }
 
-    unsafe fn calculate_md5(img: *const ffi::vpx_image_t) -> String {
+    unsafe fn calculate_frame_info(img: *const ffi::vpx_image_t) -> DecodedFrame {
         let mut context = md5::Context::new();
         let img = &*img;
 
@@ -47,7 +55,12 @@ impl LibVpxOracleDecoder {
             }
         }
 
-        format!("{:x}", context.compute())
+        DecodedFrame {
+            md5: format!("{:x}", context.compute()),
+            width: img.d_w,
+            height: img.d_h,
+            bit_depth: img.bit_depth,
+        }
     }
 }
 
@@ -104,7 +117,7 @@ impl VideoDecoder for LibVpxOracleDecoder {
         }
     }
 
-    fn get_frame(&mut self) -> Result<Option<String>, String> {
+    fn get_frame(&mut self) -> Result<Option<DecodedFrame>, String> {
         if !self.initialized {
             return Err("Decoder not initialized".to_string());
         }
@@ -115,7 +128,7 @@ impl VideoDecoder for LibVpxOracleDecoder {
         if img.is_null() {
             Ok(None)
         } else {
-            Ok(Some(unsafe { Self::calculate_md5(img) }))
+            Ok(Some(unsafe { Self::calculate_frame_info(img) }))
         }
     }
 }
@@ -146,8 +159,16 @@ impl VideoDecoder for CrabVpxDecoder {
         self.inner.decode(payload)
     }
 
-    fn get_frame(&mut self) -> Result<Option<String>, String> {
+    fn get_frame(&mut self) -> Result<Option<DecodedFrame>, String> {
         use crabvpx::api::Decoder;
-        self.inner.get_frame()
+        match self.inner.get_frame()? {
+            Some(f) => Ok(Some(DecodedFrame {
+                md5: f.md5,
+                width: f.width,
+                height: f.height,
+                bit_depth: f.bit_depth,
+            })),
+            None => Ok(None),
+        }
     }
 }

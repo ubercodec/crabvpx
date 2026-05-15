@@ -131,15 +131,25 @@ fn main() {
                 }
 
                 match decoder.get_frame() {
-                    Ok(Some(actual_md5)) => {
-                        if !expected_md5s.is_empty() && frame_idx < expected_md5s.len() {
-                            if actual_md5 != expected_md5s[frame_idx] {
+                    Ok(Some(actual)) => {
+                        // Check against expected if not benchmarking
+                        if !args.benchmark && !expected_md5s.is_empty() && frame_idx < expected_md5s.len() {
+                            if actual.md5 != expected_md5s[frame_idx] {
                                 pb.println(format!("MD5 mismatch for {:?} frame {}: expected {}, got {}", 
-                                    file.file_name().unwrap(), frame_idx, expected_md5s[frame_idx], actual_md5));
+                                    file.file_name().unwrap(), frame_idx, expected_md5s[frame_idx], actual.md5));
                                 success = false;
                                 break;
                             }
                         }
+                        
+                        // Output machine-readable info for side-by-side comparison
+                        if !args.benchmark {
+                            pb.suspend(|| {
+                                println!("FRAME_DATA: {{\"file\": {:?}, \"idx\": {}, \"md5\": \"{}\", \"w\": {}, \"h\": {}, \"bits\": {}}}",
+                                    file.file_name().unwrap(), frame_idx, actual.md5, actual.width, actual.height, actual.bit_depth);
+                            });
+                        }
+                        
                         frame_idx += 1;
                     }
                     Ok(None) => {}

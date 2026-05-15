@@ -5,6 +5,15 @@ use crate::vpx::src::vpx_decoder::{
     vpx_codec_iter_t, VPX_CODEC_OK, VPX_DECODER_ABI_VERSION,
 };
 
+/// A representation of a decoded video frame's metadata and hash.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Frame {
+    pub md5: String,
+    pub width: u32,
+    pub height: u32,
+    pub bit_depth: u32,
+}
+
 /// A generic Video Decoder trait that can be implemented by different codecs
 /// (e.g., VP8, VP9, AV1, H264).
 pub trait Decoder {
@@ -58,7 +67,7 @@ impl Drop for Vp8Decoder {
 }
 
 impl Decoder for Vp8Decoder {
-    type Frame = String;
+    type Frame = Frame;
     type Error = String;
 
     fn init(&mut self) -> Result<(), Self::Error> {
@@ -129,7 +138,12 @@ impl Decoder for Vp8Decoder {
                 }
             }
 
-            Ok(Some(format!("{:x}", context.compute())))
+            Ok(Some(Frame {
+                md5: format!("{:x}", context.compute()),
+                width: img.d_w,
+                height: img.d_h,
+                bit_depth: img.bit_depth,
+            }))
         }
     }
 }
