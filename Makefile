@@ -1,11 +1,12 @@
 # CrabVPX Makefile (Just Wrapper)
 # Modern projects prefer 'just', so we forward commands to it.
 
-.PHONY: help harness bench analyze clean
+.PHONY: help harness bench analyze clean bootstrap
 
 help:
 	@echo "CrabVPX Command Runner"
 	@echo "----------------------"
+	@echo "bootstrap: Install required development tools (just)"
 	@echo "harness : Run the test harness"
 	@echo "bench   : Run performance benchmarks"
 	@echo "analyze : Run complexity analysis"
@@ -13,6 +14,10 @@ help:
 	@echo ""
 	@echo "Note: This project uses 'just' for orchestration."
 	@echo "If you have 'just' installed, you can run 'just <command>' directly."
+
+bootstrap:
+	@echo "Installing 'just' via cargo..."
+	cargo install just
 
 harness:
 	@./scripts/run_harness.py
