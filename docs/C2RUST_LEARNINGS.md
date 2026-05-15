@@ -49,3 +49,18 @@ While it might seem tempting to rewrite the hardware-specific C intrinsics or As
 2. **Raw Assembly (`.asm` / `.S`):** `c2rust` *cannot* translate raw assembly files. If you want the optimizations contained in these files (which are primarily used for x86 in `libvpx`), you must keep the `.asm` files in the project, compile them using the `cc` crate in `build.rs` (with an assembler like `nasm`), and link to them from the transpiled Rust code via FFI (`extern "C"`).
 
 **Strategy:** Rely on the transpiled `core::arch` Rust files for C-intrinsic optimizations (which covers most of ARM/Apple Silicon). For raw assembly optimizations, link them via FFI. Avoid `std::simd` for this project.
+
+## 6. C-Flavored Rust and Binary Compatibility
+One of the most important findings is the "philosophy" of the code `c2rust` produces. While it is 100% valid Rust code compiled by `rustc`, it is semantically **"C-flavored Rust."**
+
+### Key Characteristics:
+- **Binary Compatibility:** By default, every function is marked `pub unsafe extern "C" fn` and often includes `#[no_mangle]`. This ensures the compiled Rust library maintains the exact same ABI as the original C library, allowing it to be a drop-in replacement.
+- **C Semantics in Rust Syntax:** The code "thinks" like C. It uses raw pointers (`*mut T`) instead of references, manual memory management (`malloc`/`free`) via FFI, and relies heavily on `static mut` for global state.
+- **The "Lift and Shift" Goal:** The objective of `c2rust` is **mechanical equivalence**, not idiomatic safety. It produces a codebase that passes pristine C tests (as verified by our Differential Test Harness) but requires significant manual "Rustification" to become safe, idiomatic code.
+
+### The Path to Idiomatic Rust:
+The transition from "C-flavored Rust" to "Safe Rust" is an incremental process of:
+1.  Replacing raw pointers with safe references (`&` and `&mut`) and slices (`&[u8]`).
+2.  Moving `static mut` global state into instance-based structs or thread-safe containers.
+3.  Removing `extern "C"` and `#[no_mangle]` from internal functions that no longer need to be callable from C.
+4.  Introducing `Option` and `Result` to replace C-style error codes and null-pointer checks.
