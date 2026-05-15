@@ -20,6 +20,6 @@ Lifting and shifting `libvpx` (specifically VP8 decoding) to Rust using `c2rust`
 - [x] Verify `extern "C"` linkages in the Rust code.
 
 ### Phase 4: Stabilization & Refactoring
-- [ ] Fix compilation errors in the transpiled Rust code.
-- [ ] Port/integrate tests to verify decoding correctness.
+- [x] Fix compilation errors in the transpiled Rust code.
+- [x] Port/integrate tests to verify decoding correctness.
 - [ ] Incrementally refactor to Safe Rust APIs.
