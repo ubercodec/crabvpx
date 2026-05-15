@@ -4,11 +4,14 @@
 default:
     @just --list
 
-# Configure and build the C Oracle (libvpx)
+# libvpx configuration flags for VP8-focused decoding
+libvpx_config_flags := "--enable-vp8 --disable-vp8-encoder --disable-vp9 --enable-multithread --enable-postproc --enable-pic --enable-runtime-cpu-detect"
+
+# Configure and build the C Oracle (libvpx) for VP8 decoding
 configure:
     git submodule update --init --recursive
-    cd libvpx && ./configure --enable-vp8 --enable-vp9 --enable-multithread --enable-postproc --enable-pic --enable-runtime-cpu-detect
-    cd libvpx && make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+    cd libvpx && ./configure {{libvpx_config_flags}}
+    cd libvpx && make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu) vpx
 
 # Run differential testing (Oracle vs Rust)
 compare *args:

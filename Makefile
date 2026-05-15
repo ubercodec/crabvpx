@@ -1,3 +1,6 @@
+# libvpx configuration flags for VP8-focused decoding
+LIBVPX_CONFIG_FLAGS = --enable-vp8 --disable-vp8-encoder --disable-vp9 --enable-multithread --enable-postproc --enable-pic --enable-runtime-cpu-detect
+
 # CrabVPX Makefile (Just Wrapper)
 # Modern projects prefer 'just', so we forward commands to it.
 
@@ -7,7 +10,7 @@ help:
 	@echo "CrabVPX Command Runner"
 	@echo "----------------------"
 	@echo "bootstrap: Install required development tools (just)"
-	@echo "configure: Setup and build the C Oracle (libvpx)"
+	@echo "configure: Setup and build the C Oracle (libvpx) for VP8"
 	@echo "compare : Run differential testing"
 	@echo "bench   : Run performance benchmarks"
 	@echo "analyze : Run complexity analysis"
@@ -22,8 +25,8 @@ bootstrap:
 
 configure:
 	git submodule update --init --recursive
-	cd libvpx && ./configure --enable-vp8 --enable-vp9 --enable-multithread --enable-postproc --enable-pic --enable-runtime-cpu-detect
-	cd libvpx && make -j$$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+	cd libvpx && ./configure $(LIBVPX_CONFIG_FLAGS)
+	cd libvpx && make -j$$(nproc 2>/dev/null || sysctl -n hw.ncpu) vpx
 
 compare:
 	@./scripts/compare.py
