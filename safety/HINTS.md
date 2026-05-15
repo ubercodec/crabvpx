@@ -14,6 +14,7 @@
 - **Public API Boundary**: Implemented safe `Image<'a>` wrapper around `vpx_image_t` and updated `Decoder` trait in `src/api.rs` using GATs. `get_frame` now returns `Option<Image<'a>>` providing safe slice access to image planes. Updated integration harness to match.
 - **Bitstream Parser**: Refactored `GetSigned` in `src/vp8/decoder/detokenize.rs` to delegate to `vp8dx_decode_bool(br, 128)`, eliminating manual C-style bitstream arithmetic and ensuring all bool decoding passes through `SafeBoolDecoder`.
 - **Safe Multithreading Allocation**: Replaced legacy `vpx_calloc` and `vpx_memalign` calls with `Box::into_raw(vec![...].into_boxed_slice())` and `AlignedBox::new()` for thread management allocations (`h_decoding_thread`, `h_event_start_decoding`, `de_thread_data`, `mb_row_di`) in `src/vp8/decoder/threading.rs`.
+- **Safe Temporary Buffer Allocation**: Replaced legacy `vpx_calloc`, `vpx_malloc`, and `vpx_memalign` calls with `Box::into_raw(vec![...].into_boxed_slice())` and `AlignedBox::new()` for multithreading temporary buffers (`mt_yabove_row`, `mt_uabove_row`, `mt_vabove_row`, `mt_yleft_col`, `mt_uleft_col`, `mt_vleft_col`, `mt_current_mb_col`) in `src/vp8/decoder/threading.rs`.
 
 ## Architectural Quirks to Watch Out For
 - **c2rust Duplication**: Functions that were `static inline` in C headers (specifically `vp8dx_decode_bool` from `dboolhuff.h`) were duplicated by `c2rust` into every Rust module that called them. (Resolved for `vp8dx_decode_bool`).
@@ -21,7 +22,5 @@
 - **Duplicated Structs**: Struct definitions like `YV12_BUFFER_CONFIG` and `VP8Common` were duplicated by `c2rust` across dozens of files. Do not attempt to deduplicate them yet; maintain raw pointer boundaries between modules to avoid FFI type mismatches.
 
 ## Next Steps for Future Agents
-1. **Safe Memory Allocation**: Continue replacing `vpx_memalign` and `vpx_calloc` calls with safe Rust allocations (`Vec`, `Box`, `AlignedBox`).
-   - **Target 1**: Multithreading temporary buffer allocations (`mt_yabove_row`, `mt_uabove_row`, `mt_vabove_row`, `mt_yleft_col`, `mt_uleft_col`, `mt_vleft_col`, `mt_current_mb_col`) in `src/vp8/decoder/threading.rs`.
-2. **Core Decoding Pipeline**: Begin Phase 5, Step 4 of `docs/refactor_plan.md`. Convert pointer arithmetic inside loops to slice iterators in core decoding files (`decodeframe.rs`, `decodemv.rs`).
+1. **Core Decoding Pipeline**: Begin Phase 5, Step 4 of `docs/refactor_plan.md`. Convert pointer arithmetic inside loops to slice iterators in core decoding files (`decodeframe.rs`, `decodemv.rs`).
 

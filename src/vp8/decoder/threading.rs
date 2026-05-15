@@ -1656,73 +1656,75 @@ pub unsafe extern "C" fn vp8mt_de_alloc_temp_buffers(
     mut pbi: *mut VP8D_COMP,
     mut mb_rows: ::core::ffi::c_int,
 ) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    vpx_free((*pbi).mt_current_mb_col as *mut ::core::ffi::c_void);
-    (*pbi).mt_current_mb_col = ::core::ptr::null_mut::<vpx_atomic_int>();
+    let mb_rows_usize = mb_rows as usize;
+    if !(*pbi).mt_current_mb_col.is_null() {
+        let _ = Box::from_raw(core::ptr::slice_from_raw_parts_mut((*pbi).mt_current_mb_col, mb_rows_usize));
+        (*pbi).mt_current_mb_col = ::core::ptr::null_mut::<vpx_atomic_int>();
+    }
     if !(*pbi).mt_yabove_row.is_null() {
-        i = 0 as ::core::ffi::c_int;
-        while i < mb_rows {
-            vpx_free(*(*pbi).mt_yabove_row.offset(i as isize) as *mut ::core::ffi::c_void);
-            let ref mut fresh0 = *(*pbi).mt_yabove_row.offset(i as isize);
-            *fresh0 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-            i += 1;
+        for i in 0..mb_rows_usize {
+            let ptr = *(*pbi).mt_yabove_row.add(i);
+            if !ptr.is_null() {
+                let _ = crate::vpx_mem::vpx_mem::AlignedBox::from_raw(ptr);
+                *(*pbi).mt_yabove_row.add(i) = core::ptr::null_mut();
+            }
         }
-        vpx_free((*pbi).mt_yabove_row as *mut ::core::ffi::c_void);
+        let _ = Box::from_raw(core::ptr::slice_from_raw_parts_mut((*pbi).mt_yabove_row, mb_rows_usize));
         (*pbi).mt_yabove_row = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
     }
     if !(*pbi).mt_uabove_row.is_null() {
-        i = 0 as ::core::ffi::c_int;
-        while i < mb_rows {
-            vpx_free(*(*pbi).mt_uabove_row.offset(i as isize) as *mut ::core::ffi::c_void);
-            let ref mut fresh1 = *(*pbi).mt_uabove_row.offset(i as isize);
-            *fresh1 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-            i += 1;
+        for i in 0..mb_rows_usize {
+            let ptr = *(*pbi).mt_uabove_row.add(i);
+            if !ptr.is_null() {
+                let _ = crate::vpx_mem::vpx_mem::AlignedBox::from_raw(ptr);
+                *(*pbi).mt_uabove_row.add(i) = core::ptr::null_mut();
+            }
         }
-        vpx_free((*pbi).mt_uabove_row as *mut ::core::ffi::c_void);
+        let _ = Box::from_raw(core::ptr::slice_from_raw_parts_mut((*pbi).mt_uabove_row, mb_rows_usize));
         (*pbi).mt_uabove_row = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
     }
     if !(*pbi).mt_vabove_row.is_null() {
-        i = 0 as ::core::ffi::c_int;
-        while i < mb_rows {
-            vpx_free(*(*pbi).mt_vabove_row.offset(i as isize) as *mut ::core::ffi::c_void);
-            let ref mut fresh2 = *(*pbi).mt_vabove_row.offset(i as isize);
-            *fresh2 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-            i += 1;
+        for i in 0..mb_rows_usize {
+            let ptr = *(*pbi).mt_vabove_row.add(i);
+            if !ptr.is_null() {
+                let _ = crate::vpx_mem::vpx_mem::AlignedBox::from_raw(ptr);
+                *(*pbi).mt_vabove_row.add(i) = core::ptr::null_mut();
+            }
         }
-        vpx_free((*pbi).mt_vabove_row as *mut ::core::ffi::c_void);
+        let _ = Box::from_raw(core::ptr::slice_from_raw_parts_mut((*pbi).mt_vabove_row, mb_rows_usize));
         (*pbi).mt_vabove_row = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
     }
     if !(*pbi).mt_yleft_col.is_null() {
-        i = 0 as ::core::ffi::c_int;
-        while i < mb_rows {
-            vpx_free(*(*pbi).mt_yleft_col.offset(i as isize) as *mut ::core::ffi::c_void);
-            let ref mut fresh3 = *(*pbi).mt_yleft_col.offset(i as isize);
-            *fresh3 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-            i += 1;
+        for i in 0..mb_rows_usize {
+            let ptr = *(*pbi).mt_yleft_col.add(i);
+            if !ptr.is_null() {
+                let _ = crate::vpx_mem::vpx_mem::AlignedBox::from_raw(ptr);
+                *(*pbi).mt_yleft_col.add(i) = core::ptr::null_mut();
+            }
         }
-        vpx_free((*pbi).mt_yleft_col as *mut ::core::ffi::c_void);
+        let _ = Box::from_raw(core::ptr::slice_from_raw_parts_mut((*pbi).mt_yleft_col, mb_rows_usize));
         (*pbi).mt_yleft_col = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
     }
     if !(*pbi).mt_uleft_col.is_null() {
-        i = 0 as ::core::ffi::c_int;
-        while i < mb_rows {
-            vpx_free(*(*pbi).mt_uleft_col.offset(i as isize) as *mut ::core::ffi::c_void);
-            let ref mut fresh4 = *(*pbi).mt_uleft_col.offset(i as isize);
-            *fresh4 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-            i += 1;
+        for i in 0..mb_rows_usize {
+            let ptr = *(*pbi).mt_uleft_col.add(i);
+            if !ptr.is_null() {
+                let _ = crate::vpx_mem::vpx_mem::AlignedBox::from_raw(ptr);
+                *(*pbi).mt_uleft_col.add(i) = core::ptr::null_mut();
+            }
         }
-        vpx_free((*pbi).mt_uleft_col as *mut ::core::ffi::c_void);
+        let _ = Box::from_raw(core::ptr::slice_from_raw_parts_mut((*pbi).mt_uleft_col, mb_rows_usize));
         (*pbi).mt_uleft_col = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
     }
     if !(*pbi).mt_vleft_col.is_null() {
-        i = 0 as ::core::ffi::c_int;
-        while i < mb_rows {
-            vpx_free(*(*pbi).mt_vleft_col.offset(i as isize) as *mut ::core::ffi::c_void);
-            let ref mut fresh5 = *(*pbi).mt_vleft_col.offset(i as isize);
-            *fresh5 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-            i += 1;
+        for i in 0..mb_rows_usize {
+            let ptr = *(*pbi).mt_vleft_col.add(i);
+            if !ptr.is_null() {
+                let _ = crate::vpx_mem::vpx_mem::AlignedBox::from_raw(ptr);
+                *(*pbi).mt_vleft_col.add(i) = core::ptr::null_mut();
+            }
         }
-        vpx_free((*pbi).mt_vleft_col as *mut ::core::ffi::c_void);
+        let _ = Box::from_raw(core::ptr::slice_from_raw_parts_mut((*pbi).mt_vleft_col, mb_rows_usize));
         (*pbi).mt_vleft_col = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
     }
 }}
@@ -1733,7 +1735,6 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
     mut prev_mb_rows: ::core::ffi::c_int,
 ) { unsafe {
     let pc: *mut VP8_COMMON = &raw mut (*pbi).common;
-    let mut i: ::core::ffi::c_int = 0;
     let mut uv_width: ::core::ffi::c_int = 0;
     if vpx_atomic_load_acquire(&raw mut (*pbi).b_multithreaded_rd) != 0 {
         vp8mt_de_alloc_temp_buffers(pbi, prev_mb_rows);
@@ -1750,10 +1751,9 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
             (*pbi).sync_range = 32 as ::core::ffi::c_int;
         }
         uv_width = width >> 1 as ::core::ffi::c_int;
-        (*pbi).mt_current_mb_col = vpx_malloc(
-            (::core::mem::size_of::<vpx_atomic_int>() as size_t)
-                .wrapping_mul((*pc).mb_rows as size_t),
-        ) as *mut vpx_atomic_int;
+        let mb_rows_usize = (*pc).mb_rows as usize;
+        
+        (*pbi).mt_current_mb_col = Box::into_raw(vec![vpx_atomic_int { value: 0 }; mb_rows_usize].into_boxed_slice()) as *mut vpx_atomic_int;
         if (*pbi).mt_current_mb_col.is_null() {
             vpx_internal_error(
                 &raw mut (*pc).error,
@@ -1762,18 +1762,14 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                     as *const ::core::ffi::c_char,
             );
         }
-        i = 0 as ::core::ffi::c_int;
-        while i < (*pc).mb_rows {
+        for i in 0..mb_rows_usize {
             vpx_atomic_init(
-                (*pbi).mt_current_mb_col.offset(i as isize) as *mut vpx_atomic_int,
+                (*pbi).mt_current_mb_col.add(i),
                 0 as ::core::ffi::c_int,
             );
-            i += 1;
         }
-        (*pbi).mt_yabove_row = vpx_calloc(
-            ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
-            (*pc).mb_rows as size_t,
-        ) as *mut *mut ::core::ffi::c_uchar;
+        
+        (*pbi).mt_yabove_row = Box::into_raw(vec![core::ptr::null_mut::<core::ffi::c_uchar>(); mb_rows_usize].into_boxed_slice()) as *mut *mut ::core::ffi::c_uchar;
         if (*pbi).mt_yabove_row.is_null() {
             vpx_internal_error(
                 &raw mut (*pbi).common.error,
@@ -1782,16 +1778,14 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                     as *const ::core::ffi::c_char,
             );
         }
-        i = 0 as ::core::ffi::c_int;
-        while i < (*pc).mb_rows {
-            let ref mut fresh8 = *(*pbi).mt_yabove_row.offset(i as isize);
-            *fresh8 = vpx_memalign(
-                16 as size_t,
-                (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t).wrapping_mul(
-                    (width + ((32 as ::core::ffi::c_int) << 1 as ::core::ffi::c_int)) as size_t,
-                ),
-            ) as *mut ::core::ffi::c_uchar;
-            if (*(*pbi).mt_yabove_row.offset(i as isize)).is_null() {
+        for i in 0..mb_rows_usize {
+            let size = (width + ((32 as ::core::ffi::c_int) << 1 as ::core::ffi::c_int)) as usize;
+            let ptr = match crate::vpx_mem::vpx_mem::AlignedBox::new(16, size) {
+                Some(b) => b.into_raw(),
+                None => core::ptr::null_mut(),
+            };
+            *(*pbi).mt_yabove_row.add(i) = ptr;
+            if ptr.is_null() {
                 vpx_internal_error(
                     &raw mut (*pc).error,
                     VPX_CODEC_MEM_ERROR,
@@ -1800,17 +1794,13 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                 );
             }
             memset(
-                *(*pbi).mt_yabove_row.offset(i as isize) as *mut ::core::ffi::c_void,
+                ptr as *mut ::core::ffi::c_void,
                 0 as ::core::ffi::c_int,
-                ((width + ((32 as ::core::ffi::c_int) << 1 as ::core::ffi::c_int)) as size_t)
-                    .wrapping_mul(::core::mem::size_of::<::core::ffi::c_uchar>() as size_t),
+                size,
             );
-            i += 1;
         }
-        (*pbi).mt_uabove_row = vpx_calloc(
-            ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
-            (*pc).mb_rows as size_t,
-        ) as *mut *mut ::core::ffi::c_uchar;
+        
+        (*pbi).mt_uabove_row = Box::into_raw(vec![core::ptr::null_mut::<core::ffi::c_uchar>(); mb_rows_usize].into_boxed_slice()) as *mut *mut ::core::ffi::c_uchar;
         if (*pbi).mt_uabove_row.is_null() {
             vpx_internal_error(
                 &raw mut (*pbi).common.error,
@@ -1819,15 +1809,14 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                     as *const ::core::ffi::c_char,
             );
         }
-        i = 0 as ::core::ffi::c_int;
-        while i < (*pc).mb_rows {
-            let ref mut fresh9 = *(*pbi).mt_uabove_row.offset(i as isize);
-            *fresh9 = vpx_memalign(
-                16 as size_t,
-                (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
-                    .wrapping_mul((uv_width + 32 as ::core::ffi::c_int) as size_t),
-            ) as *mut ::core::ffi::c_uchar;
-            if (*(*pbi).mt_uabove_row.offset(i as isize)).is_null() {
+        for i in 0..mb_rows_usize {
+            let size = (uv_width + 32 as ::core::ffi::c_int) as usize;
+            let ptr = match crate::vpx_mem::vpx_mem::AlignedBox::new(16, size) {
+                Some(b) => b.into_raw(),
+                None => core::ptr::null_mut(),
+            };
+            *(*pbi).mt_uabove_row.add(i) = ptr;
+            if ptr.is_null() {
                 vpx_internal_error(
                     &raw mut (*pc).error,
                     VPX_CODEC_MEM_ERROR,
@@ -1836,17 +1825,13 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                 );
             }
             memset(
-                *(*pbi).mt_uabove_row.offset(i as isize) as *mut ::core::ffi::c_void,
+                ptr as *mut ::core::ffi::c_void,
                 0 as ::core::ffi::c_int,
-                ((uv_width + 32 as ::core::ffi::c_int) as size_t)
-                    .wrapping_mul(::core::mem::size_of::<::core::ffi::c_uchar>() as size_t),
+                size,
             );
-            i += 1;
         }
-        (*pbi).mt_vabove_row = vpx_calloc(
-            ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
-            (*pc).mb_rows as size_t,
-        ) as *mut *mut ::core::ffi::c_uchar;
+        
+        (*pbi).mt_vabove_row = Box::into_raw(vec![core::ptr::null_mut::<core::ffi::c_uchar>(); mb_rows_usize].into_boxed_slice()) as *mut *mut ::core::ffi::c_uchar;
         if (*pbi).mt_vabove_row.is_null() {
             vpx_internal_error(
                 &raw mut (*pbi).common.error,
@@ -1855,15 +1840,14 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                     as *const ::core::ffi::c_char,
             );
         }
-        i = 0 as ::core::ffi::c_int;
-        while i < (*pc).mb_rows {
-            let ref mut fresh10 = *(*pbi).mt_vabove_row.offset(i as isize);
-            *fresh10 = vpx_memalign(
-                16 as size_t,
-                (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
-                    .wrapping_mul((uv_width + 32 as ::core::ffi::c_int) as size_t),
-            ) as *mut ::core::ffi::c_uchar;
-            if (*(*pbi).mt_vabove_row.offset(i as isize)).is_null() {
+        for i in 0..mb_rows_usize {
+            let size = (uv_width + 32 as ::core::ffi::c_int) as usize;
+            let ptr = match crate::vpx_mem::vpx_mem::AlignedBox::new(16, size) {
+                Some(b) => b.into_raw(),
+                None => core::ptr::null_mut(),
+            };
+            *(*pbi).mt_vabove_row.add(i) = ptr;
+            if ptr.is_null() {
                 vpx_internal_error(
                     &raw mut (*pc).error,
                     VPX_CODEC_MEM_ERROR,
@@ -1872,17 +1856,13 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                 );
             }
             memset(
-                *(*pbi).mt_vabove_row.offset(i as isize) as *mut ::core::ffi::c_void,
+                ptr as *mut ::core::ffi::c_void,
                 0 as ::core::ffi::c_int,
-                ((uv_width + 32 as ::core::ffi::c_int) as size_t)
-                    .wrapping_mul(::core::mem::size_of::<::core::ffi::c_uchar>() as size_t),
+                size,
             );
-            i += 1;
         }
-        (*pbi).mt_yleft_col = vpx_calloc(
-            ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
-            (*pc).mb_rows as size_t,
-        ) as *mut *mut ::core::ffi::c_uchar;
+        
+        (*pbi).mt_yleft_col = Box::into_raw(vec![core::ptr::null_mut::<core::ffi::c_uchar>(); mb_rows_usize].into_boxed_slice()) as *mut *mut ::core::ffi::c_uchar;
         if (*pbi).mt_yleft_col.is_null() {
             vpx_internal_error(
                 &raw mut (*pbi).common.error,
@@ -1891,15 +1871,17 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                     as *const ::core::ffi::c_char,
             );
         }
-        i = 0 as ::core::ffi::c_int;
-        while i < (*pc).mb_rows {
-            let ref mut fresh11 = *(*pbi).mt_yleft_col.offset(i as isize);
-            *fresh11 = vpx_calloc(
-                (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
-                    .wrapping_mul(16 as size_t),
-                1 as size_t,
-            ) as *mut ::core::ffi::c_uchar;
-            if (*(*pbi).mt_yleft_col.offset(i as isize)).is_null() {
+        for i in 0..mb_rows_usize {
+            let size = 16usize;
+            let ptr = match crate::vpx_mem::vpx_mem::AlignedBox::new(32, size) {
+                Some(b) => {
+                    core::ptr::write_bytes(b.as_ptr(), 0, size);
+                    b.into_raw()
+                }
+                None => core::ptr::null_mut(),
+            };
+            *(*pbi).mt_yleft_col.add(i) = ptr;
+            if ptr.is_null() {
                 vpx_internal_error(
                     &raw mut (*pc).error,
                     VPX_CODEC_MEM_ERROR,
@@ -1907,12 +1889,9 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                         as *const ::core::ffi::c_char,
                 );
             }
-            i += 1;
         }
-        (*pbi).mt_uleft_col = vpx_calloc(
-            ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
-            (*pc).mb_rows as size_t,
-        ) as *mut *mut ::core::ffi::c_uchar;
+        
+        (*pbi).mt_uleft_col = Box::into_raw(vec![core::ptr::null_mut::<core::ffi::c_uchar>(); mb_rows_usize].into_boxed_slice()) as *mut *mut ::core::ffi::c_uchar;
         if (*pbi).mt_uleft_col.is_null() {
             vpx_internal_error(
                 &raw mut (*pbi).common.error,
@@ -1921,15 +1900,17 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                     as *const ::core::ffi::c_char,
             );
         }
-        i = 0 as ::core::ffi::c_int;
-        while i < (*pc).mb_rows {
-            let ref mut fresh12 = *(*pbi).mt_uleft_col.offset(i as isize);
-            *fresh12 = vpx_calloc(
-                (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
-                    .wrapping_mul(8 as size_t),
-                1 as size_t,
-            ) as *mut ::core::ffi::c_uchar;
-            if (*(*pbi).mt_uleft_col.offset(i as isize)).is_null() {
+        for i in 0..mb_rows_usize {
+            let size = 8usize;
+            let ptr = match crate::vpx_mem::vpx_mem::AlignedBox::new(32, size) {
+                Some(b) => {
+                    core::ptr::write_bytes(b.as_ptr(), 0, size);
+                    b.into_raw()
+                }
+                None => core::ptr::null_mut(),
+            };
+            *(*pbi).mt_uleft_col.add(i) = ptr;
+            if ptr.is_null() {
                 vpx_internal_error(
                     &raw mut (*pc).error,
                     VPX_CODEC_MEM_ERROR,
@@ -1937,12 +1918,9 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                         as *const ::core::ffi::c_char,
                 );
             }
-            i += 1;
         }
-        (*pbi).mt_vleft_col = vpx_calloc(
-            ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
-            (*pc).mb_rows as size_t,
-        ) as *mut *mut ::core::ffi::c_uchar;
+        
+        (*pbi).mt_vleft_col = Box::into_raw(vec![core::ptr::null_mut::<core::ffi::c_uchar>(); mb_rows_usize].into_boxed_slice()) as *mut *mut ::core::ffi::c_uchar;
         if (*pbi).mt_vleft_col.is_null() {
             vpx_internal_error(
                 &raw mut (*pbi).common.error,
@@ -1951,15 +1929,17 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                     as *const ::core::ffi::c_char,
             );
         }
-        i = 0 as ::core::ffi::c_int;
-        while i < (*pc).mb_rows {
-            let ref mut fresh13 = *(*pbi).mt_vleft_col.offset(i as isize);
-            *fresh13 = vpx_calloc(
-                (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
-                    .wrapping_mul(8 as size_t),
-                1 as size_t,
-            ) as *mut ::core::ffi::c_uchar;
-            if (*(*pbi).mt_vleft_col.offset(i as isize)).is_null() {
+        for i in 0..mb_rows_usize {
+            let size = 8usize;
+            let ptr = match crate::vpx_mem::vpx_mem::AlignedBox::new(32, size) {
+                Some(b) => {
+                    core::ptr::write_bytes(b.as_ptr(), 0, size);
+                    b.into_raw()
+                }
+                None => core::ptr::null_mut(),
+            };
+            *(*pbi).mt_vleft_col.add(i) = ptr;
+            if ptr.is_null() {
                 vpx_internal_error(
                     &raw mut (*pc).error,
                     VPX_CODEC_MEM_ERROR,
@@ -1967,7 +1947,6 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
                         as *const ::core::ffi::c_char,
                 );
             }
-            i += 1;
         }
     }
 }}
