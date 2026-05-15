@@ -1,12 +1,3 @@
-unsafe extern "C" {
-    fn vpx_memalign(align: size_t, size: size_t) -> *mut ::core::ffi::c_void;
-    fn vpx_free(memblk: *mut ::core::ffi::c_void);
-    fn memset(
-        __b: *mut ::core::ffi::c_void,
-        __c: ::core::ffi::c_int,
-        __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
-}
 pub type uint8_t = u8;
 pub type __darwin_size_t = usize;
 pub type vpx_color_space = ::core::ffi::c_uint;
@@ -24,6 +15,11 @@ pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
 pub type size_t = __darwin_size_t;
+
+#[derive(Clone, Copy)]
+#[repr(align(32))]
+struct Align32([u8; 32]);
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct yv12_buffer_config {
@@ -67,13 +63,11 @@ pub unsafe extern "C" fn vp8_yv12_de_alloc_frame_buffer(
 ) -> ::core::ffi::c_int { unsafe {
     if !ybf.is_null() {
         if (*ybf).buffer_alloc_sz > 0 as size_t {
-            vpx_free((*ybf).buffer_alloc as *mut ::core::ffi::c_void);
+            let alloc_size = (*ybf).buffer_alloc_sz / 32;
+            let ptr = (*ybf).buffer_alloc as *mut Align32;
+            let _vec = Vec::from_raw_parts(ptr, alloc_size, alloc_size);
         }
-        memset(
-            ybf as *mut ::core::ffi::c_void,
-            0 as ::core::ffi::c_int,
-            ::core::mem::size_of::<YV12_BUFFER_CONFIG>() as size_t,
-        );
+        *ybf = core::mem::zeroed();
     } else {
         return -(1 as ::core::ffi::c_int);
     }
@@ -102,12 +96,15 @@ pub unsafe extern "C" fn vp8_yv12_realloc_frame_buffer(
         let mut uvplane_size: ::core::ffi::c_int = (uv_height + border) * uv_stride;
         let frame_size: size_t = (yplane_size + 2 as ::core::ffi::c_int * uvplane_size) as size_t;
         if (*ybf).buffer_alloc.is_null() {
-            (*ybf).buffer_alloc = vpx_memalign(32 as size_t, frame_size) as *mut uint8_t;
+            let alloc_size = (frame_size + 31) / 32;
+            let mut vec = vec![Align32([0; 32]); alloc_size];
+            (*ybf).buffer_alloc = vec.as_mut_ptr() as *mut uint8_t;
+            core::mem::forget(vec);
             if (*ybf).buffer_alloc.is_null() {
                 (*ybf).buffer_alloc_sz = 0 as size_t;
                 return -(1 as ::core::ffi::c_int);
             }
-            (*ybf).buffer_alloc_sz = frame_size;
+            (*ybf).buffer_alloc_sz = alloc_size * 32;
         }
         if (*ybf).buffer_alloc_sz < frame_size {
             return -(1 as ::core::ffi::c_int);
@@ -164,3 +161,4 @@ pub unsafe extern "C" fn vp8_yv12_alloc_frame_buffer(
     }
     return -(2 as ::core::ffi::c_int);
 }}
+
