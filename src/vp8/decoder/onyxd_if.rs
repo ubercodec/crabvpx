@@ -534,19 +534,15 @@ unsafe extern "C" fn initialize_dec() { unsafe {
 }}
 unsafe extern "C" fn remove_decompressor(mut pbi: *mut VP8D_COMP) { unsafe {
     vp8_remove_common(&raw mut (*pbi).common);
-    vpx_free(pbi as *mut ::core::ffi::c_void);
+    if !pbi.is_null() {
+        let _ = Box::from_raw(pbi);
+    }
 }}
 unsafe extern "C" fn create_decompressor(mut oxcf: *mut VP8D_CONFIG) -> *mut VP8D_COMP { unsafe {
-    let mut pbi: *mut VP8D_COMP =
-        vpx_memalign(32 as size_t, ::core::mem::size_of::<VP8D_COMP>() as size_t) as *mut VP8D_COMP;
-    if pbi.is_null() {
-        return ::core::ptr::null_mut::<VP8D_COMP>();
-    }
-    memset(
-        pbi as *mut ::core::ffi::c_void,
-        0 as ::core::ffi::c_int,
-        ::core::mem::size_of::<VP8D_COMP>() as size_t,
-    );
+    let mut pbi: *mut VP8D_COMP = match Box::<VP8D_COMP>::try_new_zeroed() {
+        Ok(b) => Box::into_raw(b.assume_init()),
+        Err(_) => return ::core::ptr::null_mut::<VP8D_COMP>(),
+    };
     if setjmp(&raw mut (*pbi).common.error.jmp as *mut ::core::ffi::c_int) != 0 {
         (*pbi).common.error.setjmp = 0 as ::core::ffi::c_int;
         remove_decompressor(pbi);

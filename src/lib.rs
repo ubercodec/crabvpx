@@ -9,6 +9,7 @@
 #![feature(core_intrinsics)]
 #![feature(extern_types)]
 #![feature(raw_ref_op)]
+#![feature(allocator_api)]
 
 pub mod api;
 pub mod thread_shim;
