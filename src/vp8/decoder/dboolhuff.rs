@@ -188,4 +188,34 @@ impl<'a> SafeBoolDecoder<'a> {
     }
 }
 
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn vp8dx_decode_bool(
+    br: *mut BOOL_DECODER,
+    probability: ::core::ffi::c_int,
+) -> ::core::ffi::c_int {
+    unsafe {
+        let len = (*br).user_buffer_end.offset_from((*br).user_buffer) as usize;
+        let slice = if len == 0 {
+            &[]
+        } else {
+            core::slice::from_raw_parts((*br).user_buffer, len)
+        };
+        let mut safe_decoder = SafeBoolDecoder {
+            buffer: slice,
+            offset: 0,
+            value: (*br).value,
+            count: (*br).count,
+            range: (*br).range,
+            decrypt_cb: (*br).decrypt_cb,
+            decrypt_state: (*br).decrypt_state,
+        };
+        let bit = safe_decoder.read_bool(probability);
+        (*br).user_buffer = (*br).user_buffer.add(safe_decoder.offset);
+        (*br).value = safe_decoder.value;
+        (*br).count = safe_decoder.count;
+        (*br).range = safe_decoder.range;
+        bit
+    }
+}
+
 

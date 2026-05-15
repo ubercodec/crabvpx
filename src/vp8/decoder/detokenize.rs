@@ -1,6 +1,7 @@
 unsafe extern "C" {
     static vp8_norm: [::core::ffi::c_uchar; 256];
     fn vp8dx_bool_decoder_fill(br: *mut BOOL_DECODER);
+    fn vp8dx_decode_bool(br: *mut BOOL_DECODER, probability: ::core::ffi::c_int) -> ::core::ffi::c_int;
     fn memset(
         __b: *mut ::core::ffi::c_void,
         __c: ::core::ffi::c_int,
@@ -446,44 +447,6 @@ pub type ProbaArray = *const [[uint8_t; 11]; 3];
 pub const CHAR_BIT: ::core::ffi::c_int = 8 as ::core::ffi::c_int;
 pub const VP8_BD_VALUE_SIZE: ::core::ffi::c_int =
     ::core::mem::size_of::<VP8_BD_VALUE>() as ::core::ffi::c_int * CHAR_BIT;
-unsafe extern "C" fn vp8dx_decode_bool(
-    mut br: *mut BOOL_DECODER,
-    mut probability: ::core::ffi::c_int,
-) -> ::core::ffi::c_int { unsafe {
-    let mut bit: ::core::ffi::c_uint = 0 as ::core::ffi::c_uint;
-    let mut value: VP8_BD_VALUE = 0;
-    let mut split: ::core::ffi::c_uint = 0;
-    let mut bigsplit: VP8_BD_VALUE = 0;
-    let mut count: ::core::ffi::c_int = 0;
-    let mut range: ::core::ffi::c_uint = 0;
-    split = (1 as ::core::ffi::c_uint).wrapping_add(
-        (*br)
-            .range
-            .wrapping_sub(1 as ::core::ffi::c_uint)
-            .wrapping_mul(probability as ::core::ffi::c_uint)
-            >> 8 as ::core::ffi::c_int,
-    );
-    if (*br).count < 0 as ::core::ffi::c_int {
-        vp8dx_bool_decoder_fill(br);
-    }
-    value = (*br).value;
-    count = (*br).count;
-    bigsplit = (split as VP8_BD_VALUE) << VP8_BD_VALUE_SIZE - 8 as ::core::ffi::c_int;
-    range = split;
-    if value >= bigsplit {
-        range = (*br).range.wrapping_sub(split);
-        value = value.wrapping_sub(bigsplit);
-        bit = 1 as ::core::ffi::c_uint;
-    }
-    let shift: ::core::ffi::c_uchar = vp8_norm[range as ::core::ffi::c_uchar as usize];
-    range <<= shift as ::core::ffi::c_int;
-    value <<= shift as ::core::ffi::c_int;
-    count -= shift as ::core::ffi::c_int;
-    (*br).value = value;
-    (*br).count = count;
-    (*br).range = range;
-    return bit as ::core::ffi::c_int;
-}}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_reset_mb_tokens_context(mut x: *mut MACROBLOCKD) { unsafe {
     let mut a_ctx: *mut ENTROPY_CONTEXT = (*x).above_context as *mut ENTROPY_CONTEXT;

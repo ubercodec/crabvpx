@@ -1,4 +1,5 @@
 unsafe extern "C" {
+    fn vp8dx_decode_bool(br: *mut BOOL_DECODER, probability: ::core::ffi::c_int) -> ::core::ffi::c_int;
     fn vp8_bilinear_predict16x16_neon(
         src_ptr: *mut ::core::ffi::c_uchar,
         src_pixels_per_line: ::core::ffi::c_int,
@@ -669,44 +670,6 @@ pub const vp8_prob_half: vp8_prob = 128 as ::core::ffi::c_int as vp8_prob;
 pub const VP8_BD_VALUE_SIZE: ::core::ffi::c_int =
     ::core::mem::size_of::<VP8_BD_VALUE>() as ::core::ffi::c_int * CHAR_BIT;
 pub const VP8_LOTS_OF_BITS: ::core::ffi::c_int = 0x40000000 as ::core::ffi::c_int;
-unsafe extern "C" fn vp8dx_decode_bool(
-    mut br: *mut BOOL_DECODER,
-    mut probability: ::core::ffi::c_int,
-) -> ::core::ffi::c_int { unsafe {
-    let mut bit: ::core::ffi::c_uint = 0 as ::core::ffi::c_uint;
-    let mut value: VP8_BD_VALUE = 0;
-    let mut split: ::core::ffi::c_uint = 0;
-    let mut bigsplit: VP8_BD_VALUE = 0;
-    let mut count: ::core::ffi::c_int = 0;
-    let mut range: ::core::ffi::c_uint = 0;
-    split = (1 as ::core::ffi::c_uint).wrapping_add(
-        (*br)
-            .range
-            .wrapping_sub(1 as ::core::ffi::c_uint)
-            .wrapping_mul(probability as ::core::ffi::c_uint)
-            >> 8 as ::core::ffi::c_int,
-    );
-    if (*br).count < 0 as ::core::ffi::c_int {
-        vp8dx_bool_decoder_fill(br);
-    }
-    value = (*br).value;
-    count = (*br).count;
-    bigsplit = (split as VP8_BD_VALUE) << VP8_BD_VALUE_SIZE - 8 as ::core::ffi::c_int;
-    range = split;
-    if value >= bigsplit {
-        range = (*br).range.wrapping_sub(split);
-        value = value.wrapping_sub(bigsplit);
-        bit = 1 as ::core::ffi::c_uint;
-    }
-    let shift: ::core::ffi::c_uchar = vp8_norm[range as ::core::ffi::c_uchar as usize];
-    range <<= shift as ::core::ffi::c_int;
-    value <<= shift as ::core::ffi::c_int;
-    count -= shift as ::core::ffi::c_int;
-    (*br).value = value;
-    (*br).count = count;
-    (*br).range = range;
-    return bit as ::core::ffi::c_int;
-}}
 #[inline]
 unsafe extern "C" fn vp8_decode_value(
     mut br: *mut BOOL_DECODER,
