@@ -12,6 +12,8 @@ This project is strictly governed by TDD. You will not write the entire decoder 
 
 ## Current State
     **Hints**  HINTS.md has some notes from previous instances of you that might be of use (or not - they are not human audited so your mileage may vary)
+    **Tests**  ./scripts/compare.sh will run the test harness - it should pass when you start, and should pass before you declare success!
+    **Metrics** ./scripts/count_unsafe.sh will tell you how many unsafe blocks still exist.
 
 Here is an overview of the directory:
 * ./src - the Rust decoder ** This is what you are working on **
