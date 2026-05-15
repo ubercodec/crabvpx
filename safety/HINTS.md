@@ -8,6 +8,7 @@
 - **x86_64 Testing Harness**: Implemented `simd_shim.rs` to forward missing `_neon` symbols to their `_c` equivalents on non-ARM targets. Also added a `pthread_once` shim in `thread_shim.rs` to fix Linux glibc compatibility issues with Darwin-transpiled `pthread_once_t` locks. Integration test harness `just compare` now runs and passes 35/35 vectors.
 - **Frame Memory Management**: Refactored `YV12_BUFFER_CONFIG` memory allocation in `src/vpx_scale/generic/yv12config.rs` to use aligned Rust vectors (`Vec<Align32>`) instead of legacy `vpx_memalign`/`vpx_free`.
 - **Safe Memory Allocation**: Replaced legacy `vpx_memalign` and `vpx_free` calls with `Box::try_new_zeroed()` and `Box::from_raw()` for `VP8D_COMP` allocation in `src/vp8/decoder/onyxd_if.rs`.
+- **Safe Image Allocation**: Replaced `calloc` and `free` with `Box::try_new_zeroed()` and `Box::from_raw()` for `vpx_image_t` struct allocation in `src/vpx/src/vpx_image.rs`.
 
 ## Architectural Quirks to Watch Out For
 - **c2rust Duplication**: Functions that were `static inline` in C headers (specifically `vp8dx_decode_bool` from `dboolhuff.h`) were duplicated by `c2rust` into every Rust module that called them. (Resolved for `vp8dx_decode_bool`).
@@ -16,6 +17,6 @@
 
 ## Next Steps for Future Agents
 1. **Safe Memory Allocation**: Continue replacing `vpx_memalign` and `vpx_calloc` calls with safe Rust allocations (`Vec`, `Box`).
-   - **Target 1**: `vpx_image_t` buffer allocation in `src/vpx/src/vpx_image.rs`.
+   - **Target 1**: `vpx_image_t` buffer allocation (`img_data`) in `src/vpx/src/vpx_image.rs` (Note: requires handling arbitrary `buf_align`).
 2. **Public API Boundary**: Begin implementing Step 1 of `docs/refactor_plan.md` by creating a safe Rust `Decoder` wrapper around `vpx_codec_ctx_t`.
 

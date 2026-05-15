@@ -208,15 +208,15 @@ unsafe extern "C" fn img_alloc_helper(
                             s
                         };
                         if img.is_null() {
-                            img = calloc(
-                                1 as size_t,
-                                ::core::mem::size_of::<vpx_image_t>() as size_t,
-                            ) as *mut vpx_image_t;
-                            if img.is_null() {
-                                current_block = 7960401837942226685;
-                            } else {
-                                (*img).self_allocd = 1 as ::core::ffi::c_int;
-                                current_block = 13678349939556791712;
+                            match Box::<vpx_image_t>::try_new_zeroed() {
+                                Ok(b) => {
+                                    img = Box::into_raw(b.assume_init());
+                                    (*img).self_allocd = 1 as ::core::ffi::c_int;
+                                    current_block = 13678349939556791712;
+                                }
+                                Err(_) => {
+                                    current_block = 7960401837942226685;
+                                }
                             }
                         } else {
                             current_block = 13678349939556791712;
@@ -486,7 +486,7 @@ pub unsafe extern "C" fn vpx_img_free(mut img: *mut vpx_image_t) { unsafe {
             vpx_free((*img).img_data as *mut ::core::ffi::c_void);
         }
         if (*img).self_allocd != 0 {
-            free(img as *mut ::core::ffi::c_void);
+            let _ = Box::from_raw(img);
         }
     }
 }}
