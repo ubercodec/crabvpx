@@ -1570,6 +1570,7 @@ void vpx_d207_predictor_32x32_neon(uint8_t *dst, ptrdiff_t stride,
 
 #if !HAVE_NEON_ASM
 
+/* Implemented in Rust (intrapred_neon.rs)
 void vpx_v_predictor_4x4_neon(uint8_t *dst, ptrdiff_t stride,
                               const uint8_t *above, const uint8_t *left) {
   const uint32_t d = *(const uint32_t *)above;
@@ -1580,6 +1581,7 @@ void vpx_v_predictor_4x4_neon(uint8_t *dst, ptrdiff_t stride,
     *(uint32_t *)dst = d;
   }
 }
+*/
 
 void vpx_v_predictor_8x8_neon(uint8_t *dst, ptrdiff_t stride,
                               const uint8_t *above, const uint8_t *left) {

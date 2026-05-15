@@ -1,0 +1,35 @@
+use crabvpx::vp8::decoder::dboolhuff::*;
+
+#[test]
+fn test_bool_decoder_init() {
+    let data = [0u8; 10];
+    let mut br = BOOL_DECODER {
+        user_buffer_end: core::ptr::null(),
+        user_buffer: core::ptr::null(),
+        value: 0,
+        count: 0,
+        range: 0,
+        decrypt_cb: None,
+        decrypt_state: core::ptr::null_mut(),
+    };
+    unsafe {
+        vp8dx_start_decode(&mut br, data.as_ptr(), data.len() as u32, None, core::ptr::null_mut());
+    }
+    assert_eq!(br.range, 255);
+    assert_eq!(br.count, 56);
+}
+
+#[test]
+fn test_safe_bool_decoder_init() {
+    let data = [0u8; 10];
+    let sbd = SafeBoolDecoder::new(&data, None, core::ptr::null_mut());
+    assert_eq!(sbd.range, 255);
+    assert_eq!(sbd.count, 56);
+}
+
+#[test]
+fn test_safe_bool_decoder_read() {
+    let data = [0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let mut sbd = SafeBoolDecoder::new(&data, None, core::ptr::null_mut());
+    assert_eq!(sbd.read_bool(128), 1);
+}

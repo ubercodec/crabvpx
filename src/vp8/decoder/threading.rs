@@ -101,7 +101,6 @@ unsafe extern "C" {
         default_filt_lvl: ::core::ffi::c_int,
     );
     fn vp8_setup_block_dptrs(x: *mut MACROBLOCKD);
-    static mut mach_task_self_: mach_port_t;
     fn memcpy(
         __dst: *mut ::core::ffi::c_void,
         __src: *const ::core::ffi::c_void,
@@ -156,6 +155,7 @@ unsafe extern "C" {
     );
     fn vp8_setup_intra_recon_top_line(ybf: *mut YV12_BUFFER_CONFIG);
 }
+static mut mach_task_self_: mach_port_t = 0;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct blockd {

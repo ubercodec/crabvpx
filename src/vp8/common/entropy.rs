@@ -1601,7 +1601,7 @@ pub static mut vp8_coef_update_probs: [[[[vp8_prob; 11]; 3]; 8]; 4] = [
     ],
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_norm: [::core::ffi::c_uchar; 256] = [
+pub static vp8_norm: [::core::ffi::c_uchar; 256] = [
     0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     7 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     6 as ::core::ffi::c_int as ::core::ffi::c_uchar,

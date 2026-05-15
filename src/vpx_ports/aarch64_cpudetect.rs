@@ -5,13 +5,6 @@ unsafe extern "C" {
         __endptr: *mut *mut ::core::ffi::c_char,
         __base: ::core::ffi::c_int,
     ) -> ::core::ffi::c_long;
-    fn sysctlbyname(
-        _: *const ::core::ffi::c_char,
-        _: *mut ::core::ffi::c_void,
-        oldlenp: *mut size_t,
-        _: *mut ::core::ffi::c_void,
-        newlen: size_t,
-    ) -> ::core::ffi::c_int;
 }
 pub type __darwin_size_t = usize;
 pub type int64_t = i64;
@@ -53,21 +46,10 @@ unsafe extern "C" fn arm_cpu_env_mask() -> ::core::ffi::c_int { unsafe {
     };
 }}
 #[inline]
-unsafe extern "C" fn have_feature(mut feature: *const ::core::ffi::c_char) -> int64_t { unsafe {
-    let mut feature_present: int64_t = 0 as int64_t;
-    let mut size: size_t = ::core::mem::size_of::<int64_t>() as size_t;
-    if sysctlbyname(
-        feature,
-        &raw mut feature_present as *mut ::core::ffi::c_void,
-        &raw mut size,
-        NULL,
-        0 as size_t,
-    ) != 0 as ::core::ffi::c_int
-    {
-        return 0 as int64_t;
-    }
-    return feature_present;
-}}
+unsafe extern "C" fn have_feature(mut _feature: *const ::core::ffi::c_char) -> int64_t {
+    // TODO: Use getauxval on Linux
+    0
+}
 unsafe extern "C" fn arm_get_cpu_caps() -> ::core::ffi::c_int { unsafe {
     let mut flags: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     flags |= HAS_NEON;
