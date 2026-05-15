@@ -65,11 +65,11 @@ done
 echo ""
 echo "--- Testing C Oracle Decoder ---"
 cd "$HARNESS_DIR"
-cargo run --release -- --dir "$TEST_DATA_DIR"
+cargo run --release -- --dir "$TEST_DATA_DIR" "$@"
 
 echo ""
 echo "--- Testing CrabVPX Rust Decoder ---"
-cargo run --release --no-default-features --features rust -- --dir "$TEST_DATA_DIR"
+cargo run --release --no-default-features --features rust -- --dir "$TEST_DATA_DIR" "$@"
 
 echo ""
 # Run the unsafe tracker

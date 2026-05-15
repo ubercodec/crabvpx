@@ -126,7 +126,9 @@ fn main() {
                 let min = iter_times.iter().min().unwrap();
                 let max = iter_times.iter().max().unwrap();
                 let avg = sum / (iterations as u32);
-                pb.println(format!("{:?}: avg {:?}, min {:?}, max {:?}", file.file_name().unwrap(), avg, min, max));
+                pb.suspend(|| {
+                    println!("{:?}: avg {:?}, min {:?}, max {:?}", file.file_name().unwrap(), avg, min, max);
+                });
             } else {
                 pb.println(format!("Decoding failed for {:?}", file));
             }
