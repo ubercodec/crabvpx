@@ -62,6 +62,11 @@ for vector in "${VP8_VECTORS[@]}"; do
     fi
 done
 
-echo "Building and running the harness..."
+echo ""
+echo "--- Testing C Oracle Decoder ---"
 cd "$HARNESS_DIR"
 cargo run --release -- --dir "$TEST_DATA_DIR"
+
+echo ""
+echo "--- Testing CrabVPX Rust Decoder ---"
+cargo run --release --no-default-features --features rust -- --dir "$TEST_DATA_DIR"

@@ -8,8 +8,10 @@ fn main() {
     println!("cargo:rerun-if-changed=../libvpx/vpx/vpx_decoder.h");
     println!("cargo:rerun-if-changed=../libvpx/vpx/vp8dx.h");
 
-    println!("cargo:rustc-link-search=native=../libvpx");
-    println!("cargo:rustc-link-lib=static=vpx");
+    if env::var("CARGO_FEATURE_RUST").is_err() {
+        println!("cargo:rustc-link-search=native=../libvpx");
+        println!("cargo:rustc-link-lib=static=vpx");
+    }
 
     // The bindgen builder
     let bindings = bindgen::Builder::default()

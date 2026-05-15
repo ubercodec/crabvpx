@@ -2,11 +2,21 @@ mod decoder;
 mod ivf;
 
 use clap::Parser;
-use decoder::{LibVpxOracleDecoder, VideoDecoder};
+use decoder::VideoDecoder;
 use indicatif::{ProgressBar, ProgressStyle};
 use ivf::IvfParser;
 use std::fs;
 use std::path::PathBuf;
+
+#[cfg(not(feature = "rust"))]
+use decoder::LibVpxOracleDecoder as ActiveDecoder;
+#[cfg(not(feature = "rust"))]
+const DECODER_NAME: &str = "Oracle";
+
+#[cfg(feature = "rust")]
+use decoder::CrabVpxDecoder as ActiveDecoder;
+#[cfg(feature = "rust")]
+const DECODER_NAME: &str = "CrabVPX Rust";
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -63,7 +73,7 @@ fn main() {
             }
         };
 
-        let mut decoder = LibVpxOracleDecoder::new();
+        let mut decoder = ActiveDecoder::new();
         if let Err(e) = decoder.init() {
             pb.println(format!("Failed to initialize decoder for {:?}: {}", file, e));
             pb.inc(1);
@@ -94,8 +104,9 @@ fn main() {
     pb.finish_with_message("Done");
 
     println!(
-        "\n{} out of {} vectors decoded successfully by the C Oracle.",
+        "\n{} out of {} vectors decoded successfully by the {} decoder.",
         successful_decodes,
-        ivf_files.len()
+        ivf_files.len(),
+        DECODER_NAME
     );
 }

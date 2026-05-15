@@ -5,7 +5,6 @@ extern "C" {
         __c: ::core::ffi::c_int,
         __len: size_t,
     ) -> *mut ::core::ffi::c_void;
-    fn vpx_codec_destroy(ctx: *mut vpx_codec_ctx_t) -> vpx_codec_err_t;
 }
 pub type __builtin_va_list = *mut ::core::ffi::c_char;
 pub type __darwin_size_t = usize;
@@ -541,7 +540,7 @@ pub unsafe extern "C" fn vpx_codec_dec_init_ver(
             } else {
                 ::core::ptr::null::<::core::ffi::c_char>()
             };
-            vpx_codec_destroy(ctx);
+            crate::vpx::src::vpx_codec::vpx_codec_destroy(ctx as *mut crate::vpx::src::vpx_codec::vpx_codec_ctx_t);
         }
     }
     return (if !ctx.is_null() {
