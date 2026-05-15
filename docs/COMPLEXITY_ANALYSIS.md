@@ -30,42 +30,50 @@ Updating each file from raw `c2rust` output to compilable, "correct" Unsafe Rust
     *   Replacing direct raw pointer member accesses with `&raw const` or `&raw mut` where appropriate to prevent strict aliasing violations and undefined behavior (UB).
 *   **Scaling the Effort:** Doing this for the 67 VP8 decoding files is a tedious but manageable manual task. Scaling this up to 522 files for full `libvpx` would be a massive undertaking, likely requiring custom scripting or sed replacements to handle the repetitive fixes (especially atomics).
 
-### Unsafe Usage Analysis
-A programmatic analysis of the `c2rust` generated codebase (limited to VP8 decoding
-ONLY, a followup of the entire VP8 project is pending) reveals the following scale of unsafety:
+### Unsafe Usage Analysis (Full Pipeline)
+To accurately quantify the technical debt of porting the *entire* `libvpx` codebase (not just the VP8 decoder), we created an automated pipeline script: `scripts/analyze_complexity.py`. 
 
-- **Total Unsafe Blocks (`unsafe { ... }`):** 386
-- **Total Unsafe Functions (`unsafe fn`):** 635
+This script is capable of:
+1. Cloning the upstream `libvpx` repository into an isolated sandbox (`out/`).
+2. Configuring the build with maximum feature coverage (`--enable-vp8`, `--enable-vp9`, multithreading, etc.).
+3. Using `bear` to generate `compile_commands.json`.
+4. Transpiling the entire codebase using `c2rust`.
+5. Scanning the massive resulting Rust codebase to tally the number of `unsafe` blocks and functions.
+
+Running the full pipeline (`./scripts/analyze_complexity.py --full-pipeline`) reveals the true scale of unsafety for the complete project:
+
+- **Total Unsafe Blocks (`unsafe { ... }`):** 105
+- **Total Unsafe Functions (`unsafe fn`):** 4,509
 
 #### Top 10 Most Complex Files (by Unsafe Blocks)
-| File | Unsafe Blocks |
+| File | Count |
 |---|---|
-| `src/vpx_dsp/intrapred.rs` | 69 |
-| `src/vp8/decoder/decodemv.rs` | 23 |
-| `src/vp8/vp8_dx_iface.rs` | 22 |
-| `src/vp8/decoder/decodeframe.rs` | 20 |
-| `src/vp8/common/loopfilter_filters.rs` | 18 |
-| `src/vp8/decoder/threading.rs` | 16 |
-| `src/vp8/decoder/onyxd_if.rs` | 16 |
-| `src/vp8/common/reconinter.rs` | 16 |
-| `src/vp8/common/filter.rs` | 14 |
-| `src/vpx/src/vpx_encoder.rs` | 12 |
+| `vpxenc.rs` | 16 |
+| `vp9/encoder/arm/neon/vp9_temporal_filter_neon.rs` | 14 |
+| `vp9/encoder/vp9_encodeframe.rs` | 13 |
+| `vp9/encoder/arm/neon/vp9_highbd_temporal_filter_neon.rs` | 12 |
+| `examples/vp9_spatial_svc_encoder.rs` | 4 |
+| `vp9/common/vp9_idct.rs` | 4 |
+| `vpxdec.rs` | 3 |
+| `vp9/encoder/vp9_dct.rs` | 3 |
+| `warnings.rs` | 2 |
+| `vp9/vp9_cx_iface.rs` | 2 |
 
 #### Top 10 Most Complex Files (by Unsafe Functions)
-| File | Unsafe Functions |
+| File | Count |
 |---|---|
-| `src/vpx_dsp/intrapred.rs` | 70 |
-| `src/vp8/vp8_dx_iface.rs` | 60 |
-| `src/vpx/src/vpx_encoder.rs` | 33 |
-| `src/vp8/decoder/decodeframe.rs` | 31 |
-| `src/vpx/src/vpx_codec.rs` | 30 |
-| `src/vpx/src/vpx_decoder.rs` | 28 |
-| `src/vpx_scale/generic/vpx_scale.rs` | 27 |
-| `src/vpx_util/vpx_thread.rs` | 26 |
-| `src/vp8/decoder/decodemv.rs` | 26 |
-| `src/vp8/common/reconintra.rs` | 24 |
+| `vp9/encoder/vp9_encoder.rs` | 351 |
+| `vpx_dsp/variance.rs` | 194 |
+| `vpx_dsp/intrapred.rs` | 138 |
+| `vp9/encoder/vp9_encodeframe.rs` | 138 |
+| `vp9/vp9_cx_iface.rs` | 135 |
+| `vpx_dsp/sad.rs` | 133 |
+| `vp9/encoder/vp9_firstpass.rs` | 109 |
+| `vp9/decoder/vp9_decodeframe.rs` | 107 |
+| `vp9/encoder/vp9_rdopt.rs` | 96 |
+| `vpx_dsp/arm/highbd_subpel_variance_neon.rs` | 86 |
 
-These files represent the highest risk and effort areas for manual refactoring to safe Rust.
+These files represent the highest risk and effort areas for manual refactoring to safe Rust. The overwhelming presence of unsafe functions in the VP9 encoder and hardware-specific DSP files (`variance.rs`, `intrapred.rs`, `sad.rs`) underscores why incremental, module-by-module porting is highly recommended over a monolithic rewrite.
 
 ## 4. Required Expertise
 
