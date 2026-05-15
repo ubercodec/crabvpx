@@ -99,10 +99,10 @@ def extract_metrics(output: str) -> Dict[str, Dict]:
     return results
 
 
-def draw_ascii_graph(oracle_times: List[float], rust_times: List[float]):
-    """Draws a simple text-based distribution graph comparing both decoders."""
+def generate_ascii_graph(oracle_times: List[float], rust_times: List[float]) -> str:
+    """Generates a text-based distribution graph comparing both decoders."""
     if not oracle_times or not rust_times:
-        return
+        return ""
 
     all_times = oracle_times + rust_times
     min_t, max_t = min(all_times), max(all_times)
@@ -119,12 +119,13 @@ def draw_ascii_graph(oracle_times: List[float], rust_times: List[float]):
     o_hist, r_hist = get_hist(oracle_times), get_hist(rust_times)
     max_h = max(max(o_hist), max(r_hist))
 
-    print("\n Suite Performance Distribution (X: time, O: Oracle, R: Rust)")
+    graph = ["Suite Performance Distribution (X: time, O: Oracle, R: Rust)"]
     for i in range(buckets):
         t_label = min_t + i * width
         o_bar = "O" * int(o_hist[i] / max_h * 20) if max_h > 0 else ""
         r_bar = "R" * int(r_hist[i] / max_h * 20) if max_h > 0 else ""
-        print(f" {t_label:>6.1f} ms | {o_bar:<20} {r_bar}")
+        graph.append(f" {t_label:>6.1f} ms | {o_bar:<20} {r_bar}")
+    return "\n".join(graph)
 
 
 def print_row(label: str, oracle_val: float, rust_val: float, unit: str = "ms"):
@@ -137,8 +138,31 @@ def print_row(label: str, oracle_val: float, rust_val: float, unit: str = "ms"):
           f"{color}{diff:>+8.2f} %{reset}")
 
 
+def write_markdown_report(out_file: Path, results: Dict[str, Dict], graph: str):
+    """Writes a detailed benchmark report to a Markdown file."""
+    oracle, rust = results["oracle"], results["rust"]
+    
+    report = [
+        "# Performance Benchmark Report\n",
+        "| Metric | C Oracle | CrabVPX | Diff (%) |",
+        "|---|---|---|---|",
+        f"| Suite Average | {oracle['avg']:.2f} ms | {rust['avg']:.2f} ms | {((rust['avg']-oracle['avg'])/oracle['avg'])*100:+.2f}% |",
+        f"| Suite Sigma (σ) | {oracle['sigma']:.2f} ms | {rust['sigma']:.2f} ms | {((rust['sigma']-oracle['sigma'])/oracle['sigma'])*100:+.2f}% |",
+        f"| Suite Min | {oracle['min']:.2f} ms | {rust['min']:.2f} ms | {((rust['min']-oracle['min'])/oracle['min'])*100:+.2f}% |",
+        f"| Suite Max | {oracle['max']:.2f} ms | {rust['max']:.2f} ms | {((rust['max']-oracle['max'])/oracle['max'])*100:+.2f}% |",
+        f"| Per Frame | {oracle['ms_per_frame']:.2f} ms | {rust['ms_per_frame']:.2f} ms | {((rust['ms_per_frame']-oracle['ms_per_frame'])/oracle['ms_per_frame'])*100:+.2f}% |\n",
+        "```text",
+        graph,
+        "```"
+    ]
+    
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    out_file.write_text("\n".join(report))
+    print(f"\nDetailed report written to: {out_file}")
+
+
 def display_results(results: Dict[str, Dict]):
-    """Formats and displays the performance comparison table and distribution."""
+    """Formats and displays the performance comparison table."""
     oracle, rust = results["oracle"], results["rust"]
 
     print("\n CrabVPX Performance Analysis vs. C Oracle")
@@ -152,8 +176,6 @@ def display_results(results: Dict[str, Dict]):
     print_row("Suite Max", oracle["max"], rust["max"])
     print_row("Per Frame", oracle["ms_per_frame"], rust["ms_per_frame"])
 
-    print("-" * 55)
-    draw_ascii_graph(oracle["times"], rust["times"])
     print("-" * 55)
     print(" Note: Positive % indicates Rust regression (slower).")
 
@@ -173,6 +195,10 @@ def main():
         sys.exit(1)
         
     display_results(results)
+    
+    graph = generate_ascii_graph(results["oracle"]["times"], results["rust"]["times"])
+    report_file = root_dir / "out" / "benchmark_results.md"
+    write_markdown_report(report_file, results, graph)
 
 
 if __name__ == "__main__":
