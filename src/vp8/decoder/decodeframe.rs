@@ -435,7 +435,7 @@ pub struct _opaque_pthread_t {
     pub __opaque: [::core::ffi::c_char; 8176],
 }
 pub type __darwin_pthread_t = *mut _opaque_pthread_t;
-pub type pthread_t = __darwin_pthread_t;
+pub type pthread_t = *mut ::core::ffi::c_void;
 pub type mach_port_t = __darwin_mach_port_t;
 pub type ptrdiff_t = __darwin_ptrdiff_t;
 #[derive(Copy, Clone)]
@@ -488,7 +488,7 @@ pub type vpx_decrypt_cb = Option<
         ::core::ffi::c_int,
     ) -> (),
 >;
-pub type semaphore_t = mach_port_t;
+pub type semaphore_t = *mut ::core::ffi::c_void;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct DECODETHREAD_DATA {

@@ -86,36 +86,37 @@ def run_c2rust(libvpx_path: Path) -> None:
     run_cmd(cmd, cwd=libvpx_path)
 
 
-def count_unsafe(file_path: Path) -> Tuple[int, int, int]:
+def count_unsafe(file_path: Path) -> Tuple[int, int, int, int]:
     """
-    Counts 'unsafe {' blocks, 'unsafe fn', and 'static mut' declarations.
-    Returns (unsafe_blocks_count, unsafe_functions_count, static_mut_count).
+    Counts 'unsafe' keywords, 'unsafe {' blocks, 'unsafe fn', and 'static mut'.
+    Returns (total_unsafe, unsafe_blocks, unsafe_functions, static_mut).
     """
-    blocks = fns = statics = 0
+    total = blocks = fns = statics = 0
     try:
         content = file_path.read_text(encoding='utf-8', errors='replace')
+        total = len(re.findall(r"\bunsafe\b", content))
         blocks = len(re.findall(r"unsafe\s*\{", content))
         fns = len(re.findall(r"unsafe\s+(?:extern\s+\"[^\"]*\"\s+)?fn\s+", content))
         statics = len(re.findall(r"static\s+mut\s+", content))
     except OSError as e:
         logging.warning("Failed to read %s: %s", file_path, e)
-    return blocks, fns, statics
+    return total, blocks, fns, statics
 
 
-def gather_file_stats(src_dir: Path) -> List[Tuple[str, int, int, int]]:
+def gather_file_stats(src_dir: Path) -> List[Tuple[str, int, int, int, int]]:
     """Walks the directory to gather unsafe stats for all .rs files."""
     file_stats = []
     for path in src_dir.rglob("*.rs"):
         if "target" in path.parts or path.name in ("build.rs", "lib.rs"):
             continue
 
-        blocks, fns, statics = count_unsafe(path)
-        if blocks > 0 or fns > 0 or statics > 0:
+        total, blocks, fns, statics = count_unsafe(path)
+        if total > 0:
             try:
                 rel_path = str(path.relative_to(src_dir))
             except ValueError:
                 rel_path = str(path)
-            file_stats.append((rel_path, blocks, fns, statics))
+            file_stats.append((rel_path, total, blocks, fns, statics))
     return file_stats
 
 
@@ -128,25 +129,28 @@ def _add_top_files(report: List[str], title: str, stats: List[Tuple], index: int
     report.append("")
 
 
-def format_markdown_report(src_dir: Path, stats: List[Tuple[str, int, int, int]]) -> str:
+def format_markdown_report(src_dir: Path, stats: List[Tuple[str, int, int, int, int]]) -> str:
     """Formats the gathered statistics into a Markdown report."""
-    total_blocks = sum(s[1] for s in stats)
-    total_fns = sum(s[2] for s in stats)
-    total_statics = sum(s[3] for s in stats)
+    total_unsafe = sum(s[1] for s in stats)
+    total_blocks = sum(s[2] for s in stats)
+    total_fns = sum(s[3] for s in stats)
+    total_statics = sum(s[4] for s in stats)
 
     report = [
         "# Unsafe Usage Analysis Report\n",
         "This report provides a programmatic analysis of the generated codebase,",
         "quantifying the scale of unsafety and technical debt required.\n",
         f"- **Target Directory:** `{src_dir.name}`",
+        f"- **Total `unsafe` Keywords:** {total_unsafe}",
         f"- **Total Unsafe Blocks (`unsafe {{ ... }}`):** {total_blocks}",
         f"- **Total Unsafe Functions (`unsafe fn`):** {total_fns}",
         f"- **Total Global Mutable State (`static mut`):** {total_statics}\n",
     ]
 
-    _add_top_files(report, "## Top 10 Files (by Unsafe Blocks)", stats, 1)
-    _add_top_files(report, "## Top 10 Files (by Unsafe Functions)", stats, 2)
-    _add_top_files(report, "## Top 10 Files (by Global Mutable State)", stats, 3)
+    _add_top_files(report, "## Top 10 Files (by Total Unsafe Keywords)", stats, 1)
+    _add_top_files(report, "## Top 10 Files (by Unsafe Blocks)", stats, 2)
+    _add_top_files(report, "## Top 10 Files (by Unsafe Functions)", stats, 3)
+    _add_top_files(report, "## Top 10 Files (by Global Mutable State)", stats, 4)
 
     report.extend([
         "## Conclusion",

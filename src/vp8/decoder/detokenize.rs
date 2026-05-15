@@ -239,7 +239,7 @@ pub struct macroblockd {
     pub error_info: vpx_internal_error_info,
 }
 pub type MACROBLOCKD = macroblockd;
-pub type pthread_t = __darwin_pthread_t;
+pub type pthread_t = *mut ::core::ffi::c_void;
 pub type mach_port_t = __darwin_mach_port_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -291,7 +291,7 @@ pub type vpx_decrypt_cb = Option<
         ::core::ffi::c_int,
     ) -> (),
 >;
-pub type semaphore_t = mach_port_t;
+pub type semaphore_t = *mut ::core::ffi::c_void;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct DECODETHREAD_DATA {

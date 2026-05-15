@@ -31,7 +31,7 @@ The core of `libvpx` relies heavily on custom memory allocators defined in `vpx_
   - Modify their initialization to use `Vec::with_capacity` or `Box::new` instead of `vpx_memalign` or `vpx_calloc`.
   - Ensure that the alignment requirements of the SIMD instructions (NEON requires specific byte alignments) are respected when allocating via Rust.
 
-### Step 3: Struct De-duplication & Threading Shims
+### Step 3: Struct De-duplication & Threading Shims (Completed)
 While auditing the codebase, it was discovered that `vpx_thread.rs` was completely unused by the VP8 decoder and was deleted (saving ~45 `unsafe` blocks). Actual VP8 multithreading relies heavily on `pthread` and `mach` semaphores embedded directly into core structs like `VP8D_COMP` and `DECODETHREAD_DATA`.
 
 Because `c2rust` operates on a per-C-file basis, it duplicated these massive struct definitions across 6 different `.rs` files.

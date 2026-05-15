@@ -33,7 +33,7 @@ pub struct _opaque_pthread_t {
 }
 pub type __darwin_pthread_t = *mut _opaque_pthread_t;
 pub type size_t = __darwin_size_t;
-pub type pthread_t = __darwin_pthread_t;
+pub type pthread_t = *mut ::core::ffi::c_void;
 pub type mach_port_t = __darwin_mach_port_t;
 pub type vpx_color_space = ::core::ffi::c_uint;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
@@ -148,7 +148,7 @@ pub type vpx_decrypt_cb = Option<
     ) -> (),
 >;
 pub type vp8_prob = ::core::ffi::c_uchar;
-pub type semaphore_t = mach_port_t;
+pub type semaphore_t = *mut ::core::ffi::c_void;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct DECODETHREAD_DATA {
