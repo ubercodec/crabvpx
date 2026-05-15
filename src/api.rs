@@ -60,6 +60,34 @@ impl<'a> Image<'a> {
             Some(core::slice::from_raw_parts(ptr as *const u8, len))
         }
     }
+
+    /// Get the bit depth of the image.
+    pub fn bit_depth(&self) -> u32 {
+        unsafe { (*self.img).bit_depth }
+    }
+
+    /// Compute the MD5 hash of the image planes (matching Oracle behavior).
+    pub fn md5(&self) -> String {
+        unsafe {
+            let img = &*self.img;
+            let mut context = md5::Context::new();
+
+            // Y, U, V planes
+            for plane in 0..3 {
+                let data = img.planes[plane];
+                let stride = img.stride[plane] as usize;
+                let w = if plane == 0 { img.d_w } else { (img.d_w + 1) >> 1 };
+                let h = if plane == 0 { img.d_h } else { (img.d_h + 1) >> 1 };
+
+                for row in 0..h {
+                    let row_ptr = data.add(row as usize * stride);
+                    let row_data = core::slice::from_raw_parts(row_ptr, w as usize);
+                    context.consume(row_data);
+                }
+            }
+            format!("{:x}", context.compute())
+        }
+    }
 }
 
 /// A generic Video Decoder trait that can be implemented by different codecs

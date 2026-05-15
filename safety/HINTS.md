@@ -1,6 +1,7 @@
 # VP8 Decoder Safety Hints
 
 ## Current Progress (May 2026)
+- **Merge Conflict Resolution**: Resolved all merge conflicts across `src/api.rs`, `harness/src/decoder.rs`, and `scripts/compare.py`. Integrated `Image<'a>` struct and GAT `Decoder` trait with harness MD5 verification. Differential testing via `./scripts/compare.py` passes 100% (1160 frames).
 - **Build Fixes**: Modified `build.rs` to conditionalize ARM assembly files based on target architecture. `crabvpx` now successfully compiles on x86_64 (library only).
 - **Boolean Decoder**: Implemented `SafeBoolDecoder<'a>` in `src/vp8/decoder/dboolhuff.rs` following `zero_unsafe_strategy.md`. Verified in isolation via `cargo +nightly test --test bool_decoder_test`.
 - **Global State**: Converted `vp8_norm` in `src/vp8/common/entropy.rs` from `static mut` to immutable `static`.
