@@ -11,13 +11,7 @@ This project is strictly governed by TDD. You will not write the entire decoder 
 **IMPORTANT** NO HACKS!  We want a general-purpose decoder when we're doing; do  not hardcode things that are only specific to our test case!
 
 ## Current State
-*   **Test Vectors:** park_joy_90p_10_420 and test_1 are our two test vectors.  the files are: `test_vectors/park_joy_90p_10_420/entropy.log` (ground truth) and `test_vectors/park_joy_90p_10_420/obu` and similar.
-Test vectors contain TR_SYMBOL and TR_UPDATE lines that are matched by the test harness (see below).  They also contain DEBUG_ lines to show the intermediate state of the decoder, with file and line information that you can look up in ./avm -- this is the reference C decoder.  TRACE_SPEC.md explains the entropy log in more detail, but TR_ lines must match and DEBUG_ lines are just helpful bits of info you can use use to see what the AV2 C reference decoder was thinking.
-
-*   **Test Harness:** `cd av2_decoder && cargo test --test ldd_test`. The harness now parses the `name`, `rng`, and `dif` fields. It immediately panics on the very first mismatch to enforce **Strict Label Parity** and arithmetic sync.
-    **CDF Tables** If the CDF seems to mismatch, check the rates against avm first.  The default probabilities were extracted seemingly reliably, but there have been several instances of incorrect rates.
     **Hints**  HINTS.md has some notes from previous instances of you that might be of use (or not - they are not human audited so your mileage may vary)
-    **IMPORTANT** park_joy currently passes to eof!  Be sure not to regress it!
 
 Here is an overview of the directory:
 * ./src - the Rust decoder ** This is what you are working on **
