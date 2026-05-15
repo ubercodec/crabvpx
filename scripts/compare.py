@@ -55,7 +55,7 @@ def download_vectors(test_data_dir: Path):
 
 def run_cargo(harness_dir: Path, args: List[str], features: str = None):
     """Runs a cargo command within the harness directory."""
-    cmd = ["cargo", "run", "--release"]
+    cmd = ["cargo", "+nightly", "run", "--release"]
     if features:
         cmd.extend(["--no-default-features", "--features", features])
     cmd.append("--")
