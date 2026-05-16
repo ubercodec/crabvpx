@@ -766,33 +766,33 @@ static mbsplit_fill_offset: [[::core::ffi::c_uchar; 16]; 4] = [
         15 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     ],
 ];
-unsafe extern "C" fn mb_mode_mv_init(mut pbi: *mut VP8D_COMP, safe_decoder: &mut SafeBoolDecoder) { unsafe {
-    let mvc = &mut (*pbi).common.fc.mvc;
+fn mb_mode_mv_init(pbi: &mut VP8D_COMP, safe_decoder: &mut SafeBoolDecoder) {
+    let mvc = &mut pbi.common.fc.mvc;
 
-    (*pbi).common.mb_no_coeff_skip = safe_decoder.read_bool(vp8_prob_half as i32);
-    (*pbi).prob_skip_false = 0 as vp8_prob;
-    if (*pbi).common.mb_no_coeff_skip != 0 {
-        (*pbi).prob_skip_false = safe_decoder.read_literal(8) as vp8_prob;
+    pbi.common.mb_no_coeff_skip = safe_decoder.read_bool(vp8_prob_half as i32);
+    pbi.prob_skip_false = 0 as vp8_prob;
+    if pbi.common.mb_no_coeff_skip != 0 {
+        pbi.prob_skip_false = safe_decoder.read_literal(8) as vp8_prob;
     }
-    if (*pbi).common.frame_type as ::core::ffi::c_uint
+    if pbi.common.frame_type as ::core::ffi::c_uint
         != KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        (*pbi).prob_intra = safe_decoder.read_literal(8) as vp8_prob;
-        (*pbi).prob_last = safe_decoder.read_literal(8) as vp8_prob;
-        (*pbi).prob_gf = safe_decoder.read_literal(8) as vp8_prob;
+        pbi.prob_intra = safe_decoder.read_literal(8) as vp8_prob;
+        pbi.prob_last = safe_decoder.read_literal(8) as vp8_prob;
+        pbi.prob_gf = safe_decoder.read_literal(8) as vp8_prob;
         if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
             for i in 0..4 {
-                (*pbi).common.fc.ymode_prob[i] = safe_decoder.read_literal(8) as vp8_prob;
+                pbi.common.fc.ymode_prob[i] = safe_decoder.read_literal(8) as vp8_prob;
             }
         }
         if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
             for i in 0..3 {
-                (*pbi).common.fc.uv_mode_prob[i] = safe_decoder.read_literal(8) as vp8_prob;
+                pbi.common.fc.uv_mode_prob[i] = safe_decoder.read_literal(8) as vp8_prob;
             }
         }
         read_mvcontexts(safe_decoder, mvc);
     }
-}}
+}
 #[unsafe(no_mangle)]
 pub static vp8_sub_mv_ref_prob3: [[vp8_prob; 3]; 8] = [
     [
@@ -1265,7 +1265,7 @@ pub unsafe extern "C" fn vp8_decode_mode_mvs(mut pbi: *mut VP8D_COMP) { unsafe {
         decrypt_state: (*bc).decrypt_state,
     };
 
-    mb_mode_mv_init(pbi, &mut safe_decoder);
+    mb_mode_mv_init(&mut *pbi, &mut safe_decoder);
     (*pbi).mb.mb_to_top_edge = 0 as ::core::ffi::c_int;
     (*pbi).mb.mb_to_bottom_edge = (((*pbi).common.mb_rows - 1 as ::core::ffi::c_int)
         * 16 as ::core::ffi::c_int)
