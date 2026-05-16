@@ -687,12 +687,12 @@ unsafe extern "C" fn vp8_decode_value(
     return z;
 }}
 #[inline]
-unsafe extern "C" fn vp8dx_bool_error(mut br: *mut BOOL_DECODER) -> ::core::ffi::c_int { unsafe {
-    if (*br).count > VP8_BD_VALUE_SIZE && (*br).count < VP8_LOTS_OF_BITS {
+fn vp8dx_bool_error(br: &BOOL_DECODER) -> ::core::ffi::c_int {
+    if br.count > VP8_BD_VALUE_SIZE && br.count < VP8_LOTS_OF_BITS {
         return 1 as ::core::ffi::c_int;
     }
     return 0 as ::core::ffi::c_int;
-}}
+}
 pub const MB_FEATURE_TREE_PROBS: ::core::ffi::c_int = 3 as ::core::ffi::c_int;
 pub const MAX_MB_SEGMENTS: ::core::ffi::c_int = 4 as ::core::ffi::c_int;
 pub const MAX_REF_LF_DELTAS: ::core::ffi::c_int = 4 as ::core::ffi::c_int;
@@ -843,7 +843,7 @@ unsafe extern "C" fn decode_macroblock(
     let mut i: ::core::ffi::c_int = 0;
     if (*(*xd).mode_info_context).mbmi.mb_skip_coeff != 0 {
         vp8_reset_mb_tokens_context(xd);
-    } else if vp8dx_bool_error((*xd).current_bc as *mut BOOL_DECODER) == 0 {
+    } else if vp8dx_bool_error(&*((*xd).current_bc as *mut BOOL_DECODER)) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
         eobtotal = vp8_decode_mb_tokens(pbi, xd);
         (*(*xd).mode_info_context).mbmi.mb_skip_coeff =
@@ -1380,7 +1380,7 @@ unsafe extern "C" fn decode_mb_rows(mut pbi: *mut VP8D_COMP) { unsafe {
             decode_macroblock(pbi, xd, mb_idx as ::core::ffi::c_uint);
             mb_idx += 1;
             (*xd).left_available = 1 as ::core::ffi::c_int;
-            (*xd).corrupted |= vp8dx_bool_error((*xd).current_bc as *mut BOOL_DECODER);
+            (*xd).corrupted |= vp8dx_bool_error(&*((*xd).current_bc as *mut BOOL_DECODER));
             (*xd).recon_above[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
                 [0 as ::core::ffi::c_int as usize]
                 .offset(16 as ::core::ffi::c_int as isize);
@@ -2279,7 +2279,7 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
         decode_mb_rows(pbi);
         corrupt_tokens |= (*xd).corrupted;
     }
-    (*yv12_fb_new).corrupted = vp8dx_bool_error(bc as *mut BOOL_DECODER);
+    (*yv12_fb_new).corrupted = vp8dx_bool_error(&*(bc as *mut BOOL_DECODER));
     (*yv12_fb_new).corrupted |= corrupt_tokens;
     if (*pbi).decoded_key_frame == 0 {
         if (*pc).frame_type as ::core::ffi::c_uint

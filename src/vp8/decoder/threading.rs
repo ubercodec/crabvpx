@@ -634,12 +634,12 @@ pub const VP8_BD_VALUE_SIZE: ::core::ffi::c_int =
     ::core::mem::size_of::<VP8_BD_VALUE>() as ::core::ffi::c_int * CHAR_BIT;
 pub const VP8_LOTS_OF_BITS: ::core::ffi::c_int = 0x40000000 as ::core::ffi::c_int;
 #[inline]
-unsafe extern "C" fn vp8dx_bool_error(mut br: *mut BOOL_DECODER) -> ::core::ffi::c_int { unsafe {
-    if (*br).count > VP8_BD_VALUE_SIZE && (*br).count < VP8_LOTS_OF_BITS {
+fn vp8dx_bool_error(br: &BOOL_DECODER) -> ::core::ffi::c_int {
+    if br.count > VP8_BD_VALUE_SIZE && br.count < VP8_LOTS_OF_BITS {
         return 1 as ::core::ffi::c_int;
     }
     return 0 as ::core::ffi::c_int;
-}}
+}
 pub const SYNC_POLICY_FIFO: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
 #[inline]
 unsafe extern "C" fn vpx_atomic_init(
@@ -809,7 +809,7 @@ unsafe extern "C" fn mt_decode_macroblock(
     let mut i: ::core::ffi::c_int = 0;
     if (*(*xd).mode_info_context).mbmi.mb_skip_coeff != 0 {
         vp8_reset_mb_tokens_context(xd);
-    } else if vp8dx_bool_error((*xd).current_bc as *mut BOOL_DECODER) == 0 {
+    } else if vp8dx_bool_error(&*((*xd).current_bc as *mut BOOL_DECODER)) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
         eobtotal = vp8_decode_mb_tokens(pbi, xd);
         (*(*xd).mode_info_context).mbmi.mb_skip_coeff =
@@ -1195,7 +1195,7 @@ unsafe extern "C" fn mt_decode_mb_rows(
             }
             mt_decode_macroblock(pbi, xd, 0 as ::core::ffi::c_uint);
             (*xd).left_available = 1 as ::core::ffi::c_int;
-            (*xd).corrupted |= vp8dx_bool_error((*xd).current_bc as *mut BOOL_DECODER);
+            (*xd).corrupted |= vp8dx_bool_error(&*((*xd).current_bc as *mut BOOL_DECODER));
             (*xd).recon_above[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
                 [0 as ::core::ffi::c_int as usize]
                 .offset(16 as ::core::ffi::c_int as isize);
