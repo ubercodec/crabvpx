@@ -1,7 +1,6 @@
 unsafe extern "C" {
     static vp8_norm: [::core::ffi::c_uchar; 256];
     fn vp8dx_bool_decoder_fill(br: *mut BOOL_DECODER);
-    fn vp8dx_decode_bool(br: *mut BOOL_DECODER, probability: ::core::ffi::c_int) -> ::core::ffi::c_int;
     fn memset(
         __b: *mut ::core::ffi::c_void,
         __c: ::core::ffi::c_int,
@@ -547,18 +546,18 @@ static mut kZigzag: [uint8_t; 16] = [
     14 as ::core::ffi::c_int as uint8_t,
     15 as ::core::ffi::c_int as uint8_t,
 ];
-unsafe extern "C" fn GetSigned(
-    mut br: *mut BOOL_DECODER,
-    mut value_to_sign: ::core::ffi::c_int,
-) -> ::core::ffi::c_int { unsafe {
-    if vp8dx_decode_bool(br, 128 as ::core::ffi::c_int) != 0 {
+fn GetSigned(
+    br: &mut crate::vp8::decoder::dboolhuff::SafeBoolDecoder,
+    value_to_sign: ::core::ffi::c_int,
+) -> ::core::ffi::c_int {
+    if br.read_bool(128 as ::core::ffi::c_int) != 0 {
         -value_to_sign
     } else {
         value_to_sign
     }
-}}
-unsafe extern "C" fn GetCoeffs(
-    mut br: *mut BOOL_DECODER,
+}
+unsafe fn GetCoeffs(
+    br: &mut crate::vp8::decoder::dboolhuff::SafeBoolDecoder,
     mut prob: ProbaArray,
     mut ctx: ::core::ffi::c_int,
     mut n: ::core::ffi::c_int,
@@ -567,8 +566,7 @@ unsafe extern "C" fn GetCoeffs(
     let mut p: *const uint8_t = &raw const *(&raw const *prob.offset(n as isize)
         as *const [uint8_t; 11])
         .offset(ctx as isize) as *const uint8_t;
-    if vp8dx_decode_bool(
-        br,
+    if br.read_bool(
         *p.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
     ) == 0
     {
@@ -576,8 +574,7 @@ unsafe extern "C" fn GetCoeffs(
     }
     loop {
         n += 1;
-        if vp8dx_decode_bool(
-            br,
+        if br.read_bool(
             *p.offset(1 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
         ) == 0
         {
@@ -588,8 +585,7 @@ unsafe extern "C" fn GetCoeffs(
         } else {
             let mut v: ::core::ffi::c_int = 0;
             let mut j: ::core::ffi::c_int = 0;
-            if vp8dx_decode_bool(
-                br,
+            if br.read_bool(
                 *p.offset(2 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
             ) == 0
             {
@@ -599,57 +595,50 @@ unsafe extern "C" fn GetCoeffs(
                     .offset(1 as ::core::ffi::c_int as isize) as *const uint8_t;
                 v = 1 as ::core::ffi::c_int;
             } else {
-                if vp8dx_decode_bool(
-                    br,
+                if br.read_bool(
                     *p.offset(3 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
                 ) == 0
                 {
-                    if vp8dx_decode_bool(
-                        br,
+                    if br.read_bool(
                         *p.offset(4 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
                     ) == 0
                     {
                         v = 2 as ::core::ffi::c_int;
                     } else {
                         v = 3 as ::core::ffi::c_int
-                            + vp8dx_decode_bool(
-                                br,
+                            + br.read_bool(
                                 *p.offset(5 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
                             );
                     }
-                } else if vp8dx_decode_bool(
-                    br,
+                } else if br.read_bool(
                     *p.offset(6 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
                 ) == 0
                 {
-                    if vp8dx_decode_bool(
-                        br,
+                    if br.read_bool(
                         *p.offset(7 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
                     ) == 0
                     {
                         v = 5 as ::core::ffi::c_int
-                            + vp8dx_decode_bool(br, 159 as ::core::ffi::c_int);
+                            + br.read_bool(159 as ::core::ffi::c_int);
                     } else {
                         v = 7 as ::core::ffi::c_int
                             + 2 as ::core::ffi::c_int
-                                * vp8dx_decode_bool(br, 165 as ::core::ffi::c_int);
-                        v += vp8dx_decode_bool(br, 145 as ::core::ffi::c_int);
+                                * br.read_bool(165 as ::core::ffi::c_int);
+                        v += br.read_bool(145 as ::core::ffi::c_int);
                     }
                 } else {
                     let mut tab: *const uint8_t = ::core::ptr::null::<uint8_t>();
-                    let bit1: ::core::ffi::c_int = vp8dx_decode_bool(
-                        br,
+                    let bit1: ::core::ffi::c_int = br.read_bool(
                         *p.offset(8 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
                     ) as ::core::ffi::c_int;
-                    let bit0: ::core::ffi::c_int = vp8dx_decode_bool(
-                        br,
+                    let bit0: ::core::ffi::c_int = br.read_bool(
                         *p.offset((9 as ::core::ffi::c_int + bit1) as isize) as ::core::ffi::c_int,
                     ) as ::core::ffi::c_int;
                     let cat: ::core::ffi::c_int = 2 as ::core::ffi::c_int * bit1 + bit0;
                     v = 0 as ::core::ffi::c_int;
                     tab = kCat3456[cat as usize];
                     while *tab != 0 {
-                        v += v + vp8dx_decode_bool(br, *tab as ::core::ffi::c_int);
+                        v += v + br.read_bool(*tab as ::core::ffi::c_int);
                         tab = tab.offset(1);
                     }
                     v += 3 as ::core::ffi::c_int + ((8 as ::core::ffi::c_int) << cat);
@@ -662,8 +651,7 @@ unsafe extern "C" fn GetCoeffs(
             j = kZigzag[(n - 1 as ::core::ffi::c_int) as usize] as ::core::ffi::c_int;
             *out.offset(j as isize) = GetSigned(br, v) as int16_t;
             if n == 16 as ::core::ffi::c_int
-                || vp8dx_decode_bool(
-                    br,
+                || br.read_bool(
                     *p.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
                 ) == 0
             {
@@ -681,6 +669,21 @@ pub unsafe extern "C" fn vp8_decode_mb_tokens(
     mut x: *mut MACROBLOCKD,
 ) -> ::core::ffi::c_int { unsafe {
     let mut bc: *mut BOOL_DECODER = (*x).current_bc as *mut BOOL_DECODER;
+    let len = (*bc).user_buffer_end.offset_from((*bc).user_buffer) as usize;
+    let slice = if len == 0 {
+        &[]
+    } else {
+        core::slice::from_raw_parts((*bc).user_buffer, len)
+    };
+    let mut safe_decoder = crate::vp8::decoder::dboolhuff::SafeBoolDecoder {
+        buffer: slice,
+        offset: 0,
+        value: (*bc).value,
+        count: (*bc).count,
+        range: (*bc).range,
+        decrypt_cb: (*bc).decrypt_cb,
+        decrypt_state: (*bc).decrypt_state,
+    };
     let fc: *const FRAME_CONTEXT = &raw mut (*dx).common.fc;
     let mut eobs: *mut ::core::ffi::c_char = &raw mut (*x).eobs as *mut ::core::ffi::c_char;
     let mut i: ::core::ffi::c_int = 0;
@@ -702,7 +705,7 @@ pub unsafe extern "C" fn vp8_decode_mb_tokens(
             .offset(1 as ::core::ffi::c_int as isize)
             as *const [[vp8_prob; 11]; 3] as ProbaArray;
         nonzeros = GetCoeffs(
-            bc,
+            &mut safe_decoder,
             coef_probs,
             *a as ::core::ffi::c_int + *l as ::core::ffi::c_int,
             0 as ::core::ffi::c_int,
@@ -727,7 +730,7 @@ pub unsafe extern "C" fn vp8_decode_mb_tokens(
         a = a_ctx.offset((i & 3 as ::core::ffi::c_int) as isize);
         l = l_ctx.offset(((i & 0xc as ::core::ffi::c_int) >> 2 as ::core::ffi::c_int) as isize);
         nonzeros = GetCoeffs(
-            bc,
+            &mut safe_decoder,
             coef_probs,
             *a as ::core::ffi::c_int + *l as ::core::ffi::c_int,
             skip_dc,
@@ -764,7 +767,7 @@ pub unsafe extern "C" fn vp8_decode_mb_tokens(
                     as isize,
             );
         nonzeros = GetCoeffs(
-            bc,
+            &mut safe_decoder,
             coef_probs,
             *a as ::core::ffi::c_int + *l as ::core::ffi::c_int,
             0 as ::core::ffi::c_int,
@@ -777,5 +780,9 @@ pub unsafe extern "C" fn vp8_decode_mb_tokens(
         qcoeff_ptr = qcoeff_ptr.offset(16 as ::core::ffi::c_int as isize);
         i += 1;
     }
+    (*bc).user_buffer = (*bc).user_buffer.add(safe_decoder.offset);
+    (*bc).value = safe_decoder.value;
+    (*bc).count = safe_decoder.count;
+    (*bc).range = safe_decoder.range;
     return eobtotal;
 }}
