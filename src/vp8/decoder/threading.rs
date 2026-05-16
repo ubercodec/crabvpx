@@ -247,7 +247,7 @@ pub struct macroblockd {
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
-    pub current_bc: *mut ::core::ffi::c_void,
+    pub current_bc_idx: usize,
     pub corrupted: ::core::ffi::c_int,
     pub error_info: vpx_internal_error_info,
 }
@@ -762,9 +762,7 @@ unsafe extern "C" fn setup_decoding_thread_data(
         );
         (*mbd).mode_ref_lf_delta_enabled = (*xd).mode_ref_lf_delta_enabled;
         (*mbd).mode_ref_lf_delta_update = (*xd).mode_ref_lf_delta_update;
-        (*mbd).current_bc = (&raw mut (*pbi).mbc as *mut vp8_reader)
-            .offset(0 as ::core::ffi::c_int as isize) as *mut vp8_reader
-            as *mut ::core::ffi::c_void;
+        (*mbd).current_bc_idx = 0;
         memcpy(
             &raw mut (*mbd).dequant_y1_dc as *mut ::core::ffi::c_short as *mut ::core::ffi::c_void,
             &raw mut (*xd).dequant_y1_dc as *mut ::core::ffi::c_short as *const ::core::ffi::c_void,
@@ -809,7 +807,7 @@ unsafe extern "C" fn mt_decode_macroblock(
     let mut i: ::core::ffi::c_int = 0;
     if (*(*xd).mode_info_context).mbmi.mb_skip_coeff != 0 {
         vp8_reset_mb_tokens_context(xd);
-    } else if vp8dx_bool_error(&*((*xd).current_bc as *mut BOOL_DECODER)) == 0 {
+    } else if vp8dx_bool_error(&(*pbi).mbc[(*xd).current_bc_idx]) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
         eobtotal = vp8_decode_mb_tokens(pbi, xd);
         (*(*xd).mode_info_context).mbmi.mb_skip_coeff =
@@ -1056,9 +1054,7 @@ unsafe extern "C" fn mt_decode_mb_rows(
         let mut filter_level: ::core::ffi::c_int = 0;
         let mut lfi_n: *mut loop_filter_info_n = &raw mut (*pc).lf_info;
         last_mb_row = mb_row;
-        (*xd).current_bc = (&raw mut (*pbi).mbc as *mut vp8_reader)
-            .offset((mb_row % num_part) as isize) as *mut vp8_reader
-            as *mut ::core::ffi::c_void;
+        (*xd).current_bc_idx = (mb_row % num_part) as usize;
         if mb_row > 0 as ::core::ffi::c_int {
             last_row_current_mb_col = (*pbi)
                 .mt_current_mb_col
@@ -1195,7 +1191,7 @@ unsafe extern "C" fn mt_decode_mb_rows(
             }
             mt_decode_macroblock(pbi, xd, 0 as ::core::ffi::c_uint);
             (*xd).left_available = 1 as ::core::ffi::c_int;
-            (*xd).corrupted |= vp8dx_bool_error(&*((*xd).current_bc as *mut BOOL_DECODER));
+            (*xd).corrupted |= vp8dx_bool_error(&(*pbi).mbc[(*xd).current_bc_idx]);
             (*xd).recon_above[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
                 [0 as ::core::ffi::c_int as usize]
                 .offset(16 as ::core::ffi::c_int as isize);

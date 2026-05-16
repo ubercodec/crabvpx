@@ -227,7 +227,7 @@ pub struct macroblockd {
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
-    pub current_bc: *mut ::core::ffi::c_void,
+    pub current_bc_idx: usize,
     pub corrupted: ::core::ffi::c_int,
     pub error_info: vpx_internal_error_info,
 }

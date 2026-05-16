@@ -234,7 +234,7 @@ pub struct macroblockd {
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
-    pub current_bc: *mut ::core::ffi::c_void,
+    pub current_bc_idx: usize,
     pub corrupted: ::core::ffi::c_int,
     pub error_info: vpx_internal_error_info,
 }
@@ -556,21 +556,21 @@ pub unsafe extern "C" fn vp8_decode_mb_tokens(
     mut pbi: *mut VP8D_COMP,
     mut x: *mut MACROBLOCKD,
 ) -> ::core::ffi::c_int { unsafe {
-    let mut bc: *mut BOOL_DECODER = (*x).current_bc as *mut BOOL_DECODER;
-    let len = (*bc).user_buffer_end.offset_from((*bc).user_buffer) as usize;
+    let bc = &mut (*pbi).mbc[(*x).current_bc_idx];
+    let len = bc.user_buffer_end.offset_from(bc.user_buffer) as usize;
     let slice = if len == 0 {
         &[]
     } else {
-        core::slice::from_raw_parts((*bc).user_buffer, len)
+        core::slice::from_raw_parts(bc.user_buffer, len)
     };
     let mut safe_decoder = crate::vp8::decoder::dboolhuff::SafeBoolDecoder {
         buffer: slice,
         offset: 0,
-        value: (*bc).value,
-        count: (*bc).count,
-        range: (*bc).range,
-        decrypt_cb: (*bc).decrypt_cb,
-        decrypt_state: (*bc).decrypt_state,
+        value: bc.value,
+        count: bc.count,
+        range: bc.range,
+        decrypt_cb: bc.decrypt_cb,
+        decrypt_state: bc.decrypt_state,
     };
     let pbi_ref = &*pbi;
     let fc_ref = &pbi_ref.common.fc;
@@ -650,9 +650,9 @@ pub unsafe extern "C" fn vp8_decode_mb_tokens(
         eobtotal += nonzeros;
         i += 1;
     }
-    (*bc).user_buffer = (*bc).user_buffer.add(safe_decoder.offset);
-    (*bc).value = safe_decoder.value;
-    (*bc).count = safe_decoder.count;
-    (*bc).range = safe_decoder.range;
+    bc.user_buffer = bc.user_buffer.add(safe_decoder.offset);
+    bc.value = safe_decoder.value;
+    bc.count = safe_decoder.count;
+    bc.range = safe_decoder.range;
     return eobtotal;
 }}

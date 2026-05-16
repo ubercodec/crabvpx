@@ -298,7 +298,7 @@ pub struct macroblockd {
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
-    pub current_bc: *mut ::core::ffi::c_void,
+    pub current_bc_idx: usize,
     pub corrupted: ::core::ffi::c_int,
     pub error_info: vpx_internal_error_info,
 }
@@ -843,7 +843,7 @@ unsafe extern "C" fn decode_macroblock(
     let mut i: ::core::ffi::c_int = 0;
     if (*(*xd).mode_info_context).mbmi.mb_skip_coeff != 0 {
         vp8_reset_mb_tokens_context(xd);
-    } else if vp8dx_bool_error(&*((*xd).current_bc as *mut BOOL_DECODER)) == 0 {
+    } else if vp8dx_bool_error(&(*pbi).mbc[(*xd).current_bc_idx]) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
         eobtotal = vp8_decode_mb_tokens(pbi, xd);
         (*(*xd).mode_info_context).mbmi.mb_skip_coeff =
@@ -1291,8 +1291,7 @@ unsafe extern "C" fn decode_mb_rows(mut pbi: *mut VP8D_COMP) { unsafe {
     mb_row = 0 as ::core::ffi::c_int;
     while mb_row < (*pc).mb_rows {
         if num_part > 1 as ::core::ffi::c_int {
-            (*xd).current_bc = (&raw mut (*pbi).mbc as *mut vp8_reader).offset(ibc as isize)
-                as *mut vp8_reader as *mut ::core::ffi::c_void;
+            (*xd).current_bc_idx = ibc as usize;
             ibc += 1;
             if ibc == num_part {
                 ibc = 0 as ::core::ffi::c_int;
@@ -1380,7 +1379,7 @@ unsafe extern "C" fn decode_mb_rows(mut pbi: *mut VP8D_COMP) { unsafe {
             decode_macroblock(pbi, xd, mb_idx as ::core::ffi::c_uint);
             mb_idx += 1;
             (*xd).left_available = 1 as ::core::ffi::c_int;
-            (*xd).corrupted |= vp8dx_bool_error(&*((*xd).current_bc as *mut BOOL_DECODER));
+            (*xd).corrupted |= vp8dx_bool_error(&(*pbi).mbc[(*xd).current_bc_idx]);
             (*xd).recon_above[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
                 [0 as ::core::ffi::c_int as usize]
                 .offset(16 as ::core::ffi::c_int as isize);
@@ -1834,8 +1833,7 @@ unsafe extern "C" fn init_frame(mut pbi: *mut VP8D_COMP) { unsafe {
 }}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
-    let bc: *mut vp8_reader = (&raw mut (*pbi).mbc as *mut vp8_reader)
-        .offset(8 as ::core::ffi::c_int as isize) as *mut vp8_reader;
+    let bc = &mut (*pbi).mbc[8];
     let pc: *mut VP8_COMMON = &raw mut (*pbi).common;
     let xd: *mut MACROBLOCKD = &raw mut (*pbi).mb;
     let mut data: *const ::core::ffi::c_uchar =
@@ -1979,7 +1977,7 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
     }
     init_frame(pbi);
     if vp8dx_start_decode(
-        bc as *mut BOOL_DECODER,
+        &raw mut *bc,
         data,
         data_end.offset_from(data) as ::core::ffi::c_long as ::core::ffi::c_uint,
         (*pbi).decrypt_cb,
@@ -1992,20 +1990,20 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
             b"Failed to allocate bool decoder 0\0" as *const u8 as *const ::core::ffi::c_char,
         );
     }
-    let len = (*bc).user_buffer_end.offset_from((*bc).user_buffer) as usize;
+    let len = bc.user_buffer_end.offset_from(bc.user_buffer) as usize;
     let slice = if len == 0 {
         &[]
     } else {
-        core::slice::from_raw_parts((*bc).user_buffer, len)
+        core::slice::from_raw_parts(bc.user_buffer, len)
     };
     let mut safe_decoder = SafeBoolDecoder {
         buffer: slice,
         offset: 0,
-        value: (*bc).value,
-        count: (*bc).count,
-        range: (*bc).range,
-        decrypt_cb: (*bc).decrypt_cb,
-        decrypt_state: (*bc).decrypt_state,
+        value: bc.value,
+        count: bc.count,
+        range: bc.range,
+        decrypt_cb: bc.decrypt_cb,
+        decrypt_state: bc.decrypt_state,
     };
 
     if (*pc).frame_type as ::core::ffi::c_uint
@@ -2119,9 +2117,7 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
         token_part_sizes_slice,
         &mut safe_decoder,
     );
-    (*xd).current_bc = (&raw mut (*pbi).mbc as *mut vp8_reader)
-        .offset(0 as ::core::ffi::c_int as isize) as *mut vp8_reader
-        as *mut ::core::ffi::c_void;
+    (*xd).current_bc_idx = 0;
 
     let mut Q: ::core::ffi::c_int = 0;
 
@@ -2207,10 +2203,10 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
         i += 1;
     }
 
-    (*bc).user_buffer = (*bc).user_buffer.add(safe_decoder.offset);
-    (*bc).value = safe_decoder.value;
-    (*bc).count = safe_decoder.count;
-    (*bc).range = safe_decoder.range;
+    bc.user_buffer = bc.user_buffer.add(safe_decoder.offset);
+    bc.value = safe_decoder.value;
+    bc.count = safe_decoder.count;
+    bc.range = safe_decoder.range;
 
     memset(
         &raw mut (*xd).qcoeff as *mut ::core::ffi::c_short as *mut ::core::ffi::c_void,
@@ -2249,7 +2245,7 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
         decode_mb_rows(pbi);
         corrupt_tokens |= (*xd).corrupted;
     }
-    (*yv12_fb_new).corrupted = vp8dx_bool_error(&*(bc as *mut BOOL_DECODER));
+    (*yv12_fb_new).corrupted = vp8dx_bool_error(bc);
     (*yv12_fb_new).corrupted |= corrupt_tokens;
     if (*pbi).decoded_key_frame == 0 {
         if (*pc).frame_type as ::core::ffi::c_uint

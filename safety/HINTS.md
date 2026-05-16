@@ -30,7 +30,8 @@
 - **Coefficient Probability Initialization**: Refactored `vp8_default_coef_probs` in `src/vp8/common/entropy.rs` to safe Rust by passing the `coef_probs` array reference directly, avoiding duplicated struct FFI mismatch issues. Converted `default_coef_probs` from `static mut` to immutable `static`. Reduced unsafe count by 3.
 - **Safe Token Decoding**: Refactored `GetCoeffs` in `src/vp8/decoder/detokenize.rs` to safe Rust by passing safe references to probability tables and coefficient slices. Converted static tables `kBands`, `kCat3..6`, `kCat3456`, and `kZigzag` from `static mut` to immutable `static`. Reduced unsafe count by 3.
 - **Safe Boolean Error Checking**: Refactored `vp8dx_bool_error` in `src/vp8/decoder/decodeframe.rs` and `src/vp8/decoder/threading.rs` to safe Rust by taking `&BOOL_DECODER` instead of raw `*mut BOOL_DECODER`. Updated 5 call sites across both files to pass references. Reduced unsafe count by 4.
-- **Safe Token Decoder Setup**: Refactored `setup_token_decoder`, `read_available_partition_size`, and `read_partition_size` in `src/vp8/decoder/decodeframe.rs` to use safe slices instead of raw pointers, and eliminated `read_is_valid`. Reduced unsafe count by 5.
+- **Safe Macroblock Context Indexing**: Converted `current_bc` in `struct macroblockd` from raw pointer `*mut c_void` to safe index `current_bc_idx: usize` across 11 files. Updated usages in `decodeframe.rs`, `detokenize.rs`, and `threading.rs` to safely index into `(*pbi).mbc` array or use clean references.
+- **Safe Motion Vector Bias**: Refactored `mv_bias` in `src/vp8/decoder/decodemv.rs` to safe Rust by taking `&mut MV` and `&[c_int; 4]` instead of raw pointers and unions. Eliminated `unsafe extern "C"` and internal `unsafe` block. Reduced unsafe count by 2.
 
 ## Architectural Quirks to Watch Out For
 - **c2rust Duplication**: Functions that were `static inline` in C headers (specifically `vp8dx_decode_bool` from `dboolhuff.h`) were duplicated by `c2rust` into every Rust module that called them. (Resolved for `vp8dx_decode_bool`).
@@ -38,7 +39,9 @@
 - **Duplicated Structs**: Struct definitions like `YV12_BUFFER_CONFIG` and `VP8Common` were duplicated by `c2rust` across dozens of files. Do not attempt to deduplicate them yet; maintain raw pointer boundaries between modules to avoid FFI type mismatches.
 
 ## Next Steps for Future Agents
-1. **Continue SafeBoolDecoder Expansion**: Investigate converting `mbc` array in `VP8D_COMP` to use `SafeBoolDecoder` or wrappers, to allow safe decoding in `decode_mb_rows` and multithreaded decoding. Note: `read_token_partitions` does not exist as a standalone function; partition setup is handled in `setup_token_decoder` (which now safely takes slices).
+1. **Module-Internal Refactoring**: Future agents should focus on refactoring module-internal functions (like those in `decodemv.rs` or `detokenize.rs`) that do not cross FFI boundaries. Converting duplicated structs like `VP8D_COMP` or `MACROBLOCKD` to use safe references or lifetimes across modules is currently impractical due to `c2rust` struct duplication.
+2. **Investigate Safe Entropy Context Indexing**: In `src/vp8/decoder/detokenize.rs`, investigate refactoring `vp8_decode_mb_tokens` and `vp8_reset_mb_tokens_context` to use safe slice indexing into `ENTROPY_CONTEXT_PLANES` (`y1`, `u`, `v`, `y2`) instead of raw pointer arithmetic on `above_context` and `left_context`.
+
 
 
 

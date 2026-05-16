@@ -201,7 +201,7 @@ pub struct macroblockd {
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
-    pub current_bc: *mut ::core::ffi::c_void,
+    pub current_bc_idx: usize,
     pub corrupted: ::core::ffi::c_int,
     pub error_info: vpx_internal_error_info,
 }
@@ -484,19 +484,19 @@ pub const VP8_BD_VALUE_SIZE: ::core::ffi::c_int =
 
 
 #[inline]
-unsafe extern "C" fn mv_bias(
-    mut refmb_ref_frame_sign_bias: ::core::ffi::c_int,
-    mut refframe: ::core::ffi::c_int,
-    mut mvp: *mut int_mv,
-    mut ref_frame_sign_bias: *const ::core::ffi::c_int,
-) { unsafe {
-    if refmb_ref_frame_sign_bias != *ref_frame_sign_bias.offset(refframe as isize) {
-        (*mvp).as_mv.row = ((*mvp).as_mv.row as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
+fn mv_bias(
+    refmb_ref_frame_sign_bias: ::core::ffi::c_int,
+    refframe: ::core::ffi::c_int,
+    mvp: &mut MV,
+    ref_frame_sign_bias: &[::core::ffi::c_int; 4],
+) {
+    if refmb_ref_frame_sign_bias != ref_frame_sign_bias[refframe as usize] {
+        mvp.row = (mvp.row as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
             as ::core::ffi::c_short;
-        (*mvp).as_mv.col = ((*mvp).as_mv.col as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
+        mvp.col = (mvp.col as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
             as ::core::ffi::c_short;
     }
-}}
+}
 pub const LEFT_TOP_MARGIN: ::core::ffi::c_int =
     (16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
 pub const RIGHT_BOTTOM_MARGIN: ::core::ffi::c_int =
@@ -993,8 +993,7 @@ unsafe extern "C" fn read_mb_modes_mv(
         let mut above: *const MODE_INFO = mi.offset(-(mis as isize));
         let mut left: *const MODE_INFO = mi.offset(-(1 as ::core::ffi::c_int as isize));
         let mut aboveleft: *const MODE_INFO = above.offset(-(1 as ::core::ffi::c_int as isize));
-        let mut ref_frame_sign_bias: *mut ::core::ffi::c_int =
-            &raw mut (*pbi).common.ref_frame_sign_bias as *mut ::core::ffi::c_int;
+        let ref_frame_sign_bias = &(*pbi).common.ref_frame_sign_bias;
         (*mbmi).need_to_clamp_mvs = 0 as uint8_t;
         if safe_decoder.read_bool(
             (*pbi).prob_last as i32,
@@ -1019,9 +1018,9 @@ unsafe extern "C" fn read_mb_modes_mv(
                 nmv = nmv.offset(1);
                 (*nmv).as_int = (*above).mbmi.mv.as_int;
                 mv_bias(
-                    *ref_frame_sign_bias.offset((*above).mbmi.ref_frame as isize),
+                    ref_frame_sign_bias[(*above).mbmi.ref_frame as usize],
                     (*mbmi).ref_frame as ::core::ffi::c_int,
-                    nmv,
+                    &mut (*nmv).as_mv,
                     ref_frame_sign_bias,
                 );
                 cntx = cntx.offset(1);
@@ -1033,9 +1032,9 @@ unsafe extern "C" fn read_mb_modes_mv(
                 let mut this_mv: int_mv = int_mv { as_int: 0 };
                 this_mv.as_int = (*left).mbmi.mv.as_int;
                 mv_bias(
-                    *ref_frame_sign_bias.offset((*left).mbmi.ref_frame as isize),
+                    ref_frame_sign_bias[(*left).mbmi.ref_frame as usize],
                     (*mbmi).ref_frame as ::core::ffi::c_int,
-                    &raw mut this_mv,
+                    &mut this_mv.as_mv,
                     ref_frame_sign_bias,
                 );
                 if this_mv.as_int != (*nmv).as_int {
@@ -1053,9 +1052,9 @@ unsafe extern "C" fn read_mb_modes_mv(
                 let mut this_mv_0: int_mv = int_mv { as_int: 0 };
                 this_mv_0.as_int = (*aboveleft).mbmi.mv.as_int;
                 mv_bias(
-                    *ref_frame_sign_bias.offset((*aboveleft).mbmi.ref_frame as isize),
+                    ref_frame_sign_bias[(*aboveleft).mbmi.ref_frame as usize],
                     (*mbmi).ref_frame as ::core::ffi::c_int,
-                    &raw mut this_mv_0,
+                    &mut this_mv_0.as_mv,
                     ref_frame_sign_bias,
                 );
                 if this_mv_0.as_int != (*nmv).as_int {
