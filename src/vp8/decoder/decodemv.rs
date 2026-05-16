@@ -490,20 +490,7 @@ pub const CHAR_BIT: ::core::ffi::c_int = 8 as ::core::ffi::c_int;
 pub const vp8_prob_half: vp8_prob = 128 as ::core::ffi::c_int as vp8_prob;
 pub const VP8_BD_VALUE_SIZE: ::core::ffi::c_int =
     ::core::mem::size_of::<VP8_BD_VALUE>() as ::core::ffi::c_int * CHAR_BIT;
-#[inline]
-unsafe extern "C" fn vp8_decode_value(
-    mut br: *mut BOOL_DECODER,
-    mut bits: ::core::ffi::c_int,
-) -> ::core::ffi::c_int { unsafe {
-    let mut z: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    let mut bit: ::core::ffi::c_int = 0;
-    bit = bits - 1 as ::core::ffi::c_int;
-    while bit >= 0 as ::core::ffi::c_int {
-        z |= vp8dx_decode_bool(br, 0x80 as ::core::ffi::c_int) << bit;
-        bit -= 1;
-    }
-    return z;
-}}
+
 #[inline]
 unsafe extern "C" fn vp8_treed_read(
     r: *mut vp8_reader,
