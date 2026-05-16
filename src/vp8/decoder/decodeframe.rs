@@ -144,7 +144,6 @@ unsafe extern "C" {
     );
     static vp8_default_mv_context: [MV_CONTEXT; 2];
     static vp8_coef_update_probs: [[[[vp8_prob; 11]; 3]; 8]; 4];
-    fn vp8_default_coef_probs(_: *mut VP8Common);
     static vp8_mb_feature_data_bits: [::core::ffi::c_int; 2];
     fn memcpy(
         __dst: *mut ::core::ffi::c_void,
@@ -1732,7 +1731,7 @@ unsafe extern "C" fn init_frame(mut pbi: *mut VP8D_COMP) { unsafe {
             ::core::mem::size_of::<[MV_CONTEXT; 2]>() as size_t,
         );
         vp8_init_mbmode_probs(pc);
-        vp8_default_coef_probs(pc as *mut VP8Common);
+        crate::vp8::common::entropy::vp8_default_coef_probs(&mut (*pc).fc.coef_probs);
         memset(
             &raw mut (*xd).segment_feature_data as *mut [::core::ffi::c_schar; 4]
                 as *mut ::core::ffi::c_void,

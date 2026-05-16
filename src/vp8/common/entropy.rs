@@ -2206,7 +2206,7 @@ pub static mut vp8_extra_bits: [vp8_extra_bit_struct; 12] = unsafe {
         },
     ]
 };
-static mut default_coef_probs: [[[[vp8_prob; 11]; 3]; 8]; 4] = [
+static default_coef_probs: [[[[vp8_prob; 11]; 3]; 8]; 4] = [
     [
         [
             [
@@ -3528,12 +3528,6 @@ static mut default_coef_probs: [[[[vp8_prob; 11]; 3]; 8]; 4] = [
         ],
     ],
 ];
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_default_coef_probs(mut pc: *mut VP8_COMMON) { unsafe {
-    memcpy(
-        &raw mut (*pc).fc.coef_probs as *mut [[[vp8_prob; 11]; 3]; 8] as *mut ::core::ffi::c_void,
-        &raw const default_coef_probs as *const [[[vp8_prob; 11]; 3]; 8]
-            as *const ::core::ffi::c_void,
-        ::core::mem::size_of::<[[[[vp8_prob; 11]; 3]; 8]; 4]>() as size_t,
-    );
-}}
+pub fn vp8_default_coef_probs(probs: &mut [[[[vp8_prob; 11]; 3]; 8]; 4]) {
+    *probs = default_coef_probs;
+}
