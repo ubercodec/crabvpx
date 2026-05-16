@@ -34,6 +34,7 @@
 - **Safe Motion Vector Bias**: Refactored `mv_bias` in `src/vp8/decoder/decodemv.rs` to safe Rust by taking `&mut MV` and `&[c_int; 4]` instead of raw pointers and unions. Eliminated `unsafe extern "C"` and internal `unsafe` block. Reduced unsafe count by 2.
 - **Safe Mode Info Indexing**: Refactored `read_kf_modes`, `decode_mb_mode_mvs`, and `vp8_decode_mode_mvs` in `src/vp8/decoder/decodemv.rs` to use safe slice indexing into `(*pbi).common.mip` instead of raw pointer arithmetic on `mi`. Updated `above_block_mode` and `left_block_mode` to safely index slices. Reduced unsafe count by 5.
 - **Safe Macroblock Mode & Motion Vector Initialization**: Refactored `mb_mode_mv_init` in `src/vp8/decoder/decodemv.rs` to safe Rust by passing `&mut VP8D_COMP` reference instead of raw pointer. Eliminated `unsafe extern "C"` and internal `unsafe` block. Updated call site in `vp8_decode_mode_mvs`. Reduced unsafe count by 2.
+- **Safe Macroblock Token Context Reset**: Refactored `vp8_reset_mb_tokens_context` in `src/vp8/decoder/detokenize.rs` to safe `extern "C" fn` signature, eliminating `unsafe` keyword from declaration. Replaced C-style `memset` and raw pointer offset arithmetic with safe slice assignments and struct field access inside function body. Maintained raw pointer parameter `*mut MACROBLOCKD` to avoid FFI type mismatch across duplicated struct boundaries. Reduced unsafe count by 1.
 
 ## Architectural Quirks to Watch Out For
 - **c2rust Duplication**: Functions that were `static inline` in C headers (specifically `vp8dx_decode_bool` from `dboolhuff.h`) were duplicated by `c2rust` into every Rust module that called them. (Resolved for `vp8dx_decode_bool`).
@@ -42,7 +43,7 @@
 
 ## Next Steps for Future Agents
 1. **Module-Internal Refactoring**: Future agents should focus on refactoring module-internal functions (like those in `decodemv.rs` or `detokenize.rs`) that do not cross FFI boundaries. Converting duplicated structs like `VP8D_COMP` or `MACROBLOCKD` to use safe references or lifetimes across modules is currently impractical due to `c2rust` struct duplication.
-2. **Investigate Safe Entropy Context Indexing**: In `src/vp8/decoder/detokenize.rs`, investigate refactoring `vp8_decode_mb_tokens` and `vp8_reset_mb_tokens_context` to use safe slice indexing into `ENTROPY_CONTEXT_PLANES` (`y1`, `u`, `v`, `y2`) instead of raw pointer arithmetic on `above_context` and `left_context`.
+2. **Investigate Safe Entropy Context Indexing**: In `src/vp8/decoder/detokenize.rs`, investigate refactoring `vp8_decode_mb_tokens` to use safe slice indexing into `ENTROPY_CONTEXT_PLANES` (`y1`, `u`, `v`, `y2`) instead of raw pointer arithmetic on `above_context` and `left_context`. Note that `vp8_reset_mb_tokens_context` has already been refactored to a safe `extern "C" fn` signature while maintaining raw pointer boundaries.
 
 
 
