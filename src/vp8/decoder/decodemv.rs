@@ -502,19 +502,19 @@ pub const LEFT_TOP_MARGIN: ::core::ffi::c_int =
 pub const RIGHT_BOTTOM_MARGIN: ::core::ffi::c_int =
     (16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
 #[inline]
-unsafe extern "C" fn vp8_clamp_mv2(mut mv: *mut int_mv, mut xd: *const MACROBLOCKD) { unsafe {
-    if ((*mv).as_mv.col as ::core::ffi::c_int) < (*xd).mb_to_left_edge - LEFT_TOP_MARGIN {
-        (*mv).as_mv.col = ((*xd).mb_to_left_edge - LEFT_TOP_MARGIN) as ::core::ffi::c_short;
-    } else if (*mv).as_mv.col as ::core::ffi::c_int > (*xd).mb_to_right_edge + RIGHT_BOTTOM_MARGIN {
-        (*mv).as_mv.col = ((*xd).mb_to_right_edge + RIGHT_BOTTOM_MARGIN) as ::core::ffi::c_short;
+fn vp8_clamp_mv2(mv: &mut MV, xd: &MACROBLOCKD) {
+    if (mv.col as ::core::ffi::c_int) < xd.mb_to_left_edge - LEFT_TOP_MARGIN {
+        mv.col = (xd.mb_to_left_edge - LEFT_TOP_MARGIN) as ::core::ffi::c_short;
+    } else if mv.col as ::core::ffi::c_int > xd.mb_to_right_edge + RIGHT_BOTTOM_MARGIN {
+        mv.col = (xd.mb_to_right_edge + RIGHT_BOTTOM_MARGIN) as ::core::ffi::c_short;
     }
-    if ((*mv).as_mv.row as ::core::ffi::c_int) < (*xd).mb_to_top_edge - LEFT_TOP_MARGIN {
-        (*mv).as_mv.row = ((*xd).mb_to_top_edge - LEFT_TOP_MARGIN) as ::core::ffi::c_short;
-    } else if (*mv).as_mv.row as ::core::ffi::c_int > (*xd).mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN
+    if (mv.row as ::core::ffi::c_int) < xd.mb_to_top_edge - LEFT_TOP_MARGIN {
+        mv.row = (xd.mb_to_top_edge - LEFT_TOP_MARGIN) as ::core::ffi::c_short;
+    } else if mv.row as ::core::ffi::c_int > xd.mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN
     {
-        (*mv).as_mv.row = ((*xd).mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN) as ::core::ffi::c_short;
+        mv.row = (xd.mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN) as ::core::ffi::c_short;
     }
-}}
+}
 #[inline]
 fn vp8_check_mv_bounds(
     mv: &MV,
@@ -1121,9 +1121,8 @@ unsafe extern "C" fn read_mb_modes_mv(
                             >= cnt[CNT_INTRA as ::core::ffi::c_int as usize])
                             as ::core::ffi::c_int;
                     vp8_clamp_mv2(
-                        (&raw mut near_mvs as *mut int_mv).offset(near_index as isize)
-                            as *mut int_mv,
-                        &raw mut (*pbi).mb,
+                        &mut near_mvs[near_index as usize].as_mv,
+                        &(*pbi).mb,
                     );
                     cnt[CNT_SPLITMV as ::core::ffi::c_int as usize] = (((*above).mbmi.mode
                         as ::core::ffi::c_int
@@ -1177,12 +1176,12 @@ unsafe extern "C" fn read_mb_modes_mv(
                 } else {
                     (*mbmi).mode = NEARMV as ::core::ffi::c_int as uint8_t;
                     (*mbmi).mv.as_int = near_mvs[CNT_NEAR as ::core::ffi::c_int as usize].as_int;
-                    vp8_clamp_mv2(&raw mut (*mbmi).mv, &raw mut (*pbi).mb);
+                    vp8_clamp_mv2(&mut (*mbmi).mv.as_mv, &(*pbi).mb);
                 }
             } else {
                 (*mbmi).mode = NEARESTMV as ::core::ffi::c_int as uint8_t;
                 (*mbmi).mv.as_int = near_mvs[CNT_NEAREST as ::core::ffi::c_int as usize].as_int;
-                vp8_clamp_mv2(&raw mut (*mbmi).mv, &raw mut (*pbi).mb);
+                vp8_clamp_mv2(&mut (*mbmi).mv.as_mv, &(*pbi).mb);
             }
         } else {
             (*mbmi).mode = ZEROMV as ::core::ffi::c_int as uint8_t;
