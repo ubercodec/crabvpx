@@ -1,4 +1,5 @@
 use crate::vp8::common::entropymv::vp8_mv_update_probs;
+use crate::vp8::decoder::dboolhuff::SafeBoolDecoder;
 
 unsafe extern "C" {
     static vp8_norm: [::core::ffi::c_uchar; 256];
@@ -757,19 +758,20 @@ unsafe extern "C" fn read_mv(mut r: *mut vp8_reader, mut mv: *mut MV, mut mvc: *
     mvc = mvc.offset(1);
     (*mv).col = (read_mvcomponent(r, mvc) * 2 as ::core::ffi::c_int) as ::core::ffi::c_short;
 }}
-fn read_mvcontexts(bc: *mut vp8_reader, mvc: &mut [MV_CONTEXT; 2]) { unsafe {
+fn read_mvcontexts(bc: &mut SafeBoolDecoder, mvc: &mut [MV_CONTEXT; 2]) {
     for i in 0..2 {
         let up_probs = &vp8_mv_update_probs[i].prob;
         let p_probs = &mut mvc[i].prob;
         for j in 0..MVPcount as usize {
             let prob_to_decode = up_probs[j];
-            if vp8dx_decode_bool(bc as *mut BOOL_DECODER, prob_to_decode as ::core::ffi::c_int) != 0 {
-                let x = vp8_decode_value(bc as *mut BOOL_DECODER, 7) as vp8_prob;
+            if bc.read_bool(prob_to_decode as i32) != 0 {
+                let x = bc.read_literal(7) as vp8_prob;
                 p_probs[j] = if x != 0 { x << 1 } else { 1 };
             }
         }
     }
-}}
+}
+
 static mut mbsplit_fill_count: [::core::ffi::c_uchar; 4] = [
     8 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     8 as ::core::ffi::c_int as ::core::ffi::c_uchar,
@@ -854,46 +856,51 @@ unsafe extern "C" fn mb_mode_mv_init(mut pbi: *mut VP8D_COMP) { unsafe {
     let bc: *mut vp8_reader = (&raw mut (*pbi).mbc as *mut vp8_reader)
         .offset(8 as ::core::ffi::c_int as isize) as *mut vp8_reader;
     let mvc = &mut (*pbi).common.fc.mvc;
-    (*pbi).common.mb_no_coeff_skip =
-        vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int);
+
+    let len = (*bc).user_buffer_end.offset_from((*bc).user_buffer) as usize;
+    let slice = if len == 0 {
+        &[]
+    } else {
+        core::slice::from_raw_parts((*bc).user_buffer, len)
+    };
+    let mut safe_decoder = SafeBoolDecoder {
+        buffer: slice,
+        offset: 0,
+        value: (*bc).value,
+        count: (*bc).count,
+        range: (*bc).range,
+        decrypt_cb: (*bc).decrypt_cb,
+        decrypt_state: (*bc).decrypt_state,
+    };
+
+    (*pbi).common.mb_no_coeff_skip = safe_decoder.read_bool(vp8_prob_half as i32);
     (*pbi).prob_skip_false = 0 as vp8_prob;
     if (*pbi).common.mb_no_coeff_skip != 0 {
-        (*pbi).prob_skip_false =
-            vp8_decode_value(bc as *mut BOOL_DECODER, 8 as ::core::ffi::c_int) as vp8_prob;
+        (*pbi).prob_skip_false = safe_decoder.read_literal(8) as vp8_prob;
     }
     if (*pbi).common.frame_type as ::core::ffi::c_uint
         != KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        (*pbi).prob_intra =
-            vp8_decode_value(bc as *mut BOOL_DECODER, 8 as ::core::ffi::c_int) as vp8_prob;
-        (*pbi).prob_last =
-            vp8_decode_value(bc as *mut BOOL_DECODER, 8 as ::core::ffi::c_int) as vp8_prob;
-        (*pbi).prob_gf =
-            vp8_decode_value(bc as *mut BOOL_DECODER, 8 as ::core::ffi::c_int) as vp8_prob;
-        if vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int) != 0 {
-            let mut i: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-            loop {
-                (*pbi).common.fc.ymode_prob[i as usize] =
-                    vp8_decode_value(bc as *mut BOOL_DECODER, 8 as ::core::ffi::c_int) as vp8_prob;
-                i += 1;
-                if !(i < 4 as ::core::ffi::c_int) {
-                    break;
-                }
+        (*pbi).prob_intra = safe_decoder.read_literal(8) as vp8_prob;
+        (*pbi).prob_last = safe_decoder.read_literal(8) as vp8_prob;
+        (*pbi).prob_gf = safe_decoder.read_literal(8) as vp8_prob;
+        if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
+            for i in 0..4 {
+                (*pbi).common.fc.ymode_prob[i] = safe_decoder.read_literal(8) as vp8_prob;
             }
         }
-        if vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int) != 0 {
-            let mut i_0: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-            loop {
-                (*pbi).common.fc.uv_mode_prob[i_0 as usize] =
-                    vp8_decode_value(bc as *mut BOOL_DECODER, 8 as ::core::ffi::c_int) as vp8_prob;
-                i_0 += 1;
-                if !(i_0 < 3 as ::core::ffi::c_int) {
-                    break;
-                }
+        if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
+            for i in 0..3 {
+                (*pbi).common.fc.uv_mode_prob[i] = safe_decoder.read_literal(8) as vp8_prob;
             }
         }
-        read_mvcontexts(bc, mvc);
+        read_mvcontexts(&mut safe_decoder, mvc);
     }
+
+    (*bc).user_buffer = (*bc).user_buffer.add(safe_decoder.offset);
+    (*bc).value = safe_decoder.value;
+    (*bc).count = safe_decoder.count;
+    (*bc).range = safe_decoder.range;
 }}
 #[unsafe(no_mangle)]
 pub static mut vp8_sub_mv_ref_prob3: [[vp8_prob; 3]; 8] = [
