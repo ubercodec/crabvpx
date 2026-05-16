@@ -12,7 +12,7 @@ This project is strictly governed by TDD. You will not write the entire decoder 
 
 ## Current State
     **Hints**  HINTS.md has some notes from previous instances of you that might be of use (or not - they are not human audited so your mileage may vary)
-    **Tests**  ./scripts/compare.py will run the test harness - it should pass when you start, and should pass before you declare success!
+    **Tests**  ./scripts/compare.py will run the test harness - it should pass when you start, and should pass before you declare success!  Note that the "unsafe blocks" count denominator might be lower than the numerator; ignore the denominator and focus on the numerator.
     **Metrics** ./scripts/count_unsafe.sh will tell you how many unsafe blocks still exist.
 
 Here is an overview of the directory:
