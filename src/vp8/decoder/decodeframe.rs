@@ -1,5 +1,8 @@
+use crate::vp8::decoder::dboolhuff::SafeBoolDecoder;
+
 unsafe extern "C" {
     fn vp8dx_decode_bool(br: *mut BOOL_DECODER, probability: ::core::ffi::c_int) -> ::core::ffi::c_int;
+
     fn vp8_bilinear_predict16x16_neon(
         src_ptr: *mut ::core::ffi::c_uchar,
         src_pixels_per_line: ::core::ffi::c_int,
@@ -1002,23 +1005,24 @@ unsafe extern "C" fn decode_macroblock(
         );
     }
 }}
-unsafe extern "C" fn get_delta_q(
-    mut bc: *mut vp8_reader,
-    mut prev: ::core::ffi::c_int,
-    mut q_update: *mut ::core::ffi::c_int,
-) -> ::core::ffi::c_int { unsafe {
-    let mut ret_val: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    if vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int) != 0 {
-        ret_val = vp8_decode_value(bc as *mut BOOL_DECODER, 4 as ::core::ffi::c_int);
-        if vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int) != 0 {
+fn get_delta_q(
+    bc: &mut SafeBoolDecoder,
+    prev: i32,
+    q_update: &mut i32,
+) -> i32 {
+    let mut ret_val = 0;
+    if bc.read_bool(vp8_prob_half as i32) != 0 {
+        ret_val = bc.read_literal(4);
+        if bc.read_bool(vp8_prob_half as i32) != 0 {
             ret_val = -ret_val;
         }
     }
     if ret_val != prev {
-        *q_update = 1 as ::core::ffi::c_int;
+        *q_update = 1;
     }
-    return ret_val;
-}}
+    ret_val
+}
+
 unsafe extern "C" fn yv12_extend_frame_top_c(mut ybf: *mut YV12_BUFFER_CONFIG) { unsafe {
     let mut i: ::core::ffi::c_int = 0;
     let mut src_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
@@ -2027,28 +2031,39 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
             b"Failed to allocate bool decoder 0\0" as *const u8 as *const ::core::ffi::c_char,
         );
     }
+    let len = (*bc).user_buffer_end.offset_from((*bc).user_buffer) as usize;
+    let slice = if len == 0 {
+        &[]
+    } else {
+        core::slice::from_raw_parts((*bc).user_buffer, len)
+    };
+    let mut safe_decoder = SafeBoolDecoder {
+        buffer: slice,
+        offset: 0,
+        value: (*bc).value,
+        count: (*bc).count,
+        range: (*bc).range,
+        decrypt_cb: (*bc).decrypt_cb,
+        decrypt_state: (*bc).decrypt_state,
+    };
+
     if (*pc).frame_type as ::core::ffi::c_uint
         == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int);
+        safe_decoder.read_bool(vp8_prob_half as i32);
         (*pc).clamp_type =
-            vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-                as CLAMP_TYPE;
+            safe_decoder.read_bool(vp8_prob_half as i32) as CLAMP_TYPE;
     }
     (*xd).segmentation_enabled =
-        vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-            as ::core::ffi::c_uchar;
+        safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
     if (*xd).segmentation_enabled != 0 {
         (*xd).update_mb_segmentation_map =
-            vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-                as ::core::ffi::c_uchar;
+            safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
         (*xd).update_mb_segmentation_data =
-            vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-                as ::core::ffi::c_uchar;
+            safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
         if (*xd).update_mb_segmentation_data != 0 {
             (*xd).mb_segment_abs_delta =
-                vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-                    as ::core::ffi::c_uchar;
+                safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
             memset(
                 &raw mut (*xd).segment_feature_data as *mut [::core::ffi::c_schar; 4]
                     as *mut ::core::ffi::c_void,
@@ -2059,21 +2074,9 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
             while i < MB_LVL_MAX as ::core::ffi::c_int {
                 j = 0 as ::core::ffi::c_int;
                 while j < MAX_MB_SEGMENTS {
-                    if vp8dx_decode_bool(
-                        bc as *mut BOOL_DECODER,
-                        vp8_prob_half as ::core::ffi::c_int,
-                    ) != 0
-                    {
-                        (*xd).segment_feature_data[i as usize][j as usize] = vp8_decode_value(
-                            bc as *mut BOOL_DECODER,
-                            *mb_feature_data_bits.offset(i as isize),
-                        )
-                            as ::core::ffi::c_schar;
-                        if vp8dx_decode_bool(
-                            bc as *mut BOOL_DECODER,
-                            vp8_prob_half as ::core::ffi::c_int,
-                        ) != 0
-                        {
+                    if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
+                        (*xd).segment_feature_data[i as usize][j as usize] = safe_decoder.read_literal(*mb_feature_data_bits.offset(i as isize)) as ::core::ffi::c_schar;
+                        if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
                             (*xd).segment_feature_data[i as usize][j as usize] = -((*xd)
                                 .segment_feature_data[i as usize][j as usize]
                                 as ::core::ffi::c_int)
@@ -2096,12 +2099,9 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
             );
             i = 0 as ::core::ffi::c_int;
             while i < MB_FEATURE_TREE_PROBS {
-                if vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-                    != 0
-                {
+                if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
                     (*xd).mb_segment_tree_probs[i as usize] =
-                        vp8_decode_value(bc as *mut BOOL_DECODER, 8 as ::core::ffi::c_int)
-                            as vp8_prob;
+                        safe_decoder.read_literal(8) as vp8_prob;
                 }
                 i += 1;
             }
@@ -2111,32 +2111,22 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
         (*xd).update_mb_segmentation_data = 0 as ::core::ffi::c_uchar;
     }
     (*pc).filter_type =
-        vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-            as LOOPFILTERTYPE;
-    (*pc).filter_level = vp8_decode_value(bc as *mut BOOL_DECODER, 6 as ::core::ffi::c_int);
-    (*pc).sharpness_level = vp8_decode_value(bc as *mut BOOL_DECODER, 3 as ::core::ffi::c_int);
+        safe_decoder.read_bool(vp8_prob_half as i32) as LOOPFILTERTYPE;
+    (*pc).filter_level = safe_decoder.read_literal(6);
+    (*pc).sharpness_level = safe_decoder.read_literal(3);
     (*xd).mode_ref_lf_delta_update = 0 as ::core::ffi::c_uchar;
     (*xd).mode_ref_lf_delta_enabled =
-        vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-            as ::core::ffi::c_uchar;
+        safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
     if (*xd).mode_ref_lf_delta_enabled != 0 {
         (*xd).mode_ref_lf_delta_update =
-            vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-                as ::core::ffi::c_uchar;
+            safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
         if (*xd).mode_ref_lf_delta_update != 0 {
             i = 0 as ::core::ffi::c_int;
             while i < MAX_REF_LF_DELTAS {
-                if vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-                    != 0
-                {
+                if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
                     (*xd).ref_lf_deltas[i as usize] =
-                        vp8_decode_value(bc as *mut BOOL_DECODER, 6 as ::core::ffi::c_int)
-                            as ::core::ffi::c_schar;
-                    if vp8dx_decode_bool(
-                        bc as *mut BOOL_DECODER,
-                        vp8_prob_half as ::core::ffi::c_int,
-                    ) != 0
-                    {
+                        safe_decoder.read_literal(6) as ::core::ffi::c_schar;
+                    if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
                         (*xd).ref_lf_deltas[i as usize] = ((*xd).ref_lf_deltas[i as usize]
                             as ::core::ffi::c_int
                             * -(1 as ::core::ffi::c_int))
@@ -2147,17 +2137,10 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
             }
             i = 0 as ::core::ffi::c_int;
             while i < MAX_MODE_LF_DELTAS {
-                if vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int)
-                    != 0
-                {
+                if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
                     (*xd).mode_lf_deltas[i as usize] =
-                        vp8_decode_value(bc as *mut BOOL_DECODER, 6 as ::core::ffi::c_int)
-                            as ::core::ffi::c_schar;
-                    if vp8dx_decode_bool(
-                        bc as *mut BOOL_DECODER,
-                        vp8_prob_half as ::core::ffi::c_int,
-                    ) != 0
-                    {
+                        safe_decoder.read_literal(6) as ::core::ffi::c_schar;
+                    if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
                         (*xd).mode_lf_deltas[i as usize] = ((*xd).mode_lf_deltas[i as usize]
                             as ::core::ffi::c_int
                             * -(1 as ::core::ffi::c_int))
@@ -2168,20 +2151,43 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
             }
         }
     }
+    (*bc).user_buffer = (*bc).user_buffer.add(safe_decoder.offset);
+    (*bc).value = safe_decoder.value;
+    (*bc).count = safe_decoder.count;
+    (*bc).range = safe_decoder.range;
+
     setup_token_decoder(pbi, data.offset(first_partition_length_in_bytes as isize));
     (*xd).current_bc = (&raw mut (*pbi).mbc as *mut vp8_reader)
         .offset(0 as ::core::ffi::c_int as isize) as *mut vp8_reader
         as *mut ::core::ffi::c_void;
+
+    let len = (*bc).user_buffer_end.offset_from((*bc).user_buffer) as usize;
+    let slice = if len == 0 {
+        &[]
+    } else {
+        core::slice::from_raw_parts((*bc).user_buffer, len)
+    };
+    safe_decoder = SafeBoolDecoder {
+        buffer: slice,
+        offset: 0,
+        value: (*bc).value,
+        count: (*bc).count,
+        range: (*bc).range,
+        decrypt_cb: (*bc).decrypt_cb,
+        decrypt_state: (*bc).decrypt_state,
+    };
+
     let mut Q: ::core::ffi::c_int = 0;
+
     let mut q_update: ::core::ffi::c_int = 0;
-    Q = vp8_decode_value(bc as *mut BOOL_DECODER, 7 as ::core::ffi::c_int);
+    Q = safe_decoder.read_literal(7);
     (*pc).base_qindex = Q;
     q_update = 0 as ::core::ffi::c_int;
-    (*pc).y1dc_delta_q = get_delta_q(bc, (*pc).y1dc_delta_q, &raw mut q_update);
-    (*pc).y2dc_delta_q = get_delta_q(bc, (*pc).y2dc_delta_q, &raw mut q_update);
-    (*pc).y2ac_delta_q = get_delta_q(bc, (*pc).y2ac_delta_q, &raw mut q_update);
-    (*pc).uvdc_delta_q = get_delta_q(bc, (*pc).uvdc_delta_q, &raw mut q_update);
-    (*pc).uvac_delta_q = get_delta_q(bc, (*pc).uvac_delta_q, &raw mut q_update);
+    (*pc).y1dc_delta_q = get_delta_q(&mut safe_decoder, (*pc).y1dc_delta_q, &mut q_update);
+    (*pc).y2dc_delta_q = get_delta_q(&mut safe_decoder, (*pc).y2dc_delta_q, &mut q_update);
+    (*pc).y2ac_delta_q = get_delta_q(&mut safe_decoder, (*pc).y2ac_delta_q, &mut q_update);
+    (*pc).uvdc_delta_q = get_delta_q(&mut safe_decoder, (*pc).uvdc_delta_q, &mut q_update);
+    (*pc).uvac_delta_q = get_delta_q(&mut safe_decoder, (*pc).uvac_delta_q, &mut q_update);
     if q_update != 0 {
         vp8cx_init_de_quantizer(pbi);
     }
@@ -2190,32 +2196,32 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
         != KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
         (*pc).refresh_golden_frame =
-            vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int);
+            safe_decoder.read_bool(vp8_prob_half as i32);
         (*pc).refresh_alt_ref_frame =
-            vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int);
+            safe_decoder.read_bool(vp8_prob_half as i32);
         (*pc).copy_buffer_to_gf = 0 as ::core::ffi::c_int;
         if (*pc).refresh_golden_frame == 0 {
             (*pc).copy_buffer_to_gf =
-                vp8_decode_value(bc as *mut BOOL_DECODER, 2 as ::core::ffi::c_int);
+                safe_decoder.read_literal(2);
         }
         (*pc).copy_buffer_to_arf = 0 as ::core::ffi::c_int;
         if (*pc).refresh_alt_ref_frame == 0 {
             (*pc).copy_buffer_to_arf =
-                vp8_decode_value(bc as *mut BOOL_DECODER, 2 as ::core::ffi::c_int);
+                safe_decoder.read_literal(2);
         }
         (*pc).ref_frame_sign_bias[GOLDEN_FRAME as ::core::ffi::c_int as usize] =
-            vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int);
+            safe_decoder.read_bool(vp8_prob_half as i32);
         (*pc).ref_frame_sign_bias[ALTREF_FRAME as ::core::ffi::c_int as usize] =
-            vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int);
+            safe_decoder.read_bool(vp8_prob_half as i32);
     }
     (*pc).refresh_entropy_probs =
-        vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int);
+        safe_decoder.read_bool(vp8_prob_half as i32);
     if (*pc).refresh_entropy_probs == 0 as ::core::ffi::c_int {
         (*pc).lfc = (*pc).fc;
     }
     (*pc).refresh_last_frame = ((*pc).frame_type as ::core::ffi::c_uint
         == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
-        || vp8dx_decode_bool(bc as *mut BOOL_DECODER, vp8_prob_half as ::core::ffi::c_int) != 0)
+        || safe_decoder.read_bool(vp8_prob_half as i32) != 0)
         as ::core::ffi::c_int;
     (*pbi).independent_partitions = 1 as ::core::ffi::c_int;
     i = 0 as ::core::ffi::c_int;
@@ -2235,14 +2241,8 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
                             as *mut [vp8_prob; 11])
                             .offset(k as isize) as *mut vp8_prob)
                             .offset(l as isize);
-                    if vp8dx_decode_bool(
-                        bc as *mut BOOL_DECODER,
-                        vp8_coef_update_probs[i as usize][j as usize][k as usize][l as usize]
-                            as ::core::ffi::c_int,
-                    ) != 0
-                    {
-                        *p = vp8_decode_value(bc as *mut BOOL_DECODER, 8 as ::core::ffi::c_int)
-                            as vp8_prob;
+                    if safe_decoder.read_bool(vp8_coef_update_probs[i as usize][j as usize][k as usize][l as usize] as i32) != 0 {
+                        *p = safe_decoder.read_literal(8) as vp8_prob;
                     }
                     if k > 0 as ::core::ffi::c_int
                         && *p as ::core::ffi::c_int
@@ -2260,6 +2260,12 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
         }
         i += 1;
     }
+
+    (*bc).user_buffer = (*bc).user_buffer.add(safe_decoder.offset);
+    (*bc).value = safe_decoder.value;
+    (*bc).count = safe_decoder.count;
+    (*bc).range = safe_decoder.range;
+
     memset(
         &raw mut (*xd).qcoeff as *mut ::core::ffi::c_short as *mut ::core::ffi::c_void,
         0 as ::core::ffi::c_int,
