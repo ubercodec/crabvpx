@@ -1611,6 +1611,7 @@ unsafe extern "C" fn read_available_partition_size(
 unsafe extern "C" fn setup_token_decoder(
     mut pbi: *mut VP8D_COMP,
     mut token_part_sizes: *const ::core::ffi::c_uchar,
+    safe_decoder: &mut SafeBoolDecoder,
 ) { unsafe {
     let mut bool_decoder: *mut vp8_reader = (&raw mut (*pbi).mbc as *mut vp8_reader)
         .offset(0 as ::core::ffi::c_int as isize)
@@ -1621,16 +1622,9 @@ unsafe extern "C" fn setup_token_decoder(
     let mut first_fragment_end: *const ::core::ffi::c_uchar = (*pbi).fragments.ptrs
         [0 as ::core::ffi::c_int as usize]
         .offset((*pbi).fragments.sizes[0 as ::core::ffi::c_int as usize] as isize);
-    let mut multi_token_partition: TOKEN_PARTITION = vp8_decode_value(
-        (&raw mut (*pbi).mbc as *mut vp8_reader).offset(8 as ::core::ffi::c_int as isize)
-            as *mut BOOL_DECODER,
-        2 as ::core::ffi::c_int,
-    ) as TOKEN_PARTITION;
-    if vp8dx_bool_error(
-        (&raw mut (*pbi).mbc as *mut vp8_reader).offset(8 as ::core::ffi::c_int as isize)
-            as *mut BOOL_DECODER,
-    ) == 0
-    {
+    let mut multi_token_partition: TOKEN_PARTITION =
+        safe_decoder.read_literal(2) as TOKEN_PARTITION;
+    if safe_decoder.count <= VP8_BD_VALUE_SIZE || safe_decoder.count >= VP8_LOTS_OF_BITS {
         (*pbi).common.multi_token_partition = multi_token_partition;
     }
     num_token_partitions = ((1 as ::core::ffi::c_int)
@@ -2151,31 +2145,14 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
             }
         }
     }
-    (*bc).user_buffer = (*bc).user_buffer.add(safe_decoder.offset);
-    (*bc).value = safe_decoder.value;
-    (*bc).count = safe_decoder.count;
-    (*bc).range = safe_decoder.range;
-
-    setup_token_decoder(pbi, data.offset(first_partition_length_in_bytes as isize));
+    setup_token_decoder(
+        pbi,
+        data.offset(first_partition_length_in_bytes as isize),
+        &mut safe_decoder,
+    );
     (*xd).current_bc = (&raw mut (*pbi).mbc as *mut vp8_reader)
         .offset(0 as ::core::ffi::c_int as isize) as *mut vp8_reader
         as *mut ::core::ffi::c_void;
-
-    let len = (*bc).user_buffer_end.offset_from((*bc).user_buffer) as usize;
-    let slice = if len == 0 {
-        &[]
-    } else {
-        core::slice::from_raw_parts((*bc).user_buffer, len)
-    };
-    safe_decoder = SafeBoolDecoder {
-        buffer: slice,
-        offset: 0,
-        value: (*bc).value,
-        count: (*bc).count,
-        range: (*bc).range,
-        decrypt_cb: (*bc).decrypt_cb,
-        decrypt_state: (*bc).decrypt_state,
-    };
 
     let mut Q: ::core::ffi::c_int = 0;
 

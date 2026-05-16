@@ -20,6 +20,7 @@
 - **Dead Code Removal**: Removed unused C-style `vp8_decode_value` from `src/vp8/decoder/decodemv.rs`. Reduced unsafe count by 2.
 - **Tree and Mode Reader Refactoring**: Converted static trees and keyframe probabilities in `src/vp8/common/entropymode.rs` to immutable `static`. Refactored `read_bmode`, `read_ymode`, `read_kf_ymode`, and `read_uv_mode` in `src/vp8/decoder/decodemv.rs` to use `SafeBoolDecoder` and static slices, eliminating 4 `unsafe` blocks. Reduced unsafe count by 8.
 - **SafeBoolDecoder Expansion in Header Parsing**: Refactored `get_delta_q` and `vp8_decode_frame_header` in `src/vp8/decoder/decodeframe.rs` to use `SafeBoolDecoder`, eliminating raw pointer casts and an `unsafe` block. Reduced unsafe count by 2.
+- **SafeBoolDecoder Expansion in Token Decoder Setup**: Refactored `setup_token_decoder` in `src/vp8/decoder/decodeframe.rs` to take `&mut SafeBoolDecoder` and use it for reading `multi_token_partition`. Eliminated raw pointer access to `mbc[8]` and removed redundant sync/re-creation of `SafeBoolDecoder` at call site.
 
 ## Architectural Quirks to Watch Out For
 - **c2rust Duplication**: Functions that were `static inline` in C headers (specifically `vp8dx_decode_bool` from `dboolhuff.h`) were duplicated by `c2rust` into every Rust module that called them. (Resolved for `vp8dx_decode_bool`).
@@ -27,7 +28,7 @@
 - **Duplicated Structs**: Struct definitions like `YV12_BUFFER_CONFIG` and `VP8Common` were duplicated by `c2rust` across dozens of files. Do not attempt to deduplicate them yet; maintain raw pointer boundaries between modules to avoid FFI type mismatches.
 
 ## Next Steps for Future Agents
-1. **Continue SafeBoolDecoder Expansion**: Focus on converting `setup_token_decoder` and `read_token_partitions` in `src/vp8/decoder/decodeframe.rs` to use `SafeBoolDecoder`.
+1. **Continue SafeBoolDecoder Expansion**: Investigate converting `mbc` array in `VP8D_COMP` to use `SafeBoolDecoder` or wrappers, to allow safe decoding in `decode_mb_rows` and multithreaded decoding. Note: `read_token_partitions` does not exist as a standalone function; partition setup is handled in `setup_token_decoder`.
 2. **Macroblock Feature Parsing**: Refactor `decode_mb_mode_mvs` and `read_mb_features` in `src/vp8/decoder/decodemv.rs` to construct and pass `SafeBoolDecoder`.
 3. **Motion Vector Component Parsing**: Refactor `read_mvcomponent` in `src/vp8/decoder/decodemv.rs` to use `SafeBoolDecoder` and `safe_treed_read`.
 
