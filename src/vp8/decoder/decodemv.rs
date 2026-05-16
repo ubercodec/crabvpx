@@ -780,13 +780,13 @@ fn read_mvcontexts(bc: &mut SafeBoolDecoder, mvc: &mut [MV_CONTEXT; 2]) {
     }
 }
 
-static mut mbsplit_fill_count: [::core::ffi::c_uchar; 4] = [
+static mbsplit_fill_count: [::core::ffi::c_uchar; 4] = [
     8 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     8 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     4 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     1 as ::core::ffi::c_int as ::core::ffi::c_uchar,
 ];
-static mut mbsplit_fill_offset: [[::core::ffi::c_uchar; 16]; 4] = [
+static mbsplit_fill_offset: [[::core::ffi::c_uchar; 16]; 4] = [
     [
         0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
         1 as ::core::ffi::c_int as ::core::ffi::c_uchar,
@@ -911,7 +911,7 @@ unsafe extern "C" fn mb_mode_mv_init(mut pbi: *mut VP8D_COMP) { unsafe {
     (*bc).range = safe_decoder.range;
 }}
 #[unsafe(no_mangle)]
-pub static mut vp8_sub_mv_ref_prob3: [[vp8_prob; 3]; 8] = [
+pub static vp8_sub_mv_ref_prob3: [[vp8_prob; 3]; 8] = [
     [
         147 as ::core::ffi::c_int as vp8_prob,
         136 as ::core::ffi::c_int as vp8_prob,
@@ -953,16 +953,12 @@ pub static mut vp8_sub_mv_ref_prob3: [[vp8_prob; 3]; 8] = [
         1 as ::core::ffi::c_int as vp8_prob,
     ],
 ];
-unsafe extern "C" fn get_sub_mv_ref_prob(left: uint32_t, above: uint32_t) -> *const vp8_prob { unsafe {
-    let mut lez: ::core::ffi::c_int = (left == 0 as uint32_t) as ::core::ffi::c_int;
-    let mut aez: ::core::ffi::c_int = (above == 0 as uint32_t) as ::core::ffi::c_int;
-    let mut lea: ::core::ffi::c_int = (left == above) as ::core::ffi::c_int;
-    let mut prob: *const vp8_prob = ::core::ptr::null::<vp8_prob>();
-    prob = &raw const *(&raw const vp8_sub_mv_ref_prob3 as *const [vp8_prob; 3])
-        .offset((aez << 2 as ::core::ffi::c_int | lez << 1 as ::core::ffi::c_int | lea) as isize)
-        as *const vp8_prob;
-    return prob;
-}}
+fn get_sub_mv_ref_prob(left: uint32_t, above: uint32_t) -> &'static [vp8_prob; 3] {
+    let lez = (left == 0) as usize;
+    let aez = (above == 0) as usize;
+    let lea = (left == above) as usize;
+    &vp8_sub_mv_ref_prob3[(aez << 2) | (lez << 1) | lea]
+}
 unsafe extern "C" fn decode_split_mv(
     bc: *mut vp8_reader,
     mut mi: *mut MODE_INFO,
@@ -994,7 +990,6 @@ unsafe extern "C" fn decode_split_mv(
         let mut abovemv: int_mv = int_mv { as_int: 0 };
         let mut blockmv: int_mv = int_mv { as_int: 0 };
         let mut k: ::core::ffi::c_int = 0;
-        let mut prob: *const vp8_prob = ::core::ptr::null::<vp8_prob>();
         k = vp8_mbsplit_offset[s as usize][j as usize] as ::core::ffi::c_int;
         if k & 3 as ::core::ffi::c_int == 0 {
             if (*left_mb).mbmi.mode as ::core::ffi::c_int != SPLITMV as ::core::ffi::c_int {
@@ -1032,21 +1027,21 @@ unsafe extern "C" fn decode_split_mv(
             .mv
             .as_int;
         }
-        prob = get_sub_mv_ref_prob(leftmv.as_int, abovemv.as_int);
+        let prob = get_sub_mv_ref_prob(leftmv.as_int, abovemv.as_int);
         if vp8dx_decode_bool(
             bc as *mut BOOL_DECODER,
-            *prob.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
+            prob[0] as ::core::ffi::c_int,
         ) != 0
         {
             if vp8dx_decode_bool(
                 bc as *mut BOOL_DECODER,
-                *prob.offset(1 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
+                prob[1] as ::core::ffi::c_int,
             ) != 0
             {
                 blockmv.as_int = 0 as uint32_t;
                 if vp8dx_decode_bool(
                     bc as *mut BOOL_DECODER,
-                    *prob.offset(2 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
+                    prob[2] as ::core::ffi::c_int,
                 ) != 0
                 {
                     blockmv.as_mv.row = (read_mvcomponent(
@@ -1080,25 +1075,11 @@ unsafe extern "C" fn decode_split_mv(
                 mb_to_top_edge,
                 mb_to_bottom_edge,
             )) as uint8_t;
-        let mut fill_offset: *const ::core::ffi::c_uchar =
-            ::core::ptr::null::<::core::ffi::c_uchar>();
-        let mut fill_count: ::core::ffi::c_uint =
-            mbsplit_fill_count[s as usize] as ::core::ffi::c_uint;
-        fill_offset = (&raw const *(&raw const mbsplit_fill_offset
-            as *const [::core::ffi::c_uchar; 16])
-            .offset(s as isize) as *const ::core::ffi::c_uchar)
-            .offset(
-                (j as ::core::ffi::c_uchar as ::core::ffi::c_int
-                    * *(&raw const mbsplit_fill_count as *const ::core::ffi::c_uchar)
-                        .offset(s as isize) as ::core::ffi::c_int) as isize,
-            ) as *const ::core::ffi::c_uchar;
-        loop {
-            (*mi).bmi[*fill_offset as usize].mv.as_int = blockmv.as_int;
-            fill_offset = fill_offset.offset(1);
-            fill_count = fill_count.wrapping_sub(1);
-            if !(fill_count != 0) {
-                break;
-            }
+        let fill_count = mbsplit_fill_count[s as usize] as usize;
+        let offset_start = (j as usize) * fill_count;
+        let fill_offsets = &mbsplit_fill_offset[s as usize][offset_start..offset_start + fill_count];
+        for &idx in fill_offsets {
+            (*mi).bmi[idx as usize].mv.as_int = blockmv.as_int;
         }
         j += 1;
         if !(j < num_p) {
