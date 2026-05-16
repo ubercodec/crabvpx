@@ -28,6 +28,7 @@
 - **Safe Motion Vector Bounds Checking**: Refactored `vp8_check_mv_bounds` in `src/vp8/decoder/decodemv.rs` to take `&MV` instead of raw `*mut int_mv`, eliminating `unsafe extern "C"` and internal `unsafe` block. Updated call sites in `read_mb_modes_mv` and `decode_mb_mode_mvs`. Reduced unsafe count by 2.
 - **Safe Motion Vector Clamping**: Refactored `vp8_clamp_mv2` in `src/vp8/decoder/decodemv.rs` to take `&mut MV` and `&MACROBLOCKD` instead of raw pointers, eliminating `unsafe extern "C"` and an internal `unsafe` block. Updated call sites in `read_mb_modes_mv`. Reduced unsafe count by 2.
 - **Coefficient Probability Initialization**: Refactored `vp8_default_coef_probs` in `src/vp8/common/entropy.rs` to safe Rust by passing the `coef_probs` array reference directly, avoiding duplicated struct FFI mismatch issues. Converted `default_coef_probs` from `static mut` to immutable `static`. Reduced unsafe count by 3.
+- **Safe Token Decoding**: Refactored `GetCoeffs` in `src/vp8/decoder/detokenize.rs` to safe Rust by passing safe references to probability tables and coefficient slices. Converted static tables `kBands`, `kCat3..6`, `kCat3456`, and `kZigzag` from `static mut` to immutable `static`. Reduced unsafe count by 3.
 
 ## Architectural Quirks to Watch Out For
 - **c2rust Duplication**: Functions that were `static inline` in C headers (specifically `vp8dx_decode_bool` from `dboolhuff.h`) were duplicated by `c2rust` into every Rust module that called them. (Resolved for `vp8dx_decode_bool`).
