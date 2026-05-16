@@ -535,57 +535,47 @@ fn vp8_check_mv_bounds(
     return need_to_clamp;
 }
 #[inline]
-unsafe extern "C" fn left_block_mode(
-    mut cur_mb: *const MODE_INFO,
-    mut b: ::core::ffi::c_int,
+fn left_block_mode(
+    mip_slice: &[MODE_INFO],
+    cur_idx: usize,
+    b: usize,
 ) -> B_PREDICTION_MODE { unsafe {
-    if b & 3 as ::core::ffi::c_int == 0 {
-        cur_mb = cur_mb.offset(-1);
-        match (*cur_mb).mbmi.mode as ::core::ffi::c_int {
-            4 => {
-                return (*(&raw const (*cur_mb).bmi as *const b_mode_info)
-                    .offset(b as isize)
-                    .offset(3 as ::core::ffi::c_int as isize))
-                .as_mode;
-            }
-            0 => return B_DC_PRED,
-            1 => return B_VE_PRED,
-            2 => return B_HE_PRED,
-            3 => return B_TM_PRED,
-            _ => return B_DC_PRED,
+    if b & 3 == 0 {
+        let left_mb = &mip_slice[cur_idx - 1];
+        match left_mb.mbmi.mode as ::core::ffi::c_int {
+            4 => left_mb.bmi[b + 3].as_mode,
+            0 => B_DC_PRED,
+            1 => B_VE_PRED,
+            2 => B_HE_PRED,
+            3 => B_TM_PRED,
+            _ => B_DC_PRED,
         }
+    } else {
+        let cur_mb = &mip_slice[cur_idx];
+        cur_mb.bmi[b - 1].as_mode
     }
-    return (*(&raw const (*cur_mb).bmi as *const b_mode_info)
-        .offset(b as isize)
-        .offset(-(1 as ::core::ffi::c_int as isize)))
-    .as_mode;
 }}
 #[inline]
-unsafe extern "C" fn above_block_mode(
-    mut cur_mb: *const MODE_INFO,
-    mut b: ::core::ffi::c_int,
-    mut mi_stride: ::core::ffi::c_int,
+fn above_block_mode(
+    mip_slice: &[MODE_INFO],
+    cur_idx: usize,
+    mi_stride: usize,
+    b: usize,
 ) -> B_PREDICTION_MODE { unsafe {
-    if b >> 2 as ::core::ffi::c_int == 0 {
-        cur_mb = cur_mb.offset(-(mi_stride as isize));
-        match (*cur_mb).mbmi.mode as ::core::ffi::c_int {
-            4 => {
-                return (*(&raw const (*cur_mb).bmi as *const b_mode_info)
-                    .offset(b as isize)
-                    .offset(12 as ::core::ffi::c_int as isize))
-                .as_mode;
-            }
-            0 => return B_DC_PRED,
-            1 => return B_VE_PRED,
-            2 => return B_HE_PRED,
-            3 => return B_TM_PRED,
-            _ => return B_DC_PRED,
+    if b >> 2 == 0 {
+        let above_mb = &mip_slice[cur_idx - mi_stride];
+        match above_mb.mbmi.mode as ::core::ffi::c_int {
+            4 => above_mb.bmi[b + 12].as_mode,
+            0 => B_DC_PRED,
+            1 => B_VE_PRED,
+            2 => B_HE_PRED,
+            3 => B_TM_PRED,
+            _ => B_DC_PRED,
         }
+    } else {
+        let cur_mb = &mip_slice[cur_idx];
+        cur_mb.bmi[b - 4].as_mode
     }
-    return (*(&raw const (*cur_mb).bmi as *const b_mode_info)
-        .offset(b as isize)
-        .offset(-(4 as ::core::ffi::c_int as isize)))
-    .as_mode;
 }}
 fn safe_treed_read(
     r: &mut SafeBoolDecoder,
@@ -632,34 +622,28 @@ fn read_uv_mode(
     safe_treed_read(bc, &vp8_uv_mode_tree, p) as MB_PREDICTION_MODE
 }
 
-unsafe extern "C" fn read_kf_modes(
-    mut pbi: *mut VP8D_COMP,
-    mut mi: *mut MODE_INFO,
+fn read_kf_modes(
+    mis: usize,
+    mip_slice: &mut [MODE_INFO],
+    cur_idx: usize,
     safe_decoder: &mut SafeBoolDecoder,
-) { unsafe {
-    let mis: ::core::ffi::c_int = (*pbi).common.mode_info_stride;
-
-    (*mi).mbmi.ref_frame = INTRA_FRAME as ::core::ffi::c_int as uint8_t;
-    (*mi).mbmi.mode = read_kf_ymode(safe_decoder, &vp8_kf_ymode_prob) as uint8_t;
-    if (*mi).mbmi.mode as ::core::ffi::c_int == B_PRED as ::core::ffi::c_int {
-        let mut i: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-        (*mi).mbmi.is_4x4 = 1 as uint8_t;
-        loop {
-            let A: B_PREDICTION_MODE = above_block_mode(mi, i, mis) as B_PREDICTION_MODE;
-            let L: B_PREDICTION_MODE = left_block_mode(mi, i) as B_PREDICTION_MODE;
-            (*mi).bmi[i as usize].as_mode = read_bmode(
+) {
+    mip_slice[cur_idx].mbmi.ref_frame = INTRA_FRAME as uint8_t;
+    mip_slice[cur_idx].mbmi.mode = read_kf_ymode(safe_decoder, &vp8_kf_ymode_prob) as uint8_t;
+    if mip_slice[cur_idx].mbmi.mode as ::core::ffi::c_int == B_PRED as ::core::ffi::c_int {
+        mip_slice[cur_idx].mbmi.is_4x4 = 1 as uint8_t;
+        for i in 0..16usize {
+            let A: B_PREDICTION_MODE = above_block_mode(mip_slice, cur_idx, mis, i) as B_PREDICTION_MODE;
+            let L: B_PREDICTION_MODE = left_block_mode(mip_slice, cur_idx, i) as B_PREDICTION_MODE;
+            mip_slice[cur_idx].bmi[i].as_mode = read_bmode(
                 safe_decoder,
                 &vp8_kf_bmode_prob[A as usize][L as usize],
             );
-            i += 1;
-            if !(i < 16 as ::core::ffi::c_int) {
-                break;
-            }
         }
     }
-    (*mi).mbmi.uv_mode =
+    mip_slice[cur_idx].mbmi.uv_mode =
         read_uv_mode(safe_decoder, &vp8_kf_uv_mode_prob) as uint8_t;
-}}
+}
 fn read_mvcomponent(
     r: &mut SafeBoolDecoder,
     mvc: &MV_CONTEXT,
@@ -1222,39 +1206,44 @@ unsafe extern "C" fn read_mb_features(
         }
     }
 }}
-unsafe extern "C" fn decode_mb_mode_mvs(
+fn decode_mb_mode_mvs(
     mut pbi: *mut VP8D_COMP,
-    mut mi: *mut MODE_INFO,
+    mip_slice: &mut [MODE_INFO],
+    cur_idx: usize,
     safe_decoder: &mut SafeBoolDecoder,
 ) { unsafe {
     if (*pbi).mb.update_mb_segmentation_map != 0 {
         read_mb_features(
             safe_decoder,
-            &raw mut (*mi).mbmi,
+            &raw mut mip_slice[cur_idx].mbmi,
             &raw mut (*pbi).mb,
         );
     } else if (*pbi).common.frame_type as ::core::ffi::c_uint
         == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        (*mi).mbmi.segment_id = 0 as uint8_t;
+        mip_slice[cur_idx].mbmi.segment_id = 0 as uint8_t;
     }
     if (*pbi).common.mb_no_coeff_skip != 0 {
-        (*mi).mbmi.mb_skip_coeff = safe_decoder.read_bool((*pbi).prob_skip_false as i32) as uint8_t;
+        mip_slice[cur_idx].mbmi.mb_skip_coeff = safe_decoder.read_bool((*pbi).prob_skip_false as i32) as uint8_t;
     } else {
-        (*mi).mbmi.mb_skip_coeff = 0 as uint8_t;
+        mip_slice[cur_idx].mbmi.mb_skip_coeff = 0 as uint8_t;
     }
-    (*mi).mbmi.is_4x4 = 0 as uint8_t;
+    mip_slice[cur_idx].mbmi.is_4x4 = 0 as uint8_t;
     if (*pbi).common.frame_type as ::core::ffi::c_uint
         == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        read_kf_modes(pbi, mi, safe_decoder);
+        read_kf_modes((*pbi).common.mode_info_stride as usize, mip_slice, cur_idx, safe_decoder);
     } else {
-        read_mb_modes_mv(pbi, mi, &raw mut (*mi).mbmi, safe_decoder);
+        read_mb_modes_mv(pbi, &raw mut mip_slice[cur_idx], &raw mut mip_slice[cur_idx].mbmi, safe_decoder);
     };
 }}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_decode_mode_mvs(mut pbi: *mut VP8D_COMP) { unsafe {
-    let mut mi: *mut MODE_INFO = (*pbi).common.mi;
+    let stride = (*pbi).common.mode_info_stride as usize;
+    let mip_len = ((*pbi).common.mb_rows + 1) as usize * stride;
+    let mip_slice = core::slice::from_raw_parts_mut((*pbi).common.mip, mip_len);
+    let mut cur_idx = stride + 1;
+
     let mut mb_row: ::core::ffi::c_int = -(1 as ::core::ffi::c_int);
     let mut mb_to_right_edge_start: ::core::ffi::c_int = 0;
 
@@ -1297,14 +1286,14 @@ pub unsafe extern "C" fn vp8_decode_mode_mvs(mut pbi: *mut VP8D_COMP) { unsafe {
             if !(mb_col < (*pbi).common.mb_cols) {
                 break;
             }
-            decode_mb_mode_mvs(pbi, mi, &mut safe_decoder);
+            decode_mb_mode_mvs(pbi, mip_slice, cur_idx, &mut safe_decoder);
             (*pbi).mb.mb_to_left_edge -= (16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
             (*pbi).mb.mb_to_right_edge -= (16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
-            mi = mi.offset(1);
+            cur_idx += 1;
         }
         (*pbi).mb.mb_to_top_edge -= (16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
         (*pbi).mb.mb_to_bottom_edge -= (16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
-        mi = mi.offset(1);
+        cur_idx += 1;
     }
 
     (*bc).user_buffer = (*bc).user_buffer.add(safe_decoder.offset);
