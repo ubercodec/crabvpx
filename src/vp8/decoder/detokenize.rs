@@ -109,13 +109,6 @@ pub const KEY_FRAME: FRAME_TYPE = 0;
 
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub union b_mode_info {
-    pub as_mode: B_PREDICTION_MODE,
-    pub mv: int_mv,
-}
-
-#[derive(Copy, Clone)]
-#[repr(C)]
 pub struct modeinfo {
     pub mbmi: MB_MODE_INFO,
     pub bmi: [b_mode_info; 16],

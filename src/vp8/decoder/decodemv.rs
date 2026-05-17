@@ -236,18 +236,6 @@ pub struct modeinfo {
     pub mbmi: MB_MODE_INFO,
     pub bmi: [b_mode_info; 16],
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union b_mode_info {
-    pub as_mode: B_PREDICTION_MODE,
-    pub mv: int_mv,
-}
-impl b_mode_info {
-    #[inline]
-    pub fn mode(&self) -> B_PREDICTION_MODE {
-        unsafe { self.as_mode }
-    }
-}
 pub use crate::vp8::common::types::*;
 
 

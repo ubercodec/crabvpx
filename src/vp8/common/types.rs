@@ -45,6 +45,19 @@ pub const B_VE_PRED: B_PREDICTION_MODE = 2;
 pub const B_TM_PRED: B_PREDICTION_MODE = 1;
 pub const B_DC_PRED: B_PREDICTION_MODE = 0;
 
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub union b_mode_info {
+    pub as_mode: B_PREDICTION_MODE,
+    pub mv: int_mv,
+}
+impl b_mode_info {
+    #[inline]
+    pub fn mode(&self) -> B_PREDICTION_MODE {
+        unsafe { self.as_mode }
+    }
+}
+
 pub type MB_PREDICTION_MODE = ::core::ffi::c_uint;
 pub const MB_MODE_COUNT: MB_PREDICTION_MODE = 10;
 pub const SPLITMV: MB_PREDICTION_MODE = 9;

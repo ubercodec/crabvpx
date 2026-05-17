@@ -82,12 +82,6 @@ pub type FRAME_TYPE = ::core::ffi::c_uint;
 pub const INTER_FRAME: FRAME_TYPE = 1;
 pub const KEY_FRAME: FRAME_TYPE = 0;
 
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union b_mode_info {
-    pub as_mode: B_PREDICTION_MODE,
-    pub mv: int_mv,
-}
 pub type C2RustUnnamed_0 = ::core::ffi::c_uint;
 pub const MAX_REF_FRAMES: C2RustUnnamed_0 = 4;
 pub const ALTREF_FRAME: C2RustUnnamed_0 = 3;

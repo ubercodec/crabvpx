@@ -1,12 +1,6 @@
 unsafe extern "C" {
     fn sysconf(_: ::core::ffi::c_int) -> ::core::ffi::c_long;
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union b_mode_info {
-    pub as_mode: B_PREDICTION_MODE,
-    pub mv: int_mv,
-}
 pub use crate::vp8::common::types::*;
 pub type uint32_t = u32;
 

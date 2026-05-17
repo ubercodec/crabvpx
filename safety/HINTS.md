@@ -1,6 +1,7 @@
 # VP8 Decoder Safety Hints
 
 ## Current Progress (May 2026)
+- **Bottom-Up Struct Deduplication (Phase 2 - b_mode_info)**: Centralized `b_mode_info` union into `src/vp8/common/types.rs` and removed duplicated definitions across 17 files. Maintained `mode(&self)` helper method. Prerequisite for Phase 2 mid-tier struct centralization.
 - **Bottom-Up Struct Deduplication (Phase 1)**: Completed Phase 1. Centralized `MV`, `int_mv`, `vp8_prob`, `ENTROPY_CONTEXT`, `ENTROPY_CONTEXT_PLANES`, `B_PREDICTION_MODE`, `MB_PREDICTION_MODE`, and `MB_MODE_INFO` into `src/vp8/common/types.rs`. Removed duplicated definitions across the codebase and replaced with glob imports. Prerequisite for safe inter-module references.
 - **Safe Macroblock Token Decoding**: Refactored `vp8_decode_mb_tokens` in `src/vp8/decoder/detokenize.rs` to safe `extern "C" fn` signature, eliminating `unsafe` keyword from declaration. Replaced manual pointer offset arithmetic on `above_context`, `left_context`, and `eobs` with safe slice and struct field indexing inside the function body. Reduced unsafe count by 1.
 - **Merge Conflict Resolution**: Resolved all merge conflicts across `src/api.rs`, `harness/src/decoder.rs`, and `scripts/compare.py`. Integrated `Image<'a>` struct and GAT `Decoder` trait with harness MD5 verification. Differential testing via `./scripts/compare.py` passes 100% (1160 frames).
@@ -45,7 +46,7 @@
 - **Duplicated Structs**: Struct definitions like `YV12_BUFFER_CONFIG` and `VP8Common` were duplicated by `c2rust` across dozens of files. Do not attempt to deduplicate them yet; maintain raw pointer boundaries between modules to avoid FFI type mismatches.
 
 ## Next Steps for Future Agents
-1. **PRIORITY: Bottom-Up Struct Deduplication**: The user has explicitly requested prioritizing the deduplication of `c2rust` generated structs across the codebase to enable safe inter-module references (`&mut MACROBLOCKD`). Agents must follow the phased execution roadmap in [struct_deduplication_strategy.md](struct_deduplication_strategy.md). Phase 1 is complete. Continue with Phase 2: Centralize mid-tier structs (`b_mode_info`, `BLOCKD`, `modeinfo`, `YV12_BUFFER_CONFIG`).
+1. **PRIORITY: Bottom-Up Struct Deduplication**: The user has explicitly requested prioritizing the deduplication of `c2rust` generated structs across the codebase to enable safe inter-module references (`&mut MACROBLOCKD`). Agents must follow the phased execution roadmap in [struct_deduplication_strategy.md](struct_deduplication_strategy.md). Phase 1 is complete. Phase 2 is in progress (`b_mode_info` centralized). Continue with remaining Phase 2 structs (`BLOCKD`, `modeinfo`, `YV12_BUFFER_CONFIG`).
 2. **Module-Internal Refactoring**: While struct deduplication is underway (or if blocked), agents can continue refactoring module-internal functions (like `vp8_decode_mb_tokens` in `detokenize.rs`) that do not cross FFI boundaries.
 
 

@@ -167,12 +167,6 @@ pub struct blockd {
     pub eob: *mut ::core::ffi::c_char,
     pub bmi: b_mode_info,
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union b_mode_info {
-    pub as_mode: B_PREDICTION_MODE,
-    pub mv: int_mv,
-}
 pub use crate::vp8::common::types::*;
 pub type uint32_t = u32;
 
