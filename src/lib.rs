@@ -41,6 +41,7 @@ pub mod vp8 {
         pub mod setupintrarecon;
         pub mod swapyv12buffer;
         pub mod treecoder;
+        pub mod types;
         pub mod vp8_loopfilter;
     } // mod common
     pub mod decoder {

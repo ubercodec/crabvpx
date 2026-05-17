@@ -256,18 +256,7 @@ impl b_mode_info {
         unsafe { self.as_mode }
     }
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union int_mv {
-    pub as_int: uint32_t,
-    pub as_mv: MV,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MV {
-    pub row: ::core::ffi::c_short,
-    pub col: ::core::ffi::c_short,
-}
+pub use crate::vp8::common::types::{int_mv, MV};
 pub type B_PREDICTION_MODE = ::core::ffi::c_uint;
 pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
 pub const NEW4X4: B_PREDICTION_MODE = 13;

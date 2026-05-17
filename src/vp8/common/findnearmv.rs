@@ -5,18 +5,7 @@ pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
 pub type uint8_t = u8;
 pub type uint32_t = u32;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MV {
-    pub row: ::core::ffi::c_short,
-    pub col: ::core::ffi::c_short,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union int_mv {
-    pub as_int: uint32_t,
-    pub as_mv: MV,
-}
+pub use crate::vp8::common::types::{int_mv, MV};
 pub type vpx_color_space = ::core::ffi::c_uint;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;

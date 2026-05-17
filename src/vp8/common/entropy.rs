@@ -89,18 +89,7 @@ pub struct yv12_buffer_config {
     pub flags: ::core::ffi::c_int,
 }
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MV {
-    pub row: ::core::ffi::c_short,
-    pub col: ::core::ffi::c_short,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union int_mv {
-    pub as_int: uint32_t,
-    pub as_mv: MV,
-}
+pub use crate::vp8::common::types::{int_mv, MV};
 pub type ENTROPY_CONTEXT = ::core::ffi::c_char;
 #[derive(Copy, Clone)]
 #[repr(C)]
