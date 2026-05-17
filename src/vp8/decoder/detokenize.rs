@@ -549,11 +549,13 @@ fn GetCoeffs(
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_decode_mb_tokens(
+pub extern "C" fn vp8_decode_mb_tokens(
     mut pbi: *mut VP8D_COMP,
     mut x: *mut MACROBLOCKD,
 ) -> ::core::ffi::c_int { unsafe {
-    let bc = &mut (*pbi).mbc[(*x).current_bc_idx];
+    let pbi_mut = &mut *pbi;
+    let x_ref = &mut *x;
+    let bc = &mut pbi_mut.mbc[x_ref.current_bc_idx];
     let len = bc.user_buffer_end.offset_from(bc.user_buffer) as usize;
     let slice = if len == 0 {
         &[]
@@ -569,84 +571,96 @@ pub unsafe extern "C" fn vp8_decode_mb_tokens(
         decrypt_cb: bc.decrypt_cb,
         decrypt_state: bc.decrypt_state,
     };
-    let pbi_ref = &*pbi;
-    let fc_ref = &pbi_ref.common.fc;
-    let x_ref = &mut *x;
-    let mut eobs: *mut ::core::ffi::c_char = &raw mut x_ref.eobs as *mut ::core::ffi::c_char;
-    let mut i: ::core::ffi::c_int = 0;
-    let mut nonzeros: ::core::ffi::c_int = 0;
+    let fc_ref = &pbi_mut.common.fc;
+    let a_ctx = &mut *x_ref.above_context;
+    let l_ctx = &mut *x_ref.left_context;
+    let mode_info = &*x_ref.mode_info_context;
     let mut eobtotal: ::core::ffi::c_int = 0;
-    let mut a_ctx: *mut ENTROPY_CONTEXT = x_ref.above_context as *mut ENTROPY_CONTEXT;
-    let mut l_ctx: *mut ENTROPY_CONTEXT = x_ref.left_context as *mut ENTROPY_CONTEXT;
-    let mut a: *mut ENTROPY_CONTEXT = ::core::ptr::null_mut::<ENTROPY_CONTEXT>();
-    let mut l: *mut ENTROPY_CONTEXT = ::core::ptr::null_mut::<ENTROPY_CONTEXT>();
+
     let mut skip_dc: ::core::ffi::c_int = 0;
-    if (*x_ref.mode_info_context).mbmi.is_4x4 == 0 {
-        a = a_ctx.offset(8);
-        l = l_ctx.offset(8);
+    if mode_info.mbmi.is_4x4 == 0 {
         let coef_probs = &fc_ref.coef_probs[1];
-        nonzeros = GetCoeffs(
+        let ctx = a_ctx.y2 as ::core::ffi::c_int + l_ctx.y2 as ::core::ffi::c_int;
+        let nonzeros = GetCoeffs(
             &mut safe_decoder,
             coef_probs,
-            *a as ::core::ffi::c_int + *l as ::core::ffi::c_int,
+            ctx,
             0,
             &mut x_ref.qcoeff[24 * 16 .. 25 * 16],
         );
-        *l = (nonzeros > 0) as ::core::ffi::c_int as ENTROPY_CONTEXT;
-        *a = *l;
-        *eobs.offset(24) = nonzeros as ::core::ffi::c_char;
+        let nonzero_bool = (nonzeros > 0) as ::core::ffi::c_int as ENTROPY_CONTEXT;
+        l_ctx.y2 = nonzero_bool;
+        a_ctx.y2 = nonzero_bool;
+        x_ref.eobs[24] = nonzeros as ::core::ffi::c_char;
         eobtotal += nonzeros - 16;
         skip_dc = 1;
     } else {
         skip_dc = 0;
     }
-    let coef_probs_y1 = if (*x_ref.mode_info_context).mbmi.is_4x4 == 0 {
+
+    let coef_probs_y1 = if mode_info.mbmi.is_4x4 == 0 {
         &fc_ref.coef_probs[0]
     } else {
         &fc_ref.coef_probs[3]
     };
-    i = 0;
-    while i < 16 {
-        a = a_ctx.offset((i & 3) as isize);
-        l = l_ctx.offset(((i & 0xc) >> 2) as isize);
-        nonzeros = GetCoeffs(
+
+    for i in 0..16 {
+        let col = i & 3;
+        let row = i >> 2;
+        let ctx = a_ctx.y1[col] as ::core::ffi::c_int + l_ctx.y1[row] as ::core::ffi::c_int;
+        let nonzeros = GetCoeffs(
             &mut safe_decoder,
             coef_probs_y1,
-            *a as ::core::ffi::c_int + *l as ::core::ffi::c_int,
+            ctx,
             skip_dc,
             &mut x_ref.qcoeff[(i * 16) as usize .. ((i + 1) * 16) as usize],
         );
-        *l = (nonzeros > 0) as ::core::ffi::c_int as ENTROPY_CONTEXT;
-        *a = *l;
-        nonzeros += skip_dc;
-        *eobs.offset(i as isize) = nonzeros as ::core::ffi::c_char;
-        eobtotal += nonzeros;
-        i += 1;
+        let nonzero_bool = (nonzeros > 0) as ::core::ffi::c_int as ENTROPY_CONTEXT;
+        l_ctx.y1[row] = nonzero_bool;
+        a_ctx.y1[col] = nonzero_bool;
+        let eob_val = nonzeros + skip_dc;
+        x_ref.eobs[i as usize] = eob_val as ::core::ffi::c_char;
+        eobtotal += eob_val;
     }
+
     let coef_probs_uv = &fc_ref.coef_probs[2];
-    a_ctx = a_ctx.offset(4);
-    l_ctx = l_ctx.offset(4);
-    i = 16;
-    while i < 24 {
-        a = a_ctx
-            .offset((((i > 19) as ::core::ffi::c_int) << 1) as isize)
-            .offset((i & 1) as isize);
-        l = l_ctx
-            .offset((((i > 19) as ::core::ffi::c_int) << 1) as isize)
-            .offset(((i & 3 > 1) as ::core::ffi::c_int) as isize);
-        nonzeros = GetCoeffs(
+
+    for i in 16..20 {
+        let col = i & 1;
+        let row = (i & 3) >> 1;
+        let ctx = a_ctx.u[col] as ::core::ffi::c_int + l_ctx.u[row] as ::core::ffi::c_int;
+        let nonzeros = GetCoeffs(
             &mut safe_decoder,
             coef_probs_uv,
-            *a as ::core::ffi::c_int + *l as ::core::ffi::c_int,
+            ctx,
             0,
             &mut x_ref.qcoeff[(i * 16) as usize .. ((i + 1) * 16) as usize],
         );
-        *l = (nonzeros > 0) as ::core::ffi::c_int as ENTROPY_CONTEXT;
-        *a = *l;
-        *eobs.offset(i as isize) = nonzeros as ::core::ffi::c_char;
+        let nonzero_bool = (nonzeros > 0) as ::core::ffi::c_int as ENTROPY_CONTEXT;
+        l_ctx.u[row] = nonzero_bool;
+        a_ctx.u[col] = nonzero_bool;
+        x_ref.eobs[i as usize] = nonzeros as ::core::ffi::c_char;
         eobtotal += nonzeros;
-        i += 1;
     }
+
+    for i in 20..24 {
+        let col = i & 1;
+        let row = (i & 3) >> 1;
+        let ctx = a_ctx.v[col] as ::core::ffi::c_int + l_ctx.v[row] as ::core::ffi::c_int;
+        let nonzeros = GetCoeffs(
+            &mut safe_decoder,
+            coef_probs_uv,
+            ctx,
+            0,
+            &mut x_ref.qcoeff[(i * 16) as usize .. ((i + 1) * 16) as usize],
+        );
+        let nonzero_bool = (nonzeros > 0) as ::core::ffi::c_int as ENTROPY_CONTEXT;
+        l_ctx.v[row] = nonzero_bool;
+        a_ctx.v[col] = nonzero_bool;
+        x_ref.eobs[i as usize] = nonzeros as ::core::ffi::c_char;
+        eobtotal += nonzeros;
+    }
+
     bc.user_buffer = bc.user_buffer.add(safe_decoder.offset);
     bc.value = safe_decoder.value;
     bc.count = safe_decoder.count;

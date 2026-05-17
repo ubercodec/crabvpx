@@ -1,6 +1,7 @@
 # VP8 Decoder Safety Hints
 
 ## Current Progress (May 2026)
+- **Safe Macroblock Token Decoding**: Refactored `vp8_decode_mb_tokens` in `src/vp8/decoder/detokenize.rs` to safe `extern "C" fn` signature, eliminating `unsafe` keyword from declaration. Replaced manual pointer offset arithmetic on `above_context`, `left_context`, and `eobs` with safe slice and struct field indexing inside the function body. Reduced unsafe count by 1.
 - **Merge Conflict Resolution**: Resolved all merge conflicts across `src/api.rs`, `harness/src/decoder.rs`, and `scripts/compare.py`. Integrated `Image<'a>` struct and GAT `Decoder` trait with harness MD5 verification. Differential testing via `./scripts/compare.py` passes 100% (1160 frames).
 - **Build Fixes**: Modified `build.rs` to conditionalize ARM assembly files based on target architecture. `crabvpx` now successfully compiles on x86_64 (library only).
 - **Boolean Decoder**: Implemented `SafeBoolDecoder<'a>` in `src/vp8/decoder/dboolhuff.rs` following `zero_unsafe_strategy.md`. Verified in isolation via `cargo +nightly test --test bool_decoder_test`.
