@@ -1,4 +1,4 @@
-pub type vp8_prob = ::core::ffi::c_uchar;
+pub use crate::vp8::common::types::vp8_prob;
 pub type vp8_tree_index = ::core::ffi::c_schar;
 #[derive(Copy, Clone)]
 #[repr(C)]

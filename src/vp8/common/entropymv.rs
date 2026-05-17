@@ -1,4 +1,4 @@
-pub type vp8_prob = ::core::ffi::c_uchar;
+pub use crate::vp8::common::types::vp8_prob;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct mv_context {

@@ -29,24 +29,9 @@ pub union b_mode_info {
     pub as_mode: B_PREDICTION_MODE,
     pub mv: int_mv,
 }
-pub use crate::vp8::common::types::{int_mv, MV};
+pub use crate::vp8::common::types::*;
 pub type uint32_t = u32;
-pub type B_PREDICTION_MODE = ::core::ffi::c_uint;
-pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
-pub const NEW4X4: B_PREDICTION_MODE = 13;
-pub const ZERO4X4: B_PREDICTION_MODE = 12;
-pub const ABOVE4X4: B_PREDICTION_MODE = 11;
-pub const LEFT4X4: B_PREDICTION_MODE = 10;
-pub const B_HU_PRED: B_PREDICTION_MODE = 9;
-pub const B_HD_PRED: B_PREDICTION_MODE = 8;
-pub const B_VL_PRED: B_PREDICTION_MODE = 7;
-pub const B_VR_PRED: B_PREDICTION_MODE = 6;
-pub const B_RD_PRED: B_PREDICTION_MODE = 5;
-pub const B_LD_PRED: B_PREDICTION_MODE = 4;
-pub const B_HE_PRED: B_PREDICTION_MODE = 3;
-pub const B_VE_PRED: B_PREDICTION_MODE = 2;
-pub const B_TM_PRED: B_PREDICTION_MODE = 1;
-pub const B_DC_PRED: B_PREDICTION_MODE = 0;
+
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
 pub type BLOCKD = blockd;

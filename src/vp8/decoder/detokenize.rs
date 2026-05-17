@@ -100,55 +100,20 @@ pub struct yv12_buffer_config {
     pub flags: ::core::ffi::c_int,
 }
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
-pub use crate::vp8::common::types::{int_mv, MV};
-pub type vp8_prob = ::core::ffi::c_uchar;
-pub type ENTROPY_CONTEXT = ::core::ffi::c_char;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct ENTROPY_CONTEXT_PLANES {
-    pub y1: [ENTROPY_CONTEXT; 4],
-    pub u: [ENTROPY_CONTEXT; 2],
-    pub v: [ENTROPY_CONTEXT; 2],
-    pub y2: ENTROPY_CONTEXT,
-}
+pub use crate::vp8::common::types::*;
+
+
 pub type FRAME_TYPE = ::core::ffi::c_uint;
 pub const INTER_FRAME: FRAME_TYPE = 1;
 pub const KEY_FRAME: FRAME_TYPE = 0;
-pub type B_PREDICTION_MODE = ::core::ffi::c_uint;
-pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
-pub const NEW4X4: B_PREDICTION_MODE = 13;
-pub const ZERO4X4: B_PREDICTION_MODE = 12;
-pub const ABOVE4X4: B_PREDICTION_MODE = 11;
-pub const LEFT4X4: B_PREDICTION_MODE = 10;
-pub const B_HU_PRED: B_PREDICTION_MODE = 9;
-pub const B_HD_PRED: B_PREDICTION_MODE = 8;
-pub const B_VL_PRED: B_PREDICTION_MODE = 7;
-pub const B_VR_PRED: B_PREDICTION_MODE = 6;
-pub const B_RD_PRED: B_PREDICTION_MODE = 5;
-pub const B_LD_PRED: B_PREDICTION_MODE = 4;
-pub const B_HE_PRED: B_PREDICTION_MODE = 3;
-pub const B_VE_PRED: B_PREDICTION_MODE = 2;
-pub const B_TM_PRED: B_PREDICTION_MODE = 1;
-pub const B_DC_PRED: B_PREDICTION_MODE = 0;
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union b_mode_info {
     pub as_mode: B_PREDICTION_MODE,
     pub mv: int_mv,
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MB_MODE_INFO {
-    pub mode: uint8_t,
-    pub uv_mode: uint8_t,
-    pub ref_frame: uint8_t,
-    pub is_4x4: uint8_t,
-    pub mv: int_mv,
-    pub partitioning: uint8_t,
-    pub mb_skip_coeff: uint8_t,
-    pub need_to_clamp_mvs: uint8_t,
-    pub segment_id: uint8_t,
-}
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct modeinfo {
