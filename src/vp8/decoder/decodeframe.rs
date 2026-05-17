@@ -672,20 +672,7 @@ pub const vp8_prob_half: vp8_prob = 128 as ::core::ffi::c_int as vp8_prob;
 pub const VP8_BD_VALUE_SIZE: ::core::ffi::c_int =
     ::core::mem::size_of::<VP8_BD_VALUE>() as ::core::ffi::c_int * CHAR_BIT;
 pub const VP8_LOTS_OF_BITS: ::core::ffi::c_int = 0x40000000 as ::core::ffi::c_int;
-#[inline]
-unsafe extern "C" fn vp8_decode_value(
-    mut br: *mut BOOL_DECODER,
-    mut bits: ::core::ffi::c_int,
-) -> ::core::ffi::c_int { unsafe {
-    let mut z: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    let mut bit: ::core::ffi::c_int = 0;
-    bit = bits - 1 as ::core::ffi::c_int;
-    while bit >= 0 as ::core::ffi::c_int {
-        z |= vp8dx_decode_bool(br, 0x80 as ::core::ffi::c_int) << bit;
-        bit -= 1;
-    }
-    return z;
-}}
+
 #[inline]
 fn vp8dx_bool_error(br: &BOOL_DECODER) -> ::core::ffi::c_int {
     if br.count > VP8_BD_VALUE_SIZE && br.count < VP8_LOTS_OF_BITS {

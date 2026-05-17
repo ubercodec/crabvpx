@@ -250,6 +250,12 @@ pub union b_mode_info {
     pub as_mode: B_PREDICTION_MODE,
     pub mv: int_mv,
 }
+impl b_mode_info {
+    #[inline]
+    pub fn mode(&self) -> B_PREDICTION_MODE {
+        unsafe { self.as_mode }
+    }
+}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union int_mv {
@@ -539,11 +545,11 @@ fn left_block_mode(
     mip_slice: &[MODE_INFO],
     cur_idx: usize,
     b: usize,
-) -> B_PREDICTION_MODE { unsafe {
+) -> B_PREDICTION_MODE {
     if b & 3 == 0 {
         let left_mb = &mip_slice[cur_idx - 1];
         match left_mb.mbmi.mode as ::core::ffi::c_int {
-            4 => left_mb.bmi[b + 3].as_mode,
+            4 => left_mb.bmi[b + 3].mode(),
             0 => B_DC_PRED,
             1 => B_VE_PRED,
             2 => B_HE_PRED,
@@ -552,20 +558,20 @@ fn left_block_mode(
         }
     } else {
         let cur_mb = &mip_slice[cur_idx];
-        cur_mb.bmi[b - 1].as_mode
+        cur_mb.bmi[b - 1].mode()
     }
-}}
+}
 #[inline]
 fn above_block_mode(
     mip_slice: &[MODE_INFO],
     cur_idx: usize,
     mi_stride: usize,
     b: usize,
-) -> B_PREDICTION_MODE { unsafe {
+) -> B_PREDICTION_MODE {
     if b >> 2 == 0 {
         let above_mb = &mip_slice[cur_idx - mi_stride];
         match above_mb.mbmi.mode as ::core::ffi::c_int {
-            4 => above_mb.bmi[b + 12].as_mode,
+            4 => above_mb.bmi[b + 12].mode(),
             0 => B_DC_PRED,
             1 => B_VE_PRED,
             2 => B_HE_PRED,
@@ -574,9 +580,9 @@ fn above_block_mode(
         }
     } else {
         let cur_mb = &mip_slice[cur_idx];
-        cur_mb.bmi[b - 4].as_mode
+        cur_mb.bmi[b - 4].mode()
     }
-}}
+}
 fn safe_treed_read(
     r: &mut SafeBoolDecoder,
     t: &[vp8_tree_index],
