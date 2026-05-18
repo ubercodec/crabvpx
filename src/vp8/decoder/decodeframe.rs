@@ -639,102 +639,72 @@ fn yv12_extend_frame_bottom_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
         v_slice.copy_within(v_src_start..v_src_end, dest_start);
     }
 }}
-fn yv12_extend_frame_left_right_c(
-    ybf: &YV12_BUFFER_CONFIG,
-    mut y_src: *mut ::core::ffi::c_uchar,
-    mut u_src: *mut ::core::ffi::c_uchar,
-    mut v_src: *mut ::core::ffi::c_uchar,
-) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    let mut src_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut src_ptr2: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut dest_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut dest_ptr2: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut Border: ::core::ffi::c_uint = 0;
-    let mut plane_stride: ::core::ffi::c_int = 0;
-    let mut plane_height: ::core::ffi::c_int = 0;
-    let mut plane_width: ::core::ffi::c_int = 0;
-    Border = ybf.border as ::core::ffi::c_uint;
-    plane_stride = ybf.y_stride;
-    plane_height = 16 as ::core::ffi::c_int;
-    plane_width = ybf.y_width;
-    src_ptr1 = y_src;
-    src_ptr2 = src_ptr1
-        .offset(plane_width as isize)
-        .offset(-(1 as ::core::ffi::c_int as isize));
-    dest_ptr1 = src_ptr1.offset(-(Border as isize));
-    dest_ptr2 = src_ptr2.offset(1 as ::core::ffi::c_int as isize);
-    i = 0 as ::core::ffi::c_int;
-    while i < plane_height {
-        memset(
-            dest_ptr1 as *mut ::core::ffi::c_void,
-            *src_ptr1.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            Border as size_t,
-        );
-        memset(
-            dest_ptr2 as *mut ::core::ffi::c_void,
-            *src_ptr2.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            Border as size_t,
-        );
-        src_ptr1 = src_ptr1.offset(plane_stride as isize);
-        src_ptr2 = src_ptr2.offset(plane_stride as isize);
-        dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
-        dest_ptr2 = dest_ptr2.offset(plane_stride as isize);
-        i += 1;
+fn yv12_extend_frame_left_right(
+    ybf: &mut YV12_BUFFER_CONFIG,
+    mb_row: i32,
+) {
+    let border = ybf.border as usize;
+
+    // Y Plane
+    let y_stride = ybf.y_stride as usize;
+    let y_width = ybf.y_width as usize;
+    let y_slice = unsafe { ybf.y_slice_mut() };
+    
+    let y_plane_height = 16;
+    for i in 0..y_plane_height {
+        let y_line = mb_row as usize * 16 + i;
+        let active_line_start_idx = (border * y_stride + border) + y_line * y_stride;
+        
+        let first_val = y_slice[active_line_start_idx];
+        let last_val = y_slice[active_line_start_idx + y_width - 1];
+        
+        let left_border_start = active_line_start_idx - border;
+        y_slice[left_border_start..active_line_start_idx].fill(first_val);
+        
+        let right_border_start = active_line_start_idx + y_width;
+        let right_border_end = right_border_start + border;
+        y_slice[right_border_start..right_border_end].fill(last_val);
     }
-    plane_stride = ybf.uv_stride;
-    plane_height = 8 as ::core::ffi::c_int;
-    plane_width = ybf.uv_width;
-    Border = Border.wrapping_div(2 as ::core::ffi::c_uint);
-    src_ptr1 = u_src;
-    src_ptr2 = src_ptr1
-        .offset(plane_width as isize)
-        .offset(-(1 as ::core::ffi::c_int as isize));
-    dest_ptr1 = src_ptr1.offset(-(Border as isize));
-    dest_ptr2 = src_ptr2.offset(1 as ::core::ffi::c_int as isize);
-    i = 0 as ::core::ffi::c_int;
-    while i < plane_height {
-        memset(
-            dest_ptr1 as *mut ::core::ffi::c_void,
-            *src_ptr1.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            Border as size_t,
-        );
-        memset(
-            dest_ptr2 as *mut ::core::ffi::c_void,
-            *src_ptr2.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            Border as size_t,
-        );
-        src_ptr1 = src_ptr1.offset(plane_stride as isize);
-        src_ptr2 = src_ptr2.offset(plane_stride as isize);
-        dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
-        dest_ptr2 = dest_ptr2.offset(plane_stride as isize);
-        i += 1;
+
+    // U Plane
+    let uv_border = border / 2;
+    let uv_stride = ybf.uv_stride as usize;
+    let uv_width = ybf.uv_width as usize;
+    let u_slice = unsafe { ybf.u_slice_mut() };
+    
+    let uv_plane_height = 8;
+    for i in 0..uv_plane_height {
+        let uv_line = mb_row as usize * 8 + i;
+        let active_line_start_idx = (uv_border * uv_stride + uv_border) + uv_line * uv_stride;
+        
+        let first_val = u_slice[active_line_start_idx];
+        let last_val = u_slice[active_line_start_idx + uv_width - 1];
+        
+        let left_border_start = active_line_start_idx - uv_border;
+        u_slice[left_border_start..active_line_start_idx].fill(first_val);
+        
+        let right_border_start = active_line_start_idx + uv_width;
+        let right_border_end = right_border_start + uv_border;
+        u_slice[right_border_start..right_border_end].fill(last_val);
     }
-    src_ptr1 = v_src;
-    src_ptr2 = src_ptr1
-        .offset(plane_width as isize)
-        .offset(-(1 as ::core::ffi::c_int as isize));
-    dest_ptr1 = src_ptr1.offset(-(Border as isize));
-    dest_ptr2 = src_ptr2.offset(1 as ::core::ffi::c_int as isize);
-    i = 0 as ::core::ffi::c_int;
-    while i < plane_height {
-        memset(
-            dest_ptr1 as *mut ::core::ffi::c_void,
-            *src_ptr1.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            Border as size_t,
-        );
-        memset(
-            dest_ptr2 as *mut ::core::ffi::c_void,
-            *src_ptr2.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            Border as size_t,
-        );
-        src_ptr1 = src_ptr1.offset(plane_stride as isize);
-        src_ptr2 = src_ptr2.offset(plane_stride as isize);
-        dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
-        dest_ptr2 = dest_ptr2.offset(plane_stride as isize);
-        i += 1;
+
+    // V Plane
+    let v_slice = unsafe { ybf.v_slice_mut() };
+    for i in 0..uv_plane_height {
+        let uv_line = mb_row as usize * 8 + i;
+        let active_line_start_idx = (uv_border * uv_stride + uv_border) + uv_line * uv_stride;
+        
+        let first_val = v_slice[active_line_start_idx];
+        let last_val = v_slice[active_line_start_idx + uv_width - 1];
+        
+        let left_border_start = active_line_start_idx - uv_border;
+        v_slice[left_border_start..active_line_start_idx].fill(first_val);
+        
+        let right_border_start = active_line_start_idx + uv_width;
+        let right_border_end = right_border_start + uv_border;
+        v_slice[right_border_start..right_border_end].fill(last_val);
     }
-}}
+}
 fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
     let pc: *mut VP8_COMMON = &raw mut pbi.common;
     let xd: *mut MACROBLOCKD = &raw mut pbi.mb;
@@ -757,8 +727,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
         [::core::ptr::null_mut::<::core::ffi::c_uchar>(); 3];
     let mut lf_dst: [*mut ::core::ffi::c_uchar; 3] =
         [::core::ptr::null_mut::<::core::ffi::c_uchar>(); 3];
-    let mut eb_dst: [*mut ::core::ffi::c_uchar; 3] =
-        [::core::ptr::null_mut::<::core::ffi::c_uchar>(); 3];
+    let mut extended_row: i32 = 0;
     let mut i: ::core::ffi::c_int = 0;
     let mut ref_fb_corrupted: [::core::ffi::c_int; 4] = [0; 4];
     ref_fb_corrupted[INTRA_FRAME as ::core::ffi::c_int as usize] = 0 as ::core::ffi::c_int;
@@ -777,15 +746,12 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
     dst_buffer[0 as ::core::ffi::c_int as usize] =
         (*yv12_fb_new).y_buffer as *mut ::core::ffi::c_uchar;
     lf_dst[0 as ::core::ffi::c_int as usize] = dst_buffer[0 as ::core::ffi::c_int as usize];
-    eb_dst[0 as ::core::ffi::c_int as usize] = lf_dst[0 as ::core::ffi::c_int as usize];
     dst_buffer[1 as ::core::ffi::c_int as usize] =
         (*yv12_fb_new).u_buffer as *mut ::core::ffi::c_uchar;
     lf_dst[1 as ::core::ffi::c_int as usize] = dst_buffer[1 as ::core::ffi::c_int as usize];
-    eb_dst[1 as ::core::ffi::c_int as usize] = lf_dst[1 as ::core::ffi::c_int as usize];
     dst_buffer[2 as ::core::ffi::c_int as usize] =
         (*yv12_fb_new).v_buffer as *mut ::core::ffi::c_uchar;
     lf_dst[2 as ::core::ffi::c_int as usize] = dst_buffer[2 as ::core::ffi::c_int as usize];
-    eb_dst[2 as ::core::ffi::c_int as usize] = lf_dst[2 as ::core::ffi::c_int as usize];
     (*xd).up_available = 0 as ::core::ffi::c_int;
     if (*pc).filter_level != 0 {
         let filter_level = (*pc).filter_level;
@@ -936,21 +902,8 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
                     );
                 }
                 if mb_row > 1 as ::core::ffi::c_int {
-                    yv12_extend_frame_left_right_c(
-                        &*yv12_fb_new,
-                        eb_dst[0 as ::core::ffi::c_int as usize],
-                        eb_dst[1 as ::core::ffi::c_int as usize],
-                        eb_dst[2 as ::core::ffi::c_int as usize],
-                    );
-                    eb_dst[0 as ::core::ffi::c_int as usize] = eb_dst
-                        [0 as ::core::ffi::c_int as usize]
-                        .offset((recon_y_stride * 16 as ::core::ffi::c_int) as isize);
-                    eb_dst[1 as ::core::ffi::c_int as usize] = eb_dst
-                        [1 as ::core::ffi::c_int as usize]
-                        .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
-                    eb_dst[2 as ::core::ffi::c_int as usize] = eb_dst
-                        [2 as ::core::ffi::c_int as usize]
-                        .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
+                    yv12_extend_frame_left_right(&mut *yv12_fb_new, extended_row);
+                    extended_row += 1;
                 }
                 lf_dst[0 as ::core::ffi::c_int as usize] = lf_dst[0 as ::core::ffi::c_int as usize]
                     .offset((recon_y_stride * 16 as ::core::ffi::c_int) as isize);
@@ -962,18 +915,8 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
                 lf_mic = lf_mic.offset(1);
             }
         } else if mb_row > 0 as ::core::ffi::c_int {
-            yv12_extend_frame_left_right_c(
-                &*yv12_fb_new,
-                eb_dst[0 as ::core::ffi::c_int as usize],
-                eb_dst[1 as ::core::ffi::c_int as usize],
-                eb_dst[2 as ::core::ffi::c_int as usize],
-            );
-            eb_dst[0 as ::core::ffi::c_int as usize] = eb_dst[0 as ::core::ffi::c_int as usize]
-                .offset((recon_y_stride * 16 as ::core::ffi::c_int) as isize);
-            eb_dst[1 as ::core::ffi::c_int as usize] = eb_dst[1 as ::core::ffi::c_int as usize]
-                .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
-            eb_dst[2 as ::core::ffi::c_int as usize] = eb_dst[2 as ::core::ffi::c_int as usize]
-                .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
+            yv12_extend_frame_left_right(&mut *yv12_fb_new, extended_row);
+            extended_row += 1;
         }
         mb_row += 1;
     }
@@ -1000,25 +943,10 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
                 lf_dst[0 as ::core::ffi::c_int as usize],
             );
         }
-        yv12_extend_frame_left_right_c(
-            &*yv12_fb_new,
-            eb_dst[0 as ::core::ffi::c_int as usize],
-            eb_dst[1 as ::core::ffi::c_int as usize],
-            eb_dst[2 as ::core::ffi::c_int as usize],
-        );
-        eb_dst[0 as ::core::ffi::c_int as usize] = eb_dst[0 as ::core::ffi::c_int as usize]
-            .offset((recon_y_stride * 16 as ::core::ffi::c_int) as isize);
-        eb_dst[1 as ::core::ffi::c_int as usize] = eb_dst[1 as ::core::ffi::c_int as usize]
-            .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
-        eb_dst[2 as ::core::ffi::c_int as usize] = eb_dst[2 as ::core::ffi::c_int as usize]
-            .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
+        yv12_extend_frame_left_right(&mut *yv12_fb_new, extended_row);
+        extended_row += 1;
     }
-    yv12_extend_frame_left_right_c(
-        &*yv12_fb_new,
-        eb_dst[0 as ::core::ffi::c_int as usize],
-        eb_dst[1 as ::core::ffi::c_int as usize],
-        eb_dst[2 as ::core::ffi::c_int as usize],
-    );
+    yv12_extend_frame_left_right(&mut *yv12_fb_new, extended_row);
     yv12_extend_frame_top_c(&mut *yv12_fb_new);
     yv12_extend_frame_bottom_c(&mut *yv12_fb_new);
 }}
