@@ -250,7 +250,7 @@ pub unsafe extern "C" fn vp8dx_set_reference(
             b"Incorrect buffer dimensions\0" as *const u8 as *const ::core::ffi::c_char,
         );
     } else {
-        free_fb = get_free_fb(cm);
+        free_fb = get_free_fb(&mut *cm);
         (*cm).fb_idx_ref_cnt[free_fb as usize] -= 1;
         ref_cnt_fb(
             &raw mut (*cm).fb_idx_ref_cnt as *mut ::core::ffi::c_int,
@@ -265,18 +265,18 @@ pub unsafe extern "C" fn vp8dx_set_reference(
     }
     return (*pbi).common.error.error_code;
 }}
-unsafe extern "C" fn get_free_fb(mut cm: *mut VP8_COMMON) -> ::core::ffi::c_int { unsafe {
+fn get_free_fb(cm: &mut VP8_COMMON) -> ::core::ffi::c_int {
     let mut i: ::core::ffi::c_int = 0;
     i = 0 as ::core::ffi::c_int;
     while i < NUM_YV12_BUFFERS {
-        if (*cm).fb_idx_ref_cnt[i as usize] == 0 as ::core::ffi::c_int {
+        if cm.fb_idx_ref_cnt[i as usize] == 0 as ::core::ffi::c_int {
             break;
         }
         i += 1;
     }
-    (*cm).fb_idx_ref_cnt[i as usize] = 1 as ::core::ffi::c_int;
+    cm.fb_idx_ref_cnt[i as usize] = 1 as ::core::ffi::c_int;
     return i;
-}}
+}
 unsafe extern "C" fn ref_cnt_fb(
     mut buf: *mut ::core::ffi::c_int,
     mut idx: *mut ::core::ffi::c_int,
@@ -362,7 +362,7 @@ unsafe extern "C" fn check_fragments_for_errors(mut pbi: *mut VP8D_COMP) -> ::co
         if (*cm).fb_idx_ref_cnt[(*cm).lst_fb_idx as usize] > 1 as ::core::ffi::c_int {
             let prev_idx: ::core::ffi::c_int = (*cm).lst_fb_idx;
             (*cm).fb_idx_ref_cnt[prev_idx as usize] -= 1;
-            (*cm).lst_fb_idx = get_free_fb(cm);
+            (*cm).lst_fb_idx = get_free_fb(&mut *cm);
             vp8_yv12_copy_frame_c(
                 (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset(prev_idx as isize)
                     as *mut YV12_BUFFER_CONFIG,
@@ -387,7 +387,7 @@ pub unsafe extern "C" fn vp8dx_receive_compressed_data(
     if retcode <= 0 as ::core::ffi::c_int {
         return retcode;
     }
-    (*cm).new_fb_idx = get_free_fb(cm);
+    (*cm).new_fb_idx = get_free_fb(&mut *cm);
     (*pbi).dec_fb_ref[INTRA_FRAME as ::core::ffi::c_int as usize] =
         (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset((*cm).new_fb_idx as isize)
             as *mut YV12_BUFFER_CONFIG;
