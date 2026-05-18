@@ -117,71 +117,16 @@ pub unsafe extern "C" fn vp8_dc_only_idct_add_c(
 pub unsafe extern "C" fn vp8_short_inv_walsh4x4_c(
     mut input: *mut ::core::ffi::c_short,
     mut mb_dqcoeff: *mut ::core::ffi::c_short,
-) { unsafe {
-    let mut output: [::core::ffi::c_short; 16] = [0; 16];
-    let mut i: ::core::ffi::c_int = 0;
-    let mut a1: ::core::ffi::c_int = 0;
-    let mut b1: ::core::ffi::c_int = 0;
-    let mut c1: ::core::ffi::c_int = 0;
-    let mut d1: ::core::ffi::c_int = 0;
-    let mut a2: ::core::ffi::c_int = 0;
-    let mut b2: ::core::ffi::c_int = 0;
-    let mut c2: ::core::ffi::c_int = 0;
-    let mut d2: ::core::ffi::c_int = 0;
-    let mut ip: *mut ::core::ffi::c_short = input;
-    let mut op: *mut ::core::ffi::c_short = &raw mut output as *mut ::core::ffi::c_short;
-    i = 0 as ::core::ffi::c_int;
-    while i < 4 as ::core::ffi::c_int {
-        a1 = *ip.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            + *ip.offset(12 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-        b1 = *ip.offset(4 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            + *ip.offset(8 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-        c1 = *ip.offset(4 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            - *ip.offset(8 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-        d1 = *ip.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            - *ip.offset(12 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-        *op.offset(0 as ::core::ffi::c_int as isize) = (a1 + b1) as ::core::ffi::c_short;
-        *op.offset(4 as ::core::ffi::c_int as isize) = (c1 + d1) as ::core::ffi::c_short;
-        *op.offset(8 as ::core::ffi::c_int as isize) = (a1 - b1) as ::core::ffi::c_short;
-        *op.offset(12 as ::core::ffi::c_int as isize) = (d1 - c1) as ::core::ffi::c_short;
-        ip = ip.offset(1);
-        op = op.offset(1);
-        i += 1;
+) {
+    unsafe {
+        let input_ref = &*(input as *const [i16; 16]);
+        // mb_dqcoeff is accessed up to index 15 * 16 = 240.
+        // So we need a slice of at least 241 elements.
+        // We use 256 as it is the size of contiguously allocated block coefficients.
+        let mb_dqcoeff_slice = std::slice::from_raw_parts_mut(mb_dqcoeff, 256);
+        vp8_short_inv_walsh4x4_safe(input_ref, mb_dqcoeff_slice);
     }
-    ip = &raw mut output as *mut ::core::ffi::c_short;
-    op = &raw mut output as *mut ::core::ffi::c_short;
-    i = 0 as ::core::ffi::c_int;
-    while i < 4 as ::core::ffi::c_int {
-        a1 = *ip.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            + *ip.offset(3 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-        b1 = *ip.offset(1 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            + *ip.offset(2 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-        c1 = *ip.offset(1 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            - *ip.offset(2 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-        d1 = *ip.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            - *ip.offset(3 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-        a2 = a1 + b1;
-        b2 = c1 + d1;
-        c2 = a1 - b1;
-        d2 = d1 - c1;
-        *op.offset(0 as ::core::ffi::c_int as isize) =
-            (a2 + 3 as ::core::ffi::c_int >> 3 as ::core::ffi::c_int) as ::core::ffi::c_short;
-        *op.offset(1 as ::core::ffi::c_int as isize) =
-            (b2 + 3 as ::core::ffi::c_int >> 3 as ::core::ffi::c_int) as ::core::ffi::c_short;
-        *op.offset(2 as ::core::ffi::c_int as isize) =
-            (c2 + 3 as ::core::ffi::c_int >> 3 as ::core::ffi::c_int) as ::core::ffi::c_short;
-        *op.offset(3 as ::core::ffi::c_int as isize) =
-            (d2 + 3 as ::core::ffi::c_int >> 3 as ::core::ffi::c_int) as ::core::ffi::c_short;
-        ip = ip.offset(4 as ::core::ffi::c_int as isize);
-        op = op.offset(4 as ::core::ffi::c_int as isize);
-        i += 1;
-    }
-    i = 0 as ::core::ffi::c_int;
-    while i < 16 as ::core::ffi::c_int {
-        *mb_dqcoeff.offset((i * 16 as ::core::ffi::c_int) as isize) = output[i as usize];
-        i += 1;
-    }
-}}
+}
 pub fn vp8_short_inv_walsh4x4_1_safe(
     input: &[i16],
     mb_dqcoeff: &mut [i16],
@@ -189,6 +134,51 @@ pub fn vp8_short_inv_walsh4x4_1_safe(
     let a1 = (input[0] as i32 + 3) >> 3;
     for i in 0..16 {
         mb_dqcoeff[i * 16] = a1 as i16;
+    }
+}
+
+pub fn vp8_short_inv_walsh4x4_safe(
+    input: &[i16; 16],
+    mb_dqcoeff: &mut [i16],
+) {
+    let mut output = [0i16; 16];
+    
+    // First pass: process columns
+    for i in 0..4 {
+        let a1 = input[i] as i32 + input[i + 12] as i32;
+        let b1 = input[i + 4] as i32 + input[i + 8] as i32;
+        let c1 = input[i + 4] as i32 - input[i + 8] as i32;
+        let d1 = input[i] as i32 - input[i + 12] as i32;
+        
+        output[i] = (a1 + b1) as i16;
+        output[i + 4] = (c1 + d1) as i16;
+        output[i + 8] = (a1 - b1) as i16;
+        output[i + 12] = (d1 - c1) as i16;
+    }
+    
+    // Second pass: process rows
+    let temp_output = output;
+    for i in 0..4 {
+        let row = i * 4;
+        let a1 = temp_output[row] as i32 + temp_output[row + 3] as i32;
+        let b1 = temp_output[row + 1] as i32 + temp_output[row + 2] as i32;
+        let c1 = temp_output[row + 1] as i32 - temp_output[row + 2] as i32;
+        let d1 = temp_output[row] as i32 - temp_output[row + 3] as i32;
+        
+        let a2 = a1 + b1;
+        let b2 = c1 + d1;
+        let c2 = a1 - b1;
+        let d2 = d1 - c1;
+        
+        output[row] = ((a2 + 3) >> 3) as i16;
+        output[row + 1] = ((b2 + 3) >> 3) as i16;
+        output[row + 2] = ((c2 + 3) >> 3) as i16;
+        output[row + 3] = ((d2 + 3) >> 3) as i16;
+    }
+    
+    // Write to mb_dqcoeff
+    for i in 0..16 {
+        mb_dqcoeff[i * 16] = output[i];
     }
 }
 
