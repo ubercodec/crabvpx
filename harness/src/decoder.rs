@@ -30,8 +30,9 @@ pub struct LibVpxOracleDecoder {
 
 impl LibVpxOracleDecoder {
     pub fn new() -> Self {
+        let lib_name = format!("../libvpx/libvpx.{}", std::env::consts::DLL_EXTENSION);
         let vpx = unsafe {
-            ffi::Vpx::new("../libvpx/libvpx.dylib").expect("Failed to load libvpx.dylib")
+            ffi::Vpx::new(&lib_name).unwrap_or_else(|e| panic!("Failed to load {}: {:?}", lib_name, e))
         };
         Self {
             ctx: unsafe { std::mem::zeroed() },
