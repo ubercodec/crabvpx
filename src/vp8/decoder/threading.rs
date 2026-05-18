@@ -1,105 +1,105 @@
 unsafe extern "Rust" {
     fn vp8_dc_only_idct_add_c(
-        input_dc: ::core::ffi::c_short,
-        pred_ptr: *mut ::core::ffi::c_uchar,
+        input_dc: i16,
+        pred_ptr: *mut u8,
         pred_stride: i32,
-        dst_ptr: *mut ::core::ffi::c_uchar,
+        dst_ptr: *mut u8,
         dst_stride: i32,
     );
     fn vp8_dequant_idct_add_c(
-        input: *mut ::core::ffi::c_short,
-        dq: *mut ::core::ffi::c_short,
-        dest: *mut ::core::ffi::c_uchar,
+        input: *mut i16,
+        dq: *mut i16,
+        dest: *mut u8,
         stride: i32,
     );
     fn vp8_dequant_idct_add_uv_block_c(
-        q: *mut ::core::ffi::c_short,
-        dq: *mut ::core::ffi::c_short,
-        dst_u: *mut ::core::ffi::c_uchar,
-        dst_v: *mut ::core::ffi::c_uchar,
+        q: *mut i16,
+        dq: *mut i16,
+        dst_u: *mut u8,
+        dst_v: *mut u8,
         stride: i32,
-        eobs: *mut ::core::ffi::c_char,
+        eobs: *mut i8,
     );
     fn vp8_dequant_idct_add_y_block_c(
-        q: *mut ::core::ffi::c_short,
-        dq: *mut ::core::ffi::c_short,
-        dst: *mut ::core::ffi::c_uchar,
+        q: *mut i16,
+        dq: *mut i16,
+        dst: *mut u8,
         stride: i32,
-        eobs: *mut ::core::ffi::c_char,
+        eobs: *mut i8,
     );
-    fn vp8_dequantize_b_c(_: *mut blockd, DQC: *mut ::core::ffi::c_short);
+    fn vp8_dequantize_b_c(_: *mut blockd, DQC: *mut i16);
     fn vp8_loop_filter_bh_c(
-        y_ptr: *mut ::core::ffi::c_uchar,
-        u_ptr: *mut ::core::ffi::c_uchar,
-        v_ptr: *mut ::core::ffi::c_uchar,
+        y_ptr: *mut u8,
+        u_ptr: *mut u8,
+        v_ptr: *mut u8,
         y_stride: i32,
         uv_stride: i32,
         lfi: *mut loop_filter_info,
     );
     fn vp8_loop_filter_bv_c(
-        y_ptr: *mut ::core::ffi::c_uchar,
-        u_ptr: *mut ::core::ffi::c_uchar,
-        v_ptr: *mut ::core::ffi::c_uchar,
+        y_ptr: *mut u8,
+        u_ptr: *mut u8,
+        v_ptr: *mut u8,
         y_stride: i32,
         uv_stride: i32,
         lfi: *mut loop_filter_info,
     );
     fn vp8_loop_filter_mbh_c(
-        y_ptr: *mut ::core::ffi::c_uchar,
-        u_ptr: *mut ::core::ffi::c_uchar,
-        v_ptr: *mut ::core::ffi::c_uchar,
+        y_ptr: *mut u8,
+        u_ptr: *mut u8,
+        v_ptr: *mut u8,
         y_stride: i32,
         uv_stride: i32,
         lfi: *mut loop_filter_info,
     );
     fn vp8_loop_filter_mbv_c(
-        y_ptr: *mut ::core::ffi::c_uchar,
-        u_ptr: *mut ::core::ffi::c_uchar,
-        v_ptr: *mut ::core::ffi::c_uchar,
+        y_ptr: *mut u8,
+        u_ptr: *mut u8,
+        v_ptr: *mut u8,
         y_stride: i32,
         uv_stride: i32,
         lfi: *mut loop_filter_info,
     );
     fn vp8_loop_filter_bhs_c(
-        y_ptr: *mut ::core::ffi::c_uchar,
+        y_ptr: *mut u8,
         y_stride: i32,
-        blimit: *const ::core::ffi::c_uchar,
+        blimit: *const u8,
     );
     fn vp8_loop_filter_bvs_c(
-        y_ptr: *mut ::core::ffi::c_uchar,
+        y_ptr: *mut u8,
         y_stride: i32,
-        blimit: *const ::core::ffi::c_uchar,
+        blimit: *const u8,
     );
     fn vp8_loop_filter_simple_horizontal_edge_c(
-        y_ptr: *mut ::core::ffi::c_uchar,
+        y_ptr: *mut u8,
         y_stride: i32,
-        blimit: *const ::core::ffi::c_uchar,
+        blimit: *const u8,
     );
     fn vp8_loop_filter_simple_vertical_edge_c(
-        y_ptr: *mut ::core::ffi::c_uchar,
+        y_ptr: *mut u8,
         y_stride: i32,
-        blimit: *const ::core::ffi::c_uchar,
+        blimit: *const u8,
     );
     fn vp8_short_inv_walsh4x4_c(
-        input: *mut ::core::ffi::c_short,
-        mb_dqcoeff: *mut ::core::ffi::c_short,
+        input: *mut i16,
+        mb_dqcoeff: *mut i16,
     );
     fn vp8_short_inv_walsh4x4_1_c(
-        input: *mut ::core::ffi::c_short,
-        mb_dqcoeff: *mut ::core::ffi::c_short,
+        input: *mut i16,
+        mb_dqcoeff: *mut i16,
     );
     fn pthread_create(
         _: *mut pthread_t,
         _: *const pthread_attr_t,
-        _: Option<unsafe fn(*mut ::core::ffi::c_void) -> *mut ::core::ffi::c_void>,
-        _: *mut ::core::ffi::c_void,
+        _: Option<unsafe fn(*mut core::ffi::c_void) -> *mut core::ffi::c_void>,
+        _: *mut core::ffi::c_void,
     ) -> i32;
-    fn pthread_join(_: pthread_t, _: *mut *mut ::core::ffi::c_void) -> i32;
+    fn pthread_join(_: pthread_t, _: *mut *mut core::ffi::c_void) -> i32;
     fn setjmp(_: *mut i32) -> i32;
     fn vpx_internal_error(
         info: *mut vpx_internal_error_info,
         error: vpx_codec_err_t,
-        fmt: *const ::core::ffi::c_char,
+        fmt: *const i8,
     );
     fn vp8_loop_filter_frame_init(
         cm: *mut VP8Common,
@@ -111,15 +111,15 @@ unsafe extern "Rust" {
     fn semaphore_signal(semaphore: semaphore_t) -> kern_return_t;
     fn semaphore_wait(semaphore: semaphore_t) -> kern_return_t;
     fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
+        __dst: *mut core::ffi::c_void,
+        __src: *const core::ffi::c_void,
         __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
     fn memset(
-        __b: *mut ::core::ffi::c_void,
+        __b: *mut core::ffi::c_void,
         __c: i32,
         __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
     fn semaphore_create(
         task: task_t,
         semaphore: *mut semaphore_t,
@@ -128,45 +128,45 @@ unsafe extern "Rust" {
     ) -> kern_return_t;
     fn semaphore_destroy(task: task_t, semaphore: semaphore_t) -> kern_return_t;
     fn vp8_mb_init_dequantizer(pbi: *mut VP8D_COMP, xd: *mut MACROBLOCKD);
-    fn vpx_memalign(align: size_t, size: size_t) -> *mut ::core::ffi::c_void;
-    fn vpx_malloc(size: size_t) -> *mut ::core::ffi::c_void;
-    fn vpx_calloc(num: size_t, size: size_t) -> *mut ::core::ffi::c_void;
-    fn vpx_free(memblk: *mut ::core::ffi::c_void);
+    fn vpx_memalign(align: size_t, size: size_t) -> *mut core::ffi::c_void;
+    fn vpx_malloc(size: size_t) -> *mut core::ffi::c_void;
+    fn vpx_calloc(num: size_t, size: size_t) -> *mut core::ffi::c_void;
+    fn vpx_free(memblk: *mut core::ffi::c_void);
     fn vp8_extend_mb_row(
         ybf: *mut YV12_BUFFER_CONFIG,
-        YPtr: *mut ::core::ffi::c_uchar,
-        UPtr: *mut ::core::ffi::c_uchar,
-        VPtr: *mut ::core::ffi::c_uchar,
+        YPtr: *mut u8,
+        UPtr: *mut u8,
+        VPtr: *mut u8,
     );
     fn vp8_reset_mb_tokens_context(x: *mut MACROBLOCKD);
     fn vp8_decode_mb_tokens(_: *mut VP8D_COMP, _: *mut MACROBLOCKD) -> i32;
     fn vp8_intra4x4_predict(
-        above: *mut ::core::ffi::c_uchar,
-        yleft: *mut ::core::ffi::c_uchar,
+        above: *mut u8,
+        yleft: *mut u8,
         left_stride: i32,
         b_mode: B_PREDICTION_MODE,
-        dst: *mut ::core::ffi::c_uchar,
+        dst: *mut u8,
         dst_stride: i32,
-        top_left: ::core::ffi::c_uchar,
+        top_left: u8,
     );
     fn vp8_build_inter_predictors_mb(xd: *mut MACROBLOCKD);
     fn vp8_build_intra_predictors_mby_s(
         x: *mut MACROBLOCKD,
-        yabove_row: *mut ::core::ffi::c_uchar,
-        yleft: *mut ::core::ffi::c_uchar,
+        yabove_row: *mut u8,
+        yleft: *mut u8,
         left_stride: i32,
-        ypred_ptr: *mut ::core::ffi::c_uchar,
+        ypred_ptr: *mut u8,
         y_stride: i32,
     );
     fn vp8_build_intra_predictors_mbuv_s(
         x: *mut MACROBLOCKD,
-        uabove_row: *mut ::core::ffi::c_uchar,
-        vabove_row: *mut ::core::ffi::c_uchar,
-        uleft: *mut ::core::ffi::c_uchar,
-        vleft: *mut ::core::ffi::c_uchar,
+        uabove_row: *mut u8,
+        vabove_row: *mut u8,
+        uleft: *mut u8,
+        vleft: *mut u8,
         left_stride: i32,
-        upred_ptr: *mut ::core::ffi::c_uchar,
-        vpred_ptr: *mut ::core::ffi::c_uchar,
+        upred_ptr: *mut u8,
+        vpred_ptr: *mut u8,
         pred_stride: i32,
     );
     fn vp8_setup_intra_recon_top_line(ybf: *mut YV12_BUFFER_CONFIG);
@@ -174,12 +174,12 @@ unsafe extern "Rust" {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct blockd {
-    pub qcoeff: *mut ::core::ffi::c_short,
-    pub dqcoeff: *mut ::core::ffi::c_short,
-    pub predictor: *mut ::core::ffi::c_uchar,
-    pub dequant: *mut ::core::ffi::c_short,
+    pub qcoeff: *mut i16,
+    pub dqcoeff: *mut i16,
+    pub predictor: *mut u8,
+    pub dequant: *mut i16,
     pub offset: i32,
-    pub eob: *mut ::core::ffi::c_char,
+    pub eob: *mut i8,
     pub bmi: b_mode_info,
 }
 #[derive(Copy, Clone)]
@@ -197,11 +197,11 @@ pub union int_mv {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MV {
-    pub row: ::core::ffi::c_short,
-    pub col: ::core::ffi::c_short,
+    pub row: i16,
+    pub col: i16,
 }
 pub type uint32_t = u32;
-pub type B_PREDICTION_MODE = ::core::ffi::c_uint;
+pub type B_PREDICTION_MODE = u32;
 pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
 pub const NEW4X4: B_PREDICTION_MODE = 13;
 pub const ZERO4X4: B_PREDICTION_MODE = 12;
@@ -220,14 +220,14 @@ pub const B_DC_PRED: B_PREDICTION_MODE = 0;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct macroblockd {
-    pub predictor: [::core::ffi::c_uchar; 384],
-    pub qcoeff: [::core::ffi::c_short; 400],
-    pub dqcoeff: [::core::ffi::c_short; 400],
-    pub eobs: [::core::ffi::c_char; 25],
-    pub dequant_y1: [::core::ffi::c_short; 16],
-    pub dequant_y1_dc: [::core::ffi::c_short; 16],
-    pub dequant_y2: [::core::ffi::c_short; 16],
-    pub dequant_uv: [::core::ffi::c_short; 16],
+    pub predictor: [u8; 384],
+    pub qcoeff: [i16; 400],
+    pub dqcoeff: [i16; 400],
+    pub eobs: [i8; 25],
+    pub dequant_y1: [i16; 16],
+    pub dequant_y1_dc: [i16; 16],
+    pub dequant_y2: [i16; 16],
+    pub dequant_uv: [i16; 16],
     pub block: [BLOCKD; 25],
     pub fullpixel_mask: i32,
     pub pre: YV12_BUFFER_CONFIG,
@@ -237,23 +237,23 @@ pub struct macroblockd {
     pub frame_type: FRAME_TYPE,
     pub up_available: i32,
     pub left_available: i32,
-    pub recon_above: [*mut ::core::ffi::c_uchar; 3],
-    pub recon_left: [*mut ::core::ffi::c_uchar; 3],
+    pub recon_above: [*mut u8; 3],
+    pub recon_left: [*mut u8; 3],
     pub recon_left_stride: [i32; 2],
     pub above_context: *mut ENTROPY_CONTEXT_PLANES,
     pub left_context: *mut ENTROPY_CONTEXT_PLANES,
-    pub segmentation_enabled: ::core::ffi::c_uchar,
-    pub update_mb_segmentation_map: ::core::ffi::c_uchar,
-    pub update_mb_segmentation_data: ::core::ffi::c_uchar,
-    pub mb_segment_abs_delta: ::core::ffi::c_uchar,
+    pub segmentation_enabled: u8,
+    pub update_mb_segmentation_map: u8,
+    pub update_mb_segmentation_data: u8,
+    pub mb_segment_abs_delta: u8,
     pub mb_segment_tree_probs: [vp8_prob; 3],
-    pub segment_feature_data: [[::core::ffi::c_schar; 4]; 2],
-    pub mode_ref_lf_delta_enabled: ::core::ffi::c_uchar,
-    pub mode_ref_lf_delta_update: ::core::ffi::c_uchar,
-    pub last_ref_lf_deltas: [::core::ffi::c_schar; 4],
-    pub ref_lf_deltas: [::core::ffi::c_schar; 4],
-    pub last_mode_lf_deltas: [::core::ffi::c_schar; 4],
-    pub mode_lf_deltas: [::core::ffi::c_schar; 4],
+    pub segment_feature_data: [[i8; 4]; 2],
+    pub mode_ref_lf_delta_enabled: u8,
+    pub mode_ref_lf_delta_update: u8,
+    pub last_ref_lf_deltas: [i8; 4],
+    pub ref_lf_deltas: [i8; 4],
+    pub last_mode_lf_deltas: [i8; 4],
+    pub mode_lf_deltas: [i8; 4],
     pub mb_to_left_edge: i32,
     pub mb_to_right_edge: i32,
     pub mb_to_top_edge: i32,
@@ -262,7 +262,7 @@ pub struct macroblockd {
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
-    pub current_bc: *mut ::core::ffi::c_void,
+    pub current_bc: *mut core::ffi::c_void,
     pub corrupted: i32,
     pub error_info: vpx_internal_error_info,
 }
@@ -271,12 +271,12 @@ pub struct macroblockd {
 pub struct vpx_internal_error_info {
     pub error_code: vpx_codec_err_t,
     pub has_detail: i32,
-    pub detail: [::core::ffi::c_char; 80],
+    pub detail: [i8; 80],
     pub setjmp: i32,
     pub jmp: jmp_buf,
 }
 pub type jmp_buf = [i32; 48];
-pub type vpx_codec_err_t = ::core::ffi::c_uint;
+pub type vpx_codec_err_t = u32;
 pub const VPX_CODEC_LIST_END: vpx_codec_err_t = 9;
 pub const VPX_CODEC_INVALID_PARAM: vpx_codec_err_t = 8;
 pub const VPX_CODEC_CORRUPT_FRAME: vpx_codec_err_t = 7;
@@ -288,15 +288,15 @@ pub const VPX_CODEC_MEM_ERROR: vpx_codec_err_t = 2;
 pub const VPX_CODEC_ERROR: vpx_codec_err_t = 1;
 pub const VPX_CODEC_OK: vpx_codec_err_t = 0;
 pub type vp8_subpix_fn_t = Option<unsafe fn(
-        *mut ::core::ffi::c_uchar,
+        *mut u8,
         i32,
         i32,
         i32,
-        *mut ::core::ffi::c_uchar,
+        *mut u8,
         i32,
     ) -> (),
 >;
-pub type vp8_prob = ::core::ffi::c_uchar;
+pub type vp8_prob = u8;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ENTROPY_CONTEXT_PLANES {
@@ -305,8 +305,8 @@ pub struct ENTROPY_CONTEXT_PLANES {
     pub v: [ENTROPY_CONTEXT; 2],
     pub y2: ENTROPY_CONTEXT,
 }
-pub type ENTROPY_CONTEXT = ::core::ffi::c_char;
-pub type FRAME_TYPE = ::core::ffi::c_uint;
+pub type ENTROPY_CONTEXT = i8;
+pub type FRAME_TYPE = u32;
 pub const INTER_FRAME: FRAME_TYPE = 1;
 pub const KEY_FRAME: FRAME_TYPE = 0;
 pub type MODE_INFO = modeinfo;
@@ -357,7 +357,7 @@ pub struct yv12_buffer_config {
     pub frame_size: size_t,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
-    pub bit_depth: ::core::ffi::c_uint,
+    pub bit_depth: u32,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
     pub render_width: i32,
@@ -366,11 +366,11 @@ pub struct yv12_buffer_config {
     pub flags: i32,
 }
 pub type vpx_color_range_t = vpx_color_range;
-pub type vpx_color_range = ::core::ffi::c_uint;
+pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_space = ::core::ffi::c_uint;
+pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
 pub const VPX_CS_BT_2020: vpx_color_space = 5;
@@ -385,38 +385,38 @@ pub type BLOCKD = blockd;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_filter_info {
-    pub mblim: *const ::core::ffi::c_uchar,
-    pub blim: *const ::core::ffi::c_uchar,
-    pub lim: *const ::core::ffi::c_uchar,
-    pub hev_thr: *const ::core::ffi::c_uchar,
+    pub mblim: *const u8,
+    pub blim: *const u8,
+    pub lim: *const u8,
+    pub hev_thr: *const u8,
 }
-pub type __darwin_natural_t = ::core::ffi::c_uint;
+pub type __darwin_natural_t = u32;
 pub type __darwin_mach_port_name_t = __darwin_natural_t;
 pub type __darwin_mach_port_t = __darwin_mach_port_name_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct __darwin_pthread_handler_rec {
-    pub __routine: Option<unsafe fn(*mut ::core::ffi::c_void) -> ()>,
-    pub __arg: *mut ::core::ffi::c_void,
+    pub __routine: Option<unsafe fn(*mut core::ffi::c_void) -> ()>,
+    pub __arg: *mut core::ffi::c_void,
     pub __next: *mut __darwin_pthread_handler_rec,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct _opaque_pthread_attr_t {
-    pub __sig: ::core::ffi::c_long,
-    pub __opaque: [::core::ffi::c_char; 56],
+    pub __sig: i64,
+    pub __opaque: [i8; 56],
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct _opaque_pthread_t {
-    pub __sig: ::core::ffi::c_long,
+    pub __sig: i64,
     pub __cleanup_stack: *mut __darwin_pthread_handler_rec,
-    pub __opaque: [::core::ffi::c_char; 8176],
+    pub __opaque: [i8; 8176],
 }
 pub type __darwin_pthread_attr_t = _opaque_pthread_attr_t;
 pub type __darwin_pthread_t = *mut _opaque_pthread_t;
-pub type pthread_attr_t = *mut ::core::ffi::c_void;
-pub type pthread_t = *mut ::core::ffi::c_void;
+pub type pthread_attr_t = *mut core::ffi::c_void;
+pub type pthread_t = *mut core::ffi::c_void;
 pub type mach_port_t = __darwin_mach_port_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -430,17 +430,17 @@ pub struct VP8D_COMP {
     pub b_multithreaded_rd: vpx_atomic_int,
     pub max_threads: i32,
     pub current_mb_col_main: i32,
-    pub decoding_thread_count: ::core::ffi::c_uint,
+    pub decoding_thread_count: u32,
     pub allocated_decoding_thread_count: i32,
     pub mt_baseline_filter_level: [i32; 4],
     pub sync_range: i32,
     pub mt_current_mb_col: *mut vpx_atomic_int,
-    pub mt_yabove_row: *mut *mut ::core::ffi::c_uchar,
-    pub mt_uabove_row: *mut *mut ::core::ffi::c_uchar,
-    pub mt_vabove_row: *mut *mut ::core::ffi::c_uchar,
-    pub mt_yleft_col: *mut *mut ::core::ffi::c_uchar,
-    pub mt_uleft_col: *mut *mut ::core::ffi::c_uchar,
-    pub mt_vleft_col: *mut *mut ::core::ffi::c_uchar,
+    pub mt_yabove_row: *mut *mut u8,
+    pub mt_uabove_row: *mut *mut u8,
+    pub mt_vabove_row: *mut *mut u8,
+    pub mt_yleft_col: *mut *mut u8,
+    pub mt_uleft_col: *mut *mut u8,
+    pub mt_vleft_col: *mut *mut u8,
     pub mb_row_di: *mut MB_ROW_DEC,
     pub de_thread_data: *mut DECODETHREAD_DATA,
     pub h_decoding_thread: *mut pthread_t,
@@ -457,23 +457,23 @@ pub struct VP8D_COMP {
     pub independent_partitions: i32,
     pub frame_corrupt_residual: i32,
     pub decrypt_cb: vpx_decrypt_cb,
-    pub decrypt_state: *mut ::core::ffi::c_void,
+    pub decrypt_state: *mut core::ffi::c_void,
     pub restart_threads: i32,
 }
 pub type vpx_decrypt_cb = Option<unsafe fn(
-        *mut ::core::ffi::c_void,
-        *const ::core::ffi::c_uchar,
-        *mut ::core::ffi::c_uchar,
+        *mut core::ffi::c_void,
+        *const u8,
+        *mut u8,
         i32,
     ) -> (),
 >;
-pub type semaphore_t = *mut ::core::ffi::c_void;
+pub type semaphore_t = *mut core::ffi::c_void;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct DECODETHREAD_DATA {
     pub ithread: i32,
-    pub ptr1: *mut ::core::ffi::c_void,
-    pub ptr2: *mut ::core::ffi::c_void,
+    pub ptr1: *mut core::ffi::c_void,
+    pub ptr2: *mut core::ffi::c_void,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -490,9 +490,9 @@ pub struct vpx_atomic_int {
 #[repr(C)]
 pub struct FRAGMENT_DATA {
     pub enabled: i32,
-    pub count: ::core::ffi::c_uint,
-    pub ptrs: [*const ::core::ffi::c_uchar; 9],
-    pub sizes: [::core::ffi::c_uint; 9],
+    pub count: u32,
+    pub ptrs: [*const u8; 9],
+    pub sizes: [u32; 9],
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -508,13 +508,13 @@ pub type BOOL_DECODER = vp8_reader;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vp8_reader {
-    pub user_buffer_end: *const ::core::ffi::c_uchar,
-    pub user_buffer: *const ::core::ffi::c_uchar,
+    pub user_buffer_end: *const u8,
+    pub user_buffer: *const u8,
     pub value: VP8_BD_VALUE,
     pub count: i32,
-    pub range: ::core::ffi::c_uint,
+    pub range: u32,
     pub decrypt_cb: vpx_decrypt_cb,
-    pub decrypt_state: *mut ::core::ffi::c_void,
+    pub decrypt_state: *mut core::ffi::c_void,
 }
 pub type VP8_BD_VALUE = size_t;
 pub type VP8_COMMON = VP8Common;
@@ -522,9 +522,9 @@ pub type VP8_COMMON = VP8Common;
 #[repr(C)]
 pub struct VP8Common {
     pub error: vpx_internal_error_info,
-    pub Y1dequant: [[::core::ffi::c_short; 2]; 128],
-    pub Y2dequant: [[::core::ffi::c_short; 2]; 128],
-    pub UVdequant: [[::core::ffi::c_short; 2]; 128],
+    pub Y1dequant: [[i16; 2]; 128],
+    pub Y2dequant: [[i16; 2]; 128],
+    pub UVdequant: [[i16; 2]; 128],
     pub Width: i32,
     pub Height: i32,
     pub horiz_scale: i32,
@@ -575,12 +575,12 @@ pub struct VP8Common {
     pub left_context: ENTROPY_CONTEXT_PLANES,
     pub lfc: FRAME_CONTEXT,
     pub fc: FRAME_CONTEXT,
-    pub current_video_frame: ::core::ffi::c_uint,
+    pub current_video_frame: u32,
     pub version: i32,
     pub multi_token_partition: TOKEN_PARTITION,
     pub processor_core_count: i32,
 }
-pub type TOKEN_PARTITION = ::core::ffi::c_uint;
+pub type TOKEN_PARTITION = u32;
 pub const EIGHT_PARTITION: TOKEN_PARTITION = 3;
 pub const FOUR_PARTITION: TOKEN_PARTITION = 2;
 pub const TWO_PARTITION: TOKEN_PARTITION = 1;
@@ -605,21 +605,21 @@ pub struct mv_context {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_filter_info_n {
-    pub mblim: [[::core::ffi::c_uchar; 16]; 64],
-    pub blim: [[::core::ffi::c_uchar; 16]; 64],
-    pub lim: [[::core::ffi::c_uchar; 16]; 64],
-    pub hev_thr: [[::core::ffi::c_uchar; 16]; 4],
-    pub lvl: [[[::core::ffi::c_uchar; 4]; 4]; 4],
-    pub hev_thr_lut: [[::core::ffi::c_uchar; 64]; 2],
-    pub mode_lf_lut: [::core::ffi::c_uchar; 10],
+    pub mblim: [[u8; 16]; 64],
+    pub blim: [[u8; 16]; 64],
+    pub lim: [[u8; 16]; 64],
+    pub hev_thr: [[u8; 16]; 4],
+    pub lvl: [[[u8; 4]; 4]; 4],
+    pub hev_thr_lut: [[u8; 64]; 2],
+    pub mode_lf_lut: [u8; 10],
 }
-pub type LOOPFILTERTYPE = ::core::ffi::c_uint;
+pub type LOOPFILTERTYPE = u32;
 pub const SIMPLE_LOOPFILTER: LOOPFILTERTYPE = 1;
 pub const NORMAL_LOOPFILTER: LOOPFILTERTYPE = 0;
-pub type CLAMP_TYPE = ::core::ffi::c_uint;
+pub type CLAMP_TYPE = u32;
 pub const RECON_CLAMP_NOTREQUIRED: CLAMP_TYPE = 1;
 pub const RECON_CLAMP_REQUIRED: CLAMP_TYPE = 0;
-pub type MB_PREDICTION_MODE = ::core::ffi::c_uint;
+pub type MB_PREDICTION_MODE = u32;
 pub const MB_MODE_COUNT: MB_PREDICTION_MODE = 10;
 pub const SPLITMV: MB_PREDICTION_MODE = 9;
 pub const NEWMV: MB_PREDICTION_MODE = 8;
@@ -631,7 +631,7 @@ pub const TM_PRED: MB_PREDICTION_MODE = 3;
 pub const H_PRED: MB_PREDICTION_MODE = 2;
 pub const V_PRED: MB_PREDICTION_MODE = 1;
 pub const DC_PRED: MB_PREDICTION_MODE = 0;
-pub type MV_REFERENCE_FRAME = ::core::ffi::c_uint;
+pub type MV_REFERENCE_FRAME = u32;
 pub const MAX_REF_FRAMES: MV_REFERENCE_FRAME = 4;
 pub const ALTREF_FRAME: MV_REFERENCE_FRAME = 3;
 pub const GOLDEN_FRAME: MV_REFERENCE_FRAME = 2;
@@ -639,8 +639,8 @@ pub const LAST_FRAME: MV_REFERENCE_FRAME = 1;
 pub const INTRA_FRAME: MV_REFERENCE_FRAME = 0;
 pub type kern_return_t = i32;
 pub type task_t = mach_port_t;
-pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
-pub const THREAD_EXIT_SUCCESS: *mut ::core::ffi::c_void = NULL;
+pub const __DARWIN_NULL: *mut core::ffi::c_void = ::core::ptr::null_mut::<core::ffi::c_void>();
+pub const THREAD_EXIT_SUCCESS: *mut core::ffi::c_void = NULL;
 pub const CHAR_BIT: i32 = 8 as i32;
 pub const VP8BORDERINPIXELS: i32 = 32 as i32;
 pub const VP8_BD_VALUE_SIZE: i32 =
@@ -699,25 +699,25 @@ unsafe fn vp8_atomic_spin_wait(
 #[inline]
 unsafe fn intra_prediction_down_copy(
     mut xd: *mut MACROBLOCKD,
-    mut above_right_src: *mut ::core::ffi::c_uchar,
+    mut above_right_src: *mut u8,
 ) {
     unsafe {
         let mut dst_stride: i32 = (*xd).dst.y_stride;
-        let mut above_right_dst: *mut ::core::ffi::c_uchar = (*xd)
+        let mut above_right_dst: *mut u8 = (*xd)
             .dst
             .y_buffer
             .offset(-(dst_stride as isize))
             .offset(16 as i32 as isize);
-        let mut src_ptr: *mut ::core::ffi::c_uint = above_right_src as *mut ::core::ffi::c_uint;
-        let mut dst_ptr0: *mut ::core::ffi::c_uint = above_right_dst
+        let mut src_ptr: *mut u32 = above_right_src as *mut u32;
+        let mut dst_ptr0: *mut u32 = above_right_dst
             .offset((4 as i32 * dst_stride) as isize)
-            as *mut ::core::ffi::c_uint;
-        let mut dst_ptr1: *mut ::core::ffi::c_uint = above_right_dst
+            as *mut u32;
+        let mut dst_ptr1: *mut u32 = above_right_dst
             .offset((8 as i32 * dst_stride) as isize)
-            as *mut ::core::ffi::c_uint;
-        let mut dst_ptr2: *mut ::core::ffi::c_uint = above_right_dst
+            as *mut u32;
+        let mut dst_ptr2: *mut u32 = above_right_dst
             .offset((12 as i32 * dst_stride) as isize)
-            as *mut ::core::ffi::c_uint;
+            as *mut u32;
         *dst_ptr0 = *src_ptr;
         *dst_ptr1 = *src_ptr;
         *dst_ptr2 = *src_ptr;
@@ -725,9 +725,9 @@ unsafe fn intra_prediction_down_copy(
 }
 #[inline]
 unsafe fn setup_intra_recon_left(
-    mut y_buffer: *mut ::core::ffi::c_uchar,
-    mut u_buffer: *mut ::core::ffi::c_uchar,
-    mut v_buffer: *mut ::core::ffi::c_uchar,
+    mut y_buffer: *mut u8,
+    mut u_buffer: *mut u8,
+    mut v_buffer: *mut u8,
     mut y_stride: i32,
     mut uv_stride: i32,
 ) {
@@ -736,19 +736,19 @@ unsafe fn setup_intra_recon_left(
         i = 0 as i32;
         while i < 16 as i32 {
             *y_buffer.offset((y_stride * i) as isize) =
-                129 as i32 as ::core::ffi::c_uchar;
+                129 as i32 as u8;
             i += 1;
         }
         i = 0 as i32;
         while i < 8 as i32 {
             *u_buffer.offset((uv_stride * i) as isize) =
-                129 as i32 as ::core::ffi::c_uchar;
+                129 as i32 as u8;
             i += 1;
         }
         i = 0 as i32;
         while i < 8 as i32 {
             *v_buffer.offset((uv_stride * i) as isize) =
-                129 as i32 as ::core::ffi::c_uchar;
+                129 as i32 as u8;
             i += 1;
         }
     }
@@ -775,55 +775,55 @@ unsafe fn setup_decoding_thread_data(
             (*mbd).segmentation_enabled = (*xd).segmentation_enabled;
             (*mbd).mb_segment_abs_delta = (*xd).mb_segment_abs_delta;
             memcpy(
-                &raw mut (*mbd).segment_feature_data as *mut [::core::ffi::c_schar; 4]
-                    as *mut ::core::ffi::c_void,
-                &raw mut (*xd).segment_feature_data as *mut [::core::ffi::c_schar; 4]
-                    as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<[[::core::ffi::c_schar; 4]; 2]>() as size_t,
+                &raw mut (*mbd).segment_feature_data as *mut [i8; 4]
+                    as *mut core::ffi::c_void,
+                &raw mut (*xd).segment_feature_data as *mut [i8; 4]
+                    as *const core::ffi::c_void,
+                ::core::mem::size_of::<[[i8; 4]; 2]>() as size_t,
             );
             memcpy(
-                &raw mut (*mbd).ref_lf_deltas as *mut ::core::ffi::c_schar
-                    as *mut ::core::ffi::c_void,
-                &raw mut (*xd).ref_lf_deltas as *mut ::core::ffi::c_schar
-                    as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<[::core::ffi::c_schar; 4]>() as size_t,
+                &raw mut (*mbd).ref_lf_deltas as *mut i8
+                    as *mut core::ffi::c_void,
+                &raw mut (*xd).ref_lf_deltas as *mut i8
+                    as *const core::ffi::c_void,
+                ::core::mem::size_of::<[i8; 4]>() as size_t,
             );
             memcpy(
-                &raw mut (*mbd).mode_lf_deltas as *mut ::core::ffi::c_schar
-                    as *mut ::core::ffi::c_void,
-                &raw mut (*xd).mode_lf_deltas as *mut ::core::ffi::c_schar
-                    as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<[::core::ffi::c_schar; 4]>() as size_t,
+                &raw mut (*mbd).mode_lf_deltas as *mut i8
+                    as *mut core::ffi::c_void,
+                &raw mut (*xd).mode_lf_deltas as *mut i8
+                    as *const core::ffi::c_void,
+                ::core::mem::size_of::<[i8; 4]>() as size_t,
             );
             (*mbd).mode_ref_lf_delta_enabled = (*xd).mode_ref_lf_delta_enabled;
             (*mbd).mode_ref_lf_delta_update = (*xd).mode_ref_lf_delta_update;
             (*mbd).current_bc = (&raw mut (*pbi).mbc as *mut vp8_reader)
                 .offset(0 as i32 as isize)
-                as *mut vp8_reader as *mut ::core::ffi::c_void;
+                as *mut vp8_reader as *mut core::ffi::c_void;
             memcpy(
-                &raw mut (*mbd).dequant_y1_dc as *mut ::core::ffi::c_short
-                    as *mut ::core::ffi::c_void,
-                &raw mut (*xd).dequant_y1_dc as *mut ::core::ffi::c_short
-                    as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<[::core::ffi::c_short; 16]>() as size_t,
+                &raw mut (*mbd).dequant_y1_dc as *mut i16
+                    as *mut core::ffi::c_void,
+                &raw mut (*xd).dequant_y1_dc as *mut i16
+                    as *const core::ffi::c_void,
+                ::core::mem::size_of::<[i16; 16]>() as size_t,
             );
             memcpy(
-                &raw mut (*mbd).dequant_y1 as *mut ::core::ffi::c_short as *mut ::core::ffi::c_void,
-                &raw mut (*xd).dequant_y1 as *mut ::core::ffi::c_short
-                    as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<[::core::ffi::c_short; 16]>() as size_t,
+                &raw mut (*mbd).dequant_y1 as *mut i16 as *mut core::ffi::c_void,
+                &raw mut (*xd).dequant_y1 as *mut i16
+                    as *const core::ffi::c_void,
+                ::core::mem::size_of::<[i16; 16]>() as size_t,
             );
             memcpy(
-                &raw mut (*mbd).dequant_y2 as *mut ::core::ffi::c_short as *mut ::core::ffi::c_void,
-                &raw mut (*xd).dequant_y2 as *mut ::core::ffi::c_short
-                    as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<[::core::ffi::c_short; 16]>() as size_t,
+                &raw mut (*mbd).dequant_y2 as *mut i16 as *mut core::ffi::c_void,
+                &raw mut (*xd).dequant_y2 as *mut i16
+                    as *const core::ffi::c_void,
+                ::core::mem::size_of::<[i16; 16]>() as size_t,
             );
             memcpy(
-                &raw mut (*mbd).dequant_uv as *mut ::core::ffi::c_short as *mut ::core::ffi::c_void,
-                &raw mut (*xd).dequant_uv as *mut ::core::ffi::c_short
-                    as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<[::core::ffi::c_short; 16]>() as size_t,
+                &raw mut (*mbd).dequant_uv as *mut i16 as *mut core::ffi::c_void,
+                &raw mut (*xd).dequant_uv as *mut i16
+                    as *const core::ffi::c_void,
+                ::core::mem::size_of::<[i16; 16]>() as size_t,
             );
             (*mbd).fullpixel_mask = !(0 as i32);
             if (*pc).full_pixel != 0 {
@@ -844,7 +844,7 @@ unsafe fn setup_decoding_thread_data(
 unsafe fn mt_decode_macroblock(
     mut pbi: *mut VP8D_COMP,
     mut xd: *mut MACROBLOCKD,
-    _mb_idx: ::core::ffi::c_uint,
+    _mb_idx: u32,
 ) {
     unsafe {
         let mut mode: MB_PREDICTION_MODE = DC_PRED;
@@ -871,26 +871,26 @@ unsafe fn mt_decode_macroblock(
                 (*xd).recon_left[1 as i32 as usize],
                 (*xd).recon_left[2 as i32 as usize],
                 (*xd).recon_left_stride[1 as i32 as usize],
-                (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                (*xd).dst.u_buffer as *mut u8,
+                (*xd).dst.v_buffer as *mut u8,
                 (*xd).dst.uv_stride,
             );
-            if mode as ::core::ffi::c_uint != B_PRED as i32 as ::core::ffi::c_uint {
+            if mode as u32 != B_PRED as i32 as u32 {
                 vp8_build_intra_predictors_mby_s(
                     xd,
                     (*xd).recon_above[0 as i32 as usize],
                     (*xd).recon_left[0 as i32 as usize],
                     (*xd).recon_left_stride[0 as i32 as usize],
-                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                    (*xd).dst.y_buffer as *mut u8,
                     (*xd).dst.y_stride,
                 );
             } else {
-                let mut DQC: *mut ::core::ffi::c_short =
-                    &raw mut (*xd).dequant_y1 as *mut ::core::ffi::c_short;
+                let mut DQC: *mut i16 =
+                    &raw mut (*xd).dequant_y1 as *mut i16;
                 let mut dst_stride: i32 = (*xd).dst.y_stride;
                 if (*(*xd).mode_info_context).mbmi.mb_skip_coeff != 0 {
                     memset(
-                        &raw mut (*xd).eobs as *mut ::core::ffi::c_char as *mut ::core::ffi::c_void,
+                        &raw mut (*xd).eobs as *mut i8 as *mut core::ffi::c_void,
                         0 as i32,
                         25 as size_t,
                     );
@@ -904,16 +904,16 @@ unsafe fn mt_decode_macroblock(
                 while i < 16 as i32 {
                     let mut b: *mut BLOCKD =
                         (&raw mut (*xd).block as *mut BLOCKD).offset(i as isize) as *mut BLOCKD;
-                    let mut dst: *mut ::core::ffi::c_uchar =
+                    let mut dst: *mut u8 =
                         (*xd).dst.y_buffer.offset((*b).offset as isize);
                     let mut b_mode: B_PREDICTION_MODE =
                         (*(*xd).mode_info_context).bmi[i as usize].as_mode;
-                    let mut Above: *mut ::core::ffi::c_uchar =
-                        ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-                    let mut yleft: *mut ::core::ffi::c_uchar =
-                        ::core::ptr::null_mut::<::core::ffi::c_uchar>();
+                    let mut Above: *mut u8 =
+                        ::core::ptr::null_mut::<u8>();
+                    let mut yleft: *mut u8 =
+                        ::core::ptr::null_mut::<u8>();
                     let mut left_stride: i32 = 0;
-                    let mut top_left: ::core::ffi::c_uchar = 0;
+                    let mut top_left: u8 = 0;
                     if i < 4 as i32 && (*pbi).common.filter_level != 0 {
                         Above = (*xd).recon_above[0 as i32 as usize]
                             .offset((*b).offset as isize);
@@ -959,18 +959,18 @@ unsafe fn mt_decode_macroblock(
                                     as i32
                                     * *DQC.offset(0 as i32 as isize)
                                         as i32)
-                                    as ::core::ffi::c_short,
+                                    as i16,
                                 dst,
                                 dst_stride,
                                 dst,
                                 dst_stride,
                             );
                             memset(
-                                (*b).qcoeff as *mut ::core::ffi::c_void,
+                                (*b).qcoeff as *mut core::ffi::c_void,
                                 0 as i32,
                                 (2 as size_t)
                                     .wrapping_mul(
-                                        ::core::mem::size_of::<::core::ffi::c_short>() as size_t
+                                        ::core::mem::size_of::<i16>() as size_t
                                     ),
                             );
                         }
@@ -982,11 +982,11 @@ unsafe fn mt_decode_macroblock(
             vp8_build_inter_predictors_mb(xd);
         }
         if (*(*xd).mode_info_context).mbmi.mb_skip_coeff == 0 {
-            if mode as ::core::ffi::c_uint != B_PRED as i32 as ::core::ffi::c_uint {
-                let mut DQC_0: *mut ::core::ffi::c_short =
-                    &raw mut (*xd).dequant_y1 as *mut ::core::ffi::c_short;
-                if mode as ::core::ffi::c_uint
-                    != SPLITMV as i32 as ::core::ffi::c_uint
+            if mode as u32 != B_PRED as i32 as u32 {
+                let mut DQC_0: *mut i16 =
+                    &raw mut (*xd).dequant_y1 as *mut i16;
+                if mode as u32
+                    != SPLITMV as i32 as u32
                 {
                     let mut b_0: *mut BLOCKD = (&raw mut (*xd).block as *mut BLOCKD)
                         .offset(24 as i32 as isize)
@@ -996,18 +996,18 @@ unsafe fn mt_decode_macroblock(
                     {
                         vp8_dequantize_b_c(
                             b_0 as *mut blockd,
-                            &raw mut (*xd).dequant_y2 as *mut ::core::ffi::c_short,
+                            &raw mut (*xd).dequant_y2 as *mut i16,
                         );
                         vp8_short_inv_walsh4x4_c(
                             (*b_0).dqcoeff.offset(0 as i32 as isize)
-                                as *mut ::core::ffi::c_short,
-                            &raw mut (*xd).qcoeff as *mut ::core::ffi::c_short,
+                                as *mut i16,
+                            &raw mut (*xd).qcoeff as *mut i16,
                         );
                         memset(
-                            (*b_0).qcoeff as *mut ::core::ffi::c_void,
+                            (*b_0).qcoeff as *mut core::ffi::c_void,
                             0 as i32,
                             (16 as size_t).wrapping_mul(
-                                ::core::mem::size_of::<::core::ffi::c_short>() as size_t,
+                                ::core::mem::size_of::<i16>() as size_t,
                             ),
                         );
                     } else {
@@ -1016,38 +1016,38 @@ unsafe fn mt_decode_macroblock(
                                 as i32
                                 * (*xd).dequant_y2[0 as i32 as usize]
                                     as i32)
-                                as ::core::ffi::c_short;
+                                as i16;
                         vp8_short_inv_walsh4x4_1_c(
                             (*b_0).dqcoeff.offset(0 as i32 as isize)
-                                as *mut ::core::ffi::c_short,
-                            &raw mut (*xd).qcoeff as *mut ::core::ffi::c_short,
+                                as *mut i16,
+                            &raw mut (*xd).qcoeff as *mut i16,
                         );
                         memset(
-                            (*b_0).qcoeff as *mut ::core::ffi::c_void,
+                            (*b_0).qcoeff as *mut core::ffi::c_void,
                             0 as i32,
                             (2 as size_t).wrapping_mul(
-                                ::core::mem::size_of::<::core::ffi::c_short>() as size_t,
+                                ::core::mem::size_of::<i16>() as size_t,
                             ),
                         );
                     }
-                    DQC_0 = &raw mut (*xd).dequant_y1_dc as *mut ::core::ffi::c_short;
+                    DQC_0 = &raw mut (*xd).dequant_y1_dc as *mut i16;
                 }
                 vp8_dequant_idct_add_y_block_c(
-                    &raw mut (*xd).qcoeff as *mut ::core::ffi::c_short,
+                    &raw mut (*xd).qcoeff as *mut i16,
                     DQC_0,
-                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                    (*xd).dst.y_buffer as *mut u8,
                     (*xd).dst.y_stride,
-                    &raw mut (*xd).eobs as *mut ::core::ffi::c_char,
+                    &raw mut (*xd).eobs as *mut i8,
                 );
             }
             vp8_dequant_idct_add_uv_block_c(
-                (&raw mut (*xd).qcoeff as *mut ::core::ffi::c_short)
+                (&raw mut (*xd).qcoeff as *mut i16)
                     .offset((16 as i32 * 16 as i32) as isize),
-                &raw mut (*xd).dequant_uv as *mut ::core::ffi::c_short,
-                (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                &raw mut (*xd).dequant_uv as *mut i16,
+                (*xd).dst.u_buffer as *mut u8,
+                (*xd).dst.v_buffer as *mut u8,
                 (*xd).dst.uv_stride,
-                (&raw mut (*xd).eobs as *mut ::core::ffi::c_char)
+                (&raw mut (*xd).eobs as *mut i8)
                     .offset(16 as i32 as isize),
             );
         }
@@ -1069,7 +1069,7 @@ unsafe fn mt_decode_mb_rows(
             value: (*pc).mb_cols + nsync,
         };
         let mut num_part: i32 =
-            (1 as i32) << (*pbi).common.multi_token_partition as ::core::ffi::c_uint;
+            (1 as i32) << (*pbi).common.multi_token_partition as u32;
         let mut last_mb_row: i32 = start_mb_row;
         let mut yv12_fb_new: *mut YV12_BUFFER_CONFIG =
             (*pbi).dec_fb_ref[INTRA_FRAME as i32 as usize];
@@ -1077,10 +1077,10 @@ unsafe fn mt_decode_mb_rows(
             (*pbi).dec_fb_ref[LAST_FRAME as i32 as usize];
         let mut recon_y_stride: i32 = (*yv12_fb_new).y_stride;
         let mut recon_uv_stride: i32 = (*yv12_fb_new).uv_stride;
-        let mut ref_buffer: [[*mut ::core::ffi::c_uchar; 3]; 4] =
-            [[::core::ptr::null_mut::<::core::ffi::c_uchar>(); 3]; 4];
-        let mut dst_buffer: [*mut ::core::ffi::c_uchar; 3] =
-            [::core::ptr::null_mut::<::core::ffi::c_uchar>(); 3];
+        let mut ref_buffer: [[*mut u8; 3]; 4] =
+            [[::core::ptr::null_mut::<u8>(); 3]; 4];
+        let mut dst_buffer: [*mut u8; 3] =
+            [::core::ptr::null_mut::<u8>(); 3];
         let mut i: i32 = 0;
         let mut ref_fb_corrupted: [i32; 4] = [0; 4];
         ref_fb_corrupted[INTRA_FRAME as i32 as usize] = 0 as i32;
@@ -1088,20 +1088,20 @@ unsafe fn mt_decode_mb_rows(
         while i < MAX_REF_FRAMES as i32 {
             let mut this_fb: *mut YV12_BUFFER_CONFIG = (*pbi).dec_fb_ref[i as usize];
             ref_buffer[i as usize][0 as i32 as usize] =
-                (*this_fb).y_buffer as *mut ::core::ffi::c_uchar;
+                (*this_fb).y_buffer as *mut u8;
             ref_buffer[i as usize][1 as i32 as usize] =
-                (*this_fb).u_buffer as *mut ::core::ffi::c_uchar;
+                (*this_fb).u_buffer as *mut u8;
             ref_buffer[i as usize][2 as i32 as usize] =
-                (*this_fb).v_buffer as *mut ::core::ffi::c_uchar;
+                (*this_fb).v_buffer as *mut u8;
             ref_fb_corrupted[i as usize] = (*this_fb).corrupted;
             i += 1;
         }
         dst_buffer[0 as i32 as usize] =
-            (*yv12_fb_new).y_buffer as *mut ::core::ffi::c_uchar;
+            (*yv12_fb_new).y_buffer as *mut u8;
         dst_buffer[1 as i32 as usize] =
-            (*yv12_fb_new).u_buffer as *mut ::core::ffi::c_uchar;
+            (*yv12_fb_new).u_buffer as *mut u8;
         dst_buffer[2 as i32 as usize] =
-            (*yv12_fb_new).v_buffer as *mut ::core::ffi::c_uchar;
+            (*yv12_fb_new).v_buffer as *mut u8;
         (*xd).up_available = (start_mb_row != 0 as i32) as i32;
         (*xd).mode_info_context = (*pc)
             .mi
@@ -1117,7 +1117,7 @@ unsafe fn mt_decode_mb_rows(
             last_mb_row = mb_row;
             (*xd).current_bc = (&raw mut (*pbi).mbc as *mut vp8_reader)
                 .offset((mb_row % num_part) as isize)
-                as *mut vp8_reader as *mut ::core::ffi::c_void;
+                as *mut vp8_reader as *mut core::ffi::c_void;
             if mb_row > 0 as i32 {
                 last_row_current_mb_col = (*pbi)
                     .mt_current_mb_col
@@ -1132,7 +1132,7 @@ unsafe fn mt_decode_mb_rows(
             recon_uvoffset = mb_row * recon_uv_stride * 8 as i32;
             (*xd).above_context = (*pc).above_context;
             memset(
-                (*xd).left_context as *mut ::core::ffi::c_void,
+                (*xd).left_context as *mut core::ffi::c_void,
                 0 as i32,
                 ::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t,
             );
@@ -1227,17 +1227,17 @@ unsafe fn mt_decode_mb_rows(
                         current_mb_col =
                             (*pbi).mt_current_mb_col.offset(mb_row as isize) as *mut vpx_atomic_int;
                         vpx_atomic_store_release(current_mb_col, (*pc).mb_cols + nsync);
-                        mb_row = (mb_row as ::core::ffi::c_uint).wrapping_add(
+                        mb_row = (mb_row as u32).wrapping_add(
                             (*pbi)
                                 .decoding_thread_count
-                                .wrapping_add(1 as ::core::ffi::c_uint),
+                                .wrapping_add(1 as u32),
                         ) as i32
                             as i32;
                     }
                     vpx_internal_error(
                         &raw mut (*xd).error_info,
                         VPX_CODEC_CORRUPT_FRAME,
-                        b"Corrupted reference frame\0" as *const u8 as *const ::core::ffi::c_char,
+                        b"Corrupted reference frame\0" as *const u8 as *const i8,
                     );
                 }
                 if (*(*xd).mode_info_context).mbmi.ref_frame as i32
@@ -1261,7 +1261,7 @@ unsafe fn mt_decode_mb_rows(
                     (*xd).pre.u_buffer = ::core::ptr::null_mut::<uint8_t>();
                     (*xd).pre.v_buffer = ::core::ptr::null_mut::<uint8_t>();
                 }
-                mt_decode_macroblock(pbi, xd, 0 as ::core::ffi::c_uint);
+                mt_decode_macroblock(pbi, xd, 0 as u32);
                 (*xd).left_available = 1 as i32;
                 (*xd).corrupted |= vp8dx_bool_error((*xd).current_bc as *mut BOOL_DECODER);
                 (*xd).recon_above[0 as i32 as usize] = (*xd).recon_above
@@ -1309,12 +1309,12 @@ unsafe fn mt_decode_mb_rows(
                                 .offset((mb_row + 1 as i32) as isize))
                             .offset(32 as i32 as isize)
                             .offset((mb_col * 16 as i32) as isize)
-                                as *mut ::core::ffi::c_void,
+                                as *mut core::ffi::c_void,
                             (*xd)
                                 .dst
                                 .y_buffer
                                 .offset((15 as i32 * recon_y_stride) as isize)
-                                as *const ::core::ffi::c_void,
+                                as *const core::ffi::c_void,
                             16 as size_t,
                         );
                         memcpy(
@@ -1323,12 +1323,12 @@ unsafe fn mt_decode_mb_rows(
                                 .offset((mb_row + 1 as i32) as isize))
                             .offset(16 as i32 as isize)
                             .offset((mb_col * 8 as i32) as isize)
-                                as *mut ::core::ffi::c_void,
+                                as *mut core::ffi::c_void,
                             (*xd)
                                 .dst
                                 .u_buffer
                                 .offset((7 as i32 * recon_uv_stride) as isize)
-                                as *const ::core::ffi::c_void,
+                                as *const core::ffi::c_void,
                             8 as size_t,
                         );
                         memcpy(
@@ -1337,12 +1337,12 @@ unsafe fn mt_decode_mb_rows(
                                 .offset((mb_row + 1 as i32) as isize))
                             .offset(16 as i32 as isize)
                             .offset((mb_col * 8 as i32) as isize)
-                                as *mut ::core::ffi::c_void,
+                                as *mut core::ffi::c_void,
                             (*xd)
                                 .dst
                                 .v_buffer
                                 .offset((7 as i32 * recon_uv_stride) as isize)
-                                as *const ::core::ffi::c_void,
+                                as *const core::ffi::c_void,
                             8 as size_t,
                         );
                     }
@@ -1359,7 +1359,7 @@ unsafe fn mt_decode_mb_rows(
                                     .offset(i as isize) = *(*xd).dst.y_buffer.offset(
                                     (i * recon_y_stride + 15 as i32) as isize,
                                 )
-                                    as ::core::ffi::c_uchar;
+                                    as u8;
                                 i += 1;
                             }
                             i = 0 as i32;
@@ -1368,51 +1368,51 @@ unsafe fn mt_decode_mb_rows(
                                     .offset(i as isize) = *(*xd).dst.u_buffer.offset(
                                     (i * recon_uv_stride + 7 as i32) as isize,
                                 )
-                                    as ::core::ffi::c_uchar;
+                                    as u8;
                                 *(*(*pbi).mt_vleft_col.offset(mb_row as isize))
                                     .offset(i as isize) = *(*xd).dst.v_buffer.offset(
                                     (i * recon_uv_stride + 7 as i32) as isize,
                                 )
-                                    as ::core::ffi::c_uchar;
+                                    as u8;
                                 i += 1;
                             }
                         }
                     }
                     if filter_level != 0 {
-                        if (*pc).filter_type as ::core::ffi::c_uint
-                            == NORMAL_LOOPFILTER as i32 as ::core::ffi::c_uint
+                        if (*pc).filter_type as u32
+                            == NORMAL_LOOPFILTER as i32 as u32
                         {
                             let mut lfi: loop_filter_info = loop_filter_info {
-                                mblim: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                                blim: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                                lim: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                                hev_thr: ::core::ptr::null::<::core::ffi::c_uchar>(),
+                                mblim: ::core::ptr::null::<u8>(),
+                                blim: ::core::ptr::null::<u8>(),
+                                lim: ::core::ptr::null::<u8>(),
+                                hev_thr: ::core::ptr::null::<u8>(),
                             };
                             let mut frame_type: FRAME_TYPE = (*pc).frame_type;
                             let hev_index: i32 = (*lfi_n).hev_thr_lut
                                 [frame_type as usize][filter_level as usize]
                                 as i32;
                             lfi.mblim = &raw mut *(&raw mut (*lfi_n).mblim
-                                as *mut [::core::ffi::c_uchar; 16])
+                                as *mut [u8; 16])
                                 .offset(filter_level as isize)
-                                as *mut ::core::ffi::c_uchar;
+                                as *mut u8;
                             lfi.blim = &raw mut *(&raw mut (*lfi_n).blim
-                                as *mut [::core::ffi::c_uchar; 16])
+                                as *mut [u8; 16])
                                 .offset(filter_level as isize)
-                                as *mut ::core::ffi::c_uchar;
+                                as *mut u8;
                             lfi.lim = &raw mut *(&raw mut (*lfi_n).lim
-                                as *mut [::core::ffi::c_uchar; 16])
+                                as *mut [u8; 16])
                                 .offset(filter_level as isize)
-                                as *mut ::core::ffi::c_uchar;
+                                as *mut u8;
                             lfi.hev_thr = &raw mut *(&raw mut (*lfi_n).hev_thr
-                                as *mut [::core::ffi::c_uchar; 16])
+                                as *mut [u8; 16])
                                 .offset(hev_index as isize)
-                                as *mut ::core::ffi::c_uchar;
+                                as *mut u8;
                             if mb_col > 0 as i32 {
                                 vp8_loop_filter_mbv_c(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.y_buffer as *mut u8,
+                                    (*xd).dst.u_buffer as *mut u8,
+                                    (*xd).dst.v_buffer as *mut u8,
                                     recon_y_stride,
                                     recon_uv_stride,
                                     &raw mut lfi,
@@ -1420,9 +1420,9 @@ unsafe fn mt_decode_mb_rows(
                             }
                             if skip_lf == 0 {
                                 vp8_loop_filter_bv_c(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.y_buffer as *mut u8,
+                                    (*xd).dst.u_buffer as *mut u8,
+                                    (*xd).dst.v_buffer as *mut u8,
                                     recon_y_stride,
                                     recon_uv_stride,
                                     &raw mut lfi,
@@ -1430,9 +1430,9 @@ unsafe fn mt_decode_mb_rows(
                             }
                             if mb_row > 0 as i32 {
                                 vp8_loop_filter_mbh_c(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.y_buffer as *mut u8,
+                                    (*xd).dst.u_buffer as *mut u8,
+                                    (*xd).dst.v_buffer as *mut u8,
                                     recon_y_stride,
                                     recon_uv_stride,
                                     &raw mut lfi,
@@ -1440,9 +1440,9 @@ unsafe fn mt_decode_mb_rows(
                             }
                             if skip_lf == 0 {
                                 vp8_loop_filter_bh_c(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.y_buffer as *mut u8,
+                                    (*xd).dst.u_buffer as *mut u8,
+                                    (*xd).dst.v_buffer as *mut u8,
                                     recon_y_stride,
                                     recon_uv_stride,
                                     &raw mut lfi,
@@ -1451,42 +1451,42 @@ unsafe fn mt_decode_mb_rows(
                         } else {
                             if mb_col > 0 as i32 {
                                 vp8_loop_filter_simple_vertical_edge_c(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.y_buffer as *mut u8,
                                     recon_y_stride,
                                     &raw mut *(&raw mut (*lfi_n).mblim
-                                        as *mut [::core::ffi::c_uchar; 16])
+                                        as *mut [u8; 16])
                                         .offset(filter_level as isize)
-                                        as *mut ::core::ffi::c_uchar,
+                                        as *mut u8,
                                 );
                             }
                             if skip_lf == 0 {
                                 vp8_loop_filter_bvs_c(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.y_buffer as *mut u8,
                                     recon_y_stride,
                                     &raw mut *(&raw mut (*lfi_n).blim
-                                        as *mut [::core::ffi::c_uchar; 16])
+                                        as *mut [u8; 16])
                                         .offset(filter_level as isize)
-                                        as *mut ::core::ffi::c_uchar,
+                                        as *mut u8,
                                 );
                             }
                             if mb_row > 0 as i32 {
                                 vp8_loop_filter_simple_horizontal_edge_c(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.y_buffer as *mut u8,
                                     recon_y_stride,
                                     &raw mut *(&raw mut (*lfi_n).mblim
-                                        as *mut [::core::ffi::c_uchar; 16])
+                                        as *mut [u8; 16])
                                         .offset(filter_level as isize)
-                                        as *mut ::core::ffi::c_uchar,
+                                        as *mut u8,
                                 );
                             }
                             if skip_lf == 0 {
                                 vp8_loop_filter_bhs_c(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.y_buffer as *mut u8,
                                     recon_y_stride,
                                     &raw mut *(&raw mut (*lfi_n).blim
-                                        as *mut [::core::ffi::c_uchar; 16])
+                                        as *mut [u8; 16])
                                         .offset(filter_level as isize)
-                                        as *mut ::core::ffi::c_uchar,
+                                        as *mut u8,
                                 );
                             }
                         }
@@ -1542,13 +1542,13 @@ unsafe fn mt_decode_mb_rows(
             (*xd).mode_info_context = (*xd).mode_info_context.offset(1);
             (*xd).up_available = 1 as i32;
             (*xd).mode_info_context = (*xd).mode_info_context.offset(
-                ((*xd).mode_info_stride as ::core::ffi::c_uint)
+                ((*xd).mode_info_stride as u32)
                     .wrapping_mul((*pbi).decoding_thread_count) as isize,
             );
-            mb_row = (mb_row as ::core::ffi::c_uint).wrapping_add(
+            mb_row = (mb_row as u32).wrapping_add(
                 (*pbi)
                     .decoding_thread_count
-                    .wrapping_add(1 as ::core::ffi::c_uint),
+                    .wrapping_add(1 as u32),
             ) as i32 as i32;
         }
         if last_mb_row
@@ -1561,8 +1561,8 @@ unsafe fn mt_decode_mb_rows(
     }
 }
 unsafe fn thread_decoding_proc(
-    mut p_data: *mut ::core::ffi::c_void,
-) -> *mut ::core::ffi::c_void {
+    mut p_data: *mut core::ffi::c_void,
+) -> *mut core::ffi::c_void {
     unsafe {
         let mut ithread: i32 = (*(p_data as *mut DECODETHREAD_DATA)).ithread;
         let mut pbi: *mut VP8D_COMP = (*(p_data as *mut DECODETHREAD_DATA)).ptr1 as *mut VP8D_COMP;
@@ -1606,7 +1606,7 @@ unsafe fn thread_decoding_proc(
 pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) {
     unsafe {
         let mut core_count: i32 = 0 as i32;
-        let mut ithread: ::core::ffi::c_uint = 0;
+        let mut ithread: u32 = 0;
         vpx_atomic_init(&raw mut (*pbi).b_multithreaded_rd, 0 as i32);
         (*pbi).allocated_decoding_thread_count = 0 as i32;
         core_count = if (*pbi).max_threads > 8 as i32 {
@@ -1620,7 +1620,7 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) {
         if core_count > 1 as i32 {
             vpx_atomic_init(&raw mut (*pbi).b_multithreaded_rd, 1 as i32);
             (*pbi).decoding_thread_count =
-                (core_count - 1 as i32) as ::core::ffi::c_uint;
+                (core_count - 1 as i32) as u32;
             (*pbi).h_decoding_thread = vpx_calloc(
                 ::core::mem::size_of::<pthread_t>() as size_t,
                 (*pbi).decoding_thread_count as size_t,
@@ -1630,7 +1630,7 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) {
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->h_decoding_thread)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             (*pbi).h_event_start_decoding = vpx_calloc(
@@ -1642,7 +1642,7 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) {
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->h_event_start_decoding)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             (*pbi).mb_row_di = vpx_memalign(
@@ -1655,11 +1655,11 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) {
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->mb_row_di)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             memset(
-                (*pbi).mb_row_di as *mut ::core::ffi::c_void,
+                (*pbi).mb_row_di as *mut core::ffi::c_void,
                 0 as i32,
                 ((*pbi).decoding_thread_count as size_t)
                     .wrapping_mul(::core::mem::size_of::<MB_ROW_DEC>() as size_t),
@@ -1673,7 +1673,7 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) {
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->de_thread_data)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             if crate::thread_shim::vp8_semaphore_create(
@@ -1686,10 +1686,10 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
-                    b"Failed to initialize semaphore\0" as *const u8 as *const ::core::ffi::c_char,
+                    b"Failed to initialize semaphore\0" as *const u8 as *const i8,
                 );
             }
-            ithread = 0 as ::core::ffi::c_uint;
+            ithread = 0 as u32;
             while ithread < (*pbi).decoding_thread_count {
                 if crate::thread_shim::vp8_semaphore_create(
                     0 as task_t,
@@ -1704,22 +1704,22 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) {
                 (*(*pbi).de_thread_data.offset(ithread as isize)).ithread =
                     ithread as i32;
                 let fresh6 = &mut (*(*pbi).de_thread_data.offset(ithread as isize)).ptr1;
-                *fresh6 = pbi as *mut ::core::ffi::c_void;
+                *fresh6 = pbi as *mut core::ffi::c_void;
                 let fresh7 = &mut (*(*pbi).de_thread_data.offset(ithread as isize)).ptr2;
                 *fresh7 = (*pbi).mb_row_di.offset(ithread as isize) as *mut MB_ROW_DEC
-                    as *mut ::core::ffi::c_void;
+                    as *mut core::ffi::c_void;
                 if crate::thread_shim::vp8_pthread_create(
                     (*pbi).h_decoding_thread.offset(ithread as isize) as *mut pthread_t,
-                    ::core::ptr::null::<::core::ffi::c_void>(),
+                    ::core::ptr::null::<core::ffi::c_void>(),
                     Some(
                         thread_decoding_proc
                             as unsafe fn(
-                                *mut ::core::ffi::c_void,
+                                *mut core::ffi::c_void,
                             )
-                                -> *mut ::core::ffi::c_void,
+                                -> *mut core::ffi::c_void,
                     ),
                     (*pbi).de_thread_data.offset(ithread as isize) as *mut DECODETHREAD_DATA
-                        as *mut ::core::ffi::c_void,
+                        as *mut core::ffi::c_void,
                 ) != 0
                 {
                     crate::thread_shim::vp8_semaphore_destroy(
@@ -1744,7 +1744,7 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
-                    b"Failed to create threads\0" as *const u8 as *const ::core::ffi::c_char,
+                    b"Failed to create threads\0" as *const u8 as *const i8,
                 );
             }
         }
@@ -1757,73 +1757,73 @@ pub unsafe fn vp8mt_de_alloc_temp_buffers(
 ) {
     unsafe {
         let mut i: i32 = 0;
-        vpx_free((*pbi).mt_current_mb_col as *mut ::core::ffi::c_void);
+        vpx_free((*pbi).mt_current_mb_col as *mut core::ffi::c_void);
         (*pbi).mt_current_mb_col = ::core::ptr::null_mut::<vpx_atomic_int>();
         if !(*pbi).mt_yabove_row.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_yabove_row.offset(i as isize) as *mut ::core::ffi::c_void);
+                vpx_free(*(*pbi).mt_yabove_row.offset(i as isize) as *mut core::ffi::c_void);
                 let fresh0 = &mut *(*pbi).mt_yabove_row.offset(i as isize);
-                *fresh0 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
+                *fresh0 = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_yabove_row as *mut ::core::ffi::c_void);
-            (*pbi).mt_yabove_row = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
+            vpx_free((*pbi).mt_yabove_row as *mut core::ffi::c_void);
+            (*pbi).mt_yabove_row = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_uabove_row.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_uabove_row.offset(i as isize) as *mut ::core::ffi::c_void);
+                vpx_free(*(*pbi).mt_uabove_row.offset(i as isize) as *mut core::ffi::c_void);
                 let fresh1 = &mut *(*pbi).mt_uabove_row.offset(i as isize);
-                *fresh1 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
+                *fresh1 = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_uabove_row as *mut ::core::ffi::c_void);
-            (*pbi).mt_uabove_row = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
+            vpx_free((*pbi).mt_uabove_row as *mut core::ffi::c_void);
+            (*pbi).mt_uabove_row = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_vabove_row.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_vabove_row.offset(i as isize) as *mut ::core::ffi::c_void);
+                vpx_free(*(*pbi).mt_vabove_row.offset(i as isize) as *mut core::ffi::c_void);
                 let fresh2 = &mut *(*pbi).mt_vabove_row.offset(i as isize);
-                *fresh2 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
+                *fresh2 = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_vabove_row as *mut ::core::ffi::c_void);
-            (*pbi).mt_vabove_row = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
+            vpx_free((*pbi).mt_vabove_row as *mut core::ffi::c_void);
+            (*pbi).mt_vabove_row = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_yleft_col.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_yleft_col.offset(i as isize) as *mut ::core::ffi::c_void);
+                vpx_free(*(*pbi).mt_yleft_col.offset(i as isize) as *mut core::ffi::c_void);
                 let fresh3 = &mut *(*pbi).mt_yleft_col.offset(i as isize);
-                *fresh3 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
+                *fresh3 = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_yleft_col as *mut ::core::ffi::c_void);
-            (*pbi).mt_yleft_col = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
+            vpx_free((*pbi).mt_yleft_col as *mut core::ffi::c_void);
+            (*pbi).mt_yleft_col = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_uleft_col.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_uleft_col.offset(i as isize) as *mut ::core::ffi::c_void);
+                vpx_free(*(*pbi).mt_uleft_col.offset(i as isize) as *mut core::ffi::c_void);
                 let fresh4 = &mut *(*pbi).mt_uleft_col.offset(i as isize);
-                *fresh4 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
+                *fresh4 = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_uleft_col as *mut ::core::ffi::c_void);
-            (*pbi).mt_uleft_col = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
+            vpx_free((*pbi).mt_uleft_col as *mut core::ffi::c_void);
+            (*pbi).mt_uleft_col = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_vleft_col.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_vleft_col.offset(i as isize) as *mut ::core::ffi::c_void);
+                vpx_free(*(*pbi).mt_vleft_col.offset(i as isize) as *mut core::ffi::c_void);
                 let fresh5 = &mut *(*pbi).mt_vleft_col.offset(i as isize);
-                *fresh5 = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
+                *fresh5 = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_vleft_col as *mut ::core::ffi::c_void);
-            (*pbi).mt_vleft_col = ::core::ptr::null_mut::<*mut ::core::ffi::c_uchar>();
+            vpx_free((*pbi).mt_vleft_col as *mut core::ffi::c_void);
+            (*pbi).mt_vleft_col = ::core::ptr::null_mut::<*mut u8>();
         }
     }
 }
@@ -1861,7 +1861,7 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                     &raw mut (*pc).error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate pbi->mt_current_mb_col\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             i = 0 as i32;
@@ -1873,15 +1873,15 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 i += 1;
             }
             (*pbi).mt_yabove_row = vpx_calloc(
-                ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
+                ::core::mem::size_of::<*mut u8>() as size_t,
                 (*pc).mb_rows as size_t,
-            ) as *mut *mut ::core::ffi::c_uchar;
+            ) as *mut *mut u8;
             if (*pbi).mt_yabove_row.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->mt_yabove_row)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             i = 0 as i32;
@@ -1889,36 +1889,36 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 let fresh8 = &mut *(*pbi).mt_yabove_row.offset(i as isize);
                 *fresh8 = vpx_memalign(
                     16 as size_t,
-                    (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t).wrapping_mul(
+                    (::core::mem::size_of::<u8>() as size_t).wrapping_mul(
                         (width + ((32 as i32) << 1 as i32)) as size_t,
                     ),
-                ) as *mut ::core::ffi::c_uchar;
+                ) as *mut u8;
                 if (*(*pbi).mt_yabove_row.offset(i as isize)).is_null() {
                     vpx_internal_error(
                         &raw mut (*pc).error,
                         VPX_CODEC_MEM_ERROR,
                         b"Failed to allocate pbi->mt_yabove_row[i]\0" as *const u8
-                            as *const ::core::ffi::c_char,
+                            as *const i8,
                     );
                 }
                 memset(
-                    *(*pbi).mt_yabove_row.offset(i as isize) as *mut ::core::ffi::c_void,
+                    *(*pbi).mt_yabove_row.offset(i as isize) as *mut core::ffi::c_void,
                     0 as i32,
                     ((width + ((32 as i32) << 1 as i32)) as size_t)
-                        .wrapping_mul(::core::mem::size_of::<::core::ffi::c_uchar>() as size_t),
+                        .wrapping_mul(::core::mem::size_of::<u8>() as size_t),
                 );
                 i += 1;
             }
             (*pbi).mt_uabove_row = vpx_calloc(
-                ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
+                ::core::mem::size_of::<*mut u8>() as size_t,
                 (*pc).mb_rows as size_t,
-            ) as *mut *mut ::core::ffi::c_uchar;
+            ) as *mut *mut u8;
             if (*pbi).mt_uabove_row.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->mt_uabove_row)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             i = 0 as i32;
@@ -1926,35 +1926,35 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 let fresh9 = &mut *(*pbi).mt_uabove_row.offset(i as isize);
                 *fresh9 = vpx_memalign(
                     16 as size_t,
-                    (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
+                    (::core::mem::size_of::<u8>() as size_t)
                         .wrapping_mul((uv_width + 32 as i32) as size_t),
-                ) as *mut ::core::ffi::c_uchar;
+                ) as *mut u8;
                 if (*(*pbi).mt_uabove_row.offset(i as isize)).is_null() {
                     vpx_internal_error(
                         &raw mut (*pc).error,
                         VPX_CODEC_MEM_ERROR,
                         b"Failed to allocate pbi->mt_uabove_row[i]\0" as *const u8
-                            as *const ::core::ffi::c_char,
+                            as *const i8,
                     );
                 }
                 memset(
-                    *(*pbi).mt_uabove_row.offset(i as isize) as *mut ::core::ffi::c_void,
+                    *(*pbi).mt_uabove_row.offset(i as isize) as *mut core::ffi::c_void,
                     0 as i32,
                     ((uv_width + 32 as i32) as size_t)
-                        .wrapping_mul(::core::mem::size_of::<::core::ffi::c_uchar>() as size_t),
+                        .wrapping_mul(::core::mem::size_of::<u8>() as size_t),
                 );
                 i += 1;
             }
             (*pbi).mt_vabove_row = vpx_calloc(
-                ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
+                ::core::mem::size_of::<*mut u8>() as size_t,
                 (*pc).mb_rows as size_t,
-            ) as *mut *mut ::core::ffi::c_uchar;
+            ) as *mut *mut u8;
             if (*pbi).mt_vabove_row.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->mt_vabove_row)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             i = 0 as i32;
@@ -1962,111 +1962,111 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 let fresh10 = &mut *(*pbi).mt_vabove_row.offset(i as isize);
                 *fresh10 = vpx_memalign(
                     16 as size_t,
-                    (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
+                    (::core::mem::size_of::<u8>() as size_t)
                         .wrapping_mul((uv_width + 32 as i32) as size_t),
-                ) as *mut ::core::ffi::c_uchar;
+                ) as *mut u8;
                 if (*(*pbi).mt_vabove_row.offset(i as isize)).is_null() {
                     vpx_internal_error(
                         &raw mut (*pc).error,
                         VPX_CODEC_MEM_ERROR,
                         b"Failed to allocate pbi->mt_vabove_row[i]\0" as *const u8
-                            as *const ::core::ffi::c_char,
+                            as *const i8,
                     );
                 }
                 memset(
-                    *(*pbi).mt_vabove_row.offset(i as isize) as *mut ::core::ffi::c_void,
+                    *(*pbi).mt_vabove_row.offset(i as isize) as *mut core::ffi::c_void,
                     0 as i32,
                     ((uv_width + 32 as i32) as size_t)
-                        .wrapping_mul(::core::mem::size_of::<::core::ffi::c_uchar>() as size_t),
+                        .wrapping_mul(::core::mem::size_of::<u8>() as size_t),
                 );
                 i += 1;
             }
             (*pbi).mt_yleft_col = vpx_calloc(
-                ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
+                ::core::mem::size_of::<*mut u8>() as size_t,
                 (*pc).mb_rows as size_t,
-            ) as *mut *mut ::core::ffi::c_uchar;
+            ) as *mut *mut u8;
             if (*pbi).mt_yleft_col.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->mt_yleft_col)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             i = 0 as i32;
             while i < (*pc).mb_rows {
                 let fresh11 = &mut *(*pbi).mt_yleft_col.offset(i as isize);
                 *fresh11 = vpx_calloc(
-                    (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
+                    (::core::mem::size_of::<u8>() as size_t)
                         .wrapping_mul(16 as size_t),
                     1 as size_t,
-                ) as *mut ::core::ffi::c_uchar;
+                ) as *mut u8;
                 if (*(*pbi).mt_yleft_col.offset(i as isize)).is_null() {
                     vpx_internal_error(
                         &raw mut (*pc).error,
                         VPX_CODEC_MEM_ERROR,
                         b"Failed to allocate pbi->mt_yleft_col[i]\0" as *const u8
-                            as *const ::core::ffi::c_char,
+                            as *const i8,
                     );
                 }
                 i += 1;
             }
             (*pbi).mt_uleft_col = vpx_calloc(
-                ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
+                ::core::mem::size_of::<*mut u8>() as size_t,
                 (*pc).mb_rows as size_t,
-            ) as *mut *mut ::core::ffi::c_uchar;
+            ) as *mut *mut u8;
             if (*pbi).mt_uleft_col.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->mt_uleft_col)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             i = 0 as i32;
             while i < (*pc).mb_rows {
                 let fresh12 = &mut *(*pbi).mt_uleft_col.offset(i as isize);
                 *fresh12 = vpx_calloc(
-                    (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
+                    (::core::mem::size_of::<u8>() as size_t)
                         .wrapping_mul(8 as size_t),
                     1 as size_t,
-                ) as *mut ::core::ffi::c_uchar;
+                ) as *mut u8;
                 if (*(*pbi).mt_uleft_col.offset(i as isize)).is_null() {
                     vpx_internal_error(
                         &raw mut (*pc).error,
                         VPX_CODEC_MEM_ERROR,
                         b"Failed to allocate pbi->mt_uleft_col[i]\0" as *const u8
-                            as *const ::core::ffi::c_char,
+                            as *const i8,
                     );
                 }
                 i += 1;
             }
             (*pbi).mt_vleft_col = vpx_calloc(
-                ::core::mem::size_of::<*mut ::core::ffi::c_uchar>() as size_t,
+                ::core::mem::size_of::<*mut u8>() as size_t,
                 (*pc).mb_rows as size_t,
-            ) as *mut *mut ::core::ffi::c_uchar;
+            ) as *mut *mut u8;
             if (*pbi).mt_vleft_col.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_MEM_ERROR,
                     b"Failed to allocate (pbi->mt_vleft_col)\0" as *const u8
-                        as *const ::core::ffi::c_char,
+                        as *const i8,
                 );
             }
             i = 0 as i32;
             while i < (*pc).mb_rows {
                 let fresh13 = &mut *(*pbi).mt_vleft_col.offset(i as isize);
                 *fresh13 = vpx_calloc(
-                    (::core::mem::size_of::<::core::ffi::c_uchar>() as size_t)
+                    (::core::mem::size_of::<u8>() as size_t)
                         .wrapping_mul(8 as size_t),
                     1 as size_t,
-                ) as *mut ::core::ffi::c_uchar;
+                ) as *mut u8;
                 if (*(*pbi).mt_vleft_col.offset(i as isize)).is_null() {
                     vpx_internal_error(
                         &raw mut (*pc).error,
                         VPX_CODEC_MEM_ERROR,
                         b"Failed to allocate pbi->mt_vleft_col[i]\0" as *const u8
-                            as *const ::core::ffi::c_char,
+                            as *const i8,
                     );
                 }
                 i += 1;
@@ -2087,7 +2087,7 @@ pub unsafe fn vp8_decoder_remove_threads(mut pbi: *mut VP8D_COMP) {
                 );
                 crate::thread_shim::vp8_pthread_join(
                     *(*pbi).h_decoding_thread.offset(i as isize) as pthread_t,
-                    ::core::ptr::null_mut::<*mut ::core::ffi::c_void>(),
+                    ::core::ptr::null_mut::<*mut core::ffi::c_void>(),
                 );
                 i += 1;
             }
@@ -2102,13 +2102,13 @@ pub unsafe fn vp8_decoder_remove_threads(mut pbi: *mut VP8D_COMP) {
             if (*pbi).allocated_decoding_thread_count != 0 {
                 crate::thread_shim::vp8_semaphore_destroy(0 as task_t, (*pbi).h_event_end_decoding);
             }
-            vpx_free((*pbi).h_decoding_thread as *mut ::core::ffi::c_void);
+            vpx_free((*pbi).h_decoding_thread as *mut core::ffi::c_void);
             (*pbi).h_decoding_thread = ::core::ptr::null_mut::<pthread_t>();
-            vpx_free((*pbi).h_event_start_decoding as *mut ::core::ffi::c_void);
+            vpx_free((*pbi).h_event_start_decoding as *mut core::ffi::c_void);
             (*pbi).h_event_start_decoding = ::core::ptr::null_mut::<semaphore_t>();
-            vpx_free((*pbi).mb_row_di as *mut ::core::ffi::c_void);
+            vpx_free((*pbi).mb_row_di as *mut core::ffi::c_void);
             (*pbi).mb_row_di = ::core::ptr::null_mut::<MB_ROW_DEC>();
-            vpx_free((*pbi).de_thread_data as *mut ::core::ffi::c_void);
+            vpx_free((*pbi).de_thread_data as *mut core::ffi::c_void);
             (*pbi).de_thread_data = ::core::ptr::null_mut::<DECODETHREAD_DATA>();
             vp8mt_de_alloc_temp_buffers(pbi, (*pbi).common.mb_rows);
         }
@@ -2121,7 +2121,7 @@ pub unsafe fn vp8mt_decode_mb_rows(
 ) -> i32 {
     unsafe {
         let mut pc: *mut VP8_COMMON = &raw mut (*pbi).common;
-        let mut i: ::core::ffi::c_uint = 0;
+        let mut i: u32 = 0;
         let mut j: i32 = 0;
         let mut filter_level: i32 = (*pc).filter_level;
         let mut yv12_fb_new: *mut YV12_BUFFER_CONFIG =
@@ -2133,7 +2133,7 @@ pub unsafe fn vp8mt_decode_mb_rows(
                     .offset(0 as i32 as isize))
                 .offset(VP8BORDERINPIXELS as isize)
                 .offset(-(1 as i32 as isize))
-                    as *mut ::core::ffi::c_void,
+                    as *mut core::ffi::c_void,
                 127 as i32,
                 ((*yv12_fb_new).y_width + 5 as i32) as size_t,
             );
@@ -2143,7 +2143,7 @@ pub unsafe fn vp8mt_decode_mb_rows(
                     .offset(0 as i32 as isize))
                 .offset((VP8BORDERINPIXELS >> 1 as i32) as isize)
                 .offset(-(1 as i32 as isize))
-                    as *mut ::core::ffi::c_void,
+                    as *mut core::ffi::c_void,
                 127 as i32,
                 (((*yv12_fb_new).y_width >> 1 as i32) + 5 as i32)
                     as size_t,
@@ -2154,7 +2154,7 @@ pub unsafe fn vp8mt_decode_mb_rows(
                     .offset(0 as i32 as isize))
                 .offset((VP8BORDERINPIXELS >> 1 as i32) as isize)
                 .offset(-(1 as i32 as isize))
-                    as *mut ::core::ffi::c_void,
+                    as *mut core::ffi::c_void,
                 127 as i32,
                 (((*yv12_fb_new).y_width >> 1 as i32) + 5 as i32)
                     as size_t,
@@ -2165,24 +2165,24 @@ pub unsafe fn vp8mt_decode_mb_rows(
                     (*(*pbi).mt_yabove_row.offset(j as isize))
                         .offset(VP8BORDERINPIXELS as isize)
                         .offset(-(1 as i32 as isize))
-                        as *mut ::core::ffi::c_void,
-                    129 as i32 as ::core::ffi::c_uchar as i32,
+                        as *mut core::ffi::c_void,
+                    129 as i32 as u8 as i32,
                     1 as size_t,
                 );
                 memset(
                     (*(*pbi).mt_uabove_row.offset(j as isize))
                         .offset((VP8BORDERINPIXELS >> 1 as i32) as isize)
                         .offset(-(1 as i32 as isize))
-                        as *mut ::core::ffi::c_void,
-                    129 as i32 as ::core::ffi::c_uchar as i32,
+                        as *mut core::ffi::c_void,
+                    129 as i32 as u8 as i32,
                     1 as size_t,
                 );
                 memset(
                     (*(*pbi).mt_vabove_row.offset(j as isize))
                         .offset((VP8BORDERINPIXELS >> 1 as i32) as isize)
                         .offset(-(1 as i32 as isize))
-                        as *mut ::core::ffi::c_void,
-                    129 as i32 as ::core::ffi::c_uchar as i32,
+                        as *mut core::ffi::c_void,
+                    129 as i32 as u8 as i32,
                     1 as size_t,
                 );
                 j += 1;
@@ -2190,18 +2190,18 @@ pub unsafe fn vp8mt_decode_mb_rows(
             j = 0 as i32;
             while j < (*pc).mb_rows {
                 memset(
-                    *(*pbi).mt_yleft_col.offset(j as isize) as *mut ::core::ffi::c_void,
-                    129 as i32 as ::core::ffi::c_uchar as i32,
+                    *(*pbi).mt_yleft_col.offset(j as isize) as *mut core::ffi::c_void,
+                    129 as i32 as u8 as i32,
                     16 as size_t,
                 );
                 memset(
-                    *(*pbi).mt_uleft_col.offset(j as isize) as *mut ::core::ffi::c_void,
-                    129 as i32 as ::core::ffi::c_uchar as i32,
+                    *(*pbi).mt_uleft_col.offset(j as isize) as *mut core::ffi::c_void,
+                    129 as i32 as u8 as i32,
                     8 as size_t,
                 );
                 memset(
-                    *(*pbi).mt_vleft_col.offset(j as isize) as *mut ::core::ffi::c_void,
-                    129 as i32 as ::core::ffi::c_uchar as i32,
+                    *(*pbi).mt_vleft_col.offset(j as isize) as *mut core::ffi::c_void,
+                    129 as i32 as u8 as i32,
                     8 as size_t,
                 );
                 j += 1;
@@ -2216,7 +2216,7 @@ pub unsafe fn vp8mt_decode_mb_rows(
             (*pbi).mb_row_di,
             (*pbi).decoding_thread_count as i32,
         );
-        i = 0 as ::core::ffi::c_uint;
+        i = 0 as u32;
         while i < (*pbi).decoding_thread_count {
             crate::thread_shim::vp8_semaphore_signal(
                 *(*pbi).h_event_start_decoding.offset(i as isize),
@@ -2226,7 +2226,7 @@ pub unsafe fn vp8mt_decode_mb_rows(
         if setjmp(&raw mut (*xd).error_info.jmp as *mut i32) != 0 {
             (*xd).error_info.setjmp = 0 as i32;
             (*xd).corrupted = 1 as i32;
-            i = 0 as ::core::ffi::c_uint;
+            i = 0 as u32;
             while i < (*pbi).decoding_thread_count {
                 crate::thread_shim::vp8_semaphore_wait((*pbi).h_event_end_decoding);
                 i = i.wrapping_add(1);
@@ -2236,11 +2236,11 @@ pub unsafe fn vp8mt_decode_mb_rows(
         (*xd).error_info.setjmp = 1 as i32;
         mt_decode_mb_rows(pbi, xd, 0 as i32);
         (*xd).error_info.setjmp = 0 as i32;
-        i = 0 as ::core::ffi::c_uint;
+        i = 0 as u32;
         while i
             < (*pbi)
                 .decoding_thread_count
-                .wrapping_add(1 as ::core::ffi::c_uint)
+                .wrapping_add(1 as u32)
         {
             crate::thread_shim::vp8_semaphore_wait((*pbi).h_event_end_decoding);
             i = i.wrapping_add(1);
@@ -2250,4 +2250,4 @@ pub unsafe fn vp8mt_decode_mb_rows(
 }
 pub const __ATOMIC_ACQUIRE: i32 = 2 as i32;
 pub const __ATOMIC_RELEASE: i32 = 3 as i32;
-pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
+pub const NULL: *mut core::ffi::c_void = __DARWIN_NULL;

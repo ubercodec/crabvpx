@@ -18,17 +18,17 @@ static mut cospi8sqrt2minus1: int16_t = 20091 as int16_t;
 static mut sinpi8sqrt2: int16_t = 17734 as int16_t;
 #[no_mangle]
 pub unsafe fn vp8_dequant_idct_add_y_block_neon(
-    mut q: *mut ::core::ffi::c_short,
-    mut dq: *mut ::core::ffi::c_short,
-    mut dst: *mut ::core::ffi::c_uchar,
+    mut q: *mut i16,
+    mut dq: *mut i16,
+    mut dst: *mut u8,
     mut stride: i32,
-    mut eobs: *mut ::core::ffi::c_char,
+    mut eobs: *mut i8,
 ) {
     let mut i: i32 = 0;
     i = 0 as i32;
     while i < 4 as i32 {
-        if *(eobs as *mut ::core::ffi::c_short).offset(0 as i32 as isize) != 0 {
-            if *(eobs as *mut ::core::ffi::c_short).offset(0 as i32 as isize)
+        if *(eobs as *mut i16).offset(0 as i32 as isize) != 0 {
+            if *(eobs as *mut i16).offset(0 as i32 as isize)
                 as i32
                 & 0xfefe as i32
                 != 0
@@ -43,8 +43,8 @@ pub unsafe fn vp8_dequant_idct_add_y_block_neon(
                 );
             }
         }
-        if *(eobs as *mut ::core::ffi::c_short).offset(1 as i32 as isize) != 0 {
-            if *(eobs as *mut ::core::ffi::c_short).offset(1 as i32 as isize)
+        if *(eobs as *mut i16).offset(1 as i32 as isize) != 0 {
+            if *(eobs as *mut i16).offset(1 as i32 as isize)
                 as i32
                 & 0xfefe as i32
                 != 0
@@ -72,15 +72,15 @@ pub unsafe fn vp8_dequant_idct_add_y_block_neon(
 }
 #[no_mangle]
 pub unsafe fn vp8_dequant_idct_add_uv_block_neon(
-    mut q: *mut ::core::ffi::c_short,
-    mut dq: *mut ::core::ffi::c_short,
-    mut dst_u: *mut ::core::ffi::c_uchar,
-    mut dst_v: *mut ::core::ffi::c_uchar,
+    mut q: *mut i16,
+    mut dq: *mut i16,
+    mut dst_u: *mut u8,
+    mut dst_v: *mut u8,
     mut stride: i32,
-    mut eobs: *mut ::core::ffi::c_char,
+    mut eobs: *mut i8,
 ) {
-    if *(eobs as *mut ::core::ffi::c_short).offset(0 as i32 as isize) != 0 {
-        if *(eobs as *mut ::core::ffi::c_short).offset(0 as i32 as isize)
+    if *(eobs as *mut i16).offset(0 as i32 as isize) != 0 {
+        if *(eobs as *mut i16).offset(0 as i32 as isize)
             as i32
             & 0xfefe as i32
             != 0
@@ -97,8 +97,8 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_neon(
     }
     q = q.offset(32 as i32 as isize);
     dst_u = dst_u.offset((4 as i32 * stride) as isize);
-    if *(eobs as *mut ::core::ffi::c_short).offset(1 as i32 as isize) != 0 {
-        if *(eobs as *mut ::core::ffi::c_short).offset(1 as i32 as isize)
+    if *(eobs as *mut i16).offset(1 as i32 as isize) != 0 {
+        if *(eobs as *mut i16).offset(1 as i32 as isize)
             as i32
             & 0xfefe as i32
             != 0
@@ -114,8 +114,8 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_neon(
         }
     }
     q = q.offset(32 as i32 as isize);
-    if *(eobs as *mut ::core::ffi::c_short).offset(2 as i32 as isize) != 0 {
-        if *(eobs as *mut ::core::ffi::c_short).offset(2 as i32 as isize)
+    if *(eobs as *mut i16).offset(2 as i32 as isize) != 0 {
+        if *(eobs as *mut i16).offset(2 as i32 as isize)
             as i32
             & 0xfefe as i32
             != 0
@@ -132,8 +132,8 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_neon(
     }
     q = q.offset(32 as i32 as isize);
     dst_v = dst_v.offset((4 as i32 * stride) as isize);
-    if *(eobs as *mut ::core::ffi::c_short).offset(3 as i32 as isize) != 0 {
-        if *(eobs as *mut ::core::ffi::c_short).offset(3 as i32 as isize)
+    if *(eobs as *mut i16).offset(3 as i32 as isize) != 0 {
+        if *(eobs as *mut i16).offset(3 as i32 as isize)
             as i32
             & 0xfefe as i32
             != 0

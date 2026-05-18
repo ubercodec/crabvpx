@@ -8,8 +8,8 @@ pub type uint32_t = u32;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MV {
-    pub row: ::core::ffi::c_short,
-    pub col: ::core::ffi::c_short,
+    pub row: i16,
+    pub col: i16,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -17,7 +17,7 @@ pub union int_mv {
     pub as_int: uint32_t,
     pub as_mv: MV,
 }
-pub type vpx_color_space = ::core::ffi::c_uint;
+pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
 pub const VPX_CS_BT_2020: vpx_color_space = 5;
@@ -27,11 +27,11 @@ pub const VPX_CS_BT_709: vpx_color_space = 2;
 pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_range = ::core::ffi::c_uint;
+pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
-pub type vpx_codec_err_t = ::core::ffi::c_uint;
+pub type vpx_codec_err_t = u32;
 pub const VPX_CODEC_LIST_END: vpx_codec_err_t = 9;
 pub const VPX_CODEC_INVALID_PARAM: vpx_codec_err_t = 8;
 pub const VPX_CODEC_CORRUPT_FRAME: vpx_codec_err_t = 7;
@@ -48,7 +48,7 @@ pub type jmp_buf = [i32; 48];
 pub struct vpx_internal_error_info {
     pub error_code: vpx_codec_err_t,
     pub has_detail: i32,
-    pub detail: [::core::ffi::c_char; 80],
+    pub detail: [i8; 80],
     pub setjmp: i32,
     pub jmp: jmp_buf,
 }
@@ -78,7 +78,7 @@ pub struct yv12_buffer_config {
     pub frame_size: size_t,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
-    pub bit_depth: ::core::ffi::c_uint,
+    pub bit_depth: u32,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
     pub render_width: i32,
@@ -87,8 +87,8 @@ pub struct yv12_buffer_config {
     pub flags: i32,
 }
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
-pub type vp8_prob = ::core::ffi::c_uchar;
-pub type ENTROPY_CONTEXT = ::core::ffi::c_char;
+pub type vp8_prob = u8;
+pub type ENTROPY_CONTEXT = i8;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ENTROPY_CONTEXT_PLANES {
@@ -97,10 +97,10 @@ pub struct ENTROPY_CONTEXT_PLANES {
     pub v: [ENTROPY_CONTEXT; 2],
     pub y2: ENTROPY_CONTEXT,
 }
-pub type FRAME_TYPE = ::core::ffi::c_uint;
+pub type FRAME_TYPE = u32;
 pub const INTER_FRAME: FRAME_TYPE = 1;
 pub const KEY_FRAME: FRAME_TYPE = 0;
-pub type C2RustUnnamed = ::core::ffi::c_uint;
+pub type C2RustUnnamed = u32;
 pub const MB_MODE_COUNT: C2RustUnnamed = 10;
 pub const SPLITMV: C2RustUnnamed = 9;
 pub const NEWMV: C2RustUnnamed = 8;
@@ -112,7 +112,7 @@ pub const TM_PRED: C2RustUnnamed = 3;
 pub const H_PRED: C2RustUnnamed = 2;
 pub const V_PRED: C2RustUnnamed = 1;
 pub const DC_PRED: C2RustUnnamed = 0;
-pub type B_PREDICTION_MODE = ::core::ffi::c_uint;
+pub type B_PREDICTION_MODE = u32;
 pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
 pub const NEW4X4: B_PREDICTION_MODE = 13;
 pub const ZERO4X4: B_PREDICTION_MODE = 12;
@@ -134,7 +134,7 @@ pub union b_mode_info {
     pub as_mode: B_PREDICTION_MODE,
     pub mv: int_mv,
 }
-pub type C2RustUnnamed_0 = ::core::ffi::c_uint;
+pub type C2RustUnnamed_0 = u32;
 pub const MAX_REF_FRAMES: C2RustUnnamed_0 = 4;
 pub const ALTREF_FRAME: C2RustUnnamed_0 = 3;
 pub const GOLDEN_FRAME: C2RustUnnamed_0 = 2;
@@ -163,35 +163,35 @@ pub type MODE_INFO = modeinfo;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct blockd {
-    pub qcoeff: *mut ::core::ffi::c_short,
-    pub dqcoeff: *mut ::core::ffi::c_short,
-    pub predictor: *mut ::core::ffi::c_uchar,
-    pub dequant: *mut ::core::ffi::c_short,
+    pub qcoeff: *mut i16,
+    pub dqcoeff: *mut i16,
+    pub predictor: *mut u8,
+    pub dequant: *mut i16,
     pub offset: i32,
-    pub eob: *mut ::core::ffi::c_char,
+    pub eob: *mut i8,
     pub bmi: b_mode_info,
 }
 pub type BLOCKD = blockd;
 pub type vp8_subpix_fn_t = Option<unsafe fn(
-        *mut ::core::ffi::c_uchar,
+        *mut u8,
         i32,
         i32,
         i32,
-        *mut ::core::ffi::c_uchar,
+        *mut u8,
         i32,
     ) -> (),
 >;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct macroblockd {
-    pub predictor: [::core::ffi::c_uchar; 384],
-    pub qcoeff: [::core::ffi::c_short; 400],
-    pub dqcoeff: [::core::ffi::c_short; 400],
-    pub eobs: [::core::ffi::c_char; 25],
-    pub dequant_y1: [::core::ffi::c_short; 16],
-    pub dequant_y1_dc: [::core::ffi::c_short; 16],
-    pub dequant_y2: [::core::ffi::c_short; 16],
-    pub dequant_uv: [::core::ffi::c_short; 16],
+    pub predictor: [u8; 384],
+    pub qcoeff: [i16; 400],
+    pub dqcoeff: [i16; 400],
+    pub eobs: [i8; 25],
+    pub dequant_y1: [i16; 16],
+    pub dequant_y1_dc: [i16; 16],
+    pub dequant_y2: [i16; 16],
+    pub dequant_uv: [i16; 16],
     pub block: [BLOCKD; 25],
     pub fullpixel_mask: i32,
     pub pre: YV12_BUFFER_CONFIG,
@@ -201,23 +201,23 @@ pub struct macroblockd {
     pub frame_type: FRAME_TYPE,
     pub up_available: i32,
     pub left_available: i32,
-    pub recon_above: [*mut ::core::ffi::c_uchar; 3],
-    pub recon_left: [*mut ::core::ffi::c_uchar; 3],
+    pub recon_above: [*mut u8; 3],
+    pub recon_left: [*mut u8; 3],
     pub recon_left_stride: [i32; 2],
     pub above_context: *mut ENTROPY_CONTEXT_PLANES,
     pub left_context: *mut ENTROPY_CONTEXT_PLANES,
-    pub segmentation_enabled: ::core::ffi::c_uchar,
-    pub update_mb_segmentation_map: ::core::ffi::c_uchar,
-    pub update_mb_segmentation_data: ::core::ffi::c_uchar,
-    pub mb_segment_abs_delta: ::core::ffi::c_uchar,
+    pub segmentation_enabled: u8,
+    pub update_mb_segmentation_map: u8,
+    pub update_mb_segmentation_data: u8,
+    pub mb_segment_abs_delta: u8,
     pub mb_segment_tree_probs: [vp8_prob; 3],
-    pub segment_feature_data: [[::core::ffi::c_schar; 4]; 2],
-    pub mode_ref_lf_delta_enabled: ::core::ffi::c_uchar,
-    pub mode_ref_lf_delta_update: ::core::ffi::c_uchar,
-    pub last_ref_lf_deltas: [::core::ffi::c_schar; 4],
-    pub ref_lf_deltas: [::core::ffi::c_schar; 4],
-    pub last_mode_lf_deltas: [::core::ffi::c_schar; 4],
-    pub mode_lf_deltas: [::core::ffi::c_schar; 4],
+    pub segment_feature_data: [[i8; 4]; 2],
+    pub mode_ref_lf_delta_enabled: u8,
+    pub mode_ref_lf_delta_update: u8,
+    pub last_ref_lf_deltas: [i8; 4],
+    pub ref_lf_deltas: [i8; 4],
+    pub last_mode_lf_deltas: [i8; 4],
+    pub mode_lf_deltas: [i8; 4],
     pub mb_to_left_edge: i32,
     pub mb_to_right_edge: i32,
     pub mb_to_top_edge: i32,
@@ -226,7 +226,7 @@ pub struct macroblockd {
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
-    pub current_bc: *mut ::core::ffi::c_void,
+    pub current_bc: *mut core::ffi::c_void,
     pub corrupted: i32,
     pub error_info: vpx_internal_error_info,
 }
@@ -235,7 +235,7 @@ pub const CNT_NEAR: C2RustUnnamed_1 = 2;
 pub const CNT_NEAREST: C2RustUnnamed_1 = 1;
 pub const CNT_INTRA: C2RustUnnamed_1 = 0;
 pub const CNT_SPLITMV: C2RustUnnamed_1 = 3;
-pub type C2RustUnnamed_1 = ::core::ffi::c_uint;
+pub type C2RustUnnamed_1 = u32;
 #[inline]
 unsafe fn mv_bias(
     mut refmb_ref_frame_sign_bias: i32,
@@ -246,9 +246,9 @@ unsafe fn mv_bias(
     unsafe {
         if refmb_ref_frame_sign_bias != *ref_frame_sign_bias.offset(refframe as isize) {
             (*mvp).as_mv.row = ((*mvp).as_mv.row as i32 * -(1 as i32))
-                as ::core::ffi::c_short;
+                as i16;
             (*mvp).as_mv.col = ((*mvp).as_mv.col as i32 * -(1 as i32))
-                as ::core::ffi::c_short;
+                as i16;
         }
     }
 }
@@ -260,96 +260,96 @@ pub const RIGHT_BOTTOM_MARGIN: i32 =
 unsafe fn vp8_clamp_mv2(mut mv: *mut int_mv, mut xd: *const MACROBLOCKD) {
     unsafe {
         if ((*mv).as_mv.col as i32) < (*xd).mb_to_left_edge - LEFT_TOP_MARGIN {
-            (*mv).as_mv.col = ((*xd).mb_to_left_edge - LEFT_TOP_MARGIN) as ::core::ffi::c_short;
+            (*mv).as_mv.col = ((*xd).mb_to_left_edge - LEFT_TOP_MARGIN) as i16;
         } else if (*mv).as_mv.col as i32
             > (*xd).mb_to_right_edge + RIGHT_BOTTOM_MARGIN
         {
             (*mv).as_mv.col =
-                ((*xd).mb_to_right_edge + RIGHT_BOTTOM_MARGIN) as ::core::ffi::c_short;
+                ((*xd).mb_to_right_edge + RIGHT_BOTTOM_MARGIN) as i16;
         }
         if ((*mv).as_mv.row as i32) < (*xd).mb_to_top_edge - LEFT_TOP_MARGIN {
-            (*mv).as_mv.row = ((*xd).mb_to_top_edge - LEFT_TOP_MARGIN) as ::core::ffi::c_short;
+            (*mv).as_mv.row = ((*xd).mb_to_top_edge - LEFT_TOP_MARGIN) as i16;
         } else if (*mv).as_mv.row as i32
             > (*xd).mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN
         {
             (*mv).as_mv.row =
-                ((*xd).mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN) as ::core::ffi::c_short;
+                ((*xd).mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN) as i16;
         }
     }
 }
 #[unsafe(no_mangle)]
-pub static mut vp8_mbsplit_offset: [[::core::ffi::c_uchar; 16]; 4] = [
+pub static mut vp8_mbsplit_offset: [[u8; 16]; 4] = [
     [
-        0 as i32 as ::core::ffi::c_uchar,
-        8 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as u8,
+        8 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
     ],
     [
-        0 as i32 as ::core::ffi::c_uchar,
-        2 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as u8,
+        2 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
     ],
     [
-        0 as i32 as ::core::ffi::c_uchar,
-        2 as i32 as ::core::ffi::c_uchar,
-        8 as i32 as ::core::ffi::c_uchar,
-        10 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
-        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as u8,
+        2 as i32 as u8,
+        8 as i32 as u8,
+        10 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
+        0 as i32 as u8,
     ],
     [
-        0 as i32 as ::core::ffi::c_uchar,
-        1 as i32 as ::core::ffi::c_uchar,
-        2 as i32 as ::core::ffi::c_uchar,
-        3 as i32 as ::core::ffi::c_uchar,
-        4 as i32 as ::core::ffi::c_uchar,
-        5 as i32 as ::core::ffi::c_uchar,
-        6 as i32 as ::core::ffi::c_uchar,
-        7 as i32 as ::core::ffi::c_uchar,
-        8 as i32 as ::core::ffi::c_uchar,
-        9 as i32 as ::core::ffi::c_uchar,
-        10 as i32 as ::core::ffi::c_uchar,
-        11 as i32 as ::core::ffi::c_uchar,
-        12 as i32 as ::core::ffi::c_uchar,
-        13 as i32 as ::core::ffi::c_uchar,
-        14 as i32 as ::core::ffi::c_uchar,
-        15 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as u8,
+        1 as i32 as u8,
+        2 as i32 as u8,
+        3 as i32 as u8,
+        4 as i32 as u8,
+        5 as i32 as u8,
+        6 as i32 as u8,
+        7 as i32 as u8,
+        8 as i32 as u8,
+        9 as i32 as u8,
+        10 as i32 as u8,
+        11 as i32 as u8,
+        12 as i32 as u8,
+        13 as i32 as u8,
+        14 as i32 as u8,
+        15 as i32 as u8,
     ],
 ];
 #[unsafe(no_mangle)]
@@ -483,9 +483,9 @@ unsafe fn invert_and_clamp_mvs(
 ) {
     unsafe {
         (*inv).as_mv.row = ((*src).as_mv.row as i32 * -(1 as i32))
-            as ::core::ffi::c_short;
+            as i16;
         (*inv).as_mv.col = ((*src).as_mv.col as i32 * -(1 as i32))
-            as ::core::ffi::c_short;
+            as i16;
         vp8_clamp_mv2(inv, xd);
         vp8_clamp_mv2(src, xd);
     }

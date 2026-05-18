@@ -1,16 +1,16 @@
 unsafe extern "Rust" {
     fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
+        __dst: *mut core::ffi::c_void,
+        __src: *const core::ffi::c_void,
         __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
     fn memset(
-        __b: *mut ::core::ffi::c_void,
+        __b: *mut core::ffi::c_void,
         __c: i32,
         __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
 }
-pub type vpx_color_space = ::core::ffi::c_uint;
+pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
 pub const VPX_CS_BT_2020: vpx_color_space = 5;
@@ -20,7 +20,7 @@ pub const VPX_CS_BT_709: vpx_color_space = 2;
 pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_range = ::core::ffi::c_uint;
+pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
@@ -53,7 +53,7 @@ pub struct yv12_buffer_config {
     pub frame_size: size_t,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
-    pub bit_depth: ::core::ffi::c_uint,
+    pub bit_depth: u32,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
     pub render_width: i32,
@@ -63,9 +63,9 @@ pub struct yv12_buffer_config {
 }
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 unsafe fn copy_and_extend_plane(
-    mut s: *mut ::core::ffi::c_uchar,
+    mut s: *mut u8,
     mut sp: i32,
-    mut d: *mut ::core::ffi::c_uchar,
+    mut d: *mut u8,
     mut dp: i32,
     mut h: i32,
     mut w: i32,
@@ -78,14 +78,14 @@ unsafe fn copy_and_extend_plane(
     unsafe {
         let mut i: i32 = 0;
         let mut j: i32 = 0;
-        let mut src_ptr1: *mut ::core::ffi::c_uchar =
-            ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-        let mut src_ptr2: *mut ::core::ffi::c_uchar =
-            ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-        let mut dest_ptr1: *mut ::core::ffi::c_uchar =
-            ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-        let mut dest_ptr2: *mut ::core::ffi::c_uchar =
-            ::core::ptr::null_mut::<::core::ffi::c_uchar>();
+        let mut src_ptr1: *mut u8 =
+            ::core::ptr::null_mut::<u8>();
+        let mut src_ptr2: *mut u8 =
+            ::core::ptr::null_mut::<u8>();
+        let mut dest_ptr1: *mut u8 =
+            ::core::ptr::null_mut::<u8>();
+        let mut dest_ptr2: *mut u8 =
+            ::core::ptr::null_mut::<u8>();
         let mut linesize: i32 = 0;
         if interleave_step < 1 as i32 {
             interleave_step = 1 as i32;
@@ -97,14 +97,14 @@ unsafe fn copy_and_extend_plane(
         i = 0 as i32;
         while i < h {
             memset(
-                dest_ptr1 as *mut ::core::ffi::c_void,
+                dest_ptr1 as *mut core::ffi::c_void,
                 *src_ptr1.offset(0 as i32 as isize) as i32,
                 el as size_t,
             );
             if interleave_step == 1 as i32 {
                 memcpy(
-                    dest_ptr1.offset(el as isize) as *mut ::core::ffi::c_void,
-                    src_ptr1 as *const ::core::ffi::c_void,
+                    dest_ptr1.offset(el as isize) as *mut core::ffi::c_void,
+                    src_ptr1 as *const core::ffi::c_void,
                     w as size_t,
                 );
             } else {
@@ -116,7 +116,7 @@ unsafe fn copy_and_extend_plane(
                 }
             }
             memset(
-                dest_ptr2 as *mut ::core::ffi::c_void,
+                dest_ptr2 as *mut core::ffi::c_void,
                 *src_ptr2.offset(0 as i32 as isize) as i32,
                 er as size_t,
             );
@@ -136,8 +136,8 @@ unsafe fn copy_and_extend_plane(
         i = 0 as i32;
         while i < et {
             memcpy(
-                dest_ptr1 as *mut ::core::ffi::c_void,
-                src_ptr1 as *const ::core::ffi::c_void,
+                dest_ptr1 as *mut core::ffi::c_void,
+                src_ptr1 as *const core::ffi::c_void,
                 linesize as size_t,
             );
             dest_ptr1 = dest_ptr1.offset(dp as isize);
@@ -146,8 +146,8 @@ unsafe fn copy_and_extend_plane(
         i = 0 as i32;
         while i < eb {
             memcpy(
-                dest_ptr2 as *mut ::core::ffi::c_void,
-                src_ptr2 as *const ::core::ffi::c_void,
+                dest_ptr2 as *mut core::ffi::c_void,
+                src_ptr2 as *const core::ffi::c_void,
                 linesize as size_t,
             );
             dest_ptr2 = dest_ptr2.offset(dp as isize);
@@ -166,17 +166,17 @@ pub unsafe fn vp8_copy_and_extend_frame(
         let mut eb: i32 = (*dst).border + (*dst).y_height - (*src).y_height;
         let mut er: i32 = (*dst).border + (*dst).y_width - (*src).y_width;
         let mut chroma_step: i32 = if (*src).v_buffer.offset_from((*src).u_buffer)
-            as ::core::ffi::c_long
-            == 1 as ::core::ffi::c_long
+            as i64
+            == 1 as i64
         {
             2 as i32
         } else {
             1 as i32
         };
         copy_and_extend_plane(
-            (*src).y_buffer as *mut ::core::ffi::c_uchar,
+            (*src).y_buffer as *mut u8,
             (*src).y_stride,
-            (*dst).y_buffer as *mut ::core::ffi::c_uchar,
+            (*dst).y_buffer as *mut u8,
             (*dst).y_stride,
             (*src).y_height,
             (*src).y_width,
@@ -191,9 +191,9 @@ pub unsafe fn vp8_copy_and_extend_frame(
         eb = ((*dst).border >> 1 as i32) + (*dst).uv_height - (*src).uv_height;
         er = ((*dst).border >> 1 as i32) + (*dst).uv_width - (*src).uv_width;
         copy_and_extend_plane(
-            (*src).u_buffer as *mut ::core::ffi::c_uchar,
+            (*src).u_buffer as *mut u8,
             (*src).uv_stride,
-            (*dst).u_buffer as *mut ::core::ffi::c_uchar,
+            (*dst).u_buffer as *mut u8,
             (*dst).uv_stride,
             (*src).uv_height,
             (*src).uv_width,
@@ -204,9 +204,9 @@ pub unsafe fn vp8_copy_and_extend_frame(
             chroma_step,
         );
         copy_and_extend_plane(
-            (*src).v_buffer as *mut ::core::ffi::c_uchar,
+            (*src).v_buffer as *mut u8,
             (*src).uv_stride,
-            (*dst).v_buffer as *mut ::core::ffi::c_uchar,
+            (*dst).v_buffer as *mut u8,
             (*dst).uv_stride,
             (*src).uv_height,
             (*src).uv_width,
@@ -241,8 +241,8 @@ pub unsafe fn vp8_copy_and_extend_frame_with_rect(
             >> 1 as i32)
             + (srcx >> 1 as i32);
         let mut chroma_step: i32 = if (*src).v_buffer.offset_from((*src).u_buffer)
-            as ::core::ffi::c_long
-            == 1 as ::core::ffi::c_long
+            as i64
+            == 1 as i64
         {
             2 as i32
         } else {
@@ -310,9 +310,9 @@ pub unsafe fn vp8_copy_and_extend_frame_with_rect(
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_extend_mb_row(
     mut ybf: *mut YV12_BUFFER_CONFIG,
-    mut YPtr: *mut ::core::ffi::c_uchar,
-    mut UPtr: *mut ::core::ffi::c_uchar,
-    mut VPtr: *mut ::core::ffi::c_uchar,
+    mut YPtr: *mut u8,
+    mut UPtr: *mut u8,
+    mut VPtr: *mut u8,
 ) {
     unsafe {
         let mut i: i32 = 0;

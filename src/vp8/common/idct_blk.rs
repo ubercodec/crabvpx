@@ -1,32 +1,32 @@
 unsafe extern "Rust" {
     fn vp8_dc_only_idct_add_c(
-        input_dc: ::core::ffi::c_short,
-        pred_ptr: *mut ::core::ffi::c_uchar,
+        input_dc: i16,
+        pred_ptr: *mut u8,
         pred_stride: i32,
-        dst_ptr: *mut ::core::ffi::c_uchar,
+        dst_ptr: *mut u8,
         dst_stride: i32,
     );
     fn vp8_dequant_idct_add_c(
-        input: *mut ::core::ffi::c_short,
-        dq: *mut ::core::ffi::c_short,
-        dest: *mut ::core::ffi::c_uchar,
+        input: *mut i16,
+        dq: *mut i16,
+        dest: *mut u8,
         stride: i32,
     );
     fn memset(
-        __b: *mut ::core::ffi::c_void,
+        __b: *mut core::ffi::c_void,
         __c: i32,
         __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
 }
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_dequant_idct_add_y_block_c(
-    mut q: *mut ::core::ffi::c_short,
-    mut dq: *mut ::core::ffi::c_short,
-    mut dst: *mut ::core::ffi::c_uchar,
+    mut q: *mut i16,
+    mut dq: *mut i16,
+    mut dst: *mut u8,
     mut stride: i32,
-    mut eobs: *mut ::core::ffi::c_char,
+    mut eobs: *mut i8,
 ) {
     unsafe {
         let mut i: i32 = 0;
@@ -43,17 +43,17 @@ pub unsafe fn vp8_dequant_idct_add_y_block_c(
                     vp8_dc_only_idct_add_c(
                         (*q.offset(0 as i32 as isize) as i32
                             * *dq.offset(0 as i32 as isize) as i32)
-                            as ::core::ffi::c_short,
+                            as i16,
                         dst,
                         stride,
                         dst,
                         stride,
                     );
                     memset(
-                        q as *mut ::core::ffi::c_void,
+                        q as *mut core::ffi::c_void,
                         0 as i32,
                         (2 as size_t)
-                            .wrapping_mul(::core::mem::size_of::<::core::ffi::c_short>() as size_t),
+                            .wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
                 q = q.offset(16 as i32 as isize);
@@ -68,12 +68,12 @@ pub unsafe fn vp8_dequant_idct_add_y_block_c(
 }
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_dequant_idct_add_uv_block_c(
-    mut q: *mut ::core::ffi::c_short,
-    mut dq: *mut ::core::ffi::c_short,
-    mut dst_u: *mut ::core::ffi::c_uchar,
-    mut dst_v: *mut ::core::ffi::c_uchar,
+    mut q: *mut i16,
+    mut dq: *mut i16,
+    mut dst_u: *mut u8,
+    mut dst_v: *mut u8,
     mut stride: i32,
-    mut eobs: *mut ::core::ffi::c_char,
+    mut eobs: *mut i8,
 ) {
     unsafe {
         let mut i: i32 = 0;
@@ -90,17 +90,17 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                     vp8_dc_only_idct_add_c(
                         (*q.offset(0 as i32 as isize) as i32
                             * *dq.offset(0 as i32 as isize) as i32)
-                            as ::core::ffi::c_short,
+                            as i16,
                         dst_u,
                         stride,
                         dst_u,
                         stride,
                     );
                     memset(
-                        q as *mut ::core::ffi::c_void,
+                        q as *mut core::ffi::c_void,
                         0 as i32,
                         (2 as size_t)
-                            .wrapping_mul(::core::mem::size_of::<::core::ffi::c_short>() as size_t),
+                            .wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
                 q = q.offset(16 as i32 as isize);
@@ -123,17 +123,17 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                     vp8_dc_only_idct_add_c(
                         (*q.offset(0 as i32 as isize) as i32
                             * *dq.offset(0 as i32 as isize) as i32)
-                            as ::core::ffi::c_short,
+                            as i16,
                         dst_v,
                         stride,
                         dst_v,
                         stride,
                     );
                     memset(
-                        q as *mut ::core::ffi::c_void,
+                        q as *mut core::ffi::c_void,
                         0 as i32,
                         (2 as size_t)
-                            .wrapping_mul(::core::mem::size_of::<::core::ffi::c_short>() as size_t),
+                            .wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
                 q = q.offset(16 as i32 as isize);

@@ -1,13 +1,13 @@
 unsafe extern "Rust" {
-    static vp8_norm: [::core::ffi::c_uchar; 256];
+    static vp8_norm: [u8; 256];
     fn vp8dx_bool_decoder_fill(br: *mut BOOL_DECODER);
     fn memset(
-        __b: *mut ::core::ffi::c_void,
+        __b: *mut core::ffi::c_void,
         __c: i32,
         __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
 }
-pub type vpx_color_space = ::core::ffi::c_uint;
+pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
 pub const VPX_CS_BT_2020: vpx_color_space = 5;
@@ -17,34 +17,34 @@ pub const VPX_CS_BT_709: vpx_color_space = 2;
 pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_range = ::core::ffi::c_uint;
+pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
-pub type __darwin_natural_t = ::core::ffi::c_uint;
+pub type __darwin_natural_t = u32;
 pub type __darwin_size_t = usize;
 pub type __darwin_mach_port_name_t = __darwin_natural_t;
 pub type __darwin_mach_port_t = __darwin_mach_port_name_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct __darwin_pthread_handler_rec {
-    pub __routine: Option<unsafe fn(*mut ::core::ffi::c_void) -> ()>,
-    pub __arg: *mut ::core::ffi::c_void,
+    pub __routine: Option<unsafe fn(*mut core::ffi::c_void) -> ()>,
+    pub __arg: *mut core::ffi::c_void,
     pub __next: *mut __darwin_pthread_handler_rec,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct _opaque_pthread_t {
-    pub __sig: ::core::ffi::c_long,
+    pub __sig: i64,
     pub __cleanup_stack: *mut __darwin_pthread_handler_rec,
-    pub __opaque: [::core::ffi::c_char; 8176],
+    pub __opaque: [i8; 8176],
 }
 pub type __darwin_pthread_t = *mut _opaque_pthread_t;
 pub type int16_t = i16;
 pub type size_t = __darwin_size_t;
 pub type uint8_t = u8;
 pub type uint32_t = u32;
-pub type vpx_codec_err_t = ::core::ffi::c_uint;
+pub type vpx_codec_err_t = u32;
 pub const VPX_CODEC_LIST_END: vpx_codec_err_t = 9;
 pub const VPX_CODEC_INVALID_PARAM: vpx_codec_err_t = 8;
 pub const VPX_CODEC_CORRUPT_FRAME: vpx_codec_err_t = 7;
@@ -61,7 +61,7 @@ pub type jmp_buf = [i32; 48];
 pub struct vpx_internal_error_info {
     pub error_code: vpx_codec_err_t,
     pub has_detail: i32,
-    pub detail: [::core::ffi::c_char; 80],
+    pub detail: [i8; 80],
     pub setjmp: i32,
     pub jmp: jmp_buf,
 }
@@ -91,7 +91,7 @@ pub struct yv12_buffer_config {
     pub frame_size: size_t,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
-    pub bit_depth: ::core::ffi::c_uint,
+    pub bit_depth: u32,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
     pub render_width: i32,
@@ -103,8 +103,8 @@ pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MV {
-    pub row: ::core::ffi::c_short,
-    pub col: ::core::ffi::c_short,
+    pub row: i16,
+    pub col: i16,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -112,8 +112,8 @@ pub union int_mv {
     pub as_int: uint32_t,
     pub as_mv: MV,
 }
-pub type vp8_prob = ::core::ffi::c_uchar;
-pub type ENTROPY_CONTEXT = ::core::ffi::c_char;
+pub type vp8_prob = u8;
+pub type ENTROPY_CONTEXT = i8;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ENTROPY_CONTEXT_PLANES {
@@ -122,10 +122,10 @@ pub struct ENTROPY_CONTEXT_PLANES {
     pub v: [ENTROPY_CONTEXT; 2],
     pub y2: ENTROPY_CONTEXT,
 }
-pub type FRAME_TYPE = ::core::ffi::c_uint;
+pub type FRAME_TYPE = u32;
 pub const INTER_FRAME: FRAME_TYPE = 1;
 pub const KEY_FRAME: FRAME_TYPE = 0;
-pub type B_PREDICTION_MODE = ::core::ffi::c_uint;
+pub type B_PREDICTION_MODE = u32;
 pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
 pub const NEW4X4: B_PREDICTION_MODE = 13;
 pub const ZERO4X4: B_PREDICTION_MODE = 12;
@@ -170,35 +170,35 @@ pub type MODE_INFO = modeinfo;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct blockd {
-    pub qcoeff: *mut ::core::ffi::c_short,
-    pub dqcoeff: *mut ::core::ffi::c_short,
-    pub predictor: *mut ::core::ffi::c_uchar,
-    pub dequant: *mut ::core::ffi::c_short,
+    pub qcoeff: *mut i16,
+    pub dqcoeff: *mut i16,
+    pub predictor: *mut u8,
+    pub dequant: *mut i16,
     pub offset: i32,
-    pub eob: *mut ::core::ffi::c_char,
+    pub eob: *mut i8,
     pub bmi: b_mode_info,
 }
 pub type BLOCKD = blockd;
 pub type vp8_subpix_fn_t = Option<unsafe fn(
-        *mut ::core::ffi::c_uchar,
+        *mut u8,
         i32,
         i32,
         i32,
-        *mut ::core::ffi::c_uchar,
+        *mut u8,
         i32,
     ) -> (),
 >;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct macroblockd {
-    pub predictor: [::core::ffi::c_uchar; 384],
-    pub qcoeff: [::core::ffi::c_short; 400],
-    pub dqcoeff: [::core::ffi::c_short; 400],
-    pub eobs: [::core::ffi::c_char; 25],
-    pub dequant_y1: [::core::ffi::c_short; 16],
-    pub dequant_y1_dc: [::core::ffi::c_short; 16],
-    pub dequant_y2: [::core::ffi::c_short; 16],
-    pub dequant_uv: [::core::ffi::c_short; 16],
+    pub predictor: [u8; 384],
+    pub qcoeff: [i16; 400],
+    pub dqcoeff: [i16; 400],
+    pub eobs: [i8; 25],
+    pub dequant_y1: [i16; 16],
+    pub dequant_y1_dc: [i16; 16],
+    pub dequant_y2: [i16; 16],
+    pub dequant_uv: [i16; 16],
     pub block: [BLOCKD; 25],
     pub fullpixel_mask: i32,
     pub pre: YV12_BUFFER_CONFIG,
@@ -208,23 +208,23 @@ pub struct macroblockd {
     pub frame_type: FRAME_TYPE,
     pub up_available: i32,
     pub left_available: i32,
-    pub recon_above: [*mut ::core::ffi::c_uchar; 3],
-    pub recon_left: [*mut ::core::ffi::c_uchar; 3],
+    pub recon_above: [*mut u8; 3],
+    pub recon_left: [*mut u8; 3],
     pub recon_left_stride: [i32; 2],
     pub above_context: *mut ENTROPY_CONTEXT_PLANES,
     pub left_context: *mut ENTROPY_CONTEXT_PLANES,
-    pub segmentation_enabled: ::core::ffi::c_uchar,
-    pub update_mb_segmentation_map: ::core::ffi::c_uchar,
-    pub update_mb_segmentation_data: ::core::ffi::c_uchar,
-    pub mb_segment_abs_delta: ::core::ffi::c_uchar,
+    pub segmentation_enabled: u8,
+    pub update_mb_segmentation_map: u8,
+    pub update_mb_segmentation_data: u8,
+    pub mb_segment_abs_delta: u8,
     pub mb_segment_tree_probs: [vp8_prob; 3],
-    pub segment_feature_data: [[::core::ffi::c_schar; 4]; 2],
-    pub mode_ref_lf_delta_enabled: ::core::ffi::c_uchar,
-    pub mode_ref_lf_delta_update: ::core::ffi::c_uchar,
-    pub last_ref_lf_deltas: [::core::ffi::c_schar; 4],
-    pub ref_lf_deltas: [::core::ffi::c_schar; 4],
-    pub last_mode_lf_deltas: [::core::ffi::c_schar; 4],
-    pub mode_lf_deltas: [::core::ffi::c_schar; 4],
+    pub segment_feature_data: [[i8; 4]; 2],
+    pub mode_ref_lf_delta_enabled: u8,
+    pub mode_ref_lf_delta_update: u8,
+    pub last_ref_lf_deltas: [i8; 4],
+    pub ref_lf_deltas: [i8; 4],
+    pub last_mode_lf_deltas: [i8; 4],
+    pub mode_lf_deltas: [i8; 4],
     pub mb_to_left_edge: i32,
     pub mb_to_right_edge: i32,
     pub mb_to_top_edge: i32,
@@ -233,12 +233,12 @@ pub struct macroblockd {
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
-    pub current_bc: *mut ::core::ffi::c_void,
+    pub current_bc: *mut core::ffi::c_void,
     pub corrupted: i32,
     pub error_info: vpx_internal_error_info,
 }
 pub type MACROBLOCKD = macroblockd;
-pub type pthread_t = *mut ::core::ffi::c_void;
+pub type pthread_t = *mut core::ffi::c_void;
 pub type mach_port_t = __darwin_mach_port_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -252,17 +252,17 @@ pub struct VP8D_COMP {
     pub b_multithreaded_rd: vpx_atomic_int,
     pub max_threads: i32,
     pub current_mb_col_main: i32,
-    pub decoding_thread_count: ::core::ffi::c_uint,
+    pub decoding_thread_count: u32,
     pub allocated_decoding_thread_count: i32,
     pub mt_baseline_filter_level: [i32; 4],
     pub sync_range: i32,
     pub mt_current_mb_col: *mut vpx_atomic_int,
-    pub mt_yabove_row: *mut *mut ::core::ffi::c_uchar,
-    pub mt_uabove_row: *mut *mut ::core::ffi::c_uchar,
-    pub mt_vabove_row: *mut *mut ::core::ffi::c_uchar,
-    pub mt_yleft_col: *mut *mut ::core::ffi::c_uchar,
-    pub mt_uleft_col: *mut *mut ::core::ffi::c_uchar,
-    pub mt_vleft_col: *mut *mut ::core::ffi::c_uchar,
+    pub mt_yabove_row: *mut *mut u8,
+    pub mt_uabove_row: *mut *mut u8,
+    pub mt_vabove_row: *mut *mut u8,
+    pub mt_yleft_col: *mut *mut u8,
+    pub mt_uleft_col: *mut *mut u8,
+    pub mt_vleft_col: *mut *mut u8,
     pub mb_row_di: *mut MB_ROW_DEC,
     pub de_thread_data: *mut DECODETHREAD_DATA,
     pub h_decoding_thread: *mut pthread_t,
@@ -279,23 +279,23 @@ pub struct VP8D_COMP {
     pub independent_partitions: i32,
     pub frame_corrupt_residual: i32,
     pub decrypt_cb: vpx_decrypt_cb,
-    pub decrypt_state: *mut ::core::ffi::c_void,
+    pub decrypt_state: *mut core::ffi::c_void,
     pub restart_threads: i32,
 }
 pub type vpx_decrypt_cb = Option<unsafe fn(
-        *mut ::core::ffi::c_void,
-        *const ::core::ffi::c_uchar,
-        *mut ::core::ffi::c_uchar,
+        *mut core::ffi::c_void,
+        *const u8,
+        *mut u8,
         i32,
     ) -> (),
 >;
-pub type semaphore_t = *mut ::core::ffi::c_void;
+pub type semaphore_t = *mut core::ffi::c_void;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct DECODETHREAD_DATA {
     pub ithread: i32,
-    pub ptr1: *mut ::core::ffi::c_void,
-    pub ptr2: *mut ::core::ffi::c_void,
+    pub ptr1: *mut core::ffi::c_void,
+    pub ptr2: *mut core::ffi::c_void,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -311,9 +311,9 @@ pub struct vpx_atomic_int {
 #[repr(C)]
 pub struct FRAGMENT_DATA {
     pub enabled: i32,
-    pub count: ::core::ffi::c_uint,
-    pub ptrs: [*const ::core::ffi::c_uchar; 9],
-    pub sizes: [::core::ffi::c_uint; 9],
+    pub count: u32,
+    pub ptrs: [*const u8; 9],
+    pub sizes: [u32; 9],
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -329,13 +329,13 @@ pub type BOOL_DECODER = vp8_reader;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vp8_reader {
-    pub user_buffer_end: *const ::core::ffi::c_uchar,
-    pub user_buffer: *const ::core::ffi::c_uchar,
+    pub user_buffer_end: *const u8,
+    pub user_buffer: *const u8,
     pub value: VP8_BD_VALUE,
     pub count: i32,
-    pub range: ::core::ffi::c_uint,
+    pub range: u32,
     pub decrypt_cb: vpx_decrypt_cb,
-    pub decrypt_state: *mut ::core::ffi::c_void,
+    pub decrypt_state: *mut core::ffi::c_void,
 }
 pub type VP8_BD_VALUE = size_t;
 pub type VP8_COMMON = VP8Common;
@@ -343,9 +343,9 @@ pub type VP8_COMMON = VP8Common;
 #[repr(C)]
 pub struct VP8Common {
     pub error: vpx_internal_error_info,
-    pub Y1dequant: [[::core::ffi::c_short; 2]; 128],
-    pub Y2dequant: [[::core::ffi::c_short; 2]; 128],
-    pub UVdequant: [[::core::ffi::c_short; 2]; 128],
+    pub Y1dequant: [[i16; 2]; 128],
+    pub Y2dequant: [[i16; 2]; 128],
+    pub UVdequant: [[i16; 2]; 128],
     pub Width: i32,
     pub Height: i32,
     pub horiz_scale: i32,
@@ -396,12 +396,12 @@ pub struct VP8Common {
     pub left_context: ENTROPY_CONTEXT_PLANES,
     pub lfc: FRAME_CONTEXT,
     pub fc: FRAME_CONTEXT,
-    pub current_video_frame: ::core::ffi::c_uint,
+    pub current_video_frame: u32,
     pub version: i32,
     pub multi_token_partition: TOKEN_PARTITION,
     pub processor_core_count: i32,
 }
-pub type TOKEN_PARTITION = ::core::ffi::c_uint;
+pub type TOKEN_PARTITION = u32;
 pub const EIGHT_PARTITION: TOKEN_PARTITION = 3;
 pub const FOUR_PARTITION: TOKEN_PARTITION = 2;
 pub const TWO_PARTITION: TOKEN_PARTITION = 1;
@@ -426,18 +426,18 @@ pub struct mv_context {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_filter_info_n {
-    pub mblim: [[::core::ffi::c_uchar; 16]; 64],
-    pub blim: [[::core::ffi::c_uchar; 16]; 64],
-    pub lim: [[::core::ffi::c_uchar; 16]; 64],
-    pub hev_thr: [[::core::ffi::c_uchar; 16]; 4],
-    pub lvl: [[[::core::ffi::c_uchar; 4]; 4]; 4],
-    pub hev_thr_lut: [[::core::ffi::c_uchar; 64]; 2],
-    pub mode_lf_lut: [::core::ffi::c_uchar; 10],
+    pub mblim: [[u8; 16]; 64],
+    pub blim: [[u8; 16]; 64],
+    pub lim: [[u8; 16]; 64],
+    pub hev_thr: [[u8; 16]; 4],
+    pub lvl: [[[u8; 4]; 4]; 4],
+    pub hev_thr_lut: [[u8; 64]; 2],
+    pub mode_lf_lut: [u8; 10],
 }
-pub type LOOPFILTERTYPE = ::core::ffi::c_uint;
+pub type LOOPFILTERTYPE = u32;
 pub const SIMPLE_LOOPFILTER: LOOPFILTERTYPE = 1;
 pub const NORMAL_LOOPFILTER: LOOPFILTERTYPE = 0;
-pub type CLAMP_TYPE = ::core::ffi::c_uint;
+pub type CLAMP_TYPE = u32;
 pub const RECON_CLAMP_NOTREQUIRED: CLAMP_TYPE = 1;
 pub const RECON_CLAMP_REQUIRED: CLAMP_TYPE = 0;
 pub type ProbaArray = *const [[uint8_t; 11]; 3];
@@ -449,17 +449,17 @@ unsafe fn vp8dx_decode_bool(
     mut probability: i32,
 ) -> i32 {
     unsafe {
-        let mut bit: ::core::ffi::c_uint = 0 as ::core::ffi::c_uint;
+        let mut bit: u32 = 0 as u32;
         let mut value: VP8_BD_VALUE = 0;
-        let mut split: ::core::ffi::c_uint = 0;
+        let mut split: u32 = 0;
         let mut bigsplit: VP8_BD_VALUE = 0;
         let mut count: i32 = 0;
-        let mut range: ::core::ffi::c_uint = 0;
-        split = (1 as ::core::ffi::c_uint).wrapping_add(
+        let mut range: u32 = 0;
+        split = (1 as u32).wrapping_add(
             (*br)
                 .range
-                .wrapping_sub(1 as ::core::ffi::c_uint)
-                .wrapping_mul(probability as ::core::ffi::c_uint)
+                .wrapping_sub(1 as u32)
+                .wrapping_mul(probability as u32)
                 >> 8 as i32,
         );
         if (*br).count < 0 as i32 {
@@ -472,9 +472,9 @@ unsafe fn vp8dx_decode_bool(
         if value >= bigsplit {
             range = (*br).range.wrapping_sub(split);
             value = value.wrapping_sub(bigsplit);
-            bit = 1 as ::core::ffi::c_uint;
+            bit = 1 as u32;
         }
-        let shift: ::core::ffi::c_uchar = vp8_norm[range as ::core::ffi::c_uchar as usize];
+        let shift: u8 = vp8_norm[range as u8 as usize];
         range <<= shift as i32;
         value <<= shift as i32;
         count -= shift as i32;
@@ -490,12 +490,12 @@ pub unsafe fn vp8_reset_mb_tokens_context(mut x: *mut MACROBLOCKD) {
         let mut a_ctx: *mut ENTROPY_CONTEXT = (*x).above_context as *mut ENTROPY_CONTEXT;
         let mut l_ctx: *mut ENTROPY_CONTEXT = (*x).left_context as *mut ENTROPY_CONTEXT;
         memset(
-            a_ctx as *mut ::core::ffi::c_void,
+            a_ctx as *mut core::ffi::c_void,
             0 as i32,
             (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t).wrapping_sub(1 as size_t),
         );
         memset(
-            l_ctx as *mut ::core::ffi::c_void,
+            l_ctx as *mut core::ffi::c_void,
             0 as i32,
             (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t).wrapping_sub(1 as size_t),
         );
@@ -591,7 +591,7 @@ unsafe fn GetSigned(
     mut value_to_sign: i32,
 ) -> i32 {
     unsafe {
-        let mut split: i32 = ((*br).range.wrapping_add(1 as ::core::ffi::c_uint)
+        let mut split: i32 = ((*br).range.wrapping_add(1 as u32)
             >> 1 as i32)
             as i32;
         let mut bigsplit: VP8_BD_VALUE =
@@ -601,10 +601,10 @@ unsafe fn GetSigned(
             vp8dx_bool_decoder_fill(br);
         }
         if (*br).value < bigsplit {
-            (*br).range = split as ::core::ffi::c_uint;
+            (*br).range = split as u32;
             v = value_to_sign;
         } else {
-            (*br).range = (*br).range.wrapping_sub(split as ::core::ffi::c_uint);
+            (*br).range = (*br).range.wrapping_sub(split as u32);
             (*br).value = (*br).value.wrapping_sub(bigsplit);
             v = -value_to_sign;
         }
@@ -748,21 +748,21 @@ pub unsafe fn vp8_decode_mb_tokens(
     unsafe {
         let mut bc: *mut BOOL_DECODER = (*x).current_bc as *mut BOOL_DECODER;
         let fc: *const FRAME_CONTEXT = &raw mut (*dx).common.fc;
-        let mut eobs: *mut ::core::ffi::c_char = &raw mut (*x).eobs as *mut ::core::ffi::c_char;
+        let mut eobs: *mut i8 = &raw mut (*x).eobs as *mut i8;
         let mut i: i32 = 0;
         let mut nonzeros: i32 = 0;
         let mut eobtotal: i32 = 0 as i32;
-        let mut qcoeff_ptr: *mut ::core::ffi::c_short =
-            ::core::ptr::null_mut::<::core::ffi::c_short>();
+        let mut qcoeff_ptr: *mut i16 =
+            ::core::ptr::null_mut::<i16>();
         let mut coef_probs: ProbaArray = ::core::ptr::null::<[[uint8_t; 11]; 3]>();
         let mut a_ctx: *mut ENTROPY_CONTEXT = (*x).above_context as *mut ENTROPY_CONTEXT;
         let mut l_ctx: *mut ENTROPY_CONTEXT = (*x).left_context as *mut ENTROPY_CONTEXT;
         let mut a: *mut ENTROPY_CONTEXT = ::core::ptr::null_mut::<ENTROPY_CONTEXT>();
         let mut l: *mut ENTROPY_CONTEXT = ::core::ptr::null_mut::<ENTROPY_CONTEXT>();
         let mut skip_dc: i32 = 0 as i32;
-        qcoeff_ptr = (&raw mut (*x).qcoeff as *mut ::core::ffi::c_short)
+        qcoeff_ptr = (&raw mut (*x).qcoeff as *mut i16)
             .offset(0 as i32 as isize)
-            as *mut ::core::ffi::c_short;
+            as *mut i16;
         if (*(*x).mode_info_context).mbmi.is_4x4 == 0 {
             a = a_ctx.offset(8 as i32 as isize);
             l = l_ctx.offset(8 as i32 as isize);
@@ -779,7 +779,7 @@ pub unsafe fn vp8_decode_mb_tokens(
             );
             *l = (nonzeros > 0 as i32) as i32 as ENTROPY_CONTEXT;
             *a = *l;
-            *eobs.offset(24 as i32 as isize) = nonzeros as ::core::ffi::c_char;
+            *eobs.offset(24 as i32 as isize) = nonzeros as i8;
             eobtotal += nonzeros - 16 as i32;
             coef_probs = &raw const *(&raw const (*fc).coef_probs
                 as *const [[[vp8_prob; 11]; 3]; 8])
@@ -807,7 +807,7 @@ pub unsafe fn vp8_decode_mb_tokens(
             *l = (nonzeros > 0 as i32) as i32 as ENTROPY_CONTEXT;
             *a = *l;
             nonzeros += skip_dc;
-            *eobs.offset(i as isize) = nonzeros as ::core::ffi::c_char;
+            *eobs.offset(i as isize) = nonzeros as i8;
             eobtotal += nonzeros;
             qcoeff_ptr = qcoeff_ptr.offset(16 as i32 as isize);
             i += 1;
@@ -843,7 +843,7 @@ pub unsafe fn vp8_decode_mb_tokens(
             );
             *l = (nonzeros > 0 as i32) as i32 as ENTROPY_CONTEXT;
             *a = *l;
-            *eobs.offset(i as isize) = nonzeros as ::core::ffi::c_char;
+            *eobs.offset(i as isize) = nonzeros as i8;
             eobtotal += nonzeros;
             qcoeff_ptr = qcoeff_ptr.offset(16 as i32 as isize);
             i += 1;

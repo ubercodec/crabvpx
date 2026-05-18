@@ -1,5 +1,5 @@
-pub type vp8_prob = ::core::ffi::c_uchar;
-pub type vp8_tree_index = ::core::ffi::c_schar;
+pub type vp8_prob = u8;
+pub type vp8_tree_index = i8;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vp8_token_struct {
@@ -71,15 +71,15 @@ unsafe fn branch_counts(
     mut n: i32,
     mut tok: *const vp8_token,
     mut tree: *const vp8_tree_index,
-    mut branch_ct: *mut [::core::ffi::c_uint; 2],
-    mut num_events: *const ::core::ffi::c_uint,
+    mut branch_ct: *mut [u32; 2],
+    mut num_events: *const u32,
 ) {
     unsafe {
         let tree_len: i32 = n - 1 as i32;
         let mut t: i32 = 0 as i32;
         loop {
             let fresh1 = &mut (*branch_ct.offset(t as isize))[1 as i32 as usize];
-            *fresh1 = 0 as ::core::ffi::c_uint;
+            *fresh1 = 0 as u32;
             (*branch_ct.offset(t as isize))[0 as i32 as usize] = *fresh1;
             t += 1;
             if !(t < tree_len) {
@@ -90,7 +90,7 @@ unsafe fn branch_counts(
         loop {
             let mut L: i32 = (*tok.offset(t as isize)).Len;
             let enc: i32 = (*tok.offset(t as isize)).value;
-            let ct: ::core::ffi::c_uint = *num_events.offset(t as isize);
+            let ct: u32 = *num_events.offset(t as isize);
             let mut i: vp8_tree_index = 0 as vp8_tree_index;
             loop {
                 L -= 1;
@@ -116,9 +116,9 @@ pub unsafe fn vp8_tree_probs_from_distribution(
     mut tok: *const vp8_token,
     mut tree: *const vp8_tree_index,
     mut probs: *mut vp8_prob,
-    mut branch_ct: *mut [::core::ffi::c_uint; 2],
-    mut num_events: *const ::core::ffi::c_uint,
-    mut Pfactor: ::core::ffi::c_uint,
+    mut branch_ct: *mut [u32; 2],
+    mut num_events: *const u32,
+    mut Pfactor: u32,
     mut Round: i32,
 ) {
     unsafe {
@@ -126,26 +126,26 @@ pub unsafe fn vp8_tree_probs_from_distribution(
         let mut t: i32 = 0 as i32;
         branch_counts(n, tok, tree, branch_ct, num_events);
         loop {
-            let c: *const ::core::ffi::c_uint =
-                &raw mut *branch_ct.offset(t as isize) as *mut ::core::ffi::c_uint;
-            let tot: ::core::ffi::c_uint = (*c.offset(0 as i32 as isize))
+            let c: *const u32 =
+                &raw mut *branch_ct.offset(t as isize) as *mut u32;
+            let tot: u32 = (*c.offset(0 as i32 as isize))
                 .wrapping_add(*c.offset(1 as i32 as isize));
             if tot != 0 {
-                let p: ::core::ffi::c_uint = ((*c.offset(0 as i32 as isize)
+                let p: u32 = ((*c.offset(0 as i32 as isize)
                     as uint64_t)
                     .wrapping_mul(Pfactor as uint64_t)
                     .wrapping_add(
                         (if Round != 0 {
                             tot >> 1 as i32
                         } else {
-                            0 as ::core::ffi::c_uint
+                            0 as u32
                         }) as uint64_t,
-                    ) as ::core::ffi::c_uint)
+                    ) as u32)
                     .wrapping_div(tot);
-                *probs.offset(t as isize) = (if p < 256 as ::core::ffi::c_uint {
-                    if p != 0 { p } else { 1 as ::core::ffi::c_uint }
+                *probs.offset(t as isize) = (if p < 256 as u32 {
+                    if p != 0 { p } else { 1 as u32 }
                 } else {
-                    255 as ::core::ffi::c_uint
+                    255 as u32
                 }) as vp8_prob;
             } else {
                 *probs.offset(t as isize) = vp8_prob_half;

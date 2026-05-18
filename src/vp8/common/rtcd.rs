@@ -4,13 +4,13 @@ unsafe extern "Rust" {
         _: Option<unsafe fn() -> ()>,
     ) -> i32;
 }
-pub type pthread_once_t = *mut ::core::ffi::c_void;
+pub type pthread_once_t = *mut core::ffi::c_void;
 pub type __darwin_pthread_once_t = _opaque_pthread_once_t;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct _opaque_pthread_once_t {
-    pub __sig: ::core::ffi::c_long,
-    pub __opaque: [::core::ffi::c_char; 8],
+    pub __sig: i64,
+    pub __opaque: [i8; 8],
 }
 unsafe fn setup_rtcd_internal() {}
 pub const _PTHREAD_ONCE_SIG_init: i32 = 0x30b1bcba as i32;

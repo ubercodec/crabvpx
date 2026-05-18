@@ -1,14 +1,14 @@
 unsafe extern "Rust" {
     fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
+        __dst: *mut core::ffi::c_void,
+        __src: *const core::ffi::c_void,
         __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
     fn memset(
-        __b: *mut ::core::ffi::c_void,
+        __b: *mut core::ffi::c_void,
         __c: i32,
         __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
 }
 pub type __darwin_ptrdiff_t = isize;
 pub type __darwin_size_t = usize;
@@ -124,27 +124,27 @@ unsafe fn d63_predictor(
         while r < bs {
             memcpy(
                 dst.offset(((r + 0 as i32) as ptrdiff_t * stride) as isize)
-                    as *mut ::core::ffi::c_void,
-                dst.offset((r >> 1 as i32) as isize) as *const ::core::ffi::c_void,
+                    as *mut core::ffi::c_void,
+                dst.offset((r >> 1 as i32) as isize) as *const core::ffi::c_void,
                 size as size_t,
             );
             memset(
                 dst.offset(((r + 0 as i32) as ptrdiff_t * stride) as isize)
-                    .offset(size as isize) as *mut ::core::ffi::c_void,
+                    .offset(size as isize) as *mut core::ffi::c_void,
                 *above.offset((bs - 1 as i32) as isize) as i32,
                 (bs - size) as size_t,
             );
             memcpy(
                 dst.offset(((r + 1 as i32) as ptrdiff_t * stride) as isize)
-                    as *mut ::core::ffi::c_void,
+                    as *mut core::ffi::c_void,
                 dst.offset(stride)
                     .offset((r >> 1 as i32) as isize)
-                    as *const ::core::ffi::c_void,
+                    as *const core::ffi::c_void,
                 size as size_t,
             );
             memset(
                 dst.offset(((r + 1 as i32) as ptrdiff_t * stride) as isize)
-                    .offset(size as isize) as *mut ::core::ffi::c_void,
+                    .offset(size as isize) as *mut core::ffi::c_void,
                 *above.offset((bs - 1 as i32) as isize) as i32,
                 (bs - size) as size_t,
             );
@@ -182,12 +182,12 @@ unsafe fn d45_predictor(
         size = bs - 2 as i32;
         while x < bs {
             memcpy(
-                dst as *mut ::core::ffi::c_void,
-                dst_row0.offset(x as isize) as *const ::core::ffi::c_void,
+                dst as *mut core::ffi::c_void,
+                dst_row0.offset(x as isize) as *const core::ffi::c_void,
                 size as size_t,
             );
             memset(
-                dst.offset(size as isize) as *mut ::core::ffi::c_void,
+                dst.offset(size as isize) as *mut core::ffi::c_void,
                 above_right as i32,
                 (x + 1 as i32) as size_t,
             );
@@ -330,11 +330,11 @@ unsafe fn d135_predictor(
         i = 0 as i32;
         while i < bs {
             memcpy(
-                dst.offset((i as ptrdiff_t * stride) as isize) as *mut ::core::ffi::c_void,
+                dst.offset((i as ptrdiff_t * stride) as isize) as *mut core::ffi::c_void,
                 (&raw mut border as *mut uint8_t)
                     .offset(bs as isize)
                     .offset(-(1 as i32 as isize))
-                    .offset(-(i as isize)) as *const ::core::ffi::c_void,
+                    .offset(-(i as isize)) as *const core::ffi::c_void,
                 bs as size_t,
             );
             i += 1;
@@ -431,8 +431,8 @@ unsafe fn v_predictor(
         r = 0 as i32;
         while r < bs {
             memcpy(
-                dst as *mut ::core::ffi::c_void,
-                above as *const ::core::ffi::c_void,
+                dst as *mut core::ffi::c_void,
+                above as *const core::ffi::c_void,
                 bs as size_t,
             );
             dst = dst.offset(stride);
@@ -453,7 +453,7 @@ unsafe fn h_predictor(
         r = 0 as i32;
         while r < bs {
             memset(
-                dst as *mut ::core::ffi::c_void,
+                dst as *mut core::ffi::c_void,
                 *left.offset(r as isize) as i32,
                 bs as size_t,
             );
@@ -504,7 +504,7 @@ unsafe fn dc_128_predictor(
         r = 0 as i32;
         while r < bs {
             memset(
-                dst as *mut ::core::ffi::c_void,
+                dst as *mut core::ffi::c_void,
                 128 as i32,
                 bs as size_t,
             );
@@ -534,7 +534,7 @@ unsafe fn dc_left_predictor(
         expected_dc = (sum + (bs >> 1 as i32)) / bs;
         r = 0 as i32;
         while r < bs {
-            memset(dst as *mut ::core::ffi::c_void, expected_dc, bs as size_t);
+            memset(dst as *mut core::ffi::c_void, expected_dc, bs as size_t);
             dst = dst.offset(stride);
             r += 1;
         }
@@ -561,7 +561,7 @@ unsafe fn dc_top_predictor(
         expected_dc = (sum + (bs >> 1 as i32)) / bs;
         r = 0 as i32;
         while r < bs {
-            memset(dst as *mut ::core::ffi::c_void, expected_dc, bs as size_t);
+            memset(dst as *mut core::ffi::c_void, expected_dc, bs as size_t);
             dst = dst.offset(stride);
             r += 1;
         }
@@ -590,7 +590,7 @@ unsafe fn dc_predictor(
         expected_dc = (sum + (count >> 1 as i32)) / count;
         r = 0 as i32;
         while r < bs {
-            memset(dst as *mut ::core::ffi::c_void, expected_dc, bs as size_t);
+            memset(dst as *mut core::ffi::c_void, expected_dc, bs as size_t);
             dst = dst.offset(stride);
             r += 1;
         }
@@ -615,25 +615,25 @@ pub unsafe fn vpx_he_predictor_4x4_c(
         let L: i32 =
             *left.offset(3 as i32 as isize) as i32;
         memset(
-            dst.offset(stride * 0 as ptrdiff_t) as *mut ::core::ffi::c_void,
+            dst.offset(stride * 0 as ptrdiff_t) as *mut core::ffi::c_void,
             (H + 2 as i32 * I + J + 2 as i32)
                 >> 2 as i32,
             4 as size_t,
         );
         memset(
-            dst.offset(stride * 1 as ptrdiff_t) as *mut ::core::ffi::c_void,
+            dst.offset(stride * 1 as ptrdiff_t) as *mut core::ffi::c_void,
             (I + 2 as i32 * J + K + 2 as i32)
                 >> 2 as i32,
             4 as size_t,
         );
         memset(
-            dst.offset(stride * 2 as ptrdiff_t) as *mut ::core::ffi::c_void,
+            dst.offset(stride * 2 as ptrdiff_t) as *mut core::ffi::c_void,
             (J + 2 as i32 * K + L + 2 as i32)
                 >> 2 as i32,
             4 as size_t,
         );
         memset(
-            dst.offset(stride * 3 as ptrdiff_t) as *mut ::core::ffi::c_void,
+            dst.offset(stride * 3 as ptrdiff_t) as *mut core::ffi::c_void,
             (K + 2 as i32 * L + L + 2 as i32)
                 >> 2 as i32,
             4 as size_t,
@@ -673,18 +673,18 @@ pub unsafe fn vpx_ve_predictor_4x4_c(
             ((K + 2 as i32 * L + M + 2 as i32)
                 >> 2 as i32) as uint8_t;
         memcpy(
-            dst.offset(stride * 1 as ptrdiff_t) as *mut ::core::ffi::c_void,
-            dst as *const ::core::ffi::c_void,
+            dst.offset(stride * 1 as ptrdiff_t) as *mut core::ffi::c_void,
+            dst as *const core::ffi::c_void,
             4 as size_t,
         );
         memcpy(
-            dst.offset(stride * 2 as ptrdiff_t) as *mut ::core::ffi::c_void,
-            dst as *const ::core::ffi::c_void,
+            dst.offset(stride * 2 as ptrdiff_t) as *mut core::ffi::c_void,
+            dst as *const core::ffi::c_void,
             4 as size_t,
         );
         memcpy(
-            dst.offset(stride * 3 as ptrdiff_t) as *mut ::core::ffi::c_void,
-            dst as *const ::core::ffi::c_void,
+            dst.offset(stride * 3 as ptrdiff_t) as *mut core::ffi::c_void,
+            dst as *const core::ffi::c_void,
             4 as size_t,
         );
     }

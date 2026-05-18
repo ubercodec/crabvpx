@@ -1,11 +1,11 @@
 unsafe extern "Rust" {
     fn memset(
-        __b: *mut ::core::ffi::c_void,
+        __b: *mut core::ffi::c_void,
         __c: i32,
         __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
 }
-pub type vpx_color_space = ::core::ffi::c_uint;
+pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
 pub const VPX_CS_BT_2020: vpx_color_space = 5;
@@ -15,7 +15,7 @@ pub const VPX_CS_BT_709: vpx_color_space = 2;
 pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_range = ::core::ffi::c_uint;
+pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
@@ -48,7 +48,7 @@ pub struct yv12_buffer_config {
     pub frame_size: size_t,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
-    pub bit_depth: ::core::ffi::c_uint,
+    pub bit_depth: u32,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
     pub render_width: i32,
@@ -65,7 +65,7 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
             (*ybf)
                 .y_buffer
                 .offset(-(1 as i32 as isize))
-                .offset(-((*ybf).y_stride as isize)) as *mut ::core::ffi::c_void,
+                .offset(-((*ybf).y_stride as isize)) as *mut core::ffi::c_void,
             127 as i32,
             ((*ybf).y_width + 5 as i32) as size_t,
         );
@@ -74,14 +74,14 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
             *(*ybf)
                 .y_buffer
                 .offset(((*ybf).y_stride * i - 1 as i32) as isize) =
-                129 as i32 as ::core::ffi::c_uchar as uint8_t;
+                129 as i32 as u8 as uint8_t;
             i += 1;
         }
         memset(
             (*ybf)
                 .u_buffer
                 .offset(-(1 as i32 as isize))
-                .offset(-((*ybf).uv_stride as isize)) as *mut ::core::ffi::c_void,
+                .offset(-((*ybf).uv_stride as isize)) as *mut core::ffi::c_void,
             127 as i32,
             ((*ybf).uv_width + 5 as i32) as size_t,
         );
@@ -90,14 +90,14 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
             *(*ybf)
                 .u_buffer
                 .offset(((*ybf).uv_stride * i - 1 as i32) as isize) =
-                129 as i32 as ::core::ffi::c_uchar as uint8_t;
+                129 as i32 as u8 as uint8_t;
             i += 1;
         }
         memset(
             (*ybf)
                 .v_buffer
                 .offset(-(1 as i32 as isize))
-                .offset(-((*ybf).uv_stride as isize)) as *mut ::core::ffi::c_void,
+                .offset(-((*ybf).uv_stride as isize)) as *mut core::ffi::c_void,
             127 as i32,
             ((*ybf).uv_width + 5 as i32) as size_t,
         );
@@ -106,7 +106,7 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
             *(*ybf)
                 .v_buffer
                 .offset(((*ybf).uv_stride * i - 1 as i32) as isize) =
-                129 as i32 as ::core::ffi::c_uchar as uint8_t;
+                129 as i32 as u8 as uint8_t;
             i += 1;
         }
     }
@@ -118,7 +118,7 @@ pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut YV12_BUFFER_CONFIG) {
             (*ybf)
                 .y_buffer
                 .offset(-(1 as i32 as isize))
-                .offset(-((*ybf).y_stride as isize)) as *mut ::core::ffi::c_void,
+                .offset(-((*ybf).y_stride as isize)) as *mut core::ffi::c_void,
             127 as i32,
             ((*ybf).y_width + 5 as i32) as size_t,
         );
@@ -126,7 +126,7 @@ pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut YV12_BUFFER_CONFIG) {
             (*ybf)
                 .u_buffer
                 .offset(-(1 as i32 as isize))
-                .offset(-((*ybf).uv_stride as isize)) as *mut ::core::ffi::c_void,
+                .offset(-((*ybf).uv_stride as isize)) as *mut core::ffi::c_void,
             127 as i32,
             ((*ybf).uv_width + 5 as i32) as size_t,
         );
@@ -134,7 +134,7 @@ pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut YV12_BUFFER_CONFIG) {
             (*ybf)
                 .v_buffer
                 .offset(-(1 as i32 as isize))
-                .offset(-((*ybf).uv_stride as isize)) as *mut ::core::ffi::c_void,
+                .offset(-((*ybf).uv_stride as isize)) as *mut core::ffi::c_void,
             127 as i32,
             ((*ybf).uv_width + 5 as i32) as size_t,
         );

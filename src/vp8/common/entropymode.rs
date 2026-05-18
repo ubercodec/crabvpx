@@ -1,9 +1,9 @@
 unsafe extern "Rust" {
     fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
+        __dst: *mut core::ffi::c_void,
+        __src: *const core::ffi::c_void,
         __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -20,11 +20,11 @@ pub union int_mv {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MV {
-    pub row: ::core::ffi::c_short,
-    pub col: ::core::ffi::c_short,
+    pub row: i16,
+    pub col: i16,
 }
 pub type uint32_t = u32;
-pub type B_PREDICTION_MODE = ::core::ffi::c_uint;
+pub type B_PREDICTION_MODE = u32;
 pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
 pub const NEW4X4: B_PREDICTION_MODE = 13;
 pub const ZERO4X4: B_PREDICTION_MODE = 12;
@@ -45,12 +45,12 @@ pub const B_DC_PRED: B_PREDICTION_MODE = 0;
 pub struct vpx_internal_error_info {
     pub error_code: vpx_codec_err_t,
     pub has_detail: i32,
-    pub detail: [::core::ffi::c_char; 80],
+    pub detail: [i8; 80],
     pub setjmp: i32,
     pub jmp: jmp_buf,
 }
 pub type jmp_buf = [i32; 48];
-pub type vpx_codec_err_t = ::core::ffi::c_uint;
+pub type vpx_codec_err_t = u32;
 pub const VPX_CODEC_LIST_END: vpx_codec_err_t = 9;
 pub const VPX_CODEC_INVALID_PARAM: vpx_codec_err_t = 8;
 pub const VPX_CODEC_CORRUPT_FRAME: vpx_codec_err_t = 7;
@@ -61,7 +61,7 @@ pub const VPX_CODEC_ABI_MISMATCH: vpx_codec_err_t = 3;
 pub const VPX_CODEC_MEM_ERROR: vpx_codec_err_t = 2;
 pub const VPX_CODEC_ERROR: vpx_codec_err_t = 1;
 pub const VPX_CODEC_OK: vpx_codec_err_t = 0;
-pub type vp8_prob = ::core::ffi::c_uchar;
+pub type vp8_prob = u8;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ENTROPY_CONTEXT_PLANES {
@@ -70,8 +70,8 @@ pub struct ENTROPY_CONTEXT_PLANES {
     pub v: [ENTROPY_CONTEXT; 2],
     pub y2: ENTROPY_CONTEXT,
 }
-pub type ENTROPY_CONTEXT = ::core::ffi::c_char;
-pub type FRAME_TYPE = ::core::ffi::c_uint;
+pub type ENTROPY_CONTEXT = i8;
+pub type FRAME_TYPE = u32;
 pub const INTER_FRAME: FRAME_TYPE = 1;
 pub const KEY_FRAME: FRAME_TYPE = 0;
 pub type MODE_INFO = modeinfo;
@@ -122,7 +122,7 @@ pub struct yv12_buffer_config {
     pub frame_size: size_t,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
-    pub bit_depth: ::core::ffi::c_uint,
+    pub bit_depth: u32,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
     pub render_width: i32,
@@ -131,11 +131,11 @@ pub struct yv12_buffer_config {
     pub flags: i32,
 }
 pub type vpx_color_range_t = vpx_color_range;
-pub type vpx_color_range = ::core::ffi::c_uint;
+pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_space = ::core::ffi::c_uint;
+pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
 pub const VPX_CS_BT_2020: vpx_color_space = 5;
@@ -146,27 +146,27 @@ pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
-pub type LOOPFILTERTYPE = ::core::ffi::c_uint;
+pub type LOOPFILTERTYPE = u32;
 pub const SIMPLE_LOOPFILTER: LOOPFILTERTYPE = 1;
 pub const NORMAL_LOOPFILTER: LOOPFILTERTYPE = 0;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_filter_info_n {
-    pub mblim: [[::core::ffi::c_uchar; 16]; 64],
-    pub blim: [[::core::ffi::c_uchar; 16]; 64],
-    pub lim: [[::core::ffi::c_uchar; 16]; 64],
-    pub hev_thr: [[::core::ffi::c_uchar; 16]; 4],
-    pub lvl: [[[::core::ffi::c_uchar; 4]; 4]; 4],
-    pub hev_thr_lut: [[::core::ffi::c_uchar; 64]; 2],
-    pub mode_lf_lut: [::core::ffi::c_uchar; 10],
+    pub mblim: [[u8; 16]; 64],
+    pub blim: [[u8; 16]; 64],
+    pub lim: [[u8; 16]; 64],
+    pub hev_thr: [[u8; 16]; 4],
+    pub lvl: [[[u8; 4]; 4]; 4],
+    pub hev_thr_lut: [[u8; 64]; 2],
+    pub mode_lf_lut: [u8; 10],
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct VP8Common {
     pub error: vpx_internal_error_info,
-    pub Y1dequant: [[::core::ffi::c_short; 2]; 128],
-    pub Y2dequant: [[::core::ffi::c_short; 2]; 128],
-    pub UVdequant: [[::core::ffi::c_short; 2]; 128],
+    pub Y1dequant: [[i16; 2]; 128],
+    pub Y2dequant: [[i16; 2]; 128],
+    pub UVdequant: [[i16; 2]; 128],
     pub Width: i32,
     pub Height: i32,
     pub horiz_scale: i32,
@@ -217,12 +217,12 @@ pub struct VP8Common {
     pub left_context: ENTROPY_CONTEXT_PLANES,
     pub lfc: FRAME_CONTEXT,
     pub fc: FRAME_CONTEXT,
-    pub current_video_frame: ::core::ffi::c_uint,
+    pub current_video_frame: u32,
     pub version: i32,
     pub multi_token_partition: TOKEN_PARTITION,
     pub processor_core_count: i32,
 }
-pub type TOKEN_PARTITION = ::core::ffi::c_uint;
+pub type TOKEN_PARTITION = u32;
 pub const EIGHT_PARTITION: TOKEN_PARTITION = 3;
 pub const FOUR_PARTITION: TOKEN_PARTITION = 2;
 pub const TWO_PARTITION: TOKEN_PARTITION = 1;
@@ -244,17 +244,17 @@ pub type MV_CONTEXT = mv_context;
 pub struct mv_context {
     pub prob: [vp8_prob; 19],
 }
-pub type CLAMP_TYPE = ::core::ffi::c_uint;
+pub type CLAMP_TYPE = u32;
 pub const RECON_CLAMP_NOTREQUIRED: CLAMP_TYPE = 1;
 pub const RECON_CLAMP_REQUIRED: CLAMP_TYPE = 0;
-pub type vp8_tree_index = ::core::ffi::c_schar;
+pub type vp8_tree_index = i8;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vp8_token_struct {
     pub value: i32,
     pub Len: i32,
 }
-pub type C2RustUnnamed = ::core::ffi::c_uint;
+pub type C2RustUnnamed = u32;
 pub const MB_MODE_COUNT: C2RustUnnamed = 10;
 pub const SPLITMV: C2RustUnnamed = 9;
 pub const NEWMV: C2RustUnnamed = 8;
@@ -267,7 +267,7 @@ pub const H_PRED: C2RustUnnamed = 2;
 pub const V_PRED: C2RustUnnamed = 1;
 pub const DC_PRED: C2RustUnnamed = 0;
 pub type VP8_COMMON = VP8Common;
-pub type C2RustUnnamed_0 = ::core::ffi::c_uint;
+pub type C2RustUnnamed_0 = u32;
 pub const SUBMVREF_LEFT_ABOVE_ZED: C2RustUnnamed_0 = 4;
 pub const SUBMVREF_LEFT_ABOVE_SAME: C2RustUnnamed_0 = 3;
 pub const SUBMVREF_ABOVE_ZED: C2RustUnnamed_0 = 2;
@@ -1886,18 +1886,18 @@ pub static mut vp8_small_mvtree: [vp8_tree_index; 14] = [
 pub unsafe fn vp8_init_mbmode_probs(mut x: *mut VP8_COMMON) {
     unsafe {
         memcpy(
-            &raw mut (*x).fc.ymode_prob as *mut vp8_prob as *mut ::core::ffi::c_void,
-            &raw const vp8_ymode_prob as *const vp8_prob as *const ::core::ffi::c_void,
+            &raw mut (*x).fc.ymode_prob as *mut vp8_prob as *mut core::ffi::c_void,
+            &raw const vp8_ymode_prob as *const vp8_prob as *const core::ffi::c_void,
             ::core::mem::size_of::<[vp8_prob; 4]>() as size_t,
         );
         memcpy(
-            &raw mut (*x).fc.uv_mode_prob as *mut vp8_prob as *mut ::core::ffi::c_void,
-            &raw const vp8_uv_mode_prob as *const vp8_prob as *const ::core::ffi::c_void,
+            &raw mut (*x).fc.uv_mode_prob as *mut vp8_prob as *mut core::ffi::c_void,
+            &raw const vp8_uv_mode_prob as *const vp8_prob as *const core::ffi::c_void,
             ::core::mem::size_of::<[vp8_prob; 3]>() as size_t,
         );
         memcpy(
-            &raw mut (*x).fc.sub_mv_ref_prob as *mut vp8_prob as *mut ::core::ffi::c_void,
-            &raw const sub_mv_ref_prob as *const vp8_prob as *const ::core::ffi::c_void,
+            &raw mut (*x).fc.sub_mv_ref_prob as *mut vp8_prob as *mut core::ffi::c_void,
+            &raw const sub_mv_ref_prob as *const vp8_prob as *const core::ffi::c_void,
             ::core::mem::size_of::<[vp8_prob; 3]>() as size_t,
         );
     }
@@ -1906,8 +1906,8 @@ pub unsafe fn vp8_init_mbmode_probs(mut x: *mut VP8_COMMON) {
 pub unsafe fn vp8_default_bmode_probs(mut dest: *mut vp8_prob) {
     unsafe {
         memcpy(
-            dest as *mut ::core::ffi::c_void,
-            &raw const vp8_bmode_prob as *const vp8_prob as *const ::core::ffi::c_void,
+            dest as *mut core::ffi::c_void,
+            &raw const vp8_bmode_prob as *const vp8_prob as *const core::ffi::c_void,
             ::core::mem::size_of::<[vp8_prob; 9]>() as size_t,
         );
     }

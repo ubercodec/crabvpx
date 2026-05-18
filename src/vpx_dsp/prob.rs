@@ -5,8 +5,8 @@ pub type vpx_prob = uint8_t;
 pub type vpx_tree_index = int8_t;
 #[inline]
 unsafe fn get_prob(
-    mut num: ::core::ffi::c_uint,
-    mut den: ::core::ffi::c_uint,
+    mut num: u32,
+    mut den: u32,
 ) -> vpx_prob {
     let p: i32 = (num as uint64_t)
         .wrapping_mul(256 as uint64_t)
@@ -54,21 +54,21 @@ static mut count_to_update_factor: [i32; 21] = [
 #[inline]
 unsafe fn mode_mv_merge_probs(
     mut pre_prob: vpx_prob,
-    mut ct: *const ::core::ffi::c_uint,
+    mut ct: *const u32,
 ) -> vpx_prob {
     unsafe {
-        let den: ::core::ffi::c_uint = (*ct.offset(0 as i32 as isize))
+        let den: u32 = (*ct.offset(0 as i32 as isize))
             .wrapping_add(*ct.offset(1 as i32 as isize));
-        if den == 0 as ::core::ffi::c_uint {
+        if den == 0 as u32 {
             pre_prob
         } else {
-            let count: ::core::ffi::c_uint = if den < 20 as ::core::ffi::c_uint {
+            let count: u32 = if den < 20 as u32 {
                 den
             } else {
-                20 as ::core::ffi::c_uint
+                20 as u32
             };
-            let factor: ::core::ffi::c_uint =
-                count_to_update_factor[count as usize] as ::core::ffi::c_uint;
+            let factor: u32 =
+                count_to_update_factor[count as usize] as u32;
             let prob: vpx_prob =
                 get_prob(*ct.offset(0 as i32 as isize), den) as vpx_prob;
             weighted_prob(
@@ -339,32 +339,32 @@ pub static mut vpx_norm: [uint8_t; 256] = [
     0 as i32 as uint8_t,
 ];
 unsafe fn tree_merge_probs_impl(
-    mut i: ::core::ffi::c_uint,
+    mut i: u32,
     mut tree: *const vpx_tree_index,
     mut pre_probs: *const vpx_prob,
-    mut counts: *const ::core::ffi::c_uint,
+    mut counts: *const u32,
     mut probs: *mut vpx_prob,
-) -> ::core::ffi::c_uint {
+) -> u32 {
     unsafe {
         let l: i32 = *tree.offset(i as isize) as i32;
-        let left_count: ::core::ffi::c_uint = if l <= 0 as i32 {
+        let left_count: u32 = if l <= 0 as i32 {
             *counts.offset(-l as isize)
         } else {
-            tree_merge_probs_impl(l as ::core::ffi::c_uint, tree, pre_probs, counts, probs)
-                as ::core::ffi::c_uint
+            tree_merge_probs_impl(l as u32, tree, pre_probs, counts, probs)
+                as u32
         };
         let r: i32 =
-            *tree.offset(i.wrapping_add(1 as ::core::ffi::c_uint) as isize) as i32;
-        let right_count: ::core::ffi::c_uint = if r <= 0 as i32 {
+            *tree.offset(i.wrapping_add(1 as u32) as isize) as i32;
+        let right_count: u32 = if r <= 0 as i32 {
             *counts.offset(-r as isize)
         } else {
-            tree_merge_probs_impl(r as ::core::ffi::c_uint, tree, pre_probs, counts, probs)
-                as ::core::ffi::c_uint
+            tree_merge_probs_impl(r as u32, tree, pre_probs, counts, probs)
+                as u32
         };
-        let ct: [::core::ffi::c_uint; 2] = [left_count, right_count];
+        let ct: [u32; 2] = [left_count, right_count];
         *probs.offset((i >> 1 as i32) as isize) = mode_mv_merge_probs(
             *pre_probs.offset((i >> 1 as i32) as isize),
-            &raw const ct as *const ::core::ffi::c_uint,
+            &raw const ct as *const u32,
         );
         left_count.wrapping_add(right_count)
     }
@@ -373,10 +373,10 @@ unsafe fn tree_merge_probs_impl(
 pub unsafe fn vpx_tree_merge_probs(
     mut tree: *const vpx_tree_index,
     mut pre_probs: *const vpx_prob,
-    mut counts: *const ::core::ffi::c_uint,
+    mut counts: *const u32,
     mut probs: *mut vpx_prob,
 ) {
     unsafe {
-        tree_merge_probs_impl(0 as ::core::ffi::c_uint, tree, pre_probs, counts, probs);
+        tree_merge_probs_impl(0 as u32, tree, pre_probs, counts, probs);
     }
 }

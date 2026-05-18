@@ -25,17 +25,17 @@ pub struct uint8x8x4_t {
     pub val: [uint8x8_t; 4],
 }
 pub type loopfilter_y_neon = unsafe fn(
-    *mut ::core::ffi::c_uchar,
+    *mut u8,
     i32,
-    ::core::ffi::c_uchar,
-    ::core::ffi::c_uchar,
-    ::core::ffi::c_uchar,
+    u8,
+    u8,
+    u8,
 ) -> ();
 pub type loopfilter_uv_neon = unsafe fn(
-    *mut ::core::ffi::c_uchar,
+    *mut u8,
     i32,
-    ::core::ffi::c_uchar,
-    ::core::ffi::c_uchar,
-    ::core::ffi::c_uchar,
-    *mut ::core::ffi::c_uchar,
+    u8,
+    u8,
+    u8,
+    *mut u8,
 ) -> ();

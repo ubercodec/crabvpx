@@ -2,8 +2,8 @@ use std::ffi::c_void;
 use std::sync::{Condvar, Mutex};
 use std::thread::{self, JoinHandle};
 
-pub type pthread_t = *mut ::core::ffi::c_void;
-pub type semaphore_t = *mut ::core::ffi::c_void;
+pub type pthread_t = *mut core::ffi::c_void;
+pub type semaphore_t = *mut core::ffi::c_void;
 
 // Opaque struct for semaphore
 struct Semaphore {

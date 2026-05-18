@@ -1,15 +1,15 @@
 unsafe extern "Rust" {
-    fn vpx_memalign(align: size_t, size: size_t) -> *mut ::core::ffi::c_void;
-    fn vpx_free(memblk: *mut ::core::ffi::c_void);
+    fn vpx_memalign(align: size_t, size: size_t) -> *mut core::ffi::c_void;
+    fn vpx_free(memblk: *mut core::ffi::c_void);
     fn memset(
-        __b: *mut ::core::ffi::c_void,
+        __b: *mut core::ffi::c_void,
         __c: i32,
         __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    ) -> *mut core::ffi::c_void;
 }
 pub type uint8_t = u8;
 pub type __darwin_size_t = usize;
-pub type vpx_color_space = ::core::ffi::c_uint;
+pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
 pub const VPX_CS_BT_2020: vpx_color_space = 5;
@@ -19,7 +19,7 @@ pub const VPX_CS_BT_709: vpx_color_space = 2;
 pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_range = ::core::ffi::c_uint;
+pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
@@ -50,7 +50,7 @@ pub struct yv12_buffer_config {
     pub frame_size: size_t,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
-    pub bit_depth: ::core::ffi::c_uint,
+    pub bit_depth: u32,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
     pub render_width: i32,
@@ -59,8 +59,8 @@ pub struct yv12_buffer_config {
     pub flags: i32,
 }
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
-pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
-pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
+pub const __DARWIN_NULL: *mut core::ffi::c_void = ::core::ptr::null_mut::<core::ffi::c_void>();
+pub const NULL: *mut core::ffi::c_void = __DARWIN_NULL;
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_yv12_de_alloc_frame_buffer(
     mut ybf: *mut YV12_BUFFER_CONFIG,
@@ -68,10 +68,10 @@ pub unsafe fn vp8_yv12_de_alloc_frame_buffer(
     unsafe {
         if !ybf.is_null() {
             if (*ybf).buffer_alloc_sz > 0 as size_t {
-                vpx_free((*ybf).buffer_alloc as *mut ::core::ffi::c_void);
+                vpx_free((*ybf).buffer_alloc as *mut core::ffi::c_void);
             }
             memset(
-                ybf as *mut ::core::ffi::c_void,
+                ybf as *mut core::ffi::c_void,
                 0 as i32,
                 ::core::mem::size_of::<YV12_BUFFER_CONFIG>() as size_t,
             );

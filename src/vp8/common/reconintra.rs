@@ -94,8 +94,8 @@ pub type __darwin_size_t = usize;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct _opaque_pthread_once_t {
-    pub __sig: ::core::ffi::c_long,
-    pub __opaque: [::core::ffi::c_char; 8],
+    pub __sig: i64,
+    pub __opaque: [i8; 8],
 }
 pub type __darwin_pthread_once_t = _opaque_pthread_once_t;
 pub type ptrdiff_t = __darwin_ptrdiff_t;
@@ -105,12 +105,12 @@ pub type uint32_t = u32;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct blockd {
-    pub qcoeff: *mut ::core::ffi::c_short,
-    pub dqcoeff: *mut ::core::ffi::c_short,
-    pub predictor: *mut ::core::ffi::c_uchar,
-    pub dequant: *mut ::core::ffi::c_short,
+    pub qcoeff: *mut i16,
+    pub dqcoeff: *mut i16,
+    pub predictor: *mut u8,
+    pub dequant: *mut i16,
     pub offset: i32,
-    pub eob: *mut ::core::ffi::c_char,
+    pub eob: *mut i8,
     pub bmi: b_mode_info,
 }
 #[derive(Copy, Clone)]
@@ -128,10 +128,10 @@ pub union int_mv {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MV {
-    pub row: ::core::ffi::c_short,
-    pub col: ::core::ffi::c_short,
+    pub row: i16,
+    pub col: i16,
 }
-pub type B_PREDICTION_MODE = ::core::ffi::c_uint;
+pub type B_PREDICTION_MODE = u32;
 pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
 pub const NEW4X4: B_PREDICTION_MODE = 13;
 pub const ZERO4X4: B_PREDICTION_MODE = 12;
@@ -150,14 +150,14 @@ pub const B_DC_PRED: B_PREDICTION_MODE = 0;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct macroblockd {
-    pub predictor: [::core::ffi::c_uchar; 384],
-    pub qcoeff: [::core::ffi::c_short; 400],
-    pub dqcoeff: [::core::ffi::c_short; 400],
-    pub eobs: [::core::ffi::c_char; 25],
-    pub dequant_y1: [::core::ffi::c_short; 16],
-    pub dequant_y1_dc: [::core::ffi::c_short; 16],
-    pub dequant_y2: [::core::ffi::c_short; 16],
-    pub dequant_uv: [::core::ffi::c_short; 16],
+    pub predictor: [u8; 384],
+    pub qcoeff: [i16; 400],
+    pub dqcoeff: [i16; 400],
+    pub eobs: [i8; 25],
+    pub dequant_y1: [i16; 16],
+    pub dequant_y1_dc: [i16; 16],
+    pub dequant_y2: [i16; 16],
+    pub dequant_uv: [i16; 16],
     pub block: [BLOCKD; 25],
     pub fullpixel_mask: i32,
     pub pre: YV12_BUFFER_CONFIG,
@@ -167,23 +167,23 @@ pub struct macroblockd {
     pub frame_type: FRAME_TYPE,
     pub up_available: i32,
     pub left_available: i32,
-    pub recon_above: [*mut ::core::ffi::c_uchar; 3],
-    pub recon_left: [*mut ::core::ffi::c_uchar; 3],
+    pub recon_above: [*mut u8; 3],
+    pub recon_left: [*mut u8; 3],
     pub recon_left_stride: [i32; 2],
     pub above_context: *mut ENTROPY_CONTEXT_PLANES,
     pub left_context: *mut ENTROPY_CONTEXT_PLANES,
-    pub segmentation_enabled: ::core::ffi::c_uchar,
-    pub update_mb_segmentation_map: ::core::ffi::c_uchar,
-    pub update_mb_segmentation_data: ::core::ffi::c_uchar,
-    pub mb_segment_abs_delta: ::core::ffi::c_uchar,
+    pub segmentation_enabled: u8,
+    pub update_mb_segmentation_map: u8,
+    pub update_mb_segmentation_data: u8,
+    pub mb_segment_abs_delta: u8,
     pub mb_segment_tree_probs: [vp8_prob; 3],
-    pub segment_feature_data: [[::core::ffi::c_schar; 4]; 2],
-    pub mode_ref_lf_delta_enabled: ::core::ffi::c_uchar,
-    pub mode_ref_lf_delta_update: ::core::ffi::c_uchar,
-    pub last_ref_lf_deltas: [::core::ffi::c_schar; 4],
-    pub ref_lf_deltas: [::core::ffi::c_schar; 4],
-    pub last_mode_lf_deltas: [::core::ffi::c_schar; 4],
-    pub mode_lf_deltas: [::core::ffi::c_schar; 4],
+    pub segment_feature_data: [[i8; 4]; 2],
+    pub mode_ref_lf_delta_enabled: u8,
+    pub mode_ref_lf_delta_update: u8,
+    pub last_ref_lf_deltas: [i8; 4],
+    pub ref_lf_deltas: [i8; 4],
+    pub last_mode_lf_deltas: [i8; 4],
+    pub mode_lf_deltas: [i8; 4],
     pub mb_to_left_edge: i32,
     pub mb_to_right_edge: i32,
     pub mb_to_top_edge: i32,
@@ -192,7 +192,7 @@ pub struct macroblockd {
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
-    pub current_bc: *mut ::core::ffi::c_void,
+    pub current_bc: *mut core::ffi::c_void,
     pub corrupted: i32,
     pub error_info: vpx_internal_error_info,
 }
@@ -201,12 +201,12 @@ pub struct macroblockd {
 pub struct vpx_internal_error_info {
     pub error_code: vpx_codec_err_t,
     pub has_detail: i32,
-    pub detail: [::core::ffi::c_char; 80],
+    pub detail: [i8; 80],
     pub setjmp: i32,
     pub jmp: jmp_buf,
 }
 pub type jmp_buf = [i32; 48];
-pub type vpx_codec_err_t = ::core::ffi::c_uint;
+pub type vpx_codec_err_t = u32;
 pub const VPX_CODEC_LIST_END: vpx_codec_err_t = 9;
 pub const VPX_CODEC_INVALID_PARAM: vpx_codec_err_t = 8;
 pub const VPX_CODEC_CORRUPT_FRAME: vpx_codec_err_t = 7;
@@ -218,15 +218,15 @@ pub const VPX_CODEC_MEM_ERROR: vpx_codec_err_t = 2;
 pub const VPX_CODEC_ERROR: vpx_codec_err_t = 1;
 pub const VPX_CODEC_OK: vpx_codec_err_t = 0;
 pub type vp8_subpix_fn_t = Option<unsafe fn(
-        *mut ::core::ffi::c_uchar,
+        *mut u8,
         i32,
         i32,
         i32,
-        *mut ::core::ffi::c_uchar,
+        *mut u8,
         i32,
     ) -> (),
 >;
-pub type vp8_prob = ::core::ffi::c_uchar;
+pub type vp8_prob = u8;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ENTROPY_CONTEXT_PLANES {
@@ -235,8 +235,8 @@ pub struct ENTROPY_CONTEXT_PLANES {
     pub v: [ENTROPY_CONTEXT; 2],
     pub y2: ENTROPY_CONTEXT,
 }
-pub type ENTROPY_CONTEXT = ::core::ffi::c_char;
-pub type FRAME_TYPE = ::core::ffi::c_uint;
+pub type ENTROPY_CONTEXT = i8;
+pub type FRAME_TYPE = u32;
 pub const INTER_FRAME: FRAME_TYPE = 1;
 pub const KEY_FRAME: FRAME_TYPE = 0;
 pub type MODE_INFO = modeinfo;
@@ -286,7 +286,7 @@ pub struct yv12_buffer_config {
     pub frame_size: size_t,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
-    pub bit_depth: ::core::ffi::c_uint,
+    pub bit_depth: u32,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
     pub render_width: i32,
@@ -295,11 +295,11 @@ pub struct yv12_buffer_config {
     pub flags: i32,
 }
 pub type vpx_color_range_t = vpx_color_range;
-pub type vpx_color_range = ::core::ffi::c_uint;
+pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_space = ::core::ffi::c_uint;
+pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
 pub const VPX_CS_BT_2020: vpx_color_space = 5;
@@ -309,8 +309,8 @@ pub const VPX_CS_BT_709: vpx_color_space = 2;
 pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type BLOCKD = blockd;
-pub type pthread_once_t = *mut ::core::ffi::c_void;
-pub type MB_PREDICTION_MODE = ::core::ffi::c_uint;
+pub type pthread_once_t = *mut core::ffi::c_void;
+pub type MB_PREDICTION_MODE = u32;
 pub const MB_MODE_COUNT: MB_PREDICTION_MODE = 10;
 pub const SPLITMV: MB_PREDICTION_MODE = 9;
 pub const NEWMV: MB_PREDICTION_MODE = 8;
@@ -327,7 +327,7 @@ pub type intra_pred_fn =
     Option<unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> ()>;
 pub const SIZE_16: C2RustUnnamed = 0;
 pub const SIZE_8: C2RustUnnamed = 1;
-pub type C2RustUnnamed = ::core::ffi::c_uint;
+pub type C2RustUnnamed = u32;
 pub const NUM_SIZES: C2RustUnnamed = 2;
 pub const _PTHREAD_ONCE_SIG_init: i32 = 0x30b1bcba as i32;
 unsafe fn once(mut func: Option<unsafe fn() -> ()>) {
@@ -488,10 +488,10 @@ unsafe fn vp8_init_intra_predictors_internal() {
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_build_intra_predictors_mby_s(
     mut x: *mut MACROBLOCKD,
-    mut yabove_row: *mut ::core::ffi::c_uchar,
-    mut yleft: *mut ::core::ffi::c_uchar,
+    mut yabove_row: *mut u8,
+    mut yleft: *mut u8,
     mut left_stride: i32,
-    mut ypred_ptr: *mut ::core::ffi::c_uchar,
+    mut ypred_ptr: *mut u8,
     mut y_stride: i32,
 ) {
     unsafe {
@@ -505,7 +505,7 @@ pub unsafe fn vp8_build_intra_predictors_mby_s(
             yleft_col[i as usize] = *yleft.offset((i * left_stride) as isize) as uint8_t;
             i += 1;
         }
-        if mode as ::core::ffi::c_uint == DC_PRED as i32 as ::core::ffi::c_uint {
+        if mode as u32 == DC_PRED as i32 as u32 {
             fn_0 = dc_pred[(*x).left_available as usize][(*x).up_available as usize]
                 [SIZE_16 as i32 as usize];
         } else {
@@ -522,20 +522,20 @@ pub unsafe fn vp8_build_intra_predictors_mby_s(
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_build_intra_predictors_mbuv_s(
     mut x: *mut MACROBLOCKD,
-    mut uabove_row: *mut ::core::ffi::c_uchar,
-    mut vabove_row: *mut ::core::ffi::c_uchar,
-    mut uleft: *mut ::core::ffi::c_uchar,
-    mut vleft: *mut ::core::ffi::c_uchar,
+    mut uabove_row: *mut u8,
+    mut vabove_row: *mut u8,
+    mut uleft: *mut u8,
+    mut vleft: *mut u8,
     mut left_stride: i32,
-    mut upred_ptr: *mut ::core::ffi::c_uchar,
-    mut vpred_ptr: *mut ::core::ffi::c_uchar,
+    mut upred_ptr: *mut u8,
+    mut vpred_ptr: *mut u8,
     mut pred_stride: i32,
 ) {
     unsafe {
         let mut uvmode: MB_PREDICTION_MODE =
             (*(*x).mode_info_context).mbmi.uv_mode as MB_PREDICTION_MODE;
-        let mut uleft_col: [::core::ffi::c_uchar; 8] = [0; 8];
-        let mut vleft_col: [::core::ffi::c_uchar; 8] = [0; 8];
+        let mut uleft_col: [u8; 8] = [0; 8];
+        let mut vleft_col: [u8; 8] = [0; 8];
         let mut i: i32 = 0;
         let mut fn_0: intra_pred_fn = None;
         i = 0 as i32;
@@ -544,7 +544,7 @@ pub unsafe fn vp8_build_intra_predictors_mbuv_s(
             vleft_col[i as usize] = *vleft.offset((i * left_stride) as isize);
             i += 1;
         }
-        if uvmode as ::core::ffi::c_uint == DC_PRED as i32 as ::core::ffi::c_uint {
+        if uvmode as u32 == DC_PRED as i32 as u32 {
             fn_0 = dc_pred[(*x).left_available as usize][(*x).up_available as usize]
                 [SIZE_8 as i32 as usize];
         } else {
@@ -554,13 +554,13 @@ pub unsafe fn vp8_build_intra_predictors_mbuv_s(
             upred_ptr as *mut uint8_t,
             pred_stride as ptrdiff_t,
             uabove_row,
-            &raw mut uleft_col as *mut ::core::ffi::c_uchar,
+            &raw mut uleft_col as *mut u8,
         );
         fn_0.expect("non-null function pointer")(
             vpred_ptr as *mut uint8_t,
             pred_stride as ptrdiff_t,
             vabove_row,
-            &raw mut vleft_col as *mut ::core::ffi::c_uchar,
+            &raw mut vleft_col as *mut u8,
         );
     }
 }

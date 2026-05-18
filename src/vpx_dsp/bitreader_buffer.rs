@@ -1,18 +1,18 @@
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
 pub type uint8_t = u8;
-pub type vpx_rb_error_handler = Option<unsafe fn(*mut ::core::ffi::c_void) -> ()>;
+pub type vpx_rb_error_handler = Option<unsafe fn(*mut core::ffi::c_void) -> ()>;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_read_bit_buffer {
     pub bit_buffer: *const uint8_t,
     pub bit_buffer_end: *const uint8_t,
     pub bit_offset: size_t,
-    pub error_handler_data: *mut ::core::ffi::c_void,
+    pub error_handler_data: *mut core::ffi::c_void,
     pub error_handler: vpx_rb_error_handler,
 }
-pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
-pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
+pub const __DARWIN_NULL: *mut core::ffi::c_void = ::core::ptr::null_mut::<core::ffi::c_void>();
+pub const NULL: *mut core::ffi::c_void = __DARWIN_NULL;
 #[unsafe(no_mangle)]
 pub unsafe fn vpx_rb_bytes_read(mut rb: *mut vpx_read_bit_buffer) -> size_t {
     unsafe { (*rb).bit_offset.wrapping_add(7 as size_t) >> 3 as i32 }
