@@ -4,6 +4,7 @@ use crate::vp8::decoder::decodeframe::vp8_mb_init_dequantizer;
 use crate::vp8::common::mbpitch::vp8_setup_block_dptrs;
 use crate::vp8::common::extend::vp8_extend_mb_row;
 use crate::vp8::common::reconintra::intra_prediction_down_copy;
+use crate::vp8::common::idctllm::vp8_short_inv_walsh4x4_1_safe;
 unsafe extern "C" {
     fn vp8_dc_only_idct_add_neon(
         input_dc: ::core::ffi::c_short,
@@ -90,10 +91,7 @@ unsafe extern "C" {
         input: *mut ::core::ffi::c_short,
         mb_dqcoeff: *mut ::core::ffi::c_short,
     );
-    fn vp8_short_inv_walsh4x4_1_c(
-        input: *mut ::core::ffi::c_short,
-        mb_dqcoeff: *mut ::core::ffi::c_short,
-    );
+
     fn setjmp(_: *mut ::core::ffi::c_int) -> ::core::ffi::c_int;
     fn vpx_internal_error(
         info: *mut vpx_internal_error_info,
@@ -479,10 +477,10 @@ fn mt_decode_macroblock(
                         as ::core::ffi::c_int
                         * xd.dequant_y2[0 as ::core::ffi::c_int as usize] as ::core::ffi::c_int)
                         as ::core::ffi::c_short;
-                    vp8_short_inv_walsh4x4_1_c(
-                        (*b_0).dqcoeff.offset(0 as ::core::ffi::c_int as isize)
-                            as *mut ::core::ffi::c_short,
-                        &raw mut xd.qcoeff as *mut ::core::ffi::c_short,
+                    let dqcoeff_slice = std::slice::from_raw_parts((*b_0).dqcoeff, 16);
+                    vp8_short_inv_walsh4x4_1_safe(
+                        dqcoeff_slice,
+                        &mut xd.qcoeff,
                     );
                     memset(
                         (*b_0).qcoeff as *mut ::core::ffi::c_void,

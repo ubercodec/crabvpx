@@ -182,19 +182,14 @@ pub unsafe extern "C" fn vp8_short_inv_walsh4x4_c(
         i += 1;
     }
 }}
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_short_inv_walsh4x4_1_c(
-    mut input: *mut ::core::ffi::c_short,
-    mut mb_dqcoeff: *mut ::core::ffi::c_short,
-) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    let mut a1: ::core::ffi::c_int = 0;
-    a1 = *input.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-        + 3 as ::core::ffi::c_int
-        >> 3 as ::core::ffi::c_int;
-    i = 0 as ::core::ffi::c_int;
-    while i < 16 as ::core::ffi::c_int {
-        *mb_dqcoeff.offset((i * 16 as ::core::ffi::c_int) as isize) = a1 as ::core::ffi::c_short;
-        i += 1;
+pub fn vp8_short_inv_walsh4x4_1_safe(
+    input: &[i16],
+    mb_dqcoeff: &mut [i16],
+) {
+    let a1 = (input[0] as i32 + 3) >> 3;
+    for i in 0..16 {
+        mb_dqcoeff[i * 16] = a1 as i16;
     }
-}}
+}
+
+

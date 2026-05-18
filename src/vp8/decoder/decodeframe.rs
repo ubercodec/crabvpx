@@ -6,6 +6,7 @@ use crate::vp8::common::quant_common::{vp8_ac_yquant, vp8_dc_quant, vp8_dc2quant
 use crate::vpx_scale::generic::yv12extend::vp8_yv12_extend_frame_borders_c;
 use crate::vp8::common::extend::vp8_extend_mb_row;
 use crate::vp8::common::reconintra::intra_prediction_down_copy;
+use crate::vp8::common::idctllm::vp8_short_inv_walsh4x4_1_safe;
 
 unsafe extern "C" {
     fn vp8dx_decode_bool(br: *mut BOOL_DECODER, probability: ::core::ffi::c_int) -> ::core::ffi::c_int;
@@ -75,10 +76,7 @@ unsafe extern "C" {
         input: *mut ::core::ffi::c_short,
         mb_dqcoeff: *mut ::core::ffi::c_short,
     );
-    fn vp8_short_inv_walsh4x4_1_c(
-        input: *mut ::core::ffi::c_short,
-        mb_dqcoeff: *mut ::core::ffi::c_short,
-    );
+
     fn vp8_sixtap_predict16x16_neon(
         src_ptr: *mut ::core::ffi::c_uchar,
         src_pixels_per_line: ::core::ffi::c_int,
@@ -498,10 +496,10 @@ fn decode_macroblock(
                         as ::core::ffi::c_int
                         * xd.dequant_y2[0 as ::core::ffi::c_int as usize] as ::core::ffi::c_int)
                         as ::core::ffi::c_short;
-                    vp8_short_inv_walsh4x4_1_c(
-                        (*b_0).dqcoeff.offset(0 as ::core::ffi::c_int as isize)
-                            as *mut ::core::ffi::c_short,
-                        &raw mut xd.qcoeff as *mut ::core::ffi::c_short,
+                    let dqcoeff_slice = std::slice::from_raw_parts((*b_0).dqcoeff, 16);
+                    vp8_short_inv_walsh4x4_1_safe(
+                        dqcoeff_slice,
+                        &mut xd.qcoeff,
                     );
                     memset(
                         (*b_0).qcoeff as *mut ::core::ffi::c_void,
