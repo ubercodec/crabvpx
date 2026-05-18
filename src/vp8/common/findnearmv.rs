@@ -1,6 +1,4 @@
-unsafe extern "C" {
-    static vp8_mode_contexts: [[::core::ffi::c_int; 4]; 6];
-}
+use crate::vp8::common::modecont::vp8_mode_contexts;
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
 pub type uint8_t = u8;
@@ -330,22 +328,25 @@ pub unsafe extern "C" fn vp8_find_near_mvs_bias(
     );
     return sign_bias;
 }}
+pub fn vp8_mv_ref_probs_safe(
+    p: &mut [vp8_prob; 4],
+    near_mv_ref_ct: &[::core::ffi::c_int; 4],
+) {
+    p[0] = vp8_mode_contexts[near_mv_ref_ct[0] as usize][0] as vp8_prob;
+    p[1] = vp8_mode_contexts[near_mv_ref_ct[1] as usize][1] as vp8_prob;
+    p[2] = vp8_mode_contexts[near_mv_ref_ct[2] as usize][2] as vp8_prob;
+    p[3] = vp8_mode_contexts[near_mv_ref_ct[3] as usize][3] as vp8_prob;
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_mv_ref_probs(
-    mut p: *mut vp8_prob,
-    mut near_mv_ref_ct: *const ::core::ffi::c_int,
-) -> *mut vp8_prob { unsafe {
-    *p.offset(0 as ::core::ffi::c_int as isize) =
-        vp8_mode_contexts[*near_mv_ref_ct.offset(0 as ::core::ffi::c_int as isize) as usize]
-            [0 as ::core::ffi::c_int as usize] as vp8_prob;
-    *p.offset(1 as ::core::ffi::c_int as isize) =
-        vp8_mode_contexts[*near_mv_ref_ct.offset(1 as ::core::ffi::c_int as isize) as usize]
-            [1 as ::core::ffi::c_int as usize] as vp8_prob;
-    *p.offset(2 as ::core::ffi::c_int as isize) =
-        vp8_mode_contexts[*near_mv_ref_ct.offset(2 as ::core::ffi::c_int as isize) as usize]
-            [2 as ::core::ffi::c_int as usize] as vp8_prob;
-    *p.offset(3 as ::core::ffi::c_int as isize) =
-        vp8_mode_contexts[*near_mv_ref_ct.offset(3 as ::core::ffi::c_int as isize) as usize]
-            [3 as ::core::ffi::c_int as usize] as vp8_prob;
-    return p as *mut vp8_prob;
-}}
+    p: *mut vp8_prob,
+    near_mv_ref_ct: *const ::core::ffi::c_int,
+) -> *mut vp8_prob {
+    unsafe {
+        let p_slice = &mut *(p as *mut [vp8_prob; 4]);
+        let ct_slice = &*(near_mv_ref_ct as *const [::core::ffi::c_int; 4]);
+        vp8_mv_ref_probs_safe(p_slice, ct_slice);
+        p
+    }
+}
