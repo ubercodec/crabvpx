@@ -33,10 +33,6 @@ unsafe extern "C" {
         sd: *mut YV12_BUFFER_CONFIG,
         flags: *mut vp8_ppflags_t,
     ) -> ::core::ffi::c_int;
-    fn vp8dx_references_buffer(
-        oci: *mut VP8Common,
-        ref_frame: ::core::ffi::c_int,
-    ) -> ::core::ffi::c_int;
     fn vp8dx_get_reference(
         pbi: *mut VP8D_COMP,
         ref_frame_flag: vpx_ref_frame_type,
@@ -1355,25 +1351,31 @@ unsafe extern "C" fn vp8_get_last_ref_frame(
         let mut pbi: *mut VP8D_COMP =
             (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize] as *mut VP8D_COMP;
         if !pbi.is_null() {
-            let mut oci: *mut VP8_COMMON = &raw mut (*pbi).common;
-            *ref_info = (if vp8dx_references_buffer(
-                oci as *mut VP8Common,
+            let oci: &VP8_COMMON = &(*pbi).common;
+            let stride = oci.mode_info_stride as usize;
+            let mip_len = (oci.mb_rows + 1) as usize * stride;
+            let mip_slice = core::slice::from_raw_parts(oci.mip, mip_len);
+            *ref_info = (if crate::vp8::decoder::onyxd_if::vp8dx_references_buffer(
+                oci,
+                mip_slice,
                 ALTREF_FRAME as ::core::ffi::c_int,
             ) != 0
             {
                 VP8_ALTR_FRAME as ::core::ffi::c_int
             } else {
                 0 as ::core::ffi::c_int
-            }) | (if vp8dx_references_buffer(
-                oci as *mut VP8Common,
+            }) | (if crate::vp8::decoder::onyxd_if::vp8dx_references_buffer(
+                oci,
+                mip_slice,
                 GOLDEN_FRAME as ::core::ffi::c_int,
             ) != 0
             {
                 VP8_GOLD_FRAME as ::core::ffi::c_int
             } else {
                 0 as ::core::ffi::c_int
-            }) | (if vp8dx_references_buffer(
-                oci as *mut VP8Common,
+            }) | (if crate::vp8::decoder::onyxd_if::vp8dx_references_buffer(
+                oci,
+                mip_slice,
                 LAST_FRAME as ::core::ffi::c_int,
             ) != 0
             {

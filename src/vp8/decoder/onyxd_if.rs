@@ -445,29 +445,28 @@ pub unsafe extern "C" fn vp8dx_get_raw_frame(
     }
     return ret;
 }}
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8dx_references_buffer(
-    mut oci: *mut VP8_COMMON,
-    mut ref_frame: ::core::ffi::c_int,
-) -> ::core::ffi::c_int { unsafe {
-    let mut mi: *const MODE_INFO = (*oci).mi;
-    let mut mb_row: ::core::ffi::c_int = 0;
-    let mut mb_col: ::core::ffi::c_int = 0;
-    mb_row = 0 as ::core::ffi::c_int;
-    while mb_row < (*oci).mb_rows {
-        mb_col = 0 as ::core::ffi::c_int;
-        while mb_col < (*oci).mb_cols {
-            if (*mi).mbmi.ref_frame as ::core::ffi::c_int == ref_frame {
+pub fn vp8dx_references_buffer(
+    oci: &VP8_COMMON,
+    mip_slice: &[MODE_INFO],
+    ref_frame: ::core::ffi::c_int,
+) -> ::core::ffi::c_int {
+    let stride = oci.mode_info_stride as usize;
+    let mut cur_idx = stride + 1;
+    let mut mb_row = 0;
+    while mb_row < oci.mb_rows {
+        let mut mb_col = 0;
+        while mb_col < oci.mb_cols {
+            if mip_slice[cur_idx].mbmi.ref_frame as ::core::ffi::c_int == ref_frame {
                 return 1 as ::core::ffi::c_int;
             }
             mb_col += 1;
-            mi = mi.offset(1);
+            cur_idx += 1;
         }
-        mi = mi.offset(1);
+        cur_idx += 1;
         mb_row += 1;
     }
     return 0 as ::core::ffi::c_int;
-}}
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_create_decoder_instances(
     mut fb: *mut frame_buffers,
