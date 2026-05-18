@@ -792,11 +792,11 @@ unsafe extern "C" fn setup_intra_recon_left(
 ) {
     let y_stride = y_stride as usize;
     let uv_stride = uv_stride as usize;
-    
+
     // Convert raw pointers into safe mutable slices
-    let y_slice = core::slice::from_raw_parts_mut(y_buffer, y_stride * 16);
-    let u_slice = core::slice::from_raw_parts_mut(u_buffer, uv_stride * 8);
-    let v_slice = core::slice::from_raw_parts_mut(v_buffer, uv_stride * 8);
+    let y_slice = unsafe { core::slice::from_raw_parts_mut(y_buffer, y_stride * 16) };
+    let u_slice = unsafe { core::slice::from_raw_parts_mut(u_buffer, uv_stride * 8) };
+    let v_slice = unsafe { core::slice::from_raw_parts_mut(v_buffer, uv_stride * 8) };
 
     // Use safe iterators to set the values
     for chunk in y_slice.chunks_mut(y_stride).take(16) {
