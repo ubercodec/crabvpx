@@ -1,12 +1,12 @@
 use std::arch::aarch64::*;
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct int16x8x2_t {
+pub struct Int16x8x2T {
     pub val: [int16x8_t; 2],
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct int32x4x2_t {
+pub struct Int32x4x2T {
     pub val: [int32x4_t; 2],
 }
 static mut cospi8sqrt2minus1: i16 = 20091 as i16;

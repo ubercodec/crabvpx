@@ -49,7 +49,7 @@ unsafe extern "Rust" {
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct yv12_buffer_config {
+pub struct Yv12BufferConfig {
     pub y_width: i32,
     pub y_height: i32,
     pub y_crop_width: i32,
@@ -68,36 +68,35 @@ pub struct yv12_buffer_config {
     pub v_buffer: *mut u8,
     pub alpha_buffer: *mut u8,
     pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: size_t,
+    pub buffer_alloc_sz: SizeT,
     pub border: i32,
-    pub frame_size: size_t,
+    pub frame_size: SizeT,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
     pub bit_depth: u32,
-    pub color_space: vpx_color_space_t,
-    pub color_range: vpx_color_range_t,
+    pub color_space: VpxColorSpaceT,
+    pub color_range: VpxColorRangeT,
     pub render_width: i32,
     pub render_height: i32,
     pub corrupted: i32,
     pub flags: i32,
 }
-pub type vpx_color_range_t = vpx_color_range;
-pub type vpx_color_range = u32;
-pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
-pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
-pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_space = u32;
-pub const VPX_CS_SRGB: vpx_color_space = 7;
-pub const VPX_CS_RESERVED: vpx_color_space = 6;
-pub const VPX_CS_BT_2020: vpx_color_space = 5;
-pub const VPX_CS_SMPTE_240: vpx_color_space = 4;
-pub const VPX_CS_SMPTE_170: vpx_color_space = 3;
-pub const VPX_CS_BT_709: vpx_color_space = 2;
-pub const VPX_CS_BT_601: vpx_color_space = 1;
-pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
-pub type size_t = __darwin_size_t;
-pub type __darwin_size_t = usize;
-pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
+pub type VpxColorRangeT = VpxColorRange;
+pub type VpxColorRange = u32;
+pub const VPX_CR_FULL_RANGE: VpxColorRange = 1;
+pub const VPX_CR_STUDIO_RANGE: VpxColorRange = 0;
+pub type VpxColorSpaceT = VpxColorSpace;
+pub type VpxColorSpace = u32;
+pub const VPX_CS_SRGB: VpxColorSpace = 7;
+pub const VPX_CS_RESERVED: VpxColorSpace = 6;
+pub const VPX_CS_BT_2020: VpxColorSpace = 5;
+pub const VPX_CS_SMPTE_240: VpxColorSpace = 4;
+pub const VPX_CS_SMPTE_170: VpxColorSpace = 3;
+pub const VPX_CS_BT_709: VpxColorSpace = 2;
+pub const VPX_CS_BT_601: VpxColorSpace = 1;
+pub const VPX_CS_UNKNOWN: VpxColorSpace = 0;
+pub type SizeT = DarwinSizeT;
+pub type DarwinSizeT = usize;
 pub type Scale1D = Option<unsafe fn(*const u8, i32, u32, u32, *mut u8, i32, u32, u32) -> ()>;
 pub const __DARWIN_NULL: *mut c_void = ::core::ptr::null_mut::<c_void>();
 pub const NULL: *mut c_void = __DARWIN_NULL;
@@ -364,7 +363,7 @@ unsafe fn scale2_d(
                         temp_area.offset((source_band_height * dest_pitch) as isize)
                             as *const c_void as *const u8,
                         temp_area as *mut c_void as *mut u8,
-                        dest_width as size_t,
+                        dest_width as SizeT,
                     );
                 }
                 source = source
@@ -457,7 +456,7 @@ unsafe fn scale2_d(
                         temp_area.offset(((i - 1 as i32) * dest_pitch) as isize) as *const c_void
                             as *const u8,
                         temp_area.offset((i * dest_pitch) as isize) as *mut c_void as *mut u8,
-                        dest_pitch as size_t,
+                        dest_pitch as SizeT,
                     );
                 }
                 i += 1;
@@ -480,7 +479,7 @@ unsafe fn scale2_d(
                 temp_area.offset((source_band_height * dest_pitch) as isize) as *const c_void
                     as *const u8,
                 temp_area as *mut c_void as *mut u8,
-                dest_pitch as size_t,
+                dest_pitch as SizeT,
             );
             source = source.offset((source_band_height * source_pitch) as isize);
             dest = dest.offset((dest_band_height * dest_pitch) as isize);
@@ -490,8 +489,8 @@ unsafe fn scale2_d(
 }
 #[unsafe(no_mangle)]
 pub unsafe fn vpx_scale_frame(
-    mut src: *mut YV12_BUFFER_CONFIG,
-    mut dst: *mut YV12_BUFFER_CONFIG,
+    mut src: *mut Yv12BufferConfig,
+    mut dst: *mut Yv12BufferConfig,
     mut temp_area: *mut u8,
     mut temp_height: u8,
     mut hscale: u32,
@@ -540,7 +539,7 @@ pub unsafe fn vpx_scale_frame(
                         .y_buffer
                         .offset((i * (*dst).y_stride + dw - 2 as i32) as isize)
                         as i32 as u8,
-                    ((*dst).y_width - dw + 1 as i32) as size_t,
+                    ((*dst).y_width - dw + 1 as i32) as SizeT,
                 );
                 i += 1;
             }
@@ -555,7 +554,7 @@ pub unsafe fn vpx_scale_frame(
                         as *const c_void as *const u8,
                     (*dst).y_buffer.offset((i * (*dst).y_stride) as isize) as *mut c_void
                         as *mut u8,
-                    ((*dst).y_width + 1 as i32) as size_t,
+                    ((*dst).y_width + 1 as i32) as SizeT,
                 );
                 i += 1;
             }
@@ -590,7 +589,7 @@ pub unsafe fn vpx_scale_frame(
                         .u_buffer
                         .offset((i * (*dst).uv_stride + dw / 2 as i32 - 2 as i32) as isize)
                         as i32 as u8,
-                    ((*dst).uv_width - dw / 2 as i32 + 1 as i32) as size_t,
+                    ((*dst).uv_width - dw / 2 as i32 + 1 as i32) as SizeT,
                 );
                 i += 1;
             }
@@ -605,7 +604,7 @@ pub unsafe fn vpx_scale_frame(
                         as *const c_void as *const u8,
                     (*dst).u_buffer.offset((i * (*dst).uv_stride) as isize) as *mut c_void
                         as *mut u8,
-                    (*dst).uv_width as size_t,
+                    (*dst).uv_width as SizeT,
                 );
                 i += 1;
             }
@@ -640,7 +639,7 @@ pub unsafe fn vpx_scale_frame(
                         .v_buffer
                         .offset((i * (*dst).uv_stride + dw / 2 as i32 - 2 as i32) as isize)
                         as i32 as u8,
-                    ((*dst).uv_width - dw / 2 as i32 + 1 as i32) as size_t,
+                    ((*dst).uv_width - dw / 2 as i32 + 1 as i32) as SizeT,
                 );
                 i += 1;
             }
@@ -655,7 +654,7 @@ pub unsafe fn vpx_scale_frame(
                         as *const c_void as *const u8,
                     (*dst).v_buffer.offset((i * (*dst).uv_stride) as isize) as *mut c_void
                         as *mut u8,
-                    (*dst).uv_width as size_t,
+                    (*dst).uv_width as SizeT,
                 );
                 i += 1;
             }

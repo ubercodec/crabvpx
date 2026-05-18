@@ -1,27 +1,27 @@
 use std::arch::aarch64::*;
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct uint8x16x2_t {
+pub struct Uint8x16x2T {
     pub val: [uint8x16_t; 2],
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct uint16x8x2_t {
+pub struct Uint16x8x2T {
     pub val: [uint16x8_t; 2],
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct uint32x4x2_t {
+pub struct Uint32x4x2T {
     pub val: [uint32x4_t; 2],
 }
-pub type loopfilter_y_neon = unsafe fn(
+pub type LoopfilterYNeon = unsafe fn(
     *mut u8,
     i32,
     u8,
     u8,
     u8,
 ) -> ();
-pub type loopfilter_uv_neon = unsafe fn(
+pub type LoopfilterUvNeon = unsafe fn(
     *mut u8,
     i32,
     u8,

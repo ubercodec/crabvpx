@@ -2,30 +2,30 @@ use std::ffi::c_void;
 use std::arch::aarch64::*;
 unsafe extern "Rust" {
 }
-pub type __darwin_ptrdiff_t = isize;
-pub type __darwin_size_t = usize;
+pub type DarwinPtrdiffT = isize;
+pub type DarwinSizeT = usize;
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct uint8x8x2_t {
+pub struct Uint8x8x2T {
     pub val: [uint8x8_t; 2],
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct uint8x16x2_t {
+pub struct Uint8x16x2T {
     pub val: [uint8x16_t; 2],
 }
-pub type ptrdiff_t = __darwin_ptrdiff_t;
-pub type size_t = __darwin_size_t;
+pub type PtrdiffT = DarwinPtrdiffT;
+pub type SizeT = DarwinSizeT;
 #[inline]
 unsafe fn load_replicate_u8_4x1(mut buf: *const u8) -> uint8x8_t {
     let mut a: u32 = 0;
-    core::ptr::copy_nonoverlapping(buf as *const c_void as *const u8, &raw mut a as *mut c_void as *mut u8, 4 as size_t);
+    core::ptr::copy_nonoverlapping(buf as *const c_void as *const u8, &raw mut a as *mut c_void as *mut u8, 4 as SizeT);
     return vreinterpret_u8_u32(vdup_n_u32(a));
 }
 #[inline]
 unsafe fn load_unaligned_u8_4x1(mut buf: *const u8) -> uint8x8_t {
     let mut a: u32 = 0;
-    core::ptr::copy_nonoverlapping(buf as *const c_void as *const u8, &raw mut a as *mut c_void as *mut u8, 4 as size_t);
+    core::ptr::copy_nonoverlapping(buf as *const c_void as *const u8, &raw mut a as *mut c_void as *mut u8, 4 as SizeT);
     let mut a_u32 = vdup_n_u32(0);
     a_u32 = vset_lane_u32(a, a_u32, 0);
     return vreinterpret_u8_u32(a_u32);
@@ -57,7 +57,7 @@ unsafe fn dc_sum_4(mut ref_0: *const u8) -> u16 {
 #[unsafe(no_mangle)]
 pub unsafe fn vpx_v_predictor_4x4_neon(
     mut dst: *mut u8,
-    mut stride: ptrdiff_t,
+    mut stride: PtrdiffT,
     mut above: *const u8,
     mut left: *const u8,
 ) {
