@@ -1,55 +1,48 @@
-unsafe extern "C" {
-    fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
-        __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
-    fn memset(
-        __b: *mut ::core::ffi::c_void,
-        __c: ::core::ffi::c_int,
-        __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
+use std::ffi::c_void;
+unsafe extern "Rust" {
+    fn memcpy(__dst: *mut c_void, __src: *const c_void, __n: size_t) -> *mut c_void;
+    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct yv12_buffer_config {
-    pub y_width: ::core::ffi::c_int,
-    pub y_height: ::core::ffi::c_int,
-    pub y_crop_width: ::core::ffi::c_int,
-    pub y_crop_height: ::core::ffi::c_int,
-    pub y_stride: ::core::ffi::c_int,
-    pub uv_width: ::core::ffi::c_int,
-    pub uv_height: ::core::ffi::c_int,
-    pub uv_crop_width: ::core::ffi::c_int,
-    pub uv_crop_height: ::core::ffi::c_int,
-    pub uv_stride: ::core::ffi::c_int,
-    pub alpha_width: ::core::ffi::c_int,
-    pub alpha_height: ::core::ffi::c_int,
-    pub alpha_stride: ::core::ffi::c_int,
+    pub y_width: i32,
+    pub y_height: i32,
+    pub y_crop_width: i32,
+    pub y_crop_height: i32,
+    pub y_stride: i32,
+    pub uv_width: i32,
+    pub uv_height: i32,
+    pub uv_crop_width: i32,
+    pub uv_crop_height: i32,
+    pub uv_stride: i32,
+    pub alpha_width: i32,
+    pub alpha_height: i32,
+    pub alpha_stride: i32,
     pub y_buffer: *mut uint8_t,
     pub u_buffer: *mut uint8_t,
     pub v_buffer: *mut uint8_t,
     pub alpha_buffer: *mut uint8_t,
     pub buffer_alloc: *mut uint8_t,
     pub buffer_alloc_sz: size_t,
-    pub border: ::core::ffi::c_int,
+    pub border: i32,
     pub frame_size: size_t,
-    pub subsampling_x: ::core::ffi::c_int,
-    pub subsampling_y: ::core::ffi::c_int,
-    pub bit_depth: ::core::ffi::c_uint,
+    pub subsampling_x: i32,
+    pub subsampling_y: i32,
+    pub bit_depth: u32,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
-    pub render_width: ::core::ffi::c_int,
-    pub render_height: ::core::ffi::c_int,
-    pub corrupted: ::core::ffi::c_int,
-    pub flags: ::core::ffi::c_int,
+    pub render_width: i32,
+    pub render_height: i32,
+    pub corrupted: i32,
+    pub flags: i32,
 }
 pub type vpx_color_range_t = vpx_color_range;
-pub type vpx_color_range = ::core::ffi::c_uint;
+pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_space_t = vpx_color_space;
-pub type vpx_color_space = ::core::ffi::c_uint;
+pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
 pub const VPX_CS_BT_2020: vpx_color_space = 5;
@@ -62,35 +55,33 @@ pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
 pub type uint8_t = u8;
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
-unsafe extern "C" fn extend_plane(
+unsafe fn extend_plane(
     src: *mut uint8_t,
-    mut src_stride: ::core::ffi::c_int,
-    mut width: ::core::ffi::c_int,
-    mut height: ::core::ffi::c_int,
-    mut extend_top: ::core::ffi::c_int,
-    mut extend_left: ::core::ffi::c_int,
-    mut extend_bottom: ::core::ffi::c_int,
-    mut extend_right: ::core::ffi::c_int,
+    mut src_stride: i32,
+    mut width: i32,
+    mut height: i32,
+    mut extend_top: i32,
+    mut extend_left: i32,
+    mut extend_bottom: i32,
+    mut extend_right: i32,
 ) {
     unsafe {
-        let mut i: ::core::ffi::c_int = 0;
-        let linesize: ::core::ffi::c_int = extend_left + extend_right + width;
+        let mut i: i32 = 0;
+        let linesize: i32 = extend_left + extend_right + width;
         let mut src_ptr1: *mut uint8_t = src;
-        let mut src_ptr2: *mut uint8_t = src
-            .offset(width as isize)
-            .offset(-(1 as ::core::ffi::c_int as isize));
+        let mut src_ptr2: *mut uint8_t = src.offset(width as isize).offset(-(1 as isize));
         let mut dst_ptr1: *mut uint8_t = src.offset(-(extend_left as isize));
         let mut dst_ptr2: *mut uint8_t = src.offset(width as isize);
-        i = 0 as ::core::ffi::c_int;
+        i = 0 as i32;
         while i < height {
             memset(
-                dst_ptr1 as *mut ::core::ffi::c_void,
-                *src_ptr1.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
+                dst_ptr1 as *mut c_void,
+                *src_ptr1.offset(0 as isize) as i32,
                 extend_left as size_t,
             );
             memset(
-                dst_ptr2 as *mut ::core::ffi::c_void,
-                *src_ptr2.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
+                dst_ptr2 as *mut c_void,
+                *src_ptr2.offset(0 as isize) as i32,
                 extend_right as size_t,
             );
             src_ptr1 = src_ptr1.offset(src_stride as isize);
@@ -101,7 +92,7 @@ unsafe extern "C" fn extend_plane(
         }
         src_ptr1 = src.offset(-(extend_left as isize));
         src_ptr2 = src
-            .offset((src_stride * (height - 1 as ::core::ffi::c_int)) as isize)
+            .offset((src_stride * (height - 1 as i32)) as isize)
             .offset(-(extend_left as isize));
         dst_ptr1 = src
             .offset((src_stride * -extend_top) as isize)
@@ -109,21 +100,21 @@ unsafe extern "C" fn extend_plane(
         dst_ptr2 = src
             .offset((src_stride * height) as isize)
             .offset(-(extend_left as isize));
-        i = 0 as ::core::ffi::c_int;
+        i = 0 as i32;
         while i < extend_top {
             memcpy(
-                dst_ptr1 as *mut ::core::ffi::c_void,
-                src_ptr1 as *const ::core::ffi::c_void,
+                dst_ptr1 as *mut c_void,
+                src_ptr1 as *const c_void,
                 linesize as size_t,
             );
             dst_ptr1 = dst_ptr1.offset(src_stride as isize);
             i += 1;
         }
-        i = 0 as ::core::ffi::c_int;
+        i = 0 as i32;
         while i < extend_bottom {
             memcpy(
-                dst_ptr2 as *mut ::core::ffi::c_void,
-                src_ptr2 as *const ::core::ffi::c_void,
+                dst_ptr2 as *mut c_void,
+                src_ptr2 as *const c_void,
                 linesize as size_t,
             );
             dst_ptr2 = dst_ptr2.offset(src_stride as isize);
@@ -132,9 +123,9 @@ unsafe extern "C" fn extend_plane(
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_yv12_extend_frame_borders_c(mut ybf: *mut YV12_BUFFER_CONFIG) {
+pub unsafe fn vp8_yv12_extend_frame_borders_c(mut ybf: *mut YV12_BUFFER_CONFIG) {
     unsafe {
-        let uv_border: ::core::ffi::c_int = (*ybf).border / 2 as ::core::ffi::c_int;
+        let uv_border: i32 = (*ybf).border / 2 as i32;
         extend_plane(
             (*ybf).y_buffer,
             (*ybf).y_stride,
@@ -168,19 +159,19 @@ pub unsafe extern "C" fn vp8_yv12_extend_frame_borders_c(mut ybf: *mut YV12_BUFF
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_yv12_copy_frame_c(
+pub unsafe fn vp8_yv12_copy_frame_c(
     mut src_ybc: *const YV12_BUFFER_CONFIG,
     mut dst_ybc: *mut YV12_BUFFER_CONFIG,
 ) {
     unsafe {
-        let mut row: ::core::ffi::c_int = 0;
+        let mut row: i32 = 0;
         let mut src: *const uint8_t = (*src_ybc).y_buffer;
         let mut dst: *mut uint8_t = (*dst_ybc).y_buffer;
-        row = 0 as ::core::ffi::c_int;
+        row = 0 as i32;
         while row < (*src_ybc).y_height {
             memcpy(
-                dst as *mut ::core::ffi::c_void,
-                src as *const ::core::ffi::c_void,
+                dst as *mut c_void,
+                src as *const c_void,
                 (*src_ybc).y_width as size_t,
             );
             src = src.offset((*src_ybc).y_stride as isize);
@@ -189,11 +180,11 @@ pub unsafe extern "C" fn vp8_yv12_copy_frame_c(
         }
         src = (*src_ybc).u_buffer;
         dst = (*dst_ybc).u_buffer;
-        row = 0 as ::core::ffi::c_int;
+        row = 0 as i32;
         while row < (*src_ybc).uv_height {
             memcpy(
-                dst as *mut ::core::ffi::c_void,
-                src as *const ::core::ffi::c_void,
+                dst as *mut c_void,
+                src as *const c_void,
                 (*src_ybc).uv_width as size_t,
             );
             src = src.offset((*src_ybc).uv_stride as isize);
@@ -202,11 +193,11 @@ pub unsafe extern "C" fn vp8_yv12_copy_frame_c(
         }
         src = (*src_ybc).v_buffer;
         dst = (*dst_ybc).v_buffer;
-        row = 0 as ::core::ffi::c_int;
+        row = 0 as i32;
         while row < (*src_ybc).uv_height {
             memcpy(
-                dst as *mut ::core::ffi::c_void,
-                src as *const ::core::ffi::c_void,
+                dst as *mut c_void,
+                src as *const c_void,
                 (*src_ybc).uv_width as size_t,
             );
             src = src.offset((*src_ybc).uv_stride as isize);
@@ -217,19 +208,19 @@ pub unsafe extern "C" fn vp8_yv12_copy_frame_c(
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vpx_yv12_copy_y_c(
+pub unsafe fn vpx_yv12_copy_y_c(
     mut src_ybc: *const YV12_BUFFER_CONFIG,
     mut dst_ybc: *mut YV12_BUFFER_CONFIG,
 ) {
     unsafe {
-        let mut row: ::core::ffi::c_int = 0;
+        let mut row: i32 = 0;
         let mut src: *const uint8_t = (*src_ybc).y_buffer;
         let mut dst: *mut uint8_t = (*dst_ybc).y_buffer;
-        row = 0 as ::core::ffi::c_int;
+        row = 0 as i32;
         while row < (*src_ybc).y_height {
             memcpy(
-                dst as *mut ::core::ffi::c_void,
-                src as *const ::core::ffi::c_void,
+                dst as *mut c_void,
+                src as *const c_void,
                 (*src_ybc).y_width as size_t,
             );
             src = src.offset((*src_ybc).y_stride as isize);

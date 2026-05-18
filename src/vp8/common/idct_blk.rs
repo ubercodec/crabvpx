@@ -1,147 +1,127 @@
-unsafe extern "C" {
+use std::ffi::c_void;
+unsafe extern "Rust" {
     fn vp8_dc_only_idct_add_c(
-        input_dc: ::core::ffi::c_short,
-        pred_ptr: *mut ::core::ffi::c_uchar,
-        pred_stride: ::core::ffi::c_int,
-        dst_ptr: *mut ::core::ffi::c_uchar,
-        dst_stride: ::core::ffi::c_int,
+        input_dc: i16,
+        pred_ptr: *mut u8,
+        pred_stride: i32,
+        dst_ptr: *mut u8,
+        dst_stride: i32,
     );
-    fn vp8_dequant_idct_add_c(
-        input: *mut ::core::ffi::c_short,
-        dq: *mut ::core::ffi::c_short,
-        dest: *mut ::core::ffi::c_uchar,
-        stride: ::core::ffi::c_int,
-    );
-    fn memset(
-        __b: *mut ::core::ffi::c_void,
-        __c: ::core::ffi::c_int,
-        __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
+    fn vp8_dequant_idct_add_c(input: *mut i16, dq: *mut i16, dest: *mut u8, stride: i32);
+    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
 }
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_dequant_idct_add_y_block_c(
-    mut q: *mut ::core::ffi::c_short,
-    mut dq: *mut ::core::ffi::c_short,
-    mut dst: *mut ::core::ffi::c_uchar,
-    mut stride: ::core::ffi::c_int,
-    mut eobs: *mut ::core::ffi::c_char,
+pub unsafe fn vp8_dequant_idct_add_y_block_c(
+    mut q: *mut i16,
+    mut dq: *mut i16,
+    mut dst: *mut u8,
+    mut stride: i32,
+    mut eobs: *mut i8,
 ) {
     unsafe {
-        let mut i: ::core::ffi::c_int = 0;
-        let mut j: ::core::ffi::c_int = 0;
-        i = 0 as ::core::ffi::c_int;
-        while i < 4 as ::core::ffi::c_int {
-            j = 0 as ::core::ffi::c_int;
-            while j < 4 as ::core::ffi::c_int {
+        let mut i: i32 = 0;
+        let mut j: i32 = 0;
+        i = 0 as i32;
+        while i < 4 as i32 {
+            j = 0 as i32;
+            while j < 4 as i32 {
                 let fresh2 = eobs;
                 eobs = eobs.offset(1);
-                if *fresh2 as ::core::ffi::c_int > 1 as ::core::ffi::c_int {
+                if *fresh2 as i32 > 1 as i32 {
                     vp8_dequant_idct_add_c(q, dq, dst, stride);
                 } else {
                     vp8_dc_only_idct_add_c(
-                        (*q.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                            * *dq.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                            as ::core::ffi::c_short,
+                        (*q.offset(0 as isize) as i32 * *dq.offset(0 as isize) as i32) as i16,
                         dst,
                         stride,
                         dst,
                         stride,
                     );
                     memset(
-                        q as *mut ::core::ffi::c_void,
-                        0 as ::core::ffi::c_int,
-                        (2 as size_t)
-                            .wrapping_mul(::core::mem::size_of::<::core::ffi::c_short>() as size_t),
+                        q as *mut c_void,
+                        0 as i32,
+                        (2 as size_t).wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
-                q = q.offset(16 as ::core::ffi::c_int as isize);
-                dst = dst.offset(4 as ::core::ffi::c_int as isize);
+                q = q.offset(16 as isize);
+                dst = dst.offset(4 as isize);
                 j += 1;
             }
-            dst =
-                dst.offset((4 as ::core::ffi::c_int * stride - 16 as ::core::ffi::c_int) as isize);
+            dst = dst.offset((4 as i32 * stride - 16 as i32) as isize);
             i += 1;
         }
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_dequant_idct_add_uv_block_c(
-    mut q: *mut ::core::ffi::c_short,
-    mut dq: *mut ::core::ffi::c_short,
-    mut dst_u: *mut ::core::ffi::c_uchar,
-    mut dst_v: *mut ::core::ffi::c_uchar,
-    mut stride: ::core::ffi::c_int,
-    mut eobs: *mut ::core::ffi::c_char,
+pub unsafe fn vp8_dequant_idct_add_uv_block_c(
+    mut q: *mut i16,
+    mut dq: *mut i16,
+    mut dst_u: *mut u8,
+    mut dst_v: *mut u8,
+    mut stride: i32,
+    mut eobs: *mut i8,
 ) {
     unsafe {
-        let mut i: ::core::ffi::c_int = 0;
-        let mut j: ::core::ffi::c_int = 0;
-        i = 0 as ::core::ffi::c_int;
-        while i < 2 as ::core::ffi::c_int {
-            j = 0 as ::core::ffi::c_int;
-            while j < 2 as ::core::ffi::c_int {
+        let mut i: i32 = 0;
+        let mut j: i32 = 0;
+        i = 0 as i32;
+        while i < 2 as i32 {
+            j = 0 as i32;
+            while j < 2 as i32 {
                 let fresh0 = eobs;
                 eobs = eobs.offset(1);
-                if *fresh0 as ::core::ffi::c_int > 1 as ::core::ffi::c_int {
+                if *fresh0 as i32 > 1 as i32 {
                     vp8_dequant_idct_add_c(q, dq, dst_u, stride);
                 } else {
                     vp8_dc_only_idct_add_c(
-                        (*q.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                            * *dq.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                            as ::core::ffi::c_short,
+                        (*q.offset(0 as isize) as i32 * *dq.offset(0 as isize) as i32) as i16,
                         dst_u,
                         stride,
                         dst_u,
                         stride,
                     );
                     memset(
-                        q as *mut ::core::ffi::c_void,
-                        0 as ::core::ffi::c_int,
-                        (2 as size_t)
-                            .wrapping_mul(::core::mem::size_of::<::core::ffi::c_short>() as size_t),
+                        q as *mut c_void,
+                        0 as i32,
+                        (2 as size_t).wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
-                q = q.offset(16 as ::core::ffi::c_int as isize);
-                dst_u = dst_u.offset(4 as ::core::ffi::c_int as isize);
+                q = q.offset(16 as isize);
+                dst_u = dst_u.offset(4 as isize);
                 j += 1;
             }
-            dst_u =
-                dst_u.offset((4 as ::core::ffi::c_int * stride - 8 as ::core::ffi::c_int) as isize);
+            dst_u = dst_u.offset((4 as i32 * stride - 8 as i32) as isize);
             i += 1;
         }
-        i = 0 as ::core::ffi::c_int;
-        while i < 2 as ::core::ffi::c_int {
-            j = 0 as ::core::ffi::c_int;
-            while j < 2 as ::core::ffi::c_int {
+        i = 0 as i32;
+        while i < 2 as i32 {
+            j = 0 as i32;
+            while j < 2 as i32 {
                 let fresh1 = eobs;
                 eobs = eobs.offset(1);
-                if *fresh1 as ::core::ffi::c_int > 1 as ::core::ffi::c_int {
+                if *fresh1 as i32 > 1 as i32 {
                     vp8_dequant_idct_add_c(q, dq, dst_v, stride);
                 } else {
                     vp8_dc_only_idct_add_c(
-                        (*q.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                            * *dq.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                            as ::core::ffi::c_short,
+                        (*q.offset(0 as isize) as i32 * *dq.offset(0 as isize) as i32) as i16,
                         dst_v,
                         stride,
                         dst_v,
                         stride,
                     );
                     memset(
-                        q as *mut ::core::ffi::c_void,
-                        0 as ::core::ffi::c_int,
-                        (2 as size_t)
-                            .wrapping_mul(::core::mem::size_of::<::core::ffi::c_short>() as size_t),
+                        q as *mut c_void,
+                        0 as i32,
+                        (2 as size_t).wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
-                q = q.offset(16 as ::core::ffi::c_int as isize);
-                dst_v = dst_v.offset(4 as ::core::ffi::c_int as isize);
+                q = q.offset(16 as isize);
+                dst_v = dst_v.offset(4 as isize);
                 j += 1;
             }
-            dst_v =
-                dst_v.offset((4 as ::core::ffi::c_int * stride - 8 as ::core::ffi::c_int) as isize);
+            dst_v = dst_v.offset((4 as i32 * stride - 8 as i32) as isize);
             i += 1;
         }
     }
