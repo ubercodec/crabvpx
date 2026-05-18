@@ -991,7 +991,8 @@ unsafe fn vp8_init(mut ctx: *mut VpxCodecCtxT, _data: *mut VpxCodecPrivEncMrCfgT
             }
             priv_0 = (*ctx).priv_0 as *mut VpxCodecAlgPrivT;
             (*priv_0).fragments.count = 0 as u32;
-            (*priv_0).fragments.enabled = ((*priv_0).base.init_flags & VPX_CODEC_USE_INPUT_FRAGMENTS as VpxCodecFlagsT) != 0;
+            (*priv_0).fragments.enabled =
+                ((*priv_0).base.init_flags & VPX_CODEC_USE_INPUT_FRAGMENTS as VpxCodecFlagsT) != 0;
         }
         res
     }
