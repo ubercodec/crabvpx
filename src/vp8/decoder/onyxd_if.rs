@@ -251,8 +251,8 @@ pub unsafe extern "C" fn vp8dx_set_reference(
         free_fb = get_free_fb(&mut *cm);
         (*cm).fb_idx_ref_cnt[free_fb as usize] -= 1;
         ref_cnt_fb(
-            &raw mut (*cm).fb_idx_ref_cnt as *mut ::core::ffi::c_int,
-            ref_fb_ptr,
+            &mut (*cm).fb_idx_ref_cnt,
+            &mut *ref_fb_ptr,
             free_fb,
         );
         vp8_yv12_copy_frame_c(
@@ -274,19 +274,17 @@ fn get_free_fb(cm: &mut VP8_COMMON) -> ::core::ffi::c_int {
     cm.fb_idx_ref_cnt[i as usize] = 1 as ::core::ffi::c_int;
     return i;
 }
-unsafe extern "C" fn ref_cnt_fb(
-    mut buf: *mut ::core::ffi::c_int,
-    mut idx: *mut ::core::ffi::c_int,
-    mut new_idx: ::core::ffi::c_int,
-) { unsafe {
-    if *buf.offset(*idx as isize) > 0 as ::core::ffi::c_int {
-        let ref mut fresh0 = *buf.offset(*idx as isize);
-        *fresh0 -= 1;
+fn ref_cnt_fb(
+    buf: &mut [::core::ffi::c_int],
+    idx: &mut ::core::ffi::c_int,
+    new_idx: ::core::ffi::c_int,
+) {
+    if buf[*idx as usize] > 0 as ::core::ffi::c_int {
+        buf[*idx as usize] -= 1;
     }
     *idx = new_idx;
-    let ref mut fresh1 = *buf.offset(new_idx as isize);
-    *fresh1 += 1;
-}}
+    buf[new_idx as usize] += 1;
+}
 unsafe extern "C" fn swap_frame_buffers(mut cm: *mut VP8_COMMON) -> ::core::ffi::c_int { unsafe {
     let mut err: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     if (*cm).copy_buffer_to_arf != 0 {
@@ -299,8 +297,8 @@ unsafe extern "C" fn swap_frame_buffers(mut cm: *mut VP8_COMMON) -> ::core::ffi:
             err = -(1 as ::core::ffi::c_int);
         }
         ref_cnt_fb(
-            &raw mut (*cm).fb_idx_ref_cnt as *mut ::core::ffi::c_int,
-            &raw mut (*cm).alt_fb_idx,
+            &mut (*cm).fb_idx_ref_cnt,
+            &mut (*cm).alt_fb_idx,
             new_fb,
         );
     }
@@ -314,29 +312,29 @@ unsafe extern "C" fn swap_frame_buffers(mut cm: *mut VP8_COMMON) -> ::core::ffi:
             err = -(1 as ::core::ffi::c_int);
         }
         ref_cnt_fb(
-            &raw mut (*cm).fb_idx_ref_cnt as *mut ::core::ffi::c_int,
-            &raw mut (*cm).gld_fb_idx,
+            &mut (*cm).fb_idx_ref_cnt,
+            &mut (*cm).gld_fb_idx,
             new_fb_0,
         );
     }
     if (*cm).refresh_golden_frame != 0 {
         ref_cnt_fb(
-            &raw mut (*cm).fb_idx_ref_cnt as *mut ::core::ffi::c_int,
-            &raw mut (*cm).gld_fb_idx,
+            &mut (*cm).fb_idx_ref_cnt,
+            &mut (*cm).gld_fb_idx,
             (*cm).new_fb_idx,
         );
     }
     if (*cm).refresh_alt_ref_frame != 0 {
         ref_cnt_fb(
-            &raw mut (*cm).fb_idx_ref_cnt as *mut ::core::ffi::c_int,
-            &raw mut (*cm).alt_fb_idx,
+            &mut (*cm).fb_idx_ref_cnt,
+            &mut (*cm).alt_fb_idx,
             (*cm).new_fb_idx,
         );
     }
     if (*cm).refresh_last_frame != 0 {
         ref_cnt_fb(
-            &raw mut (*cm).fb_idx_ref_cnt as *mut ::core::ffi::c_int,
-            &raw mut (*cm).lst_fb_idx,
+            &mut (*cm).fb_idx_ref_cnt,
+            &mut (*cm).lst_fb_idx,
             (*cm).new_fb_idx,
         );
         (*cm).frame_to_show = (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG)

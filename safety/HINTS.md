@@ -1,6 +1,7 @@
 # VP8 Decoder Safety Hints
 
 ## Current Progress (May 2026)
+- **Safe Reference Count API**: Refactored `ref_cnt_fb` in `src/vp8/decoder/onyxd_if.rs` to safe Rust by taking `&mut [c_int]` slice and mutable reference `&mut c_int` instead of raw pointers. Eliminated `unsafe extern "C"` linkage and internal `unsafe` block. Updated call sites in `vp8dx_set_reference` and `swap_frame_buffers` to pass safe references. Reduced unsafe count by 2 (1297 remaining).
 - **Safe Frame Copy API**: Refactored `vp8_yv12_copy_frame_c` and `vpx_yv12_copy_y_c` in `src/vpx_scale/generic/yv12extend.rs` to take safe references `&YV12_BUFFER_CONFIG` and `&mut YV12_BUFFER_CONFIG` instead of raw pointers. Eliminated `unsafe extern "C"` linkage and `#[unsafe(no_mangle)]`. Updated call sites in `onyxd_if.rs`. Reduced unsafe count by 4 (1299 remaining).
 - **Safe Frame Border Extension API**: Refactored `vp8_yv12_extend_frame_borders_c` in `src/vpx_scale/generic/yv12extend.rs` to take safe reference `&YV12_BUFFER_CONFIG` instead of raw pointer. Eliminated `unsafe extern "C"` linkage and `#[unsafe(no_mangle)]`. Updated call sites in `decodeframe.rs` and `yv12extend.rs`. Reduced unsafe count by 2 (1303 remaining).
 - **Safe Frame Border Extension API (Left/Right)**: Refactored `yv12_extend_frame_left_right_c` in `src/vp8/decoder/decodeframe.rs` to take safe reference `&YV12_BUFFER_CONFIG` instead of raw pointer. Eliminated `unsafe extern "C"` linkage. Updated 4 call sites in `decode_mb_rows`. Reduced unsafe count by 1 (1305 remaining).
