@@ -31,9 +31,9 @@ pub type JmpBuf = [i32; 48];
 #[repr(C)]
 pub struct VpxInternalErrorInfo {
     pub error_code: VpxCodecErrT,
-    pub has_detail: i32,
+    pub has_detail: bool,
     pub detail: [i8; 80],
-    pub setjmp: i32,
+    pub setjmp: bool,
     pub jmp: JmpBuf,
 }
 #[derive(Copy, Clone)]
@@ -168,8 +168,8 @@ pub struct Macroblockd {
     pub mode_info_context: *mut ModeInfo,
     pub mode_info_stride: i32,
     pub frame_type: FrameType,
-    pub up_available: i32,
-    pub left_available: i32,
+    pub up_available: bool,
+    pub left_available: bool,
     pub recon_above: [*mut u8; 3],
     pub recon_left: [*mut u8; 3],
     pub recon_left_stride: [i32; 2],

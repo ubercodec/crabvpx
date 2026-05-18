@@ -118,8 +118,8 @@ pub struct Macroblockd {
     pub mode_info_context: *mut ModeInfo,
     pub mode_info_stride: i32,
     pub frame_type: FrameType,
-    pub up_available: i32,
-    pub left_available: i32,
+    pub up_available: bool,
+    pub left_available: bool,
     pub recon_above: [*mut u8; 3],
     pub recon_left: [*mut u8; 3],
     pub recon_left_stride: [i32; 2],
@@ -153,9 +153,9 @@ pub struct Macroblockd {
 #[repr(C)]
 pub struct VpxInternalErrorInfo {
     pub error_code: VpxCodecErrT,
-    pub has_detail: i32,
+    pub has_detail: bool,
     pub detail: [i8; 80],
-    pub setjmp: i32,
+    pub setjmp: bool,
     pub jmp: JmpBuf,
 }
 pub type JmpBuf = [i32; 48];
@@ -287,7 +287,7 @@ pub struct VpxImage {
     pub user_priv: *mut c_void,
     pub img_data: *mut u8,
     pub img_data_owner: i32,
-    pub self_allocd: i32,
+    pub self_allocd: bool,
     pub fb_priv: *mut c_void,
 }
 pub type VpxImageT = VpxImage;
@@ -437,14 +437,14 @@ pub struct VpxCodecAlgPriv {
     pub base: VpxCodecPrivT,
     pub cfg: VpxCodecDecCfgT,
     pub si: Vp8StreamInfoT,
-    pub decoder_init: i32,
-    pub restart_threads: i32,
-    pub postproc_cfg_set: i32,
+    pub decoder_init: bool,
+    pub restart_threads: bool,
+    pub postproc_cfg_set: bool,
     pub postproc_cfg: Vp8PostprocCfgT,
     pub decrypt_cb: VpxDecryptCb,
     pub decrypt_state: *mut c_void,
     pub img: VpxImageT,
-    pub img_setup: i32,
+    pub img_setup: bool,
     pub yv12_frame_buffers: FrameBuffers,
     pub user_priv: *mut c_void,
     pub fragments: FragmentData,
@@ -452,7 +452,7 @@ pub struct VpxCodecAlgPriv {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct FragmentData {
-    pub enabled: i32,
+    pub enabled: bool,
     pub count: u32,
     pub ptrs: [*const u8; 9],
     pub sizes: [u32; 9],
@@ -490,19 +490,19 @@ pub struct Vp8dComp {
     pub h_decoding_thread: *mut PthreadT,
     pub h_event_start_decoding: *mut SemaphoreT,
     pub h_event_end_decoding: SemaphoreT,
-    pub ready_for_new_data: i32,
+    pub ready_for_new_data: bool,
     pub prob_intra: Vp8Prob,
     pub prob_last: Vp8Prob,
     pub prob_gf: Vp8Prob,
     pub prob_skip_false: Vp8Prob,
-    pub ec_enabled: i32,
-    pub ec_active: i32,
-    pub decoded_key_frame: i32,
-    pub independent_partitions: i32,
+    pub ec_enabled: bool,
+    pub ec_active: bool,
+    pub decoded_key_frame: bool,
+    pub independent_partitions: bool,
     pub frame_corrupt_residual: i32,
     pub decrypt_cb: VpxDecryptCb,
     pub decrypt_state: *mut c_void,
-    pub restart_threads: i32,
+    pub restart_threads: bool,
 }
 pub type VpxDecryptCb = Option<unsafe fn(*mut c_void, *const u8, *mut u8, i32) -> ()>;
 pub type SemaphoreT = *mut c_void;
@@ -578,10 +578,10 @@ pub struct VP8Common {
     pub mb_rows: i32,
     pub mb_cols: i32,
     pub mode_info_stride: i32,
-    pub mb_no_coeff_skip: i32,
-    pub no_lpf: i32,
-    pub use_bilinear_mc_filter: i32,
-    pub full_pixel: i32,
+    pub mb_no_coeff_skip: bool,
+    pub no_lpf: bool,
+    pub use_bilinear_mc_filter: bool,
+    pub full_pixel: bool,
     pub base_qindex: i32,
     pub y1dc_delta_q: i32,
     pub y2dc_delta_q: i32,
@@ -601,7 +601,7 @@ pub struct VP8Common {
     pub refresh_alt_ref_frame: i32,
     pub copy_buffer_to_gf: i32,
     pub copy_buffer_to_arf: i32,
-    pub refresh_entropy_probs: i32,
+    pub refresh_entropy_probs: bool,
     pub ref_frame_sign_bias: [i32; 4],
     pub above_context: *mut EntropyContextPlanes,
     pub left_context: EntropyContextPlanes,
@@ -991,9 +991,8 @@ unsafe fn vp8_init(mut ctx: *mut VpxCodecCtxT, _data: *mut VpxCodecPrivEncMrCfgT
             }
             priv_0 = (*ctx).priv_0 as *mut VpxCodecAlgPrivT;
             (*priv_0).fragments.count = 0 as u32;
-            (*priv_0).fragments.enabled = ((*priv_0).base.init_flags
-                & VPX_CODEC_USE_INPUT_FRAGMENTS as VpxCodecFlagsT)
-                as i32;
+            (*priv_0).fragments.enabled =
+                ((*priv_0).base.init_flags & VPX_CODEC_USE_INPUT_FRAGMENTS as VpxCodecFlagsT) != 0;
         }
         res
     }
@@ -1099,7 +1098,7 @@ unsafe fn update_error_state(
         let mut res: VpxCodecErrT = VPX_CODEC_OK;
         res = (*error).error_code;
         if res as u64 != 0 {
-            (*ctx).base.err_detail = if (*error).has_detail != 0 {
+            (*ctx).base.err_detail = if (*error).has_detail {
                 &raw const (*error).detail as *const i8
             } else {
                 ::core::ptr::null::<i8>()
@@ -1137,7 +1136,7 @@ unsafe fn yuvconfig2image(
         (*img).user_priv = user_priv;
         (*img).img_data = (*yv12).buffer_alloc as *mut u8;
         (*img).img_data_owner = 0 as i32;
-        (*img).self_allocd = 0 as i32;
+        (*img).self_allocd = false;
     }
 }
 unsafe fn update_fragments(
@@ -1160,14 +1159,14 @@ unsafe fn update_fragments(
                 ::core::mem::size_of::<[u32; 9]>() as SizeT,
             );
         }
-        if (*ctx).fragments.enabled != 0
+        if (*ctx).fragments.enabled
             && data.is_null()
             && data_sz == 0 as u32
             && (*ctx).fragments.count == 0 as u32
         {
             return 0 as i32;
         }
-        if (*ctx).fragments.enabled != 0 && !(data.is_null() && data_sz == 0 as u32) {
+        if (*ctx).fragments.enabled && !(data.is_null() && data_sz == 0 as u32) {
             if (*ctx).fragments.count >= MAX_PARTITIONS as u32 {
                 (*ctx).fragments.count = 0 as u32;
                 ::core::ptr::write_volatile(res, VPX_CODEC_INVALID_PARAM);
@@ -1178,10 +1177,10 @@ unsafe fn update_fragments(
             (*ctx).fragments.count = (*ctx).fragments.count.wrapping_add(1);
             return 0 as i32;
         }
-        if (*ctx).fragments.enabled == 0 && (data.is_null() && data_sz == 0 as u32) {
+        if !(*ctx).fragments.enabled && (data.is_null() && data_sz == 0 as u32) {
             return 0 as i32;
         }
-        if (*ctx).fragments.enabled == 0 {
+        if !(*ctx).fragments.enabled {
             (*ctx).fragments.ptrs[0 as usize] = data as *const u8;
             (*ctx).fragments.sizes[0 as usize] = data_sz;
             (*ctx).fragments.count = 1 as u32;
@@ -1200,7 +1199,7 @@ unsafe fn vp8_decode(
         let mut resolution_change: u32 = 0 as u32;
         let mut w: u32 = 0;
         let mut h: u32 = 0;
-        if (*ctx).fragments.enabled == 0 && (data.is_null() && data_sz == 0 as u32) {
+        if !(*ctx).fragments.enabled && (data.is_null() && data_sz == 0 as u32) {
             return VPX_CODEC_OK;
         }
         if update_fragments(ctx, data, data_sz, &raw mut res) <= 0 as i32 {
@@ -1221,11 +1220,11 @@ unsafe fn vp8_decode(
         if res as u32 == VPX_CODEC_UNSUP_BITSTREAM as u32 && (*ctx).si.is_kf == 0 {
             ::core::ptr::write_volatile(&mut res as *mut VpxCodecErrT, VPX_CODEC_OK);
         }
-        if (*ctx).decoder_init == 0 && (*ctx).si.is_kf == 0 {
+        if !(*ctx).decoder_init && (*ctx).si.is_kf == 0 {
             ::core::ptr::write_volatile(&mut res as *mut VpxCodecErrT, VPX_CODEC_UNSUP_BITSTREAM);
         }
         if res as u64 == 0
-            && (*ctx).decoder_init != 0
+            && (*ctx).decoder_init
             && w == 0 as u32
             && h == 0 as u32
             && (*ctx).si.h == 0 as u32
@@ -1243,24 +1242,24 @@ unsafe fn vp8_decode(
         if (*ctx).si.h != h || (*ctx).si.w != w {
             ::core::ptr::write_volatile(&mut resolution_change as *mut u32, 1 as u32);
         }
-        if res as u64 == 0 && (*ctx).restart_threads != 0 {
+        if res as u64 == 0 && (*ctx).restart_threads {
             let mut pbi_0: *mut Vp8dComp = (*ctx).yv12_frame_buffers.pbi[0 as usize];
             let pc: *mut Vp8Common = &raw mut (*pbi_0).common;
             if setjmp(&raw mut (*pbi_0).common.error.jmp as *mut i32) != 0 {
-                (*pbi_0).common.error.setjmp = 0 as i32;
+                (*pbi_0).common.error.setjmp = false;
                 vp8_decoder_remove_threads(pbi_0);
                 return VPX_CODEC_ERROR;
             }
-            (*pbi_0).common.error.setjmp = 1 as i32;
+            (*pbi_0).common.error.setjmp = true;
             (*pbi_0).max_threads = (*ctx).cfg.threads as i32;
             vp8_decoder_create_threads(pbi_0);
             if vpx_atomic_load_acquire(&raw mut (*pbi_0).b_multithreaded_rd) != 0 {
                 vp8mt_alloc_temp_buffers(pbi_0, (*pc).width, (*pc).mb_rows);
             }
-            (*ctx).restart_threads = 0 as i32;
-            (*pbi_0).common.error.setjmp = 0 as i32;
+            (*ctx).restart_threads = false;
+            (*pbi_0).common.error.setjmp = false;
         }
-        if res as u64 == 0 && (*ctx).decoder_init == 0 {
+        if res as u64 == 0 && !(*ctx).decoder_init {
             let mut oxcf: Vp8dConfig = Vp8dConfig {
                 width: 0,
                 height: 0,
@@ -1276,7 +1275,7 @@ unsafe fn vp8_decode(
             oxcf.max_threads = (*ctx).cfg.threads as i32;
             oxcf.error_concealment =
                 ((*ctx).base.init_flags & VPX_CODEC_USE_ERROR_CONCEALMENT as VpxCodecFlagsT) as i32;
-            if (*ctx).postproc_cfg_set == 0
+            if !(*ctx).postproc_cfg_set
                 && (*ctx).base.init_flags & VPX_CODEC_USE_POSTPROC as VpxCodecFlagsT != 0
             {
                 (*ctx).postproc_cfg.post_proc_flag =
@@ -1290,13 +1289,13 @@ unsafe fn vp8_decode(
                     as VpxCodecErrT,
             );
             if res as u32 == VPX_CODEC_OK as u32 {
-                (*ctx).decoder_init = 1 as i32;
+                (*ctx).decoder_init = true;
             } else {
                 (*ctx).si.w = 0 as u32;
                 (*ctx).si.h = 0 as u32;
             }
         }
-        if (*ctx).decoder_init != 0 {
+        if (*ctx).decoder_init {
             (*(*ctx).yv12_frame_buffers.pbi[0 as usize]).decrypt_cb = (*ctx).decrypt_cb;
             (*(*ctx).yv12_frame_buffers.pbi[0 as usize]).decrypt_state = (*ctx).decrypt_state;
         }
@@ -1309,12 +1308,12 @@ unsafe fn vp8_decode(
                 (*pc_0).width = (*ctx).si.w as i32;
                 (*pc_0).height = (*ctx).si.h as i32;
                 if setjmp(&raw mut (*pbi_1).common.error.jmp as *mut i32) != 0 {
-                    (*pbi_1).common.error.setjmp = 0 as i32;
+                    (*pbi_1).common.error.setjmp = false;
                     (*ctx).si.w = 0 as u32;
                     (*ctx).si.h = 0 as u32;
                     return 4294967295 as VpxCodecErrT;
                 }
-                (*pbi_1).common.error.setjmp = 1 as i32;
+                (*pbi_1).common.error.setjmp = true;
                 if (*pc_0).width <= 0 as i32 {
                     (*pc_0).width = w as i32;
                     vpx_internal_error(
@@ -1354,7 +1353,7 @@ unsafe fn vp8_decode(
                 if vpx_atomic_load_acquire(&raw mut (*pbi_1).b_multithreaded_rd) != 0 {
                     vp8mt_alloc_temp_buffers(pbi_1, (*pc_0).width, 0 as i32);
                 }
-                (*pbi_1).common.error.setjmp = 0 as i32;
+                (*pbi_1).common.error.setjmp = false;
                 (*pbi_1).common.fb_idx_ref_cnt[0 as usize] = 0 as i32;
             }
             if setjmp(&raw mut (*pbi_1).common.error.jmp as *mut i32) != 0 {
@@ -1362,11 +1361,11 @@ unsafe fn vp8_decode(
                 if (*pc_0).fb_idx_ref_cnt[(*pc_0).new_fb_idx as usize] > 0 as i32 {
                     (*pc_0).fb_idx_ref_cnt[(*pc_0).new_fb_idx as usize] -= 1;
                 }
-                (*pbi_1).common.error.setjmp = 0 as i32;
-                if (*pbi_1).restart_threads != 0 {
+                (*pbi_1).common.error.setjmp = false;
+                if (*pbi_1).restart_threads {
                     (*ctx).si.w = 0 as u32;
                     (*ctx).si.h = 0 as u32;
-                    (*ctx).restart_threads = 1 as i32;
+                    (*ctx).restart_threads = true;
                 }
                 ::core::ptr::write_volatile(
                     &mut res as *mut VpxCodecErrT,
@@ -1374,9 +1373,9 @@ unsafe fn vp8_decode(
                 );
                 return res;
             }
-            (*pbi_1).common.error.setjmp = 1 as i32;
+            (*pbi_1).common.error.setjmp = true;
             (*pbi_1).fragments = (*ctx).fragments;
-            (*pbi_1).restart_threads = 0 as i32;
+            (*pbi_1).restart_threads = false;
             (*ctx).user_priv = user_priv;
             if vp8dx_receive_compressed_data(pbi_1 as *mut Vp8dComp) != 0 {
                 ::core::ptr::write_volatile(
@@ -1385,7 +1384,7 @@ unsafe fn vp8_decode(
                 );
             }
             (*ctx).fragments.count = 0 as u32;
-            (*pbi_1).common.error.setjmp = 0 as i32;
+            (*pbi_1).common.error.setjmp = false;
         }
         res
     }

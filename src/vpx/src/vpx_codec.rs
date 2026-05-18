@@ -56,7 +56,7 @@ pub struct VpxImage {
     pub user_priv: *mut c_void,
     pub img_data: *mut u8,
     pub img_data_owner: i32,
-    pub self_allocd: i32,
+    pub self_allocd: bool,
     pub fb_priv: *mut c_void,
 }
 pub type VpxImageT = VpxImage;
@@ -422,9 +422,9 @@ pub type JmpBuf = [i32; 48];
 #[repr(C)]
 pub struct VpxInternalErrorInfo {
     pub error_code: VpxCodecErrT,
-    pub has_detail: i32,
+    pub has_detail: bool,
     pub detail: [i8; 80],
-    pub setjmp: i32,
+    pub setjmp: bool,
     pub jmp: JmpBuf,
 }
 pub const __DARWIN_NULL: *mut c_void = ::core::ptr::null_mut::<c_void>();
@@ -594,10 +594,10 @@ pub unsafe fn vpx_internal_error(
 ) {
     unsafe {
         (*info).error_code = error;
-        (*info).has_detail = 0 as i32;
+        (*info).has_detail = false;
         if !fmt.is_null() {
             let mut sz: SizeT = ::core::mem::size_of::<[i8; 80]>() as SizeT;
-            (*info).has_detail = 1 as i32;
+            (*info).has_detail = true;
 
             // On Windows MSVC, vsnprintf is not readily available in the default linked CRT
             // without explicitly linking legacy_stdio_definitions.lib, which complicates Rust
@@ -611,7 +611,7 @@ pub unsafe fn vpx_internal_error(
             }
             (*info).detail[i] = 0 as i8;
         }
-        if (*info).setjmp != 0 {
+        if (*info).setjmp {
             longjmp(&raw mut (*info).jmp as *mut i32, (*info).error_code as i32);
         }
     }

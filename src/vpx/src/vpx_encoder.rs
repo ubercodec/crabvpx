@@ -54,7 +54,7 @@ pub struct VpxImage {
     pub user_priv: *mut c_void,
     pub img_data: *mut u8,
     pub img_data_owner: i32,
-    pub self_allocd: i32,
+    pub self_allocd: bool,
     pub fb_priv: *mut c_void,
 }
 pub type VpxImageT = VpxImage;

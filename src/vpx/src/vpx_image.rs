@@ -55,7 +55,7 @@ pub struct VpxImage {
     pub user_priv: *mut c_void,
     pub img_data: *mut u8,
     pub img_data_owner: i32,
-    pub self_allocd: i32,
+    pub self_allocd: bool,
     pub fb_priv: *mut c_void,
 }
 pub type VpxImageT = VpxImage;
@@ -192,7 +192,7 @@ unsafe fn img_alloc_helper(
                             if img.is_null() {
                                 current_block = 7960401837942226685;
                             } else {
-                                (*img).self_allocd = 1 as i32;
+                                (*img).self_allocd = true;
                                 current_block = 13678349939556791712;
                             }
                         } else {
@@ -424,7 +424,7 @@ pub unsafe fn vpx_img_free(mut img: *mut VpxImageT) {
             if !(*img).img_data.is_null() && (*img).img_data_owner != 0 {
                 vpx_free((*img).img_data as *mut c_void);
             }
-            if (*img).self_allocd != 0 {
+            if (*img).self_allocd {
                 free(img as *mut c_void);
             }
         }
