@@ -204,8 +204,7 @@ pub struct macroblockd {
 }
 pub type MACROBLOCKD = macroblockd;
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_setup_block_dptrs(mut x: *mut MACROBLOCKD) {
-    unsafe {
+pub unsafe fn vp8_setup_block_dptrs(mut x: *mut MACROBLOCKD) { unsafe {
         let mut r: i32 = 0;
         let mut c: i32 = 0;
         r = 0 as i32;
@@ -255,11 +254,9 @@ pub unsafe fn vp8_setup_block_dptrs(mut x: *mut MACROBLOCKD) {
             (*x).block[r as usize].eob = (&raw mut (*x).eobs as *mut i8).offset(r as isize);
             r += 1;
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_build_block_doffsets(mut x: *mut MACROBLOCKD) {
-    unsafe {
+pub unsafe fn vp8_build_block_doffsets(mut x: *mut MACROBLOCKD) { unsafe {
         let mut block: i32 = 0;
         block = 0 as i32;
         while block < 16 as i32 {
@@ -275,5 +272,4 @@ pub unsafe fn vp8_build_block_doffsets(mut x: *mut MACROBLOCKD) {
             (*x).block[(block + 4 as i32) as usize].offset = (*x).block[block as usize].offset;
             block += 1;
         }
-    }
-}
+}}

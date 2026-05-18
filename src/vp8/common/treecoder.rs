@@ -15,8 +15,7 @@ unsafe fn tree2tok(
     mut i: i32,
     mut v: i32,
     mut L: i32,
-) {
-    unsafe {
+) { unsafe {
         v += v;
         L += 1;
         loop {
@@ -34,21 +33,17 @@ unsafe fn tree2tok(
                 break;
             }
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_tokens_from_tree(mut p: *mut vp8_token_struct, mut t: *const vp8_tree_index) {
-    unsafe {
+pub unsafe fn vp8_tokens_from_tree(mut p: *mut vp8_token_struct, mut t: *const vp8_tree_index) { unsafe {
         tree2tok(p, t, 0 as i32, 0 as i32, 0 as i32);
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_tokens_from_tree_offset(
     mut p: *mut vp8_token_struct,
     mut t: *const vp8_tree_index,
     mut offset: i32,
-) {
-    unsafe {
+) { unsafe {
         tree2tok(
             p.offset(-(offset as isize)),
             t,
@@ -56,16 +51,14 @@ pub unsafe fn vp8_tokens_from_tree_offset(
             0 as i32,
             0 as i32,
         );
-    }
-}
+}}
 unsafe fn branch_counts(
     mut n: i32,
     mut tok: *const vp8_token,
     mut tree: *const vp8_tree_index,
     mut branch_ct: *mut [u32; 2],
     mut num_events: *const u32,
-) {
-    unsafe {
+) { unsafe {
         let tree_len: i32 = n - 1 as i32;
         let mut t: i32 = 0 as i32;
         loop {
@@ -99,8 +92,7 @@ unsafe fn branch_counts(
                 break;
             }
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_tree_probs_from_distribution(
     mut n: i32,
@@ -111,8 +103,7 @@ pub unsafe fn vp8_tree_probs_from_distribution(
     mut num_events: *const u32,
     mut Pfactor: u32,
     mut Round: i32,
-) {
-    unsafe {
+) { unsafe {
         let tree_len: i32 = n - 1 as i32;
         let mut t: i32 = 0 as i32;
         branch_counts(n, tok, tree, branch_ct, num_events);
@@ -143,5 +134,4 @@ pub unsafe fn vp8_tree_probs_from_distribution(
                 break;
             }
         }
-    }
-}
+}}

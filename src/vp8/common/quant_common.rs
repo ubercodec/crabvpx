@@ -35,8 +35,7 @@ static mut ac_qlookup: [i32; 128] = [
     254 as i32, 259 as i32, 264 as i32, 269 as i32, 274 as i32, 279 as i32, 284 as i32,
 ];
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_dc_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    unsafe {
+pub unsafe fn vp8_dc_quant(mut QIndex: i32, mut Delta: i32) -> i32 { unsafe {
         let mut retval: i32 = 0;
         QIndex += Delta;
         if QIndex > 127 as i32 {
@@ -46,11 +45,9 @@ pub unsafe fn vp8_dc_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
         }
         retval = dc_qlookup[QIndex as usize];
         retval
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_dc2quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    unsafe {
+pub unsafe fn vp8_dc2quant(mut QIndex: i32, mut Delta: i32) -> i32 { unsafe {
         let mut retval: i32 = 0;
         QIndex += Delta;
         if QIndex > 127 as i32 {
@@ -60,11 +57,9 @@ pub unsafe fn vp8_dc2quant(mut QIndex: i32, mut Delta: i32) -> i32 {
         }
         retval = dc_qlookup[QIndex as usize] * 2 as i32;
         retval
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_dc_uv_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    unsafe {
+pub unsafe fn vp8_dc_uv_quant(mut QIndex: i32, mut Delta: i32) -> i32 { unsafe {
         let mut retval: i32 = 0;
         QIndex += Delta;
         if QIndex > 127 as i32 {
@@ -77,11 +72,9 @@ pub unsafe fn vp8_dc_uv_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
             retval = 132 as i32;
         }
         retval
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_ac_yquant(mut QIndex: i32) -> i32 {
-    unsafe {
+pub unsafe fn vp8_ac_yquant(mut QIndex: i32) -> i32 { unsafe {
         let mut retval: i32 = 0;
         if QIndex > 127 as i32 {
             QIndex = 127 as i32;
@@ -90,11 +83,9 @@ pub unsafe fn vp8_ac_yquant(mut QIndex: i32) -> i32 {
         }
         retval = ac_qlookup[QIndex as usize];
         retval
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_ac2quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    unsafe {
+pub unsafe fn vp8_ac2quant(mut QIndex: i32, mut Delta: i32) -> i32 { unsafe {
         let mut retval: i32 = 0;
         QIndex += Delta;
         if QIndex > 127 as i32 {
@@ -107,11 +98,9 @@ pub unsafe fn vp8_ac2quant(mut QIndex: i32, mut Delta: i32) -> i32 {
             retval = 8 as i32;
         }
         retval
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_ac_uv_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    unsafe {
+pub unsafe fn vp8_ac_uv_quant(mut QIndex: i32, mut Delta: i32) -> i32 { unsafe {
         let mut retval: i32 = 0;
         QIndex += Delta;
         if QIndex > 127 as i32 {
@@ -121,5 +110,4 @@ pub unsafe fn vp8_ac_uv_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
         }
         retval = ac_qlookup[QIndex as usize];
         retval
-    }
-}
+}}

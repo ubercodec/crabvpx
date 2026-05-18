@@ -54,8 +54,7 @@ pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 pub unsafe fn vp8_swap_yv12_buffer(
     mut new_frame: *mut YV12_BUFFER_CONFIG,
     mut last_frame: *mut YV12_BUFFER_CONFIG,
-) {
-    unsafe {
+) { unsafe {
         let mut temp: *mut u8 = ::core::ptr::null_mut::<u8>();
         temp = (*last_frame).buffer_alloc as *mut u8;
         (*last_frame).buffer_alloc = (*new_frame).buffer_alloc;
@@ -69,5 +68,4 @@ pub unsafe fn vp8_swap_yv12_buffer(
         temp = (*last_frame).v_buffer as *mut u8;
         (*last_frame).v_buffer = (*new_frame).v_buffer;
         (*new_frame).v_buffer = temp as *mut uint8_t;
-    }
-}
+}}

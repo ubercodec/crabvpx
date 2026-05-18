@@ -261,8 +261,7 @@ pub const NULL: *mut c_void = __DARWIN_NULL;
 pub const VP8BORDERINPIXELS: i32 = 32 as i32;
 pub const NUM_YV12_BUFFERS: i32 = 4 as i32;
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_de_alloc_frame_buffers(mut oci: *mut VP8_COMMON) {
-    unsafe {
+pub unsafe fn vp8_de_alloc_frame_buffers(mut oci: *mut VP8_COMMON) { unsafe {
         let mut i: i32 = 0;
         i = 0 as i32;
         while i < NUM_YV12_BUFFERS {
@@ -281,15 +280,13 @@ pub unsafe fn vp8_de_alloc_frame_buffers(mut oci: *mut VP8_COMMON) {
         (*oci).mi = ::core::ptr::null_mut::<MODE_INFO>();
         (*oci).show_frame_mi = ::core::ptr::null_mut::<MODE_INFO>();
         (*oci).frame_to_show = ::core::ptr::null_mut::<YV12_BUFFER_CONFIG>();
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_alloc_frame_buffers(
     mut oci: *mut VP8_COMMON,
     mut width: i32,
     mut height: i32,
-) -> i32 {
-    unsafe {
+) -> i32 { unsafe {
         let mut current_block: u64;
         let mut i: i32 = 0;
         vp8_de_alloc_frame_buffers(oci);
@@ -360,11 +357,9 @@ pub unsafe fn vp8_alloc_frame_buffers(
         }
         vp8_de_alloc_frame_buffers(oci);
         1 as i32
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_setup_version(mut cm: *mut VP8_COMMON) {
-    unsafe {
+pub unsafe fn vp8_setup_version(mut cm: *mut VP8_COMMON) { unsafe {
         match (*cm).version {
             0 => {
                 (*cm).no_lpf = 0 as i32;
@@ -397,11 +392,9 @@ pub unsafe fn vp8_setup_version(mut cm: *mut VP8_COMMON) {
                 (*cm).full_pixel = 0 as i32;
             }
         };
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_create_common(mut oci: *mut VP8_COMMON) {
-    unsafe {
+pub unsafe fn vp8_create_common(mut oci: *mut VP8_COMMON) { unsafe {
         vp8_machine_specific_config(oci as *mut VP8Common);
         vp8_init_mbmode_probs(oci);
         vp8_default_bmode_probs(&raw mut (*oci).fc.bmode_prob as *mut vp8_prob);
@@ -419,11 +412,8 @@ pub unsafe fn vp8_create_common(mut oci: *mut VP8_COMMON) {
         );
         (*oci).copy_buffer_to_gf = 0 as i32;
         (*oci).copy_buffer_to_arf = 0 as i32;
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_remove_common(mut oci: *mut VP8_COMMON) {
-    unsafe {
+pub unsafe fn vp8_remove_common(mut oci: *mut VP8_COMMON) { unsafe {
         vp8_de_alloc_frame_buffers(oci);
-    }
-}
+}}

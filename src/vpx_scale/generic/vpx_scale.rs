@@ -111,8 +111,7 @@ unsafe fn scale1d_2t1_i(
     mut dest_step: i32,
     _dest_scale: u32,
     mut dest_length: u32,
-) {
-    unsafe {
+) { unsafe {
         let mut i: u32 = 0;
         let mut j: u32 = 0;
         let mut temp: u32 = 0;
@@ -137,8 +136,7 @@ unsafe fn scale1d_2t1_i(
             i = i.wrapping_add(dest_step as u32);
             j = j.wrapping_add(source_step as u32);
         }
-    }
-}
+}}
 unsafe fn scale1d_2t1_ps(
     mut source: *const u8,
     mut source_step: i32,
@@ -148,8 +146,7 @@ unsafe fn scale1d_2t1_ps(
     mut dest_step: i32,
     _dest_scale: u32,
     mut dest_length: u32,
-) {
-    unsafe {
+) { unsafe {
         let mut i: u32 = 0;
         let mut j: u32 = 0;
         source_step *= 2 as i32;
@@ -160,8 +157,7 @@ unsafe fn scale1d_2t1_ps(
             i = i.wrapping_add(dest_step as u32);
             j = j.wrapping_add(source_step as u32);
         }
-    }
-}
+}}
 unsafe fn scale1d_c(
     mut source: *const u8,
     mut source_step: i32,
@@ -171,8 +167,7 @@ unsafe fn scale1d_c(
     mut dest_step: i32,
     mut dest_scale: u32,
     mut dest_length: u32,
-) {
-    unsafe {
+) { unsafe {
         let mut i: u32 = 0;
         let mut round_value: u32 = dest_scale.wrapping_div(2 as u32);
         let mut left_modifier: u32 = dest_scale;
@@ -196,8 +191,7 @@ unsafe fn scale1d_c(
             left_modifier = dest_scale.wrapping_sub(right_modifier);
             i = i.wrapping_add(dest_step as u32);
         }
-    }
-}
+}}
 unsafe fn Scale2D(
     mut source: *mut u8,
     mut source_pitch: i32,
@@ -214,8 +208,7 @@ unsafe fn Scale2D(
     mut vscale: u32,
     mut vratio: u32,
     mut interlaced: u32,
-) {
-    unsafe {
+) { unsafe {
         let mut i: i32 = 0;
         let mut j: i32 = 0;
         let mut k: i32 = 0;
@@ -487,8 +480,7 @@ unsafe fn Scale2D(
             dest = dest.offset((dest_band_height * dest_pitch) as isize);
             k += 1;
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vpx_scale_frame(
     mut src: *mut YV12_BUFFER_CONFIG,
@@ -500,8 +492,7 @@ pub unsafe fn vpx_scale_frame(
     mut vscale: u32,
     mut vratio: u32,
     mut interlaced: u32,
-) {
-    unsafe {
+) { unsafe {
         let mut i: i32 = 0;
         let mut dw: i32 = hscale
             .wrapping_sub(1 as u32)
@@ -661,5 +652,4 @@ pub unsafe fn vpx_scale_frame(
                 i += 1;
             }
         }
-    }
-}
+}}

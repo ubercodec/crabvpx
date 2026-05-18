@@ -58,8 +58,7 @@ pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
 pub type BLOCKD = blockd;
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_dequantize_b_c(mut d: *mut BLOCKD, mut DQC: *mut i16) {
-    unsafe {
+pub unsafe fn vp8_dequantize_b_c(mut d: *mut BLOCKD, mut DQC: *mut i16) { unsafe {
         let mut i: i32 = 0;
         let mut DQ: *mut i16 = (*d).dqcoeff;
         let mut Q: *mut i16 = (*d).qcoeff;
@@ -69,16 +68,14 @@ pub unsafe fn vp8_dequantize_b_c(mut d: *mut BLOCKD, mut DQC: *mut i16) {
                 (*Q.offset(i as isize) as i32 * *DQC.offset(i as isize) as i32) as i16;
             i += 1;
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_dequant_idct_add_c(
     mut input: *mut i16,
     mut dq: *mut i16,
     mut dest: *mut u8,
     mut stride: i32,
-) {
-    unsafe {
+) { unsafe {
         let mut i: i32 = 0;
         i = 0 as i32;
         while i < 16 as i32 {
@@ -92,5 +89,4 @@ pub unsafe fn vp8_dequant_idct_add_c(
             0 as i32 as u8,
             32 as size_t,
         );
-    }
-}
+}}

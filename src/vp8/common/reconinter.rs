@@ -223,8 +223,7 @@ pub unsafe fn vp8_copy_mem16x16_c(
     mut src_stride: i32,
     mut dst: *mut u8,
     mut dst_stride: i32,
-) {
-    unsafe {
+) { unsafe {
         let mut r: i32 = 0;
         r = 0 as i32;
         while r < 16 as i32 {
@@ -237,16 +236,14 @@ pub unsafe fn vp8_copy_mem16x16_c(
             dst = dst.offset(dst_stride as isize);
             r += 1;
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_copy_mem8x8_c(
     mut src: *mut u8,
     mut src_stride: i32,
     mut dst: *mut u8,
     mut dst_stride: i32,
-) {
-    unsafe {
+) { unsafe {
         let mut r: i32 = 0;
         r = 0 as i32;
         while r < 8 as i32 {
@@ -259,16 +256,14 @@ pub unsafe fn vp8_copy_mem8x8_c(
             dst = dst.offset(dst_stride as isize);
             r += 1;
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_copy_mem8x4_c(
     mut src: *mut u8,
     mut src_stride: i32,
     mut dst: *mut u8,
     mut dst_stride: i32,
-) {
-    unsafe {
+) { unsafe {
         let mut r: i32 = 0;
         r = 0 as i32;
         while r < 4 as i32 {
@@ -281,8 +276,7 @@ pub unsafe fn vp8_copy_mem8x4_c(
             dst = dst.offset(dst_stride as isize);
             r += 1;
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_build_inter_predictors_b(
     mut d: *mut BLOCKD,
@@ -290,8 +284,7 @@ pub unsafe fn vp8_build_inter_predictors_b(
     mut base_pre: *mut u8,
     mut pre_stride: i32,
     mut sppf: vp8_subpix_fn_t,
-) {
-    unsafe {
+) { unsafe {
         let mut r: i32 = 0;
         let mut pred_ptr: *mut u8 = (*d).predictor;
         let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
@@ -322,8 +315,7 @@ pub unsafe fn vp8_build_inter_predictors_b(
                 r += 1;
             }
         };
-    }
-}
+}}
 unsafe fn build_inter_predictors4b(
     mut x: *mut MACROBLOCKD,
     mut d: *mut BLOCKD,
@@ -331,8 +323,7 @@ unsafe fn build_inter_predictors4b(
     mut dst_stride: i32,
     mut base_pre: *mut u8,
     mut pre_stride: i32,
-) {
-    unsafe {
+) { unsafe {
         let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
         ptr = base_pre
             .offset((*d).offset as isize)
@@ -352,8 +343,7 @@ unsafe fn build_inter_predictors4b(
         } else {
             vp8_copy_mem8x8_c(ptr, pre_stride, dst, dst_stride);
         };
-    }
-}
+}}
 unsafe fn build_inter_predictors2b(
     mut x: *mut MACROBLOCKD,
     mut d: *mut BLOCKD,
@@ -361,8 +351,7 @@ unsafe fn build_inter_predictors2b(
     mut dst_stride: i32,
     mut base_pre: *mut u8,
     mut pre_stride: i32,
-) {
-    unsafe {
+) { unsafe {
         let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
         ptr = base_pre
             .offset((*d).offset as isize)
@@ -382,8 +371,7 @@ unsafe fn build_inter_predictors2b(
         } else {
             vp8_copy_mem8x4_c(ptr, pre_stride, dst, dst_stride);
         };
-    }
-}
+}}
 unsafe fn build_inter_predictors_b(
     mut d: *mut BLOCKD,
     mut dst: *mut u8,
@@ -391,8 +379,7 @@ unsafe fn build_inter_predictors_b(
     mut base_pre: *mut u8,
     mut pre_stride: i32,
     mut sppf: vp8_subpix_fn_t,
-) {
-    unsafe {
+) { unsafe {
         let mut r: i32 = 0;
         let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
         ptr = base_pre
@@ -422,11 +409,9 @@ unsafe fn build_inter_predictors_b(
                 r += 1;
             }
         };
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_build_inter16x16_predictors_mbuv(mut x: *mut MACROBLOCKD) {
-    unsafe {
+pub unsafe fn vp8_build_inter16x16_predictors_mbuv(mut x: *mut MACROBLOCKD) { unsafe {
         let mut uptr: *mut u8 = ::core::ptr::null_mut::<u8>();
         let mut vptr: *mut u8 = ::core::ptr::null_mut::<u8>();
         let mut upred_ptr: *mut u8 =
@@ -475,11 +460,9 @@ pub unsafe fn vp8_build_inter16x16_predictors_mbuv(mut x: *mut MACROBLOCKD) {
             vp8_copy_mem8x8_c(uptr, pre_stride, upred_ptr, 8 as i32);
             vp8_copy_mem8x8_c(vptr, pre_stride, vpred_ptr, 8 as i32);
         };
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_build_inter4x4_predictors_mbuv(mut x: *mut MACROBLOCKD) {
-    unsafe {
+pub unsafe fn vp8_build_inter4x4_predictors_mbuv(mut x: *mut MACROBLOCKD) { unsafe {
         let mut i: i32 = 0;
         let mut j: i32 = 0;
         let mut pre_stride: i32 = (*x).pre.uv_stride;
@@ -583,15 +566,13 @@ pub unsafe fn vp8_build_inter4x4_predictors_mbuv(mut x: *mut MACROBLOCKD) {
             }
             i += 2 as i32;
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_build_inter16x16_predictors_mby(
     mut x: *mut MACROBLOCKD,
     mut dst_y: *mut u8,
     mut dst_ystride: i32,
-) {
-    unsafe {
+) { unsafe {
         let mut ptr_base: *mut u8 = ::core::ptr::null_mut::<u8>();
         let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
         let mut mv_row: i32 = (*(*x).mode_info_context).mbmi.mv.as_mv.row as i32;
@@ -614,10 +595,8 @@ pub unsafe fn vp8_build_inter16x16_predictors_mby(
         } else {
             vp8_copy_mem16x16_c(ptr, pre_stride, dst_y, dst_ystride);
         };
-    }
-}
-unsafe fn clamp_mv_to_umv_border(mut mv: *mut MV, mut xd: *const MACROBLOCKD) {
-    unsafe {
+}}
+unsafe fn clamp_mv_to_umv_border(mut mv: *mut MV, mut xd: *const MACROBLOCKD) { unsafe {
         if ((*mv).col as i32) < (*xd).mb_to_left_edge - ((19 as i32) << 3 as i32) {
             (*mv).col = ((*xd).mb_to_left_edge - ((16 as i32) << 3 as i32)) as i16;
         } else if (*mv).col as i32 > (*xd).mb_to_right_edge + ((18 as i32) << 3 as i32) {
@@ -628,10 +607,8 @@ unsafe fn clamp_mv_to_umv_border(mut mv: *mut MV, mut xd: *const MACROBLOCKD) {
         } else if (*mv).row as i32 > (*xd).mb_to_bottom_edge + ((18 as i32) << 3 as i32) {
             (*mv).row = ((*xd).mb_to_bottom_edge + ((16 as i32) << 3 as i32)) as i16;
         }
-    }
-}
-unsafe fn clamp_uvmv_to_umv_border(mut mv: *mut MV, mut xd: *const MACROBLOCKD) {
-    unsafe {
+}}
+unsafe fn clamp_uvmv_to_umv_border(mut mv: *mut MV, mut xd: *const MACROBLOCKD) { unsafe {
         (*mv).col =
             (if (2 as i32 * (*mv).col as i32) < (*xd).mb_to_left_edge - ((19 as i32) << 3 as i32) {
                 ((*xd).mb_to_left_edge - ((16 as i32) << 3 as i32)) >> 1 as i32
@@ -656,8 +633,7 @@ unsafe fn clamp_uvmv_to_umv_border(mut mv: *mut MV, mut xd: *const MACROBLOCKD) 
             } else {
                 (*mv).row as i32
             }) as i16;
-    }
-}
+}}
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_build_inter16x16_predictors_mb(
     mut x: *mut MACROBLOCKD,
@@ -666,8 +642,7 @@ pub unsafe fn vp8_build_inter16x16_predictors_mb(
     mut dst_v: *mut u8,
     mut dst_ystride: i32,
     mut dst_uvstride: i32,
-) {
-    unsafe {
+) { unsafe {
         let mut offset: i32 = 0;
         let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
         let mut uptr: *mut u8 = ::core::ptr::null_mut::<u8>();
@@ -747,10 +722,8 @@ pub unsafe fn vp8_build_inter16x16_predictors_mb(
             vp8_copy_mem8x8_c(uptr, pre_stride, dst_u, dst_uvstride);
             vp8_copy_mem8x8_c(vptr, pre_stride, dst_v, dst_uvstride);
         };
-    }
-}
-unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
-    unsafe {
+}}
+unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) { unsafe {
         let mut i: i32 = 0;
         let mut base_dst: *mut u8 = (*x).dst.y_buffer as *mut u8;
         let mut base_pre: *mut u8 = (*x).pre.y_buffer as *mut u8;
@@ -964,10 +937,8 @@ unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
             }
             i += 2 as i32;
         }
-    }
-}
-unsafe fn build_4x4uvmvs(mut x: *mut MACROBLOCKD) {
-    unsafe {
+}}
+unsafe fn build_4x4uvmvs(mut x: *mut MACROBLOCKD) { unsafe {
         let mut i: i32 = 0;
         let mut j: i32 = 0;
         i = 0 as i32;
@@ -1041,11 +1012,9 @@ unsafe fn build_4x4uvmvs(mut x: *mut MACROBLOCKD) {
             }
             i += 1;
         }
-    }
-}
+}}
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_build_inter_predictors_mb(mut xd: *mut MACROBLOCKD) {
-    unsafe {
+pub unsafe fn vp8_build_inter_predictors_mb(mut xd: *mut MACROBLOCKD) { unsafe {
         if (*(*xd).mode_info_context).mbmi.mode as i32 != SPLITMV as i32 {
             vp8_build_inter16x16_predictors_mb(
                 xd,
@@ -1059,5 +1028,4 @@ pub unsafe fn vp8_build_inter_predictors_mb(mut xd: *mut MACROBLOCKD) {
             build_4x4uvmvs(xd);
             build_inter4x4_predictors_mb(xd);
         };
-    }
-}
+}}
