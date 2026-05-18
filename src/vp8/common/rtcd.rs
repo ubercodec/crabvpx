@@ -2,7 +2,7 @@ unsafe extern "Rust" {
     fn pthread_once(
         _: *mut pthread_once_t,
         _: Option<unsafe fn() -> ()>,
-    ) -> ::core::ffi::c_int;
+    ) -> i32;
 }
 pub type pthread_once_t = *mut ::core::ffi::c_void;
 pub type __darwin_pthread_once_t = _opaque_pthread_once_t;
@@ -13,7 +13,7 @@ pub struct _opaque_pthread_once_t {
     pub __opaque: [::core::ffi::c_char; 8],
 }
 unsafe fn setup_rtcd_internal() {}
-pub const _PTHREAD_ONCE_SIG_init: ::core::ffi::c_int = 0x30b1bcba as ::core::ffi::c_int;
+pub const _PTHREAD_ONCE_SIG_init: i32 = 0x30b1bcba as i32;
 unsafe fn once(mut func: Option<unsafe fn() -> ()>) {
     unsafe {
         static INIT: std::sync::Once = std::sync::Once::new();

@@ -27,49 +27,49 @@ pub const VPX_CODEC_ABI_MISMATCH: vpx_codec_err_t = 3;
 pub const VPX_CODEC_MEM_ERROR: vpx_codec_err_t = 2;
 pub const VPX_CODEC_ERROR: vpx_codec_err_t = 1;
 pub const VPX_CODEC_OK: vpx_codec_err_t = 0;
-pub type jmp_buf = [::core::ffi::c_int; 48];
+pub type jmp_buf = [i32; 48];
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_internal_error_info {
     pub error_code: vpx_codec_err_t,
-    pub has_detail: ::core::ffi::c_int,
+    pub has_detail: i32,
     pub detail: [::core::ffi::c_char; 80],
-    pub setjmp: ::core::ffi::c_int,
+    pub setjmp: i32,
     pub jmp: jmp_buf,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct yv12_buffer_config {
-    pub y_width: ::core::ffi::c_int,
-    pub y_height: ::core::ffi::c_int,
-    pub y_crop_width: ::core::ffi::c_int,
-    pub y_crop_height: ::core::ffi::c_int,
-    pub y_stride: ::core::ffi::c_int,
-    pub uv_width: ::core::ffi::c_int,
-    pub uv_height: ::core::ffi::c_int,
-    pub uv_crop_width: ::core::ffi::c_int,
-    pub uv_crop_height: ::core::ffi::c_int,
-    pub uv_stride: ::core::ffi::c_int,
-    pub alpha_width: ::core::ffi::c_int,
-    pub alpha_height: ::core::ffi::c_int,
-    pub alpha_stride: ::core::ffi::c_int,
+    pub y_width: i32,
+    pub y_height: i32,
+    pub y_crop_width: i32,
+    pub y_crop_height: i32,
+    pub y_stride: i32,
+    pub uv_width: i32,
+    pub uv_height: i32,
+    pub uv_crop_width: i32,
+    pub uv_crop_height: i32,
+    pub uv_stride: i32,
+    pub alpha_width: i32,
+    pub alpha_height: i32,
+    pub alpha_stride: i32,
     pub y_buffer: *mut uint8_t,
     pub u_buffer: *mut uint8_t,
     pub v_buffer: *mut uint8_t,
     pub alpha_buffer: *mut uint8_t,
     pub buffer_alloc: *mut uint8_t,
     pub buffer_alloc_sz: size_t,
-    pub border: ::core::ffi::c_int,
+    pub border: i32,
     pub frame_size: size_t,
-    pub subsampling_x: ::core::ffi::c_int,
-    pub subsampling_y: ::core::ffi::c_int,
+    pub subsampling_x: i32,
+    pub subsampling_y: i32,
     pub bit_depth: ::core::ffi::c_uint,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
-    pub render_width: ::core::ffi::c_int,
-    pub render_height: ::core::ffi::c_int,
-    pub corrupted: ::core::ffi::c_int,
-    pub flags: ::core::ffi::c_int,
+    pub render_width: i32,
+    pub render_height: i32,
+    pub corrupted: i32,
+    pub flags: i32,
 }
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 #[derive(Copy, Clone)]
@@ -146,18 +146,18 @@ pub struct blockd {
     pub dqcoeff: *mut ::core::ffi::c_short,
     pub predictor: *mut ::core::ffi::c_uchar,
     pub dequant: *mut ::core::ffi::c_short,
-    pub offset: ::core::ffi::c_int,
+    pub offset: i32,
     pub eob: *mut ::core::ffi::c_char,
     pub bmi: b_mode_info,
 }
 pub type BLOCKD = blockd;
 pub type vp8_subpix_fn_t = Option<unsafe fn(
         *mut ::core::ffi::c_uchar,
-        ::core::ffi::c_int,
-        ::core::ffi::c_int,
-        ::core::ffi::c_int,
+        i32,
+        i32,
+        i32,
         *mut ::core::ffi::c_uchar,
-        ::core::ffi::c_int,
+        i32,
     ) -> (),
 >;
 #[derive(Copy, Clone)]
@@ -172,17 +172,17 @@ pub struct macroblockd {
     pub dequant_y2: [::core::ffi::c_short; 16],
     pub dequant_uv: [::core::ffi::c_short; 16],
     pub block: [BLOCKD; 25],
-    pub fullpixel_mask: ::core::ffi::c_int,
+    pub fullpixel_mask: i32,
     pub pre: YV12_BUFFER_CONFIG,
     pub dst: YV12_BUFFER_CONFIG,
     pub mode_info_context: *mut MODE_INFO,
-    pub mode_info_stride: ::core::ffi::c_int,
+    pub mode_info_stride: i32,
     pub frame_type: FRAME_TYPE,
-    pub up_available: ::core::ffi::c_int,
-    pub left_available: ::core::ffi::c_int,
+    pub up_available: i32,
+    pub left_available: i32,
     pub recon_above: [*mut ::core::ffi::c_uchar; 3],
     pub recon_left: [*mut ::core::ffi::c_uchar; 3],
-    pub recon_left_stride: [::core::ffi::c_int; 2],
+    pub recon_left_stride: [i32; 2],
     pub above_context: *mut ENTROPY_CONTEXT_PLANES,
     pub left_context: *mut ENTROPY_CONTEXT_PLANES,
     pub segmentation_enabled: ::core::ffi::c_uchar,
@@ -197,68 +197,68 @@ pub struct macroblockd {
     pub ref_lf_deltas: [::core::ffi::c_schar; 4],
     pub last_mode_lf_deltas: [::core::ffi::c_schar; 4],
     pub mode_lf_deltas: [::core::ffi::c_schar; 4],
-    pub mb_to_left_edge: ::core::ffi::c_int,
-    pub mb_to_right_edge: ::core::ffi::c_int,
-    pub mb_to_top_edge: ::core::ffi::c_int,
-    pub mb_to_bottom_edge: ::core::ffi::c_int,
+    pub mb_to_left_edge: i32,
+    pub mb_to_right_edge: i32,
+    pub mb_to_top_edge: i32,
+    pub mb_to_bottom_edge: i32,
     pub subpixel_predict: vp8_subpix_fn_t,
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
     pub current_bc: *mut ::core::ffi::c_void,
-    pub corrupted: ::core::ffi::c_int,
+    pub corrupted: i32,
     pub error_info: vpx_internal_error_info,
 }
 pub type MACROBLOCKD = macroblockd;
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_setup_block_dptrs(mut x: *mut MACROBLOCKD) {
     unsafe {
-        let mut r: ::core::ffi::c_int = 0;
-        let mut c: ::core::ffi::c_int = 0;
-        r = 0 as ::core::ffi::c_int;
-        while r < 4 as ::core::ffi::c_int {
-            c = 0 as ::core::ffi::c_int;
-            while c < 4 as ::core::ffi::c_int {
-                (*x).block[(r * 4 as ::core::ffi::c_int + c) as usize].predictor =
+        let mut r: i32 = 0;
+        let mut c: i32 = 0;
+        r = 0 as i32;
+        while r < 4 as i32 {
+            c = 0 as i32;
+            while c < 4 as i32 {
+                (*x).block[(r * 4 as i32 + c) as usize].predictor =
                     (&raw mut (*x).predictor as *mut ::core::ffi::c_uchar)
-                        .offset((r * 4 as ::core::ffi::c_int * 16 as ::core::ffi::c_int) as isize)
-                        .offset((c * 4 as ::core::ffi::c_int) as isize);
+                        .offset((r * 4 as i32 * 16 as i32) as isize)
+                        .offset((c * 4 as i32) as isize);
                 c += 1;
             }
             r += 1;
         }
-        r = 0 as ::core::ffi::c_int;
-        while r < 2 as ::core::ffi::c_int {
-            c = 0 as ::core::ffi::c_int;
-            while c < 2 as ::core::ffi::c_int {
-                (*x).block[(16 as ::core::ffi::c_int + r * 2 as ::core::ffi::c_int + c) as usize]
+        r = 0 as i32;
+        while r < 2 as i32 {
+            c = 0 as i32;
+            while c < 2 as i32 {
+                (*x).block[(16 as i32 + r * 2 as i32 + c) as usize]
                     .predictor = (&raw mut (*x).predictor as *mut ::core::ffi::c_uchar)
-                    .offset(256 as ::core::ffi::c_int as isize)
-                    .offset((r * 4 as ::core::ffi::c_int * 8 as ::core::ffi::c_int) as isize)
-                    .offset((c * 4 as ::core::ffi::c_int) as isize);
+                    .offset(256 as i32 as isize)
+                    .offset((r * 4 as i32 * 8 as i32) as isize)
+                    .offset((c * 4 as i32) as isize);
                 c += 1;
             }
             r += 1;
         }
-        r = 0 as ::core::ffi::c_int;
-        while r < 2 as ::core::ffi::c_int {
-            c = 0 as ::core::ffi::c_int;
-            while c < 2 as ::core::ffi::c_int {
-                (*x).block[(20 as ::core::ffi::c_int + r * 2 as ::core::ffi::c_int + c) as usize]
+        r = 0 as i32;
+        while r < 2 as i32 {
+            c = 0 as i32;
+            while c < 2 as i32 {
+                (*x).block[(20 as i32 + r * 2 as i32 + c) as usize]
                     .predictor = (&raw mut (*x).predictor as *mut ::core::ffi::c_uchar)
-                    .offset(320 as ::core::ffi::c_int as isize)
-                    .offset((r * 4 as ::core::ffi::c_int * 8 as ::core::ffi::c_int) as isize)
-                    .offset((c * 4 as ::core::ffi::c_int) as isize);
+                    .offset(320 as i32 as isize)
+                    .offset((r * 4 as i32 * 8 as i32) as isize)
+                    .offset((c * 4 as i32) as isize);
                 c += 1;
             }
             r += 1;
         }
-        r = 0 as ::core::ffi::c_int;
-        while r < 25 as ::core::ffi::c_int {
+        r = 0 as i32;
+        while r < 25 as i32 {
             (*x).block[r as usize].qcoeff = (&raw mut (*x).qcoeff as *mut ::core::ffi::c_short)
-                .offset((r * 16 as ::core::ffi::c_int) as isize);
+                .offset((r * 16 as i32) as isize);
             (*x).block[r as usize].dqcoeff = (&raw mut (*x).dqcoeff as *mut ::core::ffi::c_short)
-                .offset((r * 16 as ::core::ffi::c_int) as isize);
+                .offset((r * 16 as i32) as isize);
             (*x).block[r as usize].eob =
                 (&raw mut (*x).eobs as *mut ::core::ffi::c_char).offset(r as isize);
             r += 1;
@@ -268,22 +268,22 @@ pub unsafe fn vp8_setup_block_dptrs(mut x: *mut MACROBLOCKD) {
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_build_block_doffsets(mut x: *mut MACROBLOCKD) {
     unsafe {
-        let mut block: ::core::ffi::c_int = 0;
-        block = 0 as ::core::ffi::c_int;
-        while block < 16 as ::core::ffi::c_int {
+        let mut block: i32 = 0;
+        block = 0 as i32;
+        while block < 16 as i32 {
             (*x).block[block as usize].offset =
-                (block >> 2 as ::core::ffi::c_int) * 4 as ::core::ffi::c_int * (*x).dst.y_stride
-                    + (block & 3 as ::core::ffi::c_int) * 4 as ::core::ffi::c_int;
+                (block >> 2 as i32) * 4 as i32 * (*x).dst.y_stride
+                    + (block & 3 as i32) * 4 as i32;
             block += 1;
         }
-        block = 16 as ::core::ffi::c_int;
-        while block < 20 as ::core::ffi::c_int {
-            (*x).block[block as usize].offset = ((block - 16 as ::core::ffi::c_int)
-                >> 1 as ::core::ffi::c_int)
-                * 4 as ::core::ffi::c_int
+        block = 16 as i32;
+        while block < 20 as i32 {
+            (*x).block[block as usize].offset = ((block - 16 as i32)
+                >> 1 as i32)
+                * 4 as i32
                 * (*x).dst.uv_stride
-                + (block & 1 as ::core::ffi::c_int) * 4 as ::core::ffi::c_int;
-            (*x).block[(block + 4 as ::core::ffi::c_int) as usize].offset =
+                + (block & 1 as i32) * 4 as i32;
+            (*x).block[(block + 4 as i32) as usize].offset =
                 (*x).block[block as usize].offset;
             block += 1;
         }

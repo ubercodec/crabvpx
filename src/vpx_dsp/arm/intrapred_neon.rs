@@ -81,9 +81,9 @@ pub unsafe fn vpx_v_predictor_4x4_neon(
     mut left: *const uint8_t,
 ) {
     let d: uint32_t = *(above as *const uint32_t);
-    let mut i: ::core::ffi::c_int = 0;
-    i = 0 as ::core::ffi::c_int;
-    while i < 4 as ::core::ffi::c_int {
+    let mut i: i32 = 0;
+    i = 0 as i32;
+    while i < 4 as i32 {
         *(dst as *mut uint32_t) = d;
         i += 1;
         dst = dst.offset(stride as isize);

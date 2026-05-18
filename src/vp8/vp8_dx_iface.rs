@@ -6,13 +6,13 @@ unsafe extern "Rust" {
     ) -> *mut ::core::ffi::c_void;
     fn memset(
         __b: *mut ::core::ffi::c_void,
-        __c: ::core::ffi::c_int,
+        __c: i32,
         __len: size_t,
     ) -> *mut ::core::ffi::c_void;
     fn vp8_rtcd();
     fn vpx_dsp_rtcd();
     fn vpx_scale_rtcd();
-    fn setjmp(_: *mut ::core::ffi::c_int) -> ::core::ffi::c_int;
+    fn setjmp(_: *mut i32) -> i32;
     fn vpx_internal_error(
         info: *mut vpx_internal_error_info,
         error: vpx_codec_err_t,
@@ -21,21 +21,21 @@ unsafe extern "Rust" {
     fn vp8_build_block_doffsets(x: *mut MACROBLOCKD);
     fn vp8_alloc_frame_buffers(
         oci: *mut VP8_COMMON,
-        width: ::core::ffi::c_int,
-        height: ::core::ffi::c_int,
-    ) -> ::core::ffi::c_int;
+        width: i32,
+        height: i32,
+    ) -> i32;
     fn vpx_calloc(num: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_free(memblk: *mut ::core::ffi::c_void);
-    fn vp8dx_receive_compressed_data(pbi: *mut VP8D_COMP) -> ::core::ffi::c_int;
+    fn vp8dx_receive_compressed_data(pbi: *mut VP8D_COMP) -> i32;
     fn vp8dx_get_raw_frame(
         pbi: *mut VP8D_COMP,
         sd: *mut YV12_BUFFER_CONFIG,
         flags: *mut vp8_ppflags_t,
-    ) -> ::core::ffi::c_int;
+    ) -> i32;
     fn vp8dx_references_buffer(
         oci: *mut VP8Common,
-        ref_frame: ::core::ffi::c_int,
-    ) -> ::core::ffi::c_int;
+        ref_frame: i32,
+    ) -> i32;
     fn vp8dx_get_reference(
         pbi: *mut VP8D_COMP,
         ref_frame_flag: vpx_ref_frame_type,
@@ -46,20 +46,20 @@ unsafe extern "Rust" {
         ref_frame_flag: vpx_ref_frame_type,
         sd: *mut YV12_BUFFER_CONFIG,
     ) -> vpx_codec_err_t;
-    fn vp8dx_get_quantizer(pbi: *const VP8D_COMP) -> ::core::ffi::c_int;
+    fn vp8dx_get_quantizer(pbi: *const VP8D_COMP) -> i32;
     fn vp8_create_decoder_instances(
         fb: *mut frame_buffers,
         oxcf: *mut VP8D_CONFIG,
-    ) -> ::core::ffi::c_int;
-    fn vp8_remove_decoder_instances(fb: *mut frame_buffers) -> ::core::ffi::c_int;
+    ) -> i32;
+    fn vp8_remove_decoder_instances(fb: *mut frame_buffers) -> i32;
     fn vp8_decoder_remove_threads(pbi: *mut VP8D_COMP);
     fn vp8_decoder_create_threads(pbi: *mut VP8D_COMP);
     fn vp8mt_alloc_temp_buffers(
         pbi: *mut VP8D_COMP,
-        width: ::core::ffi::c_int,
-        prev_mb_rows: ::core::ffi::c_int,
+        width: i32,
+        prev_mb_rows: i32,
     );
-    fn vp8mt_de_alloc_temp_buffers(pbi: *mut VP8D_COMP, mb_rows: ::core::ffi::c_int);
+    fn vp8mt_de_alloc_temp_buffers(pbi: *mut VP8D_COMP, mb_rows: i32);
 }
 pub type __builtin_va_list = *mut ::core::ffi::c_char;
 pub type __darwin_natural_t = ::core::ffi::c_uint;
@@ -93,7 +93,7 @@ pub struct blockd {
     pub dqcoeff: *mut ::core::ffi::c_short,
     pub predictor: *mut ::core::ffi::c_uchar,
     pub dequant: *mut ::core::ffi::c_short,
-    pub offset: ::core::ffi::c_int,
+    pub offset: i32,
     pub eob: *mut ::core::ffi::c_char,
     pub bmi: b_mode_info,
 }
@@ -143,17 +143,17 @@ pub struct macroblockd {
     pub dequant_y2: [::core::ffi::c_short; 16],
     pub dequant_uv: [::core::ffi::c_short; 16],
     pub block: [BLOCKD; 25],
-    pub fullpixel_mask: ::core::ffi::c_int,
+    pub fullpixel_mask: i32,
     pub pre: YV12_BUFFER_CONFIG,
     pub dst: YV12_BUFFER_CONFIG,
     pub mode_info_context: *mut MODE_INFO,
-    pub mode_info_stride: ::core::ffi::c_int,
+    pub mode_info_stride: i32,
     pub frame_type: FRAME_TYPE,
-    pub up_available: ::core::ffi::c_int,
-    pub left_available: ::core::ffi::c_int,
+    pub up_available: i32,
+    pub left_available: i32,
     pub recon_above: [*mut ::core::ffi::c_uchar; 3],
     pub recon_left: [*mut ::core::ffi::c_uchar; 3],
-    pub recon_left_stride: [::core::ffi::c_int; 2],
+    pub recon_left_stride: [i32; 2],
     pub above_context: *mut ENTROPY_CONTEXT_PLANES,
     pub left_context: *mut ENTROPY_CONTEXT_PLANES,
     pub segmentation_enabled: ::core::ffi::c_uchar,
@@ -168,28 +168,28 @@ pub struct macroblockd {
     pub ref_lf_deltas: [::core::ffi::c_schar; 4],
     pub last_mode_lf_deltas: [::core::ffi::c_schar; 4],
     pub mode_lf_deltas: [::core::ffi::c_schar; 4],
-    pub mb_to_left_edge: ::core::ffi::c_int,
-    pub mb_to_right_edge: ::core::ffi::c_int,
-    pub mb_to_top_edge: ::core::ffi::c_int,
-    pub mb_to_bottom_edge: ::core::ffi::c_int,
+    pub mb_to_left_edge: i32,
+    pub mb_to_right_edge: i32,
+    pub mb_to_top_edge: i32,
+    pub mb_to_bottom_edge: i32,
     pub subpixel_predict: vp8_subpix_fn_t,
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
     pub current_bc: *mut ::core::ffi::c_void,
-    pub corrupted: ::core::ffi::c_int,
+    pub corrupted: i32,
     pub error_info: vpx_internal_error_info,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_internal_error_info {
     pub error_code: vpx_codec_err_t,
-    pub has_detail: ::core::ffi::c_int,
+    pub has_detail: i32,
     pub detail: [::core::ffi::c_char; 80],
-    pub setjmp: ::core::ffi::c_int,
+    pub setjmp: i32,
     pub jmp: jmp_buf,
 }
-pub type jmp_buf = [::core::ffi::c_int; 48];
+pub type jmp_buf = [i32; 48];
 pub type vpx_codec_err_t = ::core::ffi::c_uint;
 pub const VPX_CODEC_LIST_END: vpx_codec_err_t = 9;
 pub const VPX_CODEC_INVALID_PARAM: vpx_codec_err_t = 8;
@@ -203,11 +203,11 @@ pub const VPX_CODEC_ERROR: vpx_codec_err_t = 1;
 pub const VPX_CODEC_OK: vpx_codec_err_t = 0;
 pub type vp8_subpix_fn_t = Option<unsafe fn(
         *mut ::core::ffi::c_uchar,
-        ::core::ffi::c_int,
-        ::core::ffi::c_int,
-        ::core::ffi::c_int,
+        i32,
+        i32,
+        i32,
         *mut ::core::ffi::c_uchar,
-        ::core::ffi::c_int,
+        i32,
     ) -> (),
 >;
 pub type vp8_prob = ::core::ffi::c_uchar;
@@ -247,36 +247,36 @@ pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct yv12_buffer_config {
-    pub y_width: ::core::ffi::c_int,
-    pub y_height: ::core::ffi::c_int,
-    pub y_crop_width: ::core::ffi::c_int,
-    pub y_crop_height: ::core::ffi::c_int,
-    pub y_stride: ::core::ffi::c_int,
-    pub uv_width: ::core::ffi::c_int,
-    pub uv_height: ::core::ffi::c_int,
-    pub uv_crop_width: ::core::ffi::c_int,
-    pub uv_crop_height: ::core::ffi::c_int,
-    pub uv_stride: ::core::ffi::c_int,
-    pub alpha_width: ::core::ffi::c_int,
-    pub alpha_height: ::core::ffi::c_int,
-    pub alpha_stride: ::core::ffi::c_int,
+    pub y_width: i32,
+    pub y_height: i32,
+    pub y_crop_width: i32,
+    pub y_crop_height: i32,
+    pub y_stride: i32,
+    pub uv_width: i32,
+    pub uv_height: i32,
+    pub uv_crop_width: i32,
+    pub uv_crop_height: i32,
+    pub uv_stride: i32,
+    pub alpha_width: i32,
+    pub alpha_height: i32,
+    pub alpha_stride: i32,
     pub y_buffer: *mut uint8_t,
     pub u_buffer: *mut uint8_t,
     pub v_buffer: *mut uint8_t,
     pub alpha_buffer: *mut uint8_t,
     pub buffer_alloc: *mut uint8_t,
     pub buffer_alloc_sz: size_t,
-    pub border: ::core::ffi::c_int,
+    pub border: i32,
     pub frame_size: size_t,
-    pub subsampling_x: ::core::ffi::c_int,
-    pub subsampling_y: ::core::ffi::c_int,
+    pub subsampling_x: i32,
+    pub subsampling_y: i32,
     pub bit_depth: ::core::ffi::c_uint,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
-    pub render_width: ::core::ffi::c_int,
-    pub render_height: ::core::ffi::c_int,
-    pub corrupted: ::core::ffi::c_int,
-    pub flags: ::core::ffi::c_int,
+    pub render_width: i32,
+    pub render_height: i32,
+    pub corrupted: i32,
+    pub flags: i32,
 }
 pub type vpx_color_range_t = vpx_color_range;
 pub type vpx_color_range = ::core::ffi::c_uint;
@@ -322,12 +322,12 @@ pub struct vpx_image {
     pub x_chroma_shift: ::core::ffi::c_uint,
     pub y_chroma_shift: ::core::ffi::c_uint,
     pub planes: [*mut ::core::ffi::c_uchar; 4],
-    pub stride: [::core::ffi::c_int; 4],
-    pub bps: ::core::ffi::c_int,
+    pub stride: [i32; 4],
+    pub bps: i32,
     pub user_priv: *mut ::core::ffi::c_void,
     pub img_data: *mut ::core::ffi::c_uchar,
-    pub img_data_owner: ::core::ffi::c_int,
-    pub self_allocd: ::core::ffi::c_int,
+    pub img_data_owner: i32,
+    pub self_allocd: i32,
     pub fb_priv: *mut ::core::ffi::c_void,
 }
 pub type vpx_image_t = vpx_image;
@@ -346,7 +346,7 @@ pub type vpx_codec_flags_t = ::core::ffi::c_long;
 #[repr(C)]
 pub struct vpx_codec_iface {
     pub name: *const ::core::ffi::c_char,
-    pub abi_version: ::core::ffi::c_int,
+    pub abi_version: i32,
     pub caps: vpx_codec_caps_t,
     pub init: vpx_codec_init_fn_t,
     pub destroy: vpx_codec_destroy_fn_t,
@@ -357,7 +357,7 @@ pub struct vpx_codec_iface {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_enc_iface {
-    pub cfg_map_count: ::core::ffi::c_int,
+    pub cfg_map_count: i32,
     pub cfg_maps: *const vpx_codec_enc_cfg_map_t,
     pub encode: vpx_codec_encode_fn_t,
     pub get_cx_data: vpx_codec_get_cx_data_fn_t,
@@ -414,7 +414,7 @@ pub struct vpx_codec_enc_cfg {
     pub kf_min_dist: ::core::ffi::c_uint,
     pub kf_max_dist: ::core::ffi::c_uint,
     pub ss_number_layers: ::core::ffi::c_uint,
-    pub ss_enable_auto_alt_ref: [::core::ffi::c_int; 5],
+    pub ss_enable_auto_alt_ref: [i32; 5],
     pub ss_target_bitrate: [::core::ffi::c_uint; 5],
     pub ts_number_layers: ::core::ffi::c_uint,
     pub ts_target_bitrate: [::core::ffi::c_uint; 5],
@@ -422,8 +422,8 @@ pub struct vpx_codec_enc_cfg {
     pub ts_periodicity: ::core::ffi::c_uint,
     pub ts_layer_id: [::core::ffi::c_uint; 16],
     pub layer_target_bitrate: [::core::ffi::c_uint; 12],
-    pub temporal_layering_mode: ::core::ffi::c_int,
-    pub use_vizier_rc_params: ::core::ffi::c_int,
+    pub temporal_layering_mode: i32,
+    pub use_vizier_rc_params: i32,
     pub active_wq_factor: vpx_rational_t,
     pub err_per_mb_factor: vpx_rational_t,
     pub sr_default_decay_limit: vpx_rational_t,
@@ -444,8 +444,8 @@ pub type vpx_rational_t = vpx_rational;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_rational {
-    pub num: ::core::ffi::c_int,
-    pub den: ::core::ffi::c_int,
+    pub num: i32,
+    pub den: i32,
 }
 pub type vpx_kf_mode = ::core::ffi::c_uint;
 pub const VPX_KF_DISABLED: vpx_kf_mode = 0;
@@ -482,14 +482,14 @@ pub struct vpx_codec_alg_priv {
     pub base: vpx_codec_priv_t,
     pub cfg: vpx_codec_dec_cfg_t,
     pub si: vp8_stream_info_t,
-    pub decoder_init: ::core::ffi::c_int,
-    pub restart_threads: ::core::ffi::c_int,
-    pub postproc_cfg_set: ::core::ffi::c_int,
+    pub decoder_init: i32,
+    pub restart_threads: i32,
+    pub postproc_cfg_set: i32,
     pub postproc_cfg: vp8_postproc_cfg_t,
     pub decrypt_cb: vpx_decrypt_cb,
     pub decrypt_state: *mut ::core::ffi::c_void,
     pub img: vpx_image_t,
-    pub img_setup: ::core::ffi::c_int,
+    pub img_setup: i32,
     pub yv12_frame_buffers: frame_buffers,
     pub user_priv: *mut ::core::ffi::c_void,
     pub fragments: FRAGMENT_DATA,
@@ -497,7 +497,7 @@ pub struct vpx_codec_alg_priv {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct FRAGMENT_DATA {
-    pub enabled: ::core::ffi::c_int,
+    pub enabled: i32,
     pub count: ::core::ffi::c_uint,
     pub ptrs: [*const ::core::ffi::c_uchar; 9],
     pub sizes: [::core::ffi::c_uint; 9],
@@ -517,12 +517,12 @@ pub struct VP8D_COMP {
     pub oxcf: VP8D_CONFIG,
     pub fragments: FRAGMENT_DATA,
     pub b_multithreaded_rd: vpx_atomic_int,
-    pub max_threads: ::core::ffi::c_int,
-    pub current_mb_col_main: ::core::ffi::c_int,
+    pub max_threads: i32,
+    pub current_mb_col_main: i32,
     pub decoding_thread_count: ::core::ffi::c_uint,
-    pub allocated_decoding_thread_count: ::core::ffi::c_int,
-    pub mt_baseline_filter_level: [::core::ffi::c_int; 4],
-    pub sync_range: ::core::ffi::c_int,
+    pub allocated_decoding_thread_count: i32,
+    pub mt_baseline_filter_level: [i32; 4],
+    pub sync_range: i32,
     pub mt_current_mb_col: *mut vpx_atomic_int,
     pub mt_yabove_row: *mut *mut ::core::ffi::c_uchar,
     pub mt_uabove_row: *mut *mut ::core::ffi::c_uchar,
@@ -535,25 +535,25 @@ pub struct VP8D_COMP {
     pub h_decoding_thread: *mut pthread_t,
     pub h_event_start_decoding: *mut semaphore_t,
     pub h_event_end_decoding: semaphore_t,
-    pub ready_for_new_data: ::core::ffi::c_int,
+    pub ready_for_new_data: i32,
     pub prob_intra: vp8_prob,
     pub prob_last: vp8_prob,
     pub prob_gf: vp8_prob,
     pub prob_skip_false: vp8_prob,
-    pub ec_enabled: ::core::ffi::c_int,
-    pub ec_active: ::core::ffi::c_int,
-    pub decoded_key_frame: ::core::ffi::c_int,
-    pub independent_partitions: ::core::ffi::c_int,
-    pub frame_corrupt_residual: ::core::ffi::c_int,
+    pub ec_enabled: i32,
+    pub ec_active: i32,
+    pub decoded_key_frame: i32,
+    pub independent_partitions: i32,
+    pub frame_corrupt_residual: i32,
     pub decrypt_cb: vpx_decrypt_cb,
     pub decrypt_state: *mut ::core::ffi::c_void,
-    pub restart_threads: ::core::ffi::c_int,
+    pub restart_threads: i32,
 }
 pub type vpx_decrypt_cb = Option<unsafe fn(
         *mut ::core::ffi::c_void,
         *const ::core::ffi::c_uchar,
         *mut ::core::ffi::c_uchar,
-        ::core::ffi::c_int,
+        i32,
     ) -> (),
 >;
 pub type semaphore_t = *mut ::core::ffi::c_void;
@@ -562,7 +562,7 @@ pub type pthread_t = *mut ::core::ffi::c_void;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct DECODETHREAD_DATA {
-    pub ithread: ::core::ffi::c_int,
+    pub ithread: i32,
     pub ptr1: *mut ::core::ffi::c_void,
     pub ptr2: *mut ::core::ffi::c_void,
 }
@@ -575,17 +575,17 @@ pub type MACROBLOCKD = macroblockd;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_atomic_int {
-    pub value: ::core::ffi::c_int,
+    pub value: i32,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct VP8D_CONFIG {
-    pub Width: ::core::ffi::c_int,
-    pub Height: ::core::ffi::c_int,
-    pub Version: ::core::ffi::c_int,
-    pub postprocess: ::core::ffi::c_int,
-    pub max_threads: ::core::ffi::c_int,
-    pub error_concealment: ::core::ffi::c_int,
+    pub Width: i32,
+    pub Height: i32,
+    pub Version: i32,
+    pub postprocess: i32,
+    pub max_threads: i32,
+    pub error_concealment: i32,
 }
 pub type BOOL_DECODER = vp8_reader;
 #[derive(Copy, Clone)]
@@ -594,7 +594,7 @@ pub struct vp8_reader {
     pub user_buffer_end: *const ::core::ffi::c_uchar,
     pub user_buffer: *const ::core::ffi::c_uchar,
     pub value: VP8_BD_VALUE,
-    pub count: ::core::ffi::c_int,
+    pub count: i32,
     pub range: ::core::ffi::c_uint,
     pub decrypt_cb: vpx_decrypt_cb,
     pub decrypt_state: *mut ::core::ffi::c_void,
@@ -608,60 +608,60 @@ pub struct VP8Common {
     pub Y1dequant: [[::core::ffi::c_short; 2]; 128],
     pub Y2dequant: [[::core::ffi::c_short; 2]; 128],
     pub UVdequant: [[::core::ffi::c_short; 2]; 128],
-    pub Width: ::core::ffi::c_int,
-    pub Height: ::core::ffi::c_int,
-    pub horiz_scale: ::core::ffi::c_int,
-    pub vert_scale: ::core::ffi::c_int,
+    pub Width: i32,
+    pub Height: i32,
+    pub horiz_scale: i32,
+    pub vert_scale: i32,
     pub clamp_type: CLAMP_TYPE,
     pub frame_to_show: *mut YV12_BUFFER_CONFIG,
     pub yv12_fb: [YV12_BUFFER_CONFIG; 4],
-    pub fb_idx_ref_cnt: [::core::ffi::c_int; 4],
-    pub new_fb_idx: ::core::ffi::c_int,
-    pub lst_fb_idx: ::core::ffi::c_int,
-    pub gld_fb_idx: ::core::ffi::c_int,
-    pub alt_fb_idx: ::core::ffi::c_int,
+    pub fb_idx_ref_cnt: [i32; 4],
+    pub new_fb_idx: i32,
+    pub lst_fb_idx: i32,
+    pub gld_fb_idx: i32,
+    pub alt_fb_idx: i32,
     pub temp_scale_frame: YV12_BUFFER_CONFIG,
     pub last_frame_type: FRAME_TYPE,
     pub frame_type: FRAME_TYPE,
-    pub show_frame: ::core::ffi::c_int,
-    pub frame_flags: ::core::ffi::c_int,
-    pub MBs: ::core::ffi::c_int,
-    pub mb_rows: ::core::ffi::c_int,
-    pub mb_cols: ::core::ffi::c_int,
-    pub mode_info_stride: ::core::ffi::c_int,
-    pub mb_no_coeff_skip: ::core::ffi::c_int,
-    pub no_lpf: ::core::ffi::c_int,
-    pub use_bilinear_mc_filter: ::core::ffi::c_int,
-    pub full_pixel: ::core::ffi::c_int,
-    pub base_qindex: ::core::ffi::c_int,
-    pub y1dc_delta_q: ::core::ffi::c_int,
-    pub y2dc_delta_q: ::core::ffi::c_int,
-    pub y2ac_delta_q: ::core::ffi::c_int,
-    pub uvdc_delta_q: ::core::ffi::c_int,
-    pub uvac_delta_q: ::core::ffi::c_int,
+    pub show_frame: i32,
+    pub frame_flags: i32,
+    pub MBs: i32,
+    pub mb_rows: i32,
+    pub mb_cols: i32,
+    pub mode_info_stride: i32,
+    pub mb_no_coeff_skip: i32,
+    pub no_lpf: i32,
+    pub use_bilinear_mc_filter: i32,
+    pub full_pixel: i32,
+    pub base_qindex: i32,
+    pub y1dc_delta_q: i32,
+    pub y2dc_delta_q: i32,
+    pub y2ac_delta_q: i32,
+    pub uvdc_delta_q: i32,
+    pub uvac_delta_q: i32,
     pub mip: *mut MODE_INFO,
     pub mi: *mut MODE_INFO,
     pub show_frame_mi: *mut MODE_INFO,
     pub filter_type: LOOPFILTERTYPE,
     pub lf_info: loop_filter_info_n,
-    pub filter_level: ::core::ffi::c_int,
-    pub last_sharpness_level: ::core::ffi::c_int,
-    pub sharpness_level: ::core::ffi::c_int,
-    pub refresh_last_frame: ::core::ffi::c_int,
-    pub refresh_golden_frame: ::core::ffi::c_int,
-    pub refresh_alt_ref_frame: ::core::ffi::c_int,
-    pub copy_buffer_to_gf: ::core::ffi::c_int,
-    pub copy_buffer_to_arf: ::core::ffi::c_int,
-    pub refresh_entropy_probs: ::core::ffi::c_int,
-    pub ref_frame_sign_bias: [::core::ffi::c_int; 4],
+    pub filter_level: i32,
+    pub last_sharpness_level: i32,
+    pub sharpness_level: i32,
+    pub refresh_last_frame: i32,
+    pub refresh_golden_frame: i32,
+    pub refresh_alt_ref_frame: i32,
+    pub copy_buffer_to_gf: i32,
+    pub copy_buffer_to_arf: i32,
+    pub refresh_entropy_probs: i32,
+    pub ref_frame_sign_bias: [i32; 4],
     pub above_context: *mut ENTROPY_CONTEXT_PLANES,
     pub left_context: ENTROPY_CONTEXT_PLANES,
     pub lfc: FRAME_CONTEXT,
     pub fc: FRAME_CONTEXT,
     pub current_video_frame: ::core::ffi::c_uint,
-    pub version: ::core::ffi::c_int,
+    pub version: i32,
     pub multi_token_partition: TOKEN_PARTITION,
-    pub processor_core_count: ::core::ffi::c_int,
+    pub processor_core_count: i32,
 }
 pub type TOKEN_PARTITION = ::core::ffi::c_uint;
 pub const EIGHT_PARTITION: TOKEN_PARTITION = 3;
@@ -706,9 +706,9 @@ pub type vp8_postproc_cfg_t = vp8_postproc_cfg;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vp8_postproc_cfg {
-    pub post_proc_flag: ::core::ffi::c_int,
-    pub deblocking_level: ::core::ffi::c_int,
-    pub noise_level: ::core::ffi::c_int,
+    pub post_proc_flag: i32,
+    pub deblocking_level: i32,
+    pub noise_level: i32,
 }
 pub type vp8_stream_info_t = vpx_codec_stream_info_t;
 pub type vpx_codec_stream_info_t = vpx_codec_stream_info;
@@ -769,7 +769,7 @@ pub struct vpx_psnr_pkt {
     pub samples: [::core::ffi::c_uint; 4],
     pub sse: [uint64_t; 4],
     pub psnr: [::core::ffi::c_double; 4],
-    pub spatial_layer_id: ::core::ffi::c_int,
+    pub spatial_layer_id: i32,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -779,7 +779,7 @@ pub struct C2RustUnnamed_1 {
     pub pts: vpx_codec_pts_t,
     pub duration: ::core::ffi::c_ulong,
     pub flags: vpx_codec_frame_flags_t,
-    pub partition_id: ::core::ffi::c_int,
+    pub partition_id: i32,
     pub width: [::core::ffi::c_uint; 5],
     pub height: [::core::ffi::c_uint; 5],
     pub spatial_layer_encoded: [uint8_t; 5],
@@ -845,7 +845,7 @@ pub type vpx_codec_enc_cfg_map_t = vpx_codec_enc_cfg_map;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_enc_cfg_map {
-    pub usage: ::core::ffi::c_int,
+    pub usage: i32,
     pub cfg: vpx_codec_enc_cfg_t,
 }
 #[derive(Copy, Clone)]
@@ -867,7 +867,7 @@ pub type vpx_codec_set_fb_fn_t = Option<unsafe fn(
 pub type vpx_release_frame_buffer_cb_fn_t = Option<unsafe fn(
         *mut ::core::ffi::c_void,
         *mut vpx_codec_frame_buffer_t,
-    ) -> ::core::ffi::c_int,
+    ) -> i32,
 >;
 pub type vpx_codec_frame_buffer_t = vpx_codec_frame_buffer;
 #[derive(Copy, Clone)]
@@ -881,7 +881,7 @@ pub type vpx_get_frame_buffer_cb_fn_t = Option<unsafe fn(
         *mut ::core::ffi::c_void,
         size_t,
         *mut vpx_codec_frame_buffer_t,
-    ) -> ::core::ffi::c_int,
+    ) -> i32,
 >;
 pub type vpx_codec_get_frame_fn_t = Option<unsafe fn(*mut vpx_codec_alg_priv_t, *mut vpx_codec_iter_t) -> *mut vpx_image_t,
 >;
@@ -907,7 +907,7 @@ pub type vpx_codec_ctrl_fn_map_t = vpx_codec_ctrl_fn_map;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_ctrl_fn_map {
-    pub ctrl_id: ::core::ffi::c_int,
+    pub ctrl_id: i32,
     pub fn_0: vpx_codec_control_fn_t,
 }
 pub type vpx_codec_control_fn_t =
@@ -974,13 +974,13 @@ pub type vpx_ref_frame_t = vpx_ref_frame;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vp8_ppflags_t {
-    pub post_proc_flag: ::core::ffi::c_int,
-    pub deblocking_level: ::core::ffi::c_int,
-    pub noise_level: ::core::ffi::c_int,
-    pub display_ref_frame_flag: ::core::ffi::c_int,
-    pub display_mb_modes_flag: ::core::ffi::c_int,
-    pub display_b_modes_flag: ::core::ffi::c_int,
-    pub display_mv_flag: ::core::ffi::c_int,
+    pub post_proc_flag: i32,
+    pub deblocking_level: i32,
+    pub noise_level: i32,
+    pub display_ref_frame_flag: i32,
+    pub display_mb_modes_flag: i32,
+    pub display_b_modes_flag: i32,
+    pub display_mv_flag: i32,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -1012,39 +1012,39 @@ pub type C2RustUnnamed_5 = ::core::ffi::c_uint;
 pub const MAX_REF_FRAMES: C2RustUnnamed_5 = 4;
 pub const INTRA_FRAME: C2RustUnnamed_5 = 0;
 pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
-pub const CONFIG_POSTPROC: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-pub const CONFIG_ERROR_CONCEALMENT: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-pub const VPX_PLANE_Y: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-pub const VPX_PLANE_U: ::core::ffi::c_int = 1 as ::core::ffi::c_int;
-pub const VPX_PLANE_V: ::core::ffi::c_int = 2 as ::core::ffi::c_int;
-pub const VPX_PLANE_ALPHA: ::core::ffi::c_int = 3 as ::core::ffi::c_int;
-pub const VPX_CODEC_CAP_DECODER: ::core::ffi::c_int = 0x1 as ::core::ffi::c_int;
-pub const VPX_CODEC_CAP_POSTPROC: ::core::ffi::c_int = 0x40000 as ::core::ffi::c_int;
-pub const VPX_CODEC_CAP_ERROR_CONCEALMENT: ::core::ffi::c_int = 0x80000 as ::core::ffi::c_int;
-pub const VPX_CODEC_CAP_INPUT_FRAGMENTS: ::core::ffi::c_int = 0x100000 as ::core::ffi::c_int;
-pub const VPX_CODEC_USE_POSTPROC: ::core::ffi::c_int = 0x10000 as ::core::ffi::c_int;
-pub const VPX_CODEC_USE_ERROR_CONCEALMENT: ::core::ffi::c_int = 0x20000 as ::core::ffi::c_int;
-pub const VPX_CODEC_USE_INPUT_FRAGMENTS: ::core::ffi::c_int = 0x40000 as ::core::ffi::c_int;
-pub const VPX_CODEC_INTERNAL_ABI_VERSION: ::core::ffi::c_int = 5 as ::core::ffi::c_int;
-pub const VP8BORDERINPIXELS: ::core::ffi::c_int = 32 as ::core::ffi::c_int;
-pub const MAX_PARTITIONS: ::core::ffi::c_int = 9 as ::core::ffi::c_int;
+pub const CONFIG_POSTPROC: i32 = 0 as i32;
+pub const CONFIG_ERROR_CONCEALMENT: i32 = 0 as i32;
+pub const VPX_PLANE_Y: i32 = 0 as i32;
+pub const VPX_PLANE_U: i32 = 1 as i32;
+pub const VPX_PLANE_V: i32 = 2 as i32;
+pub const VPX_PLANE_ALPHA: i32 = 3 as i32;
+pub const VPX_CODEC_CAP_DECODER: i32 = 0x1 as i32;
+pub const VPX_CODEC_CAP_POSTPROC: i32 = 0x40000 as i32;
+pub const VPX_CODEC_CAP_ERROR_CONCEALMENT: i32 = 0x80000 as i32;
+pub const VPX_CODEC_CAP_INPUT_FRAGMENTS: i32 = 0x100000 as i32;
+pub const VPX_CODEC_USE_POSTPROC: i32 = 0x10000 as i32;
+pub const VPX_CODEC_USE_ERROR_CONCEALMENT: i32 = 0x20000 as i32;
+pub const VPX_CODEC_USE_INPUT_FRAGMENTS: i32 = 0x40000 as i32;
+pub const VPX_CODEC_INTERNAL_ABI_VERSION: i32 = 5 as i32;
+pub const VP8BORDERINPIXELS: i32 = 32 as i32;
+pub const MAX_PARTITIONS: i32 = 9 as i32;
 #[inline]
 unsafe fn vpx_atomic_load_acquire(
     mut atomic: *const vpx_atomic_int,
-) -> ::core::ffi::c_int {
+) -> i32 {
     unsafe {
         (*((&raw const (*atomic).value) as *const core::sync::atomic::AtomicI32))
             .load(core::sync::atomic::Ordering::Acquire)
     }
 }
-unsafe fn vp8_init_ctx(mut ctx: *mut vpx_codec_ctx_t) -> ::core::ffi::c_int {
+unsafe fn vp8_init_ctx(mut ctx: *mut vpx_codec_ctx_t) -> i32 {
     unsafe {
         let mut priv_0: *mut vpx_codec_alg_priv_t = vpx_calloc(
             1 as size_t,
             ::core::mem::size_of::<vpx_codec_alg_priv_t>() as size_t,
         ) as *mut vpx_codec_alg_priv_t;
         if priv_0.is_null() {
-            return 1 as ::core::ffi::c_int;
+            return 1 as i32;
         }
         (*ctx).priv_0 = priv_0 as *mut vpx_codec_priv_t;
         (*(*ctx).priv_0).init_flags = (*ctx).init_flags;
@@ -1055,7 +1055,7 @@ unsafe fn vp8_init_ctx(mut ctx: *mut vpx_codec_ctx_t) -> ::core::ffi::c_int {
             (*priv_0).cfg = *(*ctx).config.dec as vpx_codec_dec_cfg_t;
             (*ctx).config.dec = &raw mut (*priv_0).cfg;
         }
-        0 as ::core::ffi::c_int
+        0 as i32
     }
 }
 unsafe fn vp8_init(
@@ -1077,7 +1077,7 @@ unsafe fn vp8_init(
             (*priv_0).fragments.count = 0 as ::core::ffi::c_uint;
             (*priv_0).fragments.enabled = ((*priv_0).base.init_flags
                 & VPX_CODEC_USE_INPUT_FRAGMENTS as vpx_codec_flags_t)
-                as ::core::ffi::c_int;
+                as i32;
         }
         res
     }
@@ -1107,12 +1107,12 @@ unsafe fn vp8_peek_si_internal(
             let mut clear_buffer: [uint8_t; 10] = [0; 10];
             let mut clear: *const uint8_t = data;
             if decrypt_cb.is_some() {
-                let mut n: ::core::ffi::c_int =
+                let mut n: i32 =
                     (if (::core::mem::size_of::<[uint8_t; 10]>() as usize) < data_sz as usize {
                         ::core::mem::size_of::<[uint8_t; 10]>() as usize
                     } else {
                         data_sz as usize
-                    }) as ::core::ffi::c_int;
+                    }) as i32;
                 decrypt_cb.expect("non-null function pointer")(
                     decrypt_state,
                     data as *const ::core::ffi::c_uchar,
@@ -1123,29 +1123,29 @@ unsafe fn vp8_peek_si_internal(
             }
             (*si).is_kf = 0 as ::core::ffi::c_uint;
             if data_sz >= 10 as ::core::ffi::c_uint
-                && *clear.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                    & 0x1 as ::core::ffi::c_int
+                && *clear.offset(0 as i32 as isize) as i32
+                    & 0x1 as i32
                     == 0
             {
                 (*si).is_kf = 1 as ::core::ffi::c_uint;
-                if *clear.offset(3 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                    != 0x9d as ::core::ffi::c_int
-                    || *clear.offset(4 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                        != 0x1 as ::core::ffi::c_int
-                    || *clear.offset(5 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                        != 0x2a as ::core::ffi::c_int
+                if *clear.offset(3 as i32 as isize) as i32
+                    != 0x9d as i32
+                    || *clear.offset(4 as i32 as isize) as i32
+                        != 0x1 as i32
+                    || *clear.offset(5 as i32 as isize) as i32
+                        != 0x2a as i32
                 {
                     return VPX_CODEC_UNSUP_BITSTREAM;
                 }
-                (*si).w = ((*clear.offset(6 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                    | (*clear.offset(7 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                        << 8 as ::core::ffi::c_int)
-                    & 0x3fff as ::core::ffi::c_int)
+                (*si).w = ((*clear.offset(6 as i32 as isize) as i32
+                    | (*clear.offset(7 as i32 as isize) as i32)
+                        << 8 as i32)
+                    & 0x3fff as i32)
                     as ::core::ffi::c_uint;
-                (*si).h = ((*clear.offset(8 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                    | (*clear.offset(9 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                        << 8 as ::core::ffi::c_int)
-                    & 0x3fff as ::core::ffi::c_int)
+                (*si).h = ((*clear.offset(8 as i32 as isize) as i32
+                    | (*clear.offset(9 as i32 as isize) as i32)
+                        << 8 as i32)
+                    & 0x3fff as i32)
                     as ::core::ffi::c_uint;
                 if !((*si).h != 0 && (*si).w != 0) {
                     (*si).h = 0 as ::core::ffi::c_uint;
@@ -1212,9 +1212,9 @@ unsafe fn yuvconfig2image(
         (*img).fmt = VPX_IMG_FMT_I420;
         (*img).w = (*yv12).y_stride as ::core::ffi::c_uint;
         (*img).h = (((*yv12).y_height
-            + 2 as ::core::ffi::c_int * VP8BORDERINPIXELS
-            + 15 as ::core::ffi::c_int)
-            & !(15 as ::core::ffi::c_int)) as ::core::ffi::c_uint;
+            + 2 as i32 * VP8BORDERINPIXELS
+            + 15 as i32)
+            & !(15 as i32)) as ::core::ffi::c_uint;
         (*img).r_w = (*yv12).y_width as ::core::ffi::c_uint;
         (*img).d_w = (*img).r_w;
         (*img).r_h = (*yv12).y_height as ::core::ffi::c_uint;
@@ -1230,11 +1230,11 @@ unsafe fn yuvconfig2image(
         (*img).stride[VPX_PLANE_V as usize] = (*yv12).uv_stride;
         (*img).stride[VPX_PLANE_ALPHA as usize] = (*yv12).y_stride;
         (*img).bit_depth = 8 as ::core::ffi::c_uint;
-        (*img).bps = 12 as ::core::ffi::c_int;
+        (*img).bps = 12 as i32;
         (*img).user_priv = user_priv;
         (*img).img_data = (*yv12).buffer_alloc as *mut ::core::ffi::c_uchar;
-        (*img).img_data_owner = 0 as ::core::ffi::c_int;
-        (*img).self_allocd = 0 as ::core::ffi::c_int;
+        (*img).img_data_owner = 0 as i32;
+        (*img).self_allocd = 0 as i32;
     }
 }
 unsafe fn update_fragments(
@@ -1242,20 +1242,20 @@ unsafe fn update_fragments(
     mut data: *const uint8_t,
     mut data_sz: ::core::ffi::c_uint,
     mut res: *mut vpx_codec_err_t,
-) -> ::core::ffi::c_int {
+) -> i32 {
     unsafe {
         ::core::ptr::write_volatile(res, VPX_CODEC_OK);
         if (*ctx).fragments.count == 0 as ::core::ffi::c_uint {
             memset(
                 &raw mut (*ctx).fragments.ptrs as *mut *const ::core::ffi::c_uchar
                     as *mut ::core::ffi::c_void,
-                0 as ::core::ffi::c_int,
+                0 as i32,
                 ::core::mem::size_of::<[*const ::core::ffi::c_uchar; 9]>() as size_t,
             );
             memset(
                 &raw mut (*ctx).fragments.sizes as *mut ::core::ffi::c_uint
                     as *mut ::core::ffi::c_void,
-                0 as ::core::ffi::c_int,
+                0 as i32,
                 ::core::mem::size_of::<[::core::ffi::c_uint; 9]>() as size_t,
             );
         }
@@ -1264,32 +1264,32 @@ unsafe fn update_fragments(
             && data_sz == 0 as ::core::ffi::c_uint
             && (*ctx).fragments.count == 0 as ::core::ffi::c_uint
         {
-            return 0 as ::core::ffi::c_int;
+            return 0 as i32;
         }
         if (*ctx).fragments.enabled != 0 && !(data.is_null() && data_sz == 0 as ::core::ffi::c_uint)
         {
             if (*ctx).fragments.count >= MAX_PARTITIONS as ::core::ffi::c_uint {
                 (*ctx).fragments.count = 0 as ::core::ffi::c_uint;
                 ::core::ptr::write_volatile(res, VPX_CODEC_INVALID_PARAM);
-                return -(1 as ::core::ffi::c_int);
+                return -(1 as i32);
             }
             (*ctx).fragments.ptrs[(*ctx).fragments.count as usize] =
                 data as *const ::core::ffi::c_uchar;
             (*ctx).fragments.sizes[(*ctx).fragments.count as usize] = data_sz;
             (*ctx).fragments.count = (*ctx).fragments.count.wrapping_add(1);
-            return 0 as ::core::ffi::c_int;
+            return 0 as i32;
         }
         if (*ctx).fragments.enabled == 0 && (data.is_null() && data_sz == 0 as ::core::ffi::c_uint)
         {
-            return 0 as ::core::ffi::c_int;
+            return 0 as i32;
         }
         if (*ctx).fragments.enabled == 0 {
-            (*ctx).fragments.ptrs[0 as ::core::ffi::c_int as usize] =
+            (*ctx).fragments.ptrs[0 as i32 as usize] =
                 data as *const ::core::ffi::c_uchar;
-            (*ctx).fragments.sizes[0 as ::core::ffi::c_int as usize] = data_sz;
+            (*ctx).fragments.sizes[0 as i32 as usize] = data_sz;
             (*ctx).fragments.count = 1 as ::core::ffi::c_uint;
         }
-        1 as ::core::ffi::c_int
+        1 as i32
     }
 }
 unsafe fn vp8_decode(
@@ -1307,7 +1307,7 @@ unsafe fn vp8_decode(
         {
             return VPX_CODEC_OK;
         }
-        if update_fragments(ctx, data, data_sz, &raw mut res) <= 0 as ::core::ffi::c_int {
+        if update_fragments(ctx, data, data_sz, &raw mut res) <= 0 as i32 {
             return res;
         }
         ::core::ptr::write_volatile(&mut w as *mut ::core::ffi::c_uint, (*ctx).si.w);
@@ -1315,15 +1315,15 @@ unsafe fn vp8_decode(
         ::core::ptr::write_volatile(
             &mut res as *mut vpx_codec_err_t,
             vp8_peek_si_internal(
-                (*ctx).fragments.ptrs[0 as ::core::ffi::c_int as usize],
-                (*ctx).fragments.sizes[0 as ::core::ffi::c_int as usize],
+                (*ctx).fragments.ptrs[0 as i32 as usize],
+                (*ctx).fragments.sizes[0 as i32 as usize],
                 &raw mut (*ctx).si,
                 (*ctx).decrypt_cb,
                 (*ctx).decrypt_state,
             ),
         );
         if res as ::core::ffi::c_uint
-            == VPX_CODEC_UNSUP_BITSTREAM as ::core::ffi::c_int as ::core::ffi::c_uint
+            == VPX_CODEC_UNSUP_BITSTREAM as i32 as ::core::ffi::c_uint
             && (*ctx).si.is_kf == 0
         {
             ::core::ptr::write_volatile(&mut res as *mut vpx_codec_err_t, VPX_CODEC_OK);
@@ -1342,7 +1342,7 @@ unsafe fn vp8_decode(
             && (*ctx).si.w == 0 as ::core::ffi::c_uint
         {
             let mut pbi: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize];
+                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize];
             ::core::ptr::write_volatile(&mut res as *mut vpx_codec_err_t, VPX_CODEC_CORRUPT_FRAME);
             vpx_internal_error(
                 &raw mut (*pbi).common.error,
@@ -1359,21 +1359,21 @@ unsafe fn vp8_decode(
         }
         if res as u64 == 0 && (*ctx).restart_threads != 0 {
             let mut pbi_0: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize];
+                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize];
             let pc: *mut VP8_COMMON = &raw mut (*pbi_0).common;
-            if setjmp(&raw mut (*pbi_0).common.error.jmp as *mut ::core::ffi::c_int) != 0 {
-                (*pbi_0).common.error.setjmp = 0 as ::core::ffi::c_int;
+            if setjmp(&raw mut (*pbi_0).common.error.jmp as *mut i32) != 0 {
+                (*pbi_0).common.error.setjmp = 0 as i32;
                 vp8_decoder_remove_threads(pbi_0);
                 return VPX_CODEC_ERROR;
             }
-            (*pbi_0).common.error.setjmp = 1 as ::core::ffi::c_int;
-            (*pbi_0).max_threads = (*ctx).cfg.threads as ::core::ffi::c_int;
+            (*pbi_0).common.error.setjmp = 1 as i32;
+            (*pbi_0).max_threads = (*ctx).cfg.threads as i32;
             vp8_decoder_create_threads(pbi_0);
             if vpx_atomic_load_acquire(&raw mut (*pbi_0).b_multithreaded_rd) != 0 {
                 vp8mt_alloc_temp_buffers(pbi_0, (*pc).Width, (*pc).mb_rows);
             }
-            (*ctx).restart_threads = 0 as ::core::ffi::c_int;
-            (*pbi_0).common.error.setjmp = 0 as ::core::ffi::c_int;
+            (*ctx).restart_threads = 0 as i32;
+            (*pbi_0).common.error.setjmp = 0 as i32;
         }
         if res as u64 == 0 && (*ctx).decoder_init == 0 {
             let mut oxcf: VP8D_CONFIG = VP8D_CONFIG {
@@ -1384,22 +1384,22 @@ unsafe fn vp8_decode(
                 max_threads: 0,
                 error_concealment: 0,
             };
-            oxcf.Width = (*ctx).si.w as ::core::ffi::c_int;
-            oxcf.Height = (*ctx).si.h as ::core::ffi::c_int;
-            oxcf.Version = 9 as ::core::ffi::c_int;
-            oxcf.postprocess = 0 as ::core::ffi::c_int;
-            oxcf.max_threads = (*ctx).cfg.threads as ::core::ffi::c_int;
+            oxcf.Width = (*ctx).si.w as i32;
+            oxcf.Height = (*ctx).si.h as i32;
+            oxcf.Version = 9 as i32;
+            oxcf.postprocess = 0 as i32;
+            oxcf.max_threads = (*ctx).cfg.threads as i32;
             oxcf.error_concealment = ((*ctx).base.init_flags
                 & VPX_CODEC_USE_ERROR_CONCEALMENT as vpx_codec_flags_t)
-                as ::core::ffi::c_int;
+                as i32;
             if (*ctx).postproc_cfg_set == 0
                 && (*ctx).base.init_flags & VPX_CODEC_USE_POSTPROC as vpx_codec_flags_t != 0
             {
-                (*ctx).postproc_cfg.post_proc_flag = VP8_DEBLOCK as ::core::ffi::c_int
-                    | VP8_DEMACROBLOCK as ::core::ffi::c_int
-                    | VP8_MFQE as ::core::ffi::c_int;
-                (*ctx).postproc_cfg.deblocking_level = 4 as ::core::ffi::c_int;
-                (*ctx).postproc_cfg.noise_level = 0 as ::core::ffi::c_int;
+                (*ctx).postproc_cfg.post_proc_flag = VP8_DEBLOCK as i32
+                    | VP8_DEMACROBLOCK as i32
+                    | VP8_MFQE as i32;
+                (*ctx).postproc_cfg.deblocking_level = 4 as i32;
+                (*ctx).postproc_cfg.noise_level = 0 as i32;
             }
             ::core::ptr::write_volatile(
                 &mut res as *mut vpx_codec_err_t,
@@ -1407,46 +1407,46 @@ unsafe fn vp8_decode(
                     as vpx_codec_err_t,
             );
             if res as ::core::ffi::c_uint
-                == VPX_CODEC_OK as ::core::ffi::c_int as ::core::ffi::c_uint
+                == VPX_CODEC_OK as i32 as ::core::ffi::c_uint
             {
-                (*ctx).decoder_init = 1 as ::core::ffi::c_int;
+                (*ctx).decoder_init = 1 as i32;
             } else {
                 (*ctx).si.w = 0 as ::core::ffi::c_uint;
                 (*ctx).si.h = 0 as ::core::ffi::c_uint;
             }
         }
         if (*ctx).decoder_init != 0 {
-            (*(*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize]).decrypt_cb =
+            (*(*ctx).yv12_frame_buffers.pbi[0 as i32 as usize]).decrypt_cb =
                 (*ctx).decrypt_cb;
-            (*(*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize]).decrypt_state =
+            (*(*ctx).yv12_frame_buffers.pbi[0 as i32 as usize]).decrypt_state =
                 (*ctx).decrypt_state;
         }
         if res as u64 == 0 {
             let mut pbi_1: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize];
+                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize];
             let pc_0: *mut VP8_COMMON = &raw mut (*pbi_1).common;
             if resolution_change != 0 {
                 let xd: *mut MACROBLOCKD = &raw mut (*pbi_1).mb;
-                let mut i: ::core::ffi::c_int = 0;
-                (*pc_0).Width = (*ctx).si.w as ::core::ffi::c_int;
-                (*pc_0).Height = (*ctx).si.h as ::core::ffi::c_int;
-                if setjmp(&raw mut (*pbi_1).common.error.jmp as *mut ::core::ffi::c_int) != 0 {
-                    (*pbi_1).common.error.setjmp = 0 as ::core::ffi::c_int;
+                let mut i: i32 = 0;
+                (*pc_0).Width = (*ctx).si.w as i32;
+                (*pc_0).Height = (*ctx).si.h as i32;
+                if setjmp(&raw mut (*pbi_1).common.error.jmp as *mut i32) != 0 {
+                    (*pbi_1).common.error.setjmp = 0 as i32;
                     (*ctx).si.w = 0 as ::core::ffi::c_uint;
                     (*ctx).si.h = 0 as ::core::ffi::c_uint;
                     return 4294967295 as vpx_codec_err_t;
                 }
-                (*pbi_1).common.error.setjmp = 1 as ::core::ffi::c_int;
-                if (*pc_0).Width <= 0 as ::core::ffi::c_int {
-                    (*pc_0).Width = w as ::core::ffi::c_int;
+                (*pbi_1).common.error.setjmp = 1 as i32;
+                if (*pc_0).Width <= 0 as i32 {
+                    (*pc_0).Width = w as i32;
                     vpx_internal_error(
                         &raw mut (*pc_0).error,
                         VPX_CODEC_CORRUPT_FRAME,
                         b"Invalid frame width\0" as *const u8 as *const ::core::ffi::c_char,
                     );
                 }
-                if (*pc_0).Height <= 0 as ::core::ffi::c_int {
-                    (*pc_0).Height = h as ::core::ffi::c_int;
+                if (*pc_0).Height <= 0 as i32 {
+                    (*pc_0).Height = h as i32;
                     vpx_internal_error(
                         &raw mut (*pc_0).error,
                         VPX_CODEC_CORRUPT_FRAME,
@@ -1466,7 +1466,7 @@ unsafe fn vp8_decode(
                 }
                 (*xd).pre = (*pc_0).yv12_fb[(*pc_0).lst_fb_idx as usize];
                 (*xd).dst = (*pc_0).yv12_fb[(*pc_0).new_fb_idx as usize];
-                i = 0 as ::core::ffi::c_int;
+                i = 0 as i32;
                 while i < (*pbi_1).allocated_decoding_thread_count {
                     (*(*pbi_1).mb_row_di.offset(i as isize)).mbd.dst =
                         (*pc_0).yv12_fb[(*pc_0).new_fb_idx as usize];
@@ -1475,22 +1475,22 @@ unsafe fn vp8_decode(
                 }
                 vp8_build_block_doffsets(&raw mut (*pbi_1).mb);
                 if vpx_atomic_load_acquire(&raw mut (*pbi_1).b_multithreaded_rd) != 0 {
-                    vp8mt_alloc_temp_buffers(pbi_1, (*pc_0).Width, 0 as ::core::ffi::c_int);
+                    vp8mt_alloc_temp_buffers(pbi_1, (*pc_0).Width, 0 as i32);
                 }
-                (*pbi_1).common.error.setjmp = 0 as ::core::ffi::c_int;
-                (*pbi_1).common.fb_idx_ref_cnt[0 as ::core::ffi::c_int as usize] =
-                    0 as ::core::ffi::c_int;
+                (*pbi_1).common.error.setjmp = 0 as i32;
+                (*pbi_1).common.fb_idx_ref_cnt[0 as i32 as usize] =
+                    0 as i32;
             }
-            if setjmp(&raw mut (*pbi_1).common.error.jmp as *mut ::core::ffi::c_int) != 0 {
-                (*pc_0).yv12_fb[(*pc_0).lst_fb_idx as usize].corrupted = 1 as ::core::ffi::c_int;
-                if (*pc_0).fb_idx_ref_cnt[(*pc_0).new_fb_idx as usize] > 0 as ::core::ffi::c_int {
+            if setjmp(&raw mut (*pbi_1).common.error.jmp as *mut i32) != 0 {
+                (*pc_0).yv12_fb[(*pc_0).lst_fb_idx as usize].corrupted = 1 as i32;
+                if (*pc_0).fb_idx_ref_cnt[(*pc_0).new_fb_idx as usize] > 0 as i32 {
                     (*pc_0).fb_idx_ref_cnt[(*pc_0).new_fb_idx as usize] -= 1;
                 }
-                (*pbi_1).common.error.setjmp = 0 as ::core::ffi::c_int;
+                (*pbi_1).common.error.setjmp = 0 as i32;
                 if (*pbi_1).restart_threads != 0 {
                     (*ctx).si.w = 0 as ::core::ffi::c_uint;
                     (*ctx).si.h = 0 as ::core::ffi::c_uint;
-                    (*ctx).restart_threads = 1 as ::core::ffi::c_int;
+                    (*ctx).restart_threads = 1 as i32;
                 }
                 ::core::ptr::write_volatile(
                     &mut res as *mut vpx_codec_err_t,
@@ -1498,9 +1498,9 @@ unsafe fn vp8_decode(
                 );
                 return res;
             }
-            (*pbi_1).common.error.setjmp = 1 as ::core::ffi::c_int;
+            (*pbi_1).common.error.setjmp = 1 as i32;
             (*pbi_1).fragments = (*ctx).fragments;
-            (*pbi_1).restart_threads = 0 as ::core::ffi::c_int;
+            (*pbi_1).restart_threads = 0 as i32;
             (*ctx).user_priv = user_priv;
             if vp8dx_receive_compressed_data(pbi_1 as *mut VP8D_COMP) != 0 {
                 ::core::ptr::write_volatile(
@@ -1509,7 +1509,7 @@ unsafe fn vp8_decode(
                 );
             }
             (*ctx).fragments.count = 0 as ::core::ffi::c_uint;
-            (*pbi_1).common.error.setjmp = 0 as ::core::ffi::c_int;
+            (*pbi_1).common.error.setjmp = 0 as i32;
         }
         res
     }
@@ -1521,7 +1521,7 @@ unsafe fn vp8_get_frame(
     unsafe {
         let mut img: *mut vpx_image_t = ::core::ptr::null_mut::<vpx_image_t>();
         if (*iter).is_null()
-            && !(*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize].is_null()
+            && !(*ctx).yv12_frame_buffers.pbi[0 as i32 as usize].is_null()
         {
             let mut sd: YV12_BUFFER_CONFIG = yv12_buffer_config {
                 y_width: 0,
@@ -1566,7 +1566,7 @@ unsafe fn vp8_get_frame(
             };
             memset(
                 &raw mut flags as *mut ::core::ffi::c_void,
-                0 as ::core::ffi::c_int,
+                0 as i32,
                 ::core::mem::size_of::<vp8_ppflags_t>() as size_t,
             );
             if (*ctx).base.init_flags & VPX_CODEC_USE_POSTPROC as vpx_codec_flags_t != 0 {
@@ -1574,9 +1574,9 @@ unsafe fn vp8_get_frame(
                 flags.deblocking_level = (*ctx).postproc_cfg.deblocking_level;
                 flags.noise_level = (*ctx).postproc_cfg.noise_level;
             }
-            if 0 as ::core::ffi::c_int
+            if 0 as i32
                 == vp8dx_get_raw_frame(
-                    (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize],
+                    (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize],
                     &raw mut sd,
                     &raw mut flags,
                 )
@@ -1594,18 +1594,18 @@ unsafe fn image2yuvconfig(
     mut yv12: *mut YV12_BUFFER_CONFIG,
 ) -> vpx_codec_err_t {
     unsafe {
-        let y_w: ::core::ffi::c_int = (*img).d_w as ::core::ffi::c_int;
-        let y_h: ::core::ffi::c_int = (*img).d_h as ::core::ffi::c_int;
-        let uv_w: ::core::ffi::c_int = (*img)
+        let y_w: i32 = (*img).d_w as i32;
+        let y_h: i32 = (*img).d_h as i32;
+        let uv_w: i32 = (*img)
             .d_w
             .wrapping_add(1 as ::core::ffi::c_uint)
             .wrapping_div(2 as ::core::ffi::c_uint)
-            as ::core::ffi::c_int;
-        let uv_h: ::core::ffi::c_int = (*img)
+            as i32;
+        let uv_h: i32 = (*img)
             .d_h
             .wrapping_add(1 as ::core::ffi::c_uint)
             .wrapping_div(2 as ::core::ffi::c_uint)
-            as ::core::ffi::c_int;
+            as i32;
         let mut res: vpx_codec_err_t = VPX_CODEC_OK;
         (*yv12).y_buffer = (*img).planes[VPX_PLANE_Y as usize] as *mut uint8_t;
         (*yv12).u_buffer = (*img).planes[VPX_PLANE_U as usize] as *mut uint8_t;
@@ -1622,7 +1622,7 @@ unsafe fn image2yuvconfig(
         (*yv12).uv_stride = (*img).stride[VPX_PLANE_U as usize];
         (*yv12).border = ((*img).stride[VPX_PLANE_Y as usize] as ::core::ffi::c_uint)
             .wrapping_sub((*img).d_w)
-            .wrapping_div(2 as ::core::ffi::c_uint) as ::core::ffi::c_int;
+            .wrapping_div(2 as ::core::ffi::c_uint) as i32;
         res
     }
 }
@@ -1667,11 +1667,11 @@ unsafe fn vp8_set_reference(
                 flags: 0,
             };
             image2yuvconfig(&raw mut (*frame).img, &raw mut sd);
-            if (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize].is_null() {
+            if (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize].is_null() {
                 return VPX_CODEC_CORRUPT_FRAME;
             }
             vp8dx_set_reference(
-                (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize],
+                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize],
                 (*frame).frame_type as vpx_ref_frame_type,
                 &raw mut sd,
             )
@@ -1721,11 +1721,11 @@ unsafe fn vp8_get_reference(
                 flags: 0,
             };
             image2yuvconfig(&raw mut (*frame).img, &raw mut sd);
-            if (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize].is_null() {
+            if (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize].is_null() {
                 return VPX_CODEC_CORRUPT_FRAME;
             }
             vp8dx_get_reference(
-                (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize],
+                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize],
                 (*frame).frame_type as vpx_ref_frame_type,
                 &raw mut sd,
             )
@@ -1739,9 +1739,9 @@ unsafe fn vp8_get_quantizer(
     mut data: *mut ::core::ffi::c_void,
 ) -> vpx_codec_err_t {
     unsafe {
-        let arg: *mut ::core::ffi::c_int = data as *mut ::core::ffi::c_int;
+        let arg: *mut i32 = data as *mut i32;
         let mut pbi: *mut VP8D_COMP =
-            (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize];
+            (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize];
         if arg.is_null() {
             return VPX_CODEC_INVALID_PARAM;
         }
@@ -1763,17 +1763,17 @@ unsafe fn vp8_get_last_ref_updates(
     mut data: *mut ::core::ffi::c_void,
 ) -> vpx_codec_err_t {
     unsafe {
-        let mut update_info: *mut ::core::ffi::c_int = data as *mut ::core::ffi::c_int;
+        let mut update_info: *mut i32 = data as *mut i32;
         if !update_info.is_null() {
             let mut pbi: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize] as *mut VP8D_COMP;
+                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize] as *mut VP8D_COMP;
             if pbi.is_null() {
                 return VPX_CODEC_CORRUPT_FRAME;
             }
             *update_info = (*pbi).common.refresh_alt_ref_frame
-                * VP8_ALTR_FRAME as ::core::ffi::c_int
-                + (*pbi).common.refresh_golden_frame * VP8_GOLD_FRAME as ::core::ffi::c_int
-                + (*pbi).common.refresh_last_frame * VP8_LAST_FRAME as ::core::ffi::c_int;
+                * VP8_ALTR_FRAME as i32
+                + (*pbi).common.refresh_golden_frame * VP8_GOLD_FRAME as i32
+                + (*pbi).common.refresh_last_frame * VP8_LAST_FRAME as i32;
             VPX_CODEC_OK
         } else {
             VPX_CODEC_INVALID_PARAM
@@ -1785,36 +1785,36 @@ unsafe fn vp8_get_last_ref_frame(
     mut data: *mut ::core::ffi::c_void,
 ) -> vpx_codec_err_t {
     unsafe {
-        let mut ref_info: *mut ::core::ffi::c_int = data as *mut ::core::ffi::c_int;
+        let mut ref_info: *mut i32 = data as *mut i32;
         if !ref_info.is_null() {
             let mut pbi: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize] as *mut VP8D_COMP;
+                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize] as *mut VP8D_COMP;
             if !pbi.is_null() {
                 let mut oci: *mut VP8_COMMON = &raw mut (*pbi).common;
                 *ref_info = (if vp8dx_references_buffer(
                     oci as *mut VP8Common,
-                    ALTREF_FRAME as ::core::ffi::c_int,
+                    ALTREF_FRAME as i32,
                 ) != 0
                 {
-                    VP8_ALTR_FRAME as ::core::ffi::c_int
+                    VP8_ALTR_FRAME as i32
                 } else {
-                    0 as ::core::ffi::c_int
+                    0 as i32
                 }) | (if vp8dx_references_buffer(
                     oci as *mut VP8Common,
-                    GOLDEN_FRAME as ::core::ffi::c_int,
+                    GOLDEN_FRAME as i32,
                 ) != 0
                 {
-                    VP8_GOLD_FRAME as ::core::ffi::c_int
+                    VP8_GOLD_FRAME as i32
                 } else {
-                    0 as ::core::ffi::c_int
+                    0 as i32
                 }) | (if vp8dx_references_buffer(
                     oci as *mut VP8Common,
-                    LAST_FRAME as ::core::ffi::c_int,
+                    LAST_FRAME as i32,
                 ) != 0
                 {
-                    VP8_LAST_FRAME as ::core::ffi::c_int
+                    VP8_LAST_FRAME as i32
                 } else {
-                    0 as ::core::ffi::c_int
+                    0 as i32
                 });
                 VPX_CODEC_OK
             } else {
@@ -1830,9 +1830,9 @@ unsafe fn vp8_get_frame_corrupted(
     mut data: *mut ::core::ffi::c_void,
 ) -> vpx_codec_err_t {
     unsafe {
-        let mut corrupted: *mut ::core::ffi::c_int = data as *mut ::core::ffi::c_int;
+        let mut corrupted: *mut i32 = data as *mut i32;
         let mut pbi: *mut VP8D_COMP =
-            (*ctx).yv12_frame_buffers.pbi[0 as ::core::ffi::c_int as usize] as *mut VP8D_COMP;
+            (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize] as *mut VP8D_COMP;
         if !corrupted.is_null() && !pbi.is_null() {
             let frame: *const YV12_BUFFER_CONFIG = (*pbi).common.frame_to_show;
             if frame.is_null() {
@@ -1864,7 +1864,7 @@ unsafe fn vp8_set_decryptor(
 static mut vp8_ctf_maps: [vpx_codec_ctrl_fn_map_t; 9] = {
     [
         vpx_codec_ctrl_fn_map {
-            ctrl_id: VP8_SET_REFERENCE as ::core::ffi::c_int,
+            ctrl_id: VP8_SET_REFERENCE as i32,
             fn_0: Some(
                 vp8_set_reference
                     as unsafe fn(
@@ -1874,7 +1874,7 @@ static mut vp8_ctf_maps: [vpx_codec_ctrl_fn_map_t; 9] = {
             ),
         },
         vpx_codec_ctrl_fn_map {
-            ctrl_id: VP8_COPY_REFERENCE as ::core::ffi::c_int,
+            ctrl_id: VP8_COPY_REFERENCE as i32,
             fn_0: Some(
                 vp8_get_reference
                     as unsafe fn(
@@ -1884,7 +1884,7 @@ static mut vp8_ctf_maps: [vpx_codec_ctrl_fn_map_t; 9] = {
             ),
         },
         vpx_codec_ctrl_fn_map {
-            ctrl_id: VP8_SET_POSTPROC as ::core::ffi::c_int,
+            ctrl_id: VP8_SET_POSTPROC as i32,
             fn_0: Some(
                 vp8_set_postproc
                     as unsafe fn(
@@ -1894,7 +1894,7 @@ static mut vp8_ctf_maps: [vpx_codec_ctrl_fn_map_t; 9] = {
             ),
         },
         vpx_codec_ctrl_fn_map {
-            ctrl_id: VP8D_GET_LAST_REF_UPDATES as ::core::ffi::c_int,
+            ctrl_id: VP8D_GET_LAST_REF_UPDATES as i32,
             fn_0: Some(
                 vp8_get_last_ref_updates
                     as unsafe fn(
@@ -1904,7 +1904,7 @@ static mut vp8_ctf_maps: [vpx_codec_ctrl_fn_map_t; 9] = {
             ),
         },
         vpx_codec_ctrl_fn_map {
-            ctrl_id: VP8D_GET_FRAME_CORRUPTED as ::core::ffi::c_int,
+            ctrl_id: VP8D_GET_FRAME_CORRUPTED as i32,
             fn_0: Some(
                 vp8_get_frame_corrupted
                     as unsafe fn(
@@ -1914,7 +1914,7 @@ static mut vp8_ctf_maps: [vpx_codec_ctrl_fn_map_t; 9] = {
             ),
         },
         vpx_codec_ctrl_fn_map {
-            ctrl_id: VP8D_GET_LAST_REF_USED as ::core::ffi::c_int,
+            ctrl_id: VP8D_GET_LAST_REF_USED as i32,
             fn_0: Some(
                 vp8_get_last_ref_frame
                     as unsafe fn(
@@ -1924,7 +1924,7 @@ static mut vp8_ctf_maps: [vpx_codec_ctrl_fn_map_t; 9] = {
             ),
         },
         vpx_codec_ctrl_fn_map {
-            ctrl_id: VPXD_GET_LAST_QUANTIZER as ::core::ffi::c_int,
+            ctrl_id: VPXD_GET_LAST_QUANTIZER as i32,
             fn_0: Some(
                 vp8_get_quantizer
                     as unsafe fn(
@@ -1934,7 +1934,7 @@ static mut vp8_ctf_maps: [vpx_codec_ctrl_fn_map_t; 9] = {
             ),
         },
         vpx_codec_ctrl_fn_map {
-            ctrl_id: VPXD_SET_DECRYPTOR as ::core::ffi::c_int,
+            ctrl_id: VPXD_SET_DECRYPTOR as i32,
             fn_0: Some(
                 vp8_set_decryptor
                     as unsafe fn(
@@ -1944,7 +1944,7 @@ static mut vp8_ctf_maps: [vpx_codec_ctrl_fn_map_t; 9] = {
             ),
         },
         vpx_codec_ctrl_fn_map {
-            ctrl_id: -(1 as ::core::ffi::c_int),
+            ctrl_id: -(1 as i32),
             fn_0: None,
         },
     ]
@@ -1980,7 +1980,7 @@ pub static mut vpx_codec_vp8_dx_algo: vpx_codec_iface_t = vpx_codec_iface {
 pub unsafe fn vpx_codec_vp8_dx() -> *const vpx_codec_iface_t {
     &raw const vpx_codec_vp8_dx_algo
 }
-pub const __ATOMIC_ACQUIRE: ::core::ffi::c_int = 2 as ::core::ffi::c_int;
+pub const __ATOMIC_ACQUIRE: i32 = 2 as i32;
 pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
 unsafe fn run_static_initializers() {
     unsafe {
@@ -1992,12 +1992,12 @@ unsafe fn run_static_initializers() {
                 | (if CONFIG_POSTPROC != 0 {
                     VPX_CODEC_CAP_POSTPROC
                 } else {
-                    0 as ::core::ffi::c_int
+                    0 as i32
                 })
                 | (if CONFIG_ERROR_CONCEALMENT != 0 {
                     VPX_CODEC_CAP_ERROR_CONCEALMENT
                 } else {
-                    0 as ::core::ffi::c_int
+                    0 as i32
                 })
                 | VPX_CODEC_CAP_INPUT_FRAGMENTS) as vpx_codec_caps_t,
             init: Some(
@@ -2046,7 +2046,7 @@ unsafe fn run_static_initializers() {
                 set_fb_fn: None,
             },
             enc: vpx_codec_enc_iface {
-                cfg_map_count: 0 as ::core::ffi::c_int,
+                cfg_map_count: 0 as i32,
                 cfg_maps: ::core::ptr::null::<vpx_codec_enc_cfg_map_t>(),
                 encode: None,
                 get_cx_data: None,

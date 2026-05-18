@@ -1,5 +1,5 @@
 unsafe extern "Rust" {
-    static vp8_mode_contexts: [[::core::ffi::c_int; 4]; 6];
+    static vp8_mode_contexts: [[i32; 4]; 6];
 }
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
@@ -42,49 +42,49 @@ pub const VPX_CODEC_ABI_MISMATCH: vpx_codec_err_t = 3;
 pub const VPX_CODEC_MEM_ERROR: vpx_codec_err_t = 2;
 pub const VPX_CODEC_ERROR: vpx_codec_err_t = 1;
 pub const VPX_CODEC_OK: vpx_codec_err_t = 0;
-pub type jmp_buf = [::core::ffi::c_int; 48];
+pub type jmp_buf = [i32; 48];
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_internal_error_info {
     pub error_code: vpx_codec_err_t,
-    pub has_detail: ::core::ffi::c_int,
+    pub has_detail: i32,
     pub detail: [::core::ffi::c_char; 80],
-    pub setjmp: ::core::ffi::c_int,
+    pub setjmp: i32,
     pub jmp: jmp_buf,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct yv12_buffer_config {
-    pub y_width: ::core::ffi::c_int,
-    pub y_height: ::core::ffi::c_int,
-    pub y_crop_width: ::core::ffi::c_int,
-    pub y_crop_height: ::core::ffi::c_int,
-    pub y_stride: ::core::ffi::c_int,
-    pub uv_width: ::core::ffi::c_int,
-    pub uv_height: ::core::ffi::c_int,
-    pub uv_crop_width: ::core::ffi::c_int,
-    pub uv_crop_height: ::core::ffi::c_int,
-    pub uv_stride: ::core::ffi::c_int,
-    pub alpha_width: ::core::ffi::c_int,
-    pub alpha_height: ::core::ffi::c_int,
-    pub alpha_stride: ::core::ffi::c_int,
+    pub y_width: i32,
+    pub y_height: i32,
+    pub y_crop_width: i32,
+    pub y_crop_height: i32,
+    pub y_stride: i32,
+    pub uv_width: i32,
+    pub uv_height: i32,
+    pub uv_crop_width: i32,
+    pub uv_crop_height: i32,
+    pub uv_stride: i32,
+    pub alpha_width: i32,
+    pub alpha_height: i32,
+    pub alpha_stride: i32,
     pub y_buffer: *mut uint8_t,
     pub u_buffer: *mut uint8_t,
     pub v_buffer: *mut uint8_t,
     pub alpha_buffer: *mut uint8_t,
     pub buffer_alloc: *mut uint8_t,
     pub buffer_alloc_sz: size_t,
-    pub border: ::core::ffi::c_int,
+    pub border: i32,
     pub frame_size: size_t,
-    pub subsampling_x: ::core::ffi::c_int,
-    pub subsampling_y: ::core::ffi::c_int,
+    pub subsampling_x: i32,
+    pub subsampling_y: i32,
     pub bit_depth: ::core::ffi::c_uint,
     pub color_space: vpx_color_space_t,
     pub color_range: vpx_color_range_t,
-    pub render_width: ::core::ffi::c_int,
-    pub render_height: ::core::ffi::c_int,
-    pub corrupted: ::core::ffi::c_int,
-    pub flags: ::core::ffi::c_int,
+    pub render_width: i32,
+    pub render_height: i32,
+    pub corrupted: i32,
+    pub flags: i32,
 }
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 pub type vp8_prob = ::core::ffi::c_uchar;
@@ -167,18 +167,18 @@ pub struct blockd {
     pub dqcoeff: *mut ::core::ffi::c_short,
     pub predictor: *mut ::core::ffi::c_uchar,
     pub dequant: *mut ::core::ffi::c_short,
-    pub offset: ::core::ffi::c_int,
+    pub offset: i32,
     pub eob: *mut ::core::ffi::c_char,
     pub bmi: b_mode_info,
 }
 pub type BLOCKD = blockd;
 pub type vp8_subpix_fn_t = Option<unsafe fn(
         *mut ::core::ffi::c_uchar,
-        ::core::ffi::c_int,
-        ::core::ffi::c_int,
-        ::core::ffi::c_int,
+        i32,
+        i32,
+        i32,
         *mut ::core::ffi::c_uchar,
-        ::core::ffi::c_int,
+        i32,
     ) -> (),
 >;
 #[derive(Copy, Clone)]
@@ -193,17 +193,17 @@ pub struct macroblockd {
     pub dequant_y2: [::core::ffi::c_short; 16],
     pub dequant_uv: [::core::ffi::c_short; 16],
     pub block: [BLOCKD; 25],
-    pub fullpixel_mask: ::core::ffi::c_int,
+    pub fullpixel_mask: i32,
     pub pre: YV12_BUFFER_CONFIG,
     pub dst: YV12_BUFFER_CONFIG,
     pub mode_info_context: *mut MODE_INFO,
-    pub mode_info_stride: ::core::ffi::c_int,
+    pub mode_info_stride: i32,
     pub frame_type: FRAME_TYPE,
-    pub up_available: ::core::ffi::c_int,
-    pub left_available: ::core::ffi::c_int,
+    pub up_available: i32,
+    pub left_available: i32,
     pub recon_above: [*mut ::core::ffi::c_uchar; 3],
     pub recon_left: [*mut ::core::ffi::c_uchar; 3],
-    pub recon_left_stride: [::core::ffi::c_int; 2],
+    pub recon_left_stride: [i32; 2],
     pub above_context: *mut ENTROPY_CONTEXT_PLANES,
     pub left_context: *mut ENTROPY_CONTEXT_PLANES,
     pub segmentation_enabled: ::core::ffi::c_uchar,
@@ -218,16 +218,16 @@ pub struct macroblockd {
     pub ref_lf_deltas: [::core::ffi::c_schar; 4],
     pub last_mode_lf_deltas: [::core::ffi::c_schar; 4],
     pub mode_lf_deltas: [::core::ffi::c_schar; 4],
-    pub mb_to_left_edge: ::core::ffi::c_int,
-    pub mb_to_right_edge: ::core::ffi::c_int,
-    pub mb_to_top_edge: ::core::ffi::c_int,
-    pub mb_to_bottom_edge: ::core::ffi::c_int,
+    pub mb_to_left_edge: i32,
+    pub mb_to_right_edge: i32,
+    pub mb_to_top_edge: i32,
+    pub mb_to_bottom_edge: i32,
     pub subpixel_predict: vp8_subpix_fn_t,
     pub subpixel_predict8x4: vp8_subpix_fn_t,
     pub subpixel_predict8x8: vp8_subpix_fn_t,
     pub subpixel_predict16x16: vp8_subpix_fn_t,
     pub current_bc: *mut ::core::ffi::c_void,
-    pub corrupted: ::core::ffi::c_int,
+    pub corrupted: i32,
     pub error_info: vpx_internal_error_info,
 }
 pub type MACROBLOCKD = macroblockd;
@@ -238,38 +238,38 @@ pub const CNT_SPLITMV: C2RustUnnamed_1 = 3;
 pub type C2RustUnnamed_1 = ::core::ffi::c_uint;
 #[inline]
 unsafe fn mv_bias(
-    mut refmb_ref_frame_sign_bias: ::core::ffi::c_int,
-    mut refframe: ::core::ffi::c_int,
+    mut refmb_ref_frame_sign_bias: i32,
+    mut refframe: i32,
     mut mvp: *mut int_mv,
-    mut ref_frame_sign_bias: *const ::core::ffi::c_int,
+    mut ref_frame_sign_bias: *const i32,
 ) {
     unsafe {
         if refmb_ref_frame_sign_bias != *ref_frame_sign_bias.offset(refframe as isize) {
-            (*mvp).as_mv.row = ((*mvp).as_mv.row as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
+            (*mvp).as_mv.row = ((*mvp).as_mv.row as i32 * -(1 as i32))
                 as ::core::ffi::c_short;
-            (*mvp).as_mv.col = ((*mvp).as_mv.col as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
+            (*mvp).as_mv.col = ((*mvp).as_mv.col as i32 * -(1 as i32))
                 as ::core::ffi::c_short;
         }
     }
 }
-pub const LEFT_TOP_MARGIN: ::core::ffi::c_int =
-    (16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
-pub const RIGHT_BOTTOM_MARGIN: ::core::ffi::c_int =
-    (16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
+pub const LEFT_TOP_MARGIN: i32 =
+    (16 as i32) << 3 as i32;
+pub const RIGHT_BOTTOM_MARGIN: i32 =
+    (16 as i32) << 3 as i32;
 #[inline]
 unsafe fn vp8_clamp_mv2(mut mv: *mut int_mv, mut xd: *const MACROBLOCKD) {
     unsafe {
-        if ((*mv).as_mv.col as ::core::ffi::c_int) < (*xd).mb_to_left_edge - LEFT_TOP_MARGIN {
+        if ((*mv).as_mv.col as i32) < (*xd).mb_to_left_edge - LEFT_TOP_MARGIN {
             (*mv).as_mv.col = ((*xd).mb_to_left_edge - LEFT_TOP_MARGIN) as ::core::ffi::c_short;
-        } else if (*mv).as_mv.col as ::core::ffi::c_int
+        } else if (*mv).as_mv.col as i32
             > (*xd).mb_to_right_edge + RIGHT_BOTTOM_MARGIN
         {
             (*mv).as_mv.col =
                 ((*xd).mb_to_right_edge + RIGHT_BOTTOM_MARGIN) as ::core::ffi::c_short;
         }
-        if ((*mv).as_mv.row as ::core::ffi::c_int) < (*xd).mb_to_top_edge - LEFT_TOP_MARGIN {
+        if ((*mv).as_mv.row as i32) < (*xd).mb_to_top_edge - LEFT_TOP_MARGIN {
             (*mv).as_mv.row = ((*xd).mb_to_top_edge - LEFT_TOP_MARGIN) as ::core::ffi::c_short;
-        } else if (*mv).as_mv.row as ::core::ffi::c_int
+        } else if (*mv).as_mv.row as i32
             > (*xd).mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN
         {
             (*mv).as_mv.row =
@@ -280,76 +280,76 @@ unsafe fn vp8_clamp_mv2(mut mv: *mut int_mv, mut xd: *const MACROBLOCKD) {
 #[unsafe(no_mangle)]
 pub static mut vp8_mbsplit_offset: [[::core::ffi::c_uchar; 16]; 4] = [
     [
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        8 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        8 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
     ],
     [
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        2 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        2 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
     ],
     [
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        2 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        8 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        10 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        2 as i32 as ::core::ffi::c_uchar,
+        8 as i32 as ::core::ffi::c_uchar,
+        10 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
     ],
     [
-        0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        1 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        2 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        3 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        4 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        5 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        6 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        7 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        8 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        9 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        10 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        11 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        12 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        13 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        14 as ::core::ffi::c_int as ::core::ffi::c_uchar,
-        15 as ::core::ffi::c_int as ::core::ffi::c_uchar,
+        0 as i32 as ::core::ffi::c_uchar,
+        1 as i32 as ::core::ffi::c_uchar,
+        2 as i32 as ::core::ffi::c_uchar,
+        3 as i32 as ::core::ffi::c_uchar,
+        4 as i32 as ::core::ffi::c_uchar,
+        5 as i32 as ::core::ffi::c_uchar,
+        6 as i32 as ::core::ffi::c_uchar,
+        7 as i32 as ::core::ffi::c_uchar,
+        8 as i32 as ::core::ffi::c_uchar,
+        9 as i32 as ::core::ffi::c_uchar,
+        10 as i32 as ::core::ffi::c_uchar,
+        11 as i32 as ::core::ffi::c_uchar,
+        12 as i32 as ::core::ffi::c_uchar,
+        13 as i32 as ::core::ffi::c_uchar,
+        14 as i32 as ::core::ffi::c_uchar,
+        15 as i32 as ::core::ffi::c_uchar,
     ],
 ];
 #[unsafe(no_mangle)]
@@ -359,30 +359,30 @@ pub unsafe fn vp8_find_near_mvs(
     mut nearest: *mut int_mv,
     mut nearby: *mut int_mv,
     mut best_mv: *mut int_mv,
-    mut near_mv_ref_cnts: *mut ::core::ffi::c_int,
-    mut refframe: ::core::ffi::c_int,
-    mut ref_frame_sign_bias: *mut ::core::ffi::c_int,
+    mut near_mv_ref_cnts: *mut i32,
+    mut refframe: i32,
+    mut ref_frame_sign_bias: *mut i32,
 ) {
     unsafe {
         let mut above: *const MODE_INFO = here.offset(-((*xd).mode_info_stride as isize));
-        let mut left: *const MODE_INFO = here.offset(-(1 as ::core::ffi::c_int as isize));
-        let mut aboveleft: *const MODE_INFO = above.offset(-(1 as ::core::ffi::c_int as isize));
+        let mut left: *const MODE_INFO = here.offset(-(1 as i32 as isize));
+        let mut aboveleft: *const MODE_INFO = above.offset(-(1 as i32 as isize));
         let mut near_mvs: [int_mv; 4] = [int_mv { as_int: 0 }; 4];
         let mut mv: *mut int_mv = &raw mut near_mvs as *mut int_mv;
-        let mut cntx: *mut ::core::ffi::c_int = near_mv_ref_cnts as *mut ::core::ffi::c_int;
-        let fresh0 = &mut (*mv.offset(2 as ::core::ffi::c_int as isize)).as_int;
+        let mut cntx: *mut i32 = near_mv_ref_cnts as *mut i32;
+        let fresh0 = &mut (*mv.offset(2 as i32 as isize)).as_int;
         *fresh0 = 0 as uint32_t;
-        let fresh1 = &mut (*mv.offset(1 as ::core::ffi::c_int as isize)).as_int;
+        let fresh1 = &mut (*mv.offset(1 as i32 as isize)).as_int;
         *fresh1 = *fresh0;
-        (*mv.offset(0 as ::core::ffi::c_int as isize)).as_int = *fresh1;
-        let fresh2 = &mut *near_mv_ref_cnts.offset(3 as ::core::ffi::c_int as isize);
-        *fresh2 = 0 as ::core::ffi::c_int;
-        let fresh3 = &mut *near_mv_ref_cnts.offset(2 as ::core::ffi::c_int as isize);
+        (*mv.offset(0 as i32 as isize)).as_int = *fresh1;
+        let fresh2 = &mut *near_mv_ref_cnts.offset(3 as i32 as isize);
+        *fresh2 = 0 as i32;
+        let fresh3 = &mut *near_mv_ref_cnts.offset(2 as i32 as isize);
         *fresh3 = *fresh2;
-        let fresh4 = &mut *near_mv_ref_cnts.offset(1 as ::core::ffi::c_int as isize);
+        let fresh4 = &mut *near_mv_ref_cnts.offset(1 as i32 as isize);
         *fresh4 = *fresh3;
-        *near_mv_ref_cnts.offset(0 as ::core::ffi::c_int as isize) = *fresh4;
-        if (*above).mbmi.ref_frame as ::core::ffi::c_int != INTRA_FRAME as ::core::ffi::c_int {
+        *near_mv_ref_cnts.offset(0 as i32 as isize) = *fresh4;
+        if (*above).mbmi.ref_frame as i32 != INTRA_FRAME as i32 {
             if (*above).mbmi.mv.as_int != 0 {
                 mv = mv.offset(1);
                 (*mv).as_int = (*above).mbmi.mv.as_int;
@@ -394,9 +394,9 @@ pub unsafe fn vp8_find_near_mvs(
                 );
                 cntx = cntx.offset(1);
             }
-            *cntx += 2 as ::core::ffi::c_int;
+            *cntx += 2 as i32;
         }
-        if (*left).mbmi.ref_frame as ::core::ffi::c_int != INTRA_FRAME as ::core::ffi::c_int {
+        if (*left).mbmi.ref_frame as i32 != INTRA_FRAME as i32 {
             if (*left).mbmi.mv.as_int != 0 {
                 let mut this_mv: int_mv = int_mv { as_int: 0 };
                 this_mv.as_int = (*left).mbmi.mv.as_int;
@@ -411,13 +411,13 @@ pub unsafe fn vp8_find_near_mvs(
                     (*mv).as_int = this_mv.as_int;
                     cntx = cntx.offset(1);
                 }
-                *cntx += 2 as ::core::ffi::c_int;
+                *cntx += 2 as i32;
             } else {
-                *near_mv_ref_cnts.offset(CNT_INTRA as ::core::ffi::c_int as isize) +=
-                    2 as ::core::ffi::c_int;
+                *near_mv_ref_cnts.offset(CNT_INTRA as i32 as isize) +=
+                    2 as i32;
             }
         }
-        if (*aboveleft).mbmi.ref_frame as ::core::ffi::c_int != INTRA_FRAME as ::core::ffi::c_int {
+        if (*aboveleft).mbmi.ref_frame as i32 != INTRA_FRAME as i32 {
             if (*aboveleft).mbmi.mv.as_int != 0 {
                 let mut this_mv_0: int_mv = int_mv { as_int: 0 };
                 this_mv_0.as_int = (*aboveleft).mbmi.mv.as_int;
@@ -432,48 +432,48 @@ pub unsafe fn vp8_find_near_mvs(
                     (*mv).as_int = this_mv_0.as_int;
                     cntx = cntx.offset(1);
                 }
-                *cntx += 1 as ::core::ffi::c_int;
+                *cntx += 1 as i32;
             } else {
-                *near_mv_ref_cnts.offset(CNT_INTRA as ::core::ffi::c_int as isize) +=
-                    1 as ::core::ffi::c_int;
+                *near_mv_ref_cnts.offset(CNT_INTRA as i32 as isize) +=
+                    1 as i32;
             }
         }
-        if *near_mv_ref_cnts.offset(CNT_SPLITMV as ::core::ffi::c_int as isize) != 0
-            && (*mv).as_int == near_mvs[CNT_NEAREST as ::core::ffi::c_int as usize].as_int
+        if *near_mv_ref_cnts.offset(CNT_SPLITMV as i32 as isize) != 0
+            && (*mv).as_int == near_mvs[CNT_NEAREST as i32 as usize].as_int
         {
-            *near_mv_ref_cnts.offset(CNT_NEAREST as ::core::ffi::c_int as isize) +=
-                1 as ::core::ffi::c_int;
+            *near_mv_ref_cnts.offset(CNT_NEAREST as i32 as isize) +=
+                1 as i32;
         }
-        *near_mv_ref_cnts.offset(CNT_SPLITMV as ::core::ffi::c_int as isize) =
-            (((*above).mbmi.mode as ::core::ffi::c_int == SPLITMV as ::core::ffi::c_int)
-                as ::core::ffi::c_int
-                + ((*left).mbmi.mode as ::core::ffi::c_int == SPLITMV as ::core::ffi::c_int)
-                    as ::core::ffi::c_int)
-                * 2 as ::core::ffi::c_int
-                + ((*aboveleft).mbmi.mode as ::core::ffi::c_int == SPLITMV as ::core::ffi::c_int)
-                    as ::core::ffi::c_int;
-        if *near_mv_ref_cnts.offset(CNT_NEAR as ::core::ffi::c_int as isize)
-            > *near_mv_ref_cnts.offset(CNT_NEAREST as ::core::ffi::c_int as isize)
+        *near_mv_ref_cnts.offset(CNT_SPLITMV as i32 as isize) =
+            (((*above).mbmi.mode as i32 == SPLITMV as i32)
+                as i32
+                + ((*left).mbmi.mode as i32 == SPLITMV as i32)
+                    as i32)
+                * 2 as i32
+                + ((*aboveleft).mbmi.mode as i32 == SPLITMV as i32)
+                    as i32;
+        if *near_mv_ref_cnts.offset(CNT_NEAR as i32 as isize)
+            > *near_mv_ref_cnts.offset(CNT_NEAREST as i32 as isize)
         {
-            let mut tmp: ::core::ffi::c_int = 0;
-            tmp = *near_mv_ref_cnts.offset(CNT_NEAREST as ::core::ffi::c_int as isize);
-            *near_mv_ref_cnts.offset(CNT_NEAREST as ::core::ffi::c_int as isize) =
-                *near_mv_ref_cnts.offset(CNT_NEAR as ::core::ffi::c_int as isize);
-            *near_mv_ref_cnts.offset(CNT_NEAR as ::core::ffi::c_int as isize) = tmp;
-            tmp = near_mvs[CNT_NEAREST as ::core::ffi::c_int as usize].as_int as ::core::ffi::c_int;
-            near_mvs[CNT_NEAREST as ::core::ffi::c_int as usize].as_int =
-                near_mvs[CNT_NEAR as ::core::ffi::c_int as usize].as_int;
-            near_mvs[CNT_NEAR as ::core::ffi::c_int as usize].as_int = tmp as uint32_t;
+            let mut tmp: i32 = 0;
+            tmp = *near_mv_ref_cnts.offset(CNT_NEAREST as i32 as isize);
+            *near_mv_ref_cnts.offset(CNT_NEAREST as i32 as isize) =
+                *near_mv_ref_cnts.offset(CNT_NEAR as i32 as isize);
+            *near_mv_ref_cnts.offset(CNT_NEAR as i32 as isize) = tmp;
+            tmp = near_mvs[CNT_NEAREST as i32 as usize].as_int as i32;
+            near_mvs[CNT_NEAREST as i32 as usize].as_int =
+                near_mvs[CNT_NEAR as i32 as usize].as_int;
+            near_mvs[CNT_NEAR as i32 as usize].as_int = tmp as uint32_t;
         }
-        if *near_mv_ref_cnts.offset(CNT_NEAREST as ::core::ffi::c_int as isize)
-            >= *near_mv_ref_cnts.offset(CNT_INTRA as ::core::ffi::c_int as isize)
+        if *near_mv_ref_cnts.offset(CNT_NEAREST as i32 as isize)
+            >= *near_mv_ref_cnts.offset(CNT_INTRA as i32 as isize)
         {
-            near_mvs[CNT_INTRA as ::core::ffi::c_int as usize] =
-                near_mvs[CNT_NEAREST as ::core::ffi::c_int as usize];
+            near_mvs[CNT_INTRA as i32 as usize] =
+                near_mvs[CNT_NEAREST as i32 as usize];
         }
-        (*best_mv).as_int = near_mvs[0 as ::core::ffi::c_int as usize].as_int;
-        (*nearest).as_int = near_mvs[CNT_NEAREST as ::core::ffi::c_int as usize].as_int;
-        (*nearby).as_int = near_mvs[CNT_NEAR as ::core::ffi::c_int as usize].as_int;
+        (*best_mv).as_int = near_mvs[0 as i32 as usize].as_int;
+        (*nearest).as_int = near_mvs[CNT_NEAREST as i32 as usize].as_int;
+        (*nearby).as_int = near_mvs[CNT_NEAR as i32 as usize].as_int;
     }
 }
 unsafe fn invert_and_clamp_mvs(
@@ -482,9 +482,9 @@ unsafe fn invert_and_clamp_mvs(
     mut xd: *mut MACROBLOCKD,
 ) {
     unsafe {
-        (*inv).as_mv.row = ((*src).as_mv.row as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
+        (*inv).as_mv.row = ((*src).as_mv.row as i32 * -(1 as i32))
             as ::core::ffi::c_short;
-        (*inv).as_mv.col = ((*src).as_mv.col as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
+        (*inv).as_mv.col = ((*src).as_mv.col as i32 * -(1 as i32))
             as ::core::ffi::c_short;
         vp8_clamp_mv2(inv, xd);
         vp8_clamp_mv2(src, xd);
@@ -496,42 +496,42 @@ pub unsafe fn vp8_find_near_mvs_bias(
     mut here: *const MODE_INFO,
     mut mode_mv_sb: *mut [int_mv; 10],
     mut best_mv_sb: *mut int_mv,
-    mut cnt: *mut ::core::ffi::c_int,
-    mut refframe: ::core::ffi::c_int,
-    mut ref_frame_sign_bias: *mut ::core::ffi::c_int,
-) -> ::core::ffi::c_int {
+    mut cnt: *mut i32,
+    mut refframe: i32,
+    mut ref_frame_sign_bias: *mut i32,
+) -> i32 {
     unsafe {
-        let mut sign_bias: ::core::ffi::c_int = *ref_frame_sign_bias.offset(refframe as isize);
+        let mut sign_bias: i32 = *ref_frame_sign_bias.offset(refframe as isize);
         vp8_find_near_mvs(
             xd,
             here,
             (&raw mut *mode_mv_sb.offset(sign_bias as isize) as *mut int_mv)
-                .offset(NEARESTMV as ::core::ffi::c_int as isize) as *mut int_mv,
+                .offset(NEARESTMV as i32 as isize) as *mut int_mv,
             (&raw mut *mode_mv_sb.offset(sign_bias as isize) as *mut int_mv)
-                .offset(NEARMV as ::core::ffi::c_int as isize) as *mut int_mv,
+                .offset(NEARMV as i32 as isize) as *mut int_mv,
             best_mv_sb.offset(sign_bias as isize) as *mut int_mv,
             cnt,
             refframe,
             ref_frame_sign_bias,
         );
         invert_and_clamp_mvs(
-            (&raw mut *mode_mv_sb.offset((sign_bias == 0) as ::core::ffi::c_int as isize)
+            (&raw mut *mode_mv_sb.offset((sign_bias == 0) as i32 as isize)
                 as *mut int_mv)
-                .offset(NEARESTMV as ::core::ffi::c_int as isize) as *mut int_mv,
+                .offset(NEARESTMV as i32 as isize) as *mut int_mv,
             (&raw mut *mode_mv_sb.offset(sign_bias as isize) as *mut int_mv)
-                .offset(NEARESTMV as ::core::ffi::c_int as isize) as *mut int_mv,
+                .offset(NEARESTMV as i32 as isize) as *mut int_mv,
             xd,
         );
         invert_and_clamp_mvs(
-            (&raw mut *mode_mv_sb.offset((sign_bias == 0) as ::core::ffi::c_int as isize)
+            (&raw mut *mode_mv_sb.offset((sign_bias == 0) as i32 as isize)
                 as *mut int_mv)
-                .offset(NEARMV as ::core::ffi::c_int as isize) as *mut int_mv,
+                .offset(NEARMV as i32 as isize) as *mut int_mv,
             (&raw mut *mode_mv_sb.offset(sign_bias as isize) as *mut int_mv)
-                .offset(NEARMV as ::core::ffi::c_int as isize) as *mut int_mv,
+                .offset(NEARMV as i32 as isize) as *mut int_mv,
             xd,
         );
         invert_and_clamp_mvs(
-            best_mv_sb.offset((sign_bias == 0) as ::core::ffi::c_int as isize) as *mut int_mv,
+            best_mv_sb.offset((sign_bias == 0) as i32 as isize) as *mut int_mv,
             best_mv_sb.offset(sign_bias as isize) as *mut int_mv,
             xd,
         );
@@ -541,21 +541,21 @@ pub unsafe fn vp8_find_near_mvs_bias(
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_mv_ref_probs(
     mut p: *mut vp8_prob,
-    mut near_mv_ref_ct: *const ::core::ffi::c_int,
+    mut near_mv_ref_ct: *const i32,
 ) -> *mut vp8_prob {
     unsafe {
-        *p.offset(0 as ::core::ffi::c_int as isize) =
-            vp8_mode_contexts[*near_mv_ref_ct.offset(0 as ::core::ffi::c_int as isize) as usize]
-                [0 as ::core::ffi::c_int as usize] as vp8_prob;
-        *p.offset(1 as ::core::ffi::c_int as isize) =
-            vp8_mode_contexts[*near_mv_ref_ct.offset(1 as ::core::ffi::c_int as isize) as usize]
-                [1 as ::core::ffi::c_int as usize] as vp8_prob;
-        *p.offset(2 as ::core::ffi::c_int as isize) =
-            vp8_mode_contexts[*near_mv_ref_ct.offset(2 as ::core::ffi::c_int as isize) as usize]
-                [2 as ::core::ffi::c_int as usize] as vp8_prob;
-        *p.offset(3 as ::core::ffi::c_int as isize) =
-            vp8_mode_contexts[*near_mv_ref_ct.offset(3 as ::core::ffi::c_int as isize) as usize]
-                [3 as ::core::ffi::c_int as usize] as vp8_prob;
+        *p.offset(0 as i32 as isize) =
+            vp8_mode_contexts[*near_mv_ref_ct.offset(0 as i32 as isize) as usize]
+                [0 as i32 as usize] as vp8_prob;
+        *p.offset(1 as i32 as isize) =
+            vp8_mode_contexts[*near_mv_ref_ct.offset(1 as i32 as isize) as usize]
+                [1 as i32 as usize] as vp8_prob;
+        *p.offset(2 as i32 as isize) =
+            vp8_mode_contexts[*near_mv_ref_ct.offset(2 as i32 as isize) as usize]
+                [2 as i32 as usize] as vp8_prob;
+        *p.offset(3 as i32 as isize) =
+            vp8_mode_contexts[*near_mv_ref_ct.offset(3 as i32 as isize) as usize]
+                [3 as i32 as usize] as vp8_prob;
         p as *mut vp8_prob
     }
 }

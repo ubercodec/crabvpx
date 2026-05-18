@@ -17,4 +17,4 @@ pub struct int32x2x2_t {
 }
 static mut cospi8sqrt2minus1: int16_t = 20091 as int16_t;
 static mut sinpi8sqrt2: int16_t =
-    (35468 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int) as int16_t;
+    (35468 as i32 >> 1 as i32) as int16_t;

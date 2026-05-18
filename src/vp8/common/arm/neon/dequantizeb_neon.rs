@@ -14,7 +14,7 @@ pub struct blockd {
     pub dqcoeff: *mut ::core::ffi::c_short,
     pub predictor: *mut ::core::ffi::c_uchar,
     pub dequant: *mut ::core::ffi::c_short,
-    pub offset: ::core::ffi::c_int,
+    pub offset: i32,
     pub eob: *mut ::core::ffi::c_char,
     pub bmi: b_mode_info,
 }

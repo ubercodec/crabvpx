@@ -5,8 +5,8 @@ unsafe extern "Rust" {
         __size: size_t,
         __format: *const ::core::ffi::c_char,
         _: *mut ::core::ffi::c_void,
-    ) -> ::core::ffi::c_int;
-    fn longjmp(_: *mut ::core::ffi::c_int, _: ::core::ffi::c_int) -> !;
+    ) -> i32;
+    fn longjmp(_: *mut i32, _: i32) -> !;
 }
 pub type __builtin_va_list = *mut ::core::ffi::c_char;
 pub type va_list = __builtin_va_list;
@@ -59,12 +59,12 @@ pub struct vpx_image {
     pub x_chroma_shift: ::core::ffi::c_uint,
     pub y_chroma_shift: ::core::ffi::c_uint,
     pub planes: [*mut ::core::ffi::c_uchar; 4],
-    pub stride: [::core::ffi::c_int; 4],
-    pub bps: ::core::ffi::c_int,
+    pub stride: [i32; 4],
+    pub bps: i32,
     pub user_priv: *mut ::core::ffi::c_void,
     pub img_data: *mut ::core::ffi::c_uchar,
-    pub img_data_owner: ::core::ffi::c_int,
-    pub self_allocd: ::core::ffi::c_int,
+    pub img_data_owner: i32,
+    pub self_allocd: i32,
     pub fb_priv: *mut ::core::ffi::c_void,
 }
 pub type vpx_image_t = vpx_image;
@@ -94,7 +94,7 @@ pub type vpx_codec_flags_t = ::core::ffi::c_long;
 #[repr(C)]
 pub struct vpx_codec_iface {
     pub name: *const ::core::ffi::c_char,
-    pub abi_version: ::core::ffi::c_int,
+    pub abi_version: i32,
     pub caps: vpx_codec_caps_t,
     pub init: vpx_codec_init_fn_t,
     pub destroy: vpx_codec_destroy_fn_t,
@@ -105,7 +105,7 @@ pub struct vpx_codec_iface {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_enc_iface {
-    pub cfg_map_count: ::core::ffi::c_int,
+    pub cfg_map_count: i32,
     pub cfg_maps: *const vpx_codec_enc_cfg_map_t,
     pub encode: vpx_codec_encode_fn_t,
     pub get_cx_data: vpx_codec_get_cx_data_fn_t,
@@ -162,7 +162,7 @@ pub struct vpx_codec_enc_cfg {
     pub kf_min_dist: ::core::ffi::c_uint,
     pub kf_max_dist: ::core::ffi::c_uint,
     pub ss_number_layers: ::core::ffi::c_uint,
-    pub ss_enable_auto_alt_ref: [::core::ffi::c_int; 5],
+    pub ss_enable_auto_alt_ref: [i32; 5],
     pub ss_target_bitrate: [::core::ffi::c_uint; 5],
     pub ts_number_layers: ::core::ffi::c_uint,
     pub ts_target_bitrate: [::core::ffi::c_uint; 5],
@@ -170,8 +170,8 @@ pub struct vpx_codec_enc_cfg {
     pub ts_periodicity: ::core::ffi::c_uint,
     pub ts_layer_id: [::core::ffi::c_uint; 16],
     pub layer_target_bitrate: [::core::ffi::c_uint; 12],
-    pub temporal_layering_mode: ::core::ffi::c_int,
-    pub use_vizier_rc_params: ::core::ffi::c_int,
+    pub temporal_layering_mode: i32,
+    pub use_vizier_rc_params: i32,
     pub active_wq_factor: vpx_rational_t,
     pub err_per_mb_factor: vpx_rational_t,
     pub sr_default_decay_limit: vpx_rational_t,
@@ -192,8 +192,8 @@ pub type vpx_rational_t = vpx_rational;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_rational {
-    pub num: ::core::ffi::c_int,
-    pub den: ::core::ffi::c_int,
+    pub num: i32,
+    pub den: i32,
 }
 pub type vpx_kf_mode = ::core::ffi::c_uint;
 pub const VPX_KF_DISABLED: vpx_kf_mode = 0;
@@ -257,7 +257,7 @@ pub struct vpx_psnr_pkt {
     pub samples: [::core::ffi::c_uint; 4],
     pub sse: [uint64_t; 4],
     pub psnr: [::core::ffi::c_double; 4],
-    pub spatial_layer_id: ::core::ffi::c_int,
+    pub spatial_layer_id: i32,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -267,7 +267,7 @@ pub struct C2RustUnnamed_0 {
     pub pts: vpx_codec_pts_t,
     pub duration: ::core::ffi::c_ulong,
     pub flags: vpx_codec_frame_flags_t,
-    pub partition_id: ::core::ffi::c_int,
+    pub partition_id: i32,
     pub width: [::core::ffi::c_uint; 5],
     pub height: [::core::ffi::c_uint; 5],
     pub spatial_layer_encoded: [uint8_t; 5],
@@ -295,7 +295,7 @@ pub type vpx_codec_enc_cfg_map_t = vpx_codec_enc_cfg_map;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_enc_cfg_map {
-    pub usage: ::core::ffi::c_int,
+    pub usage: i32,
     pub cfg: vpx_codec_enc_cfg_t,
 }
 #[derive(Copy, Clone)]
@@ -317,7 +317,7 @@ pub type vpx_codec_set_fb_fn_t = Option<unsafe fn(
 pub type vpx_release_frame_buffer_cb_fn_t = Option<unsafe fn(
         *mut ::core::ffi::c_void,
         *mut vpx_codec_frame_buffer_t,
-    ) -> ::core::ffi::c_int,
+    ) -> i32,
 >;
 pub type vpx_codec_frame_buffer_t = vpx_codec_frame_buffer;
 #[derive(Copy, Clone)]
@@ -331,7 +331,7 @@ pub type vpx_get_frame_buffer_cb_fn_t = Option<unsafe fn(
         *mut ::core::ffi::c_void,
         size_t,
         *mut vpx_codec_frame_buffer_t,
-    ) -> ::core::ffi::c_int,
+    ) -> i32,
 >;
 pub type vpx_codec_get_frame_fn_t = Option<unsafe fn(*mut vpx_codec_alg_priv_t, *mut vpx_codec_iter_t) -> *mut vpx_image_t,
 >;
@@ -366,7 +366,7 @@ pub type vpx_codec_ctrl_fn_map_t = vpx_codec_ctrl_fn_map;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_ctrl_fn_map {
-    pub ctrl_id: ::core::ffi::c_int,
+    pub ctrl_id: i32,
     pub fn_0: vpx_codec_control_fn_t,
 }
 pub type vpx_codec_control_fn_t =
@@ -457,31 +457,31 @@ pub struct vpx_codec_dec_cfg {
     pub h: ::core::ffi::c_uint,
 }
 pub type vpx_codec_iface_t = vpx_codec_iface;
-pub type jmp_buf = [::core::ffi::c_int; 48];
+pub type jmp_buf = [i32; 48];
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_internal_error_info {
     pub error_code: vpx_codec_err_t,
-    pub has_detail: ::core::ffi::c_int,
+    pub has_detail: i32,
     pub detail: [::core::ffi::c_char; 80],
-    pub setjmp: ::core::ffi::c_int,
+    pub setjmp: i32,
     pub jmp: jmp_buf,
 }
 pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
 pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
-pub const VERSION_MAJOR: ::core::ffi::c_int = 1 as ::core::ffi::c_int;
-pub const VERSION_MINOR: ::core::ffi::c_int = 16 as ::core::ffi::c_int;
-pub const VERSION_PATCH: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
+pub const VERSION_MAJOR: i32 = 1 as i32;
+pub const VERSION_MINOR: i32 = 16 as i32;
+pub const VERSION_PATCH: i32 = 0 as i32;
 pub const VERSION_EXTRA: [::core::ffi::c_char; 15] =
     unsafe { ::core::mem::transmute::<[u8; 15], [::core::ffi::c_char; 15]>(*b"122-ge9efe034e\0") };
-pub const VERSION_PACKED: ::core::ffi::c_int = VERSION_MAJOR << 16 as ::core::ffi::c_int
-    | VERSION_MINOR << 8 as ::core::ffi::c_int
-    | 0 as ::core::ffi::c_int;
+pub const VERSION_PACKED: i32 = VERSION_MAJOR << 16 as i32
+    | VERSION_MINOR << 8 as i32
+    | 0 as i32;
 pub const VERSION_STRING_NOSP: [::core::ffi::c_char; 23] = unsafe {
     ::core::mem::transmute::<[u8; 23], [::core::ffi::c_char; 23]>(*b"v1.16.0-122-ge9efe034e\0")
 };
 #[unsafe(no_mangle)]
-pub unsafe fn vpx_codec_version() -> ::core::ffi::c_int {
+pub unsafe fn vpx_codec_version() -> i32 {
     VERSION_PACKED
 }
 #[unsafe(no_mangle)]
@@ -605,7 +605,7 @@ pub unsafe fn vpx_codec_get_caps(
 #[unsafe(no_mangle)]
 pub unsafe fn vpx_codec_control_(
     mut ctx: *mut vpx_codec_ctx_t,
-    mut ctrl_id: ::core::ffi::c_int,
+    mut ctrl_id: i32,
     mut data: *mut ::core::ffi::c_void,
 ) -> vpx_codec_err_t {
     unsafe {
@@ -650,10 +650,10 @@ pub unsafe fn vpx_internal_error(
 ) {
     unsafe {
         (*info).error_code = error;
-        (*info).has_detail = 0 as ::core::ffi::c_int;
+        (*info).has_detail = 0 as i32;
         if !fmt.is_null() {
             let mut sz: size_t = ::core::mem::size_of::<[::core::ffi::c_char; 80]>() as size_t;
-            (*info).has_detail = 1 as ::core::ffi::c_int;
+            (*info).has_detail = 1 as i32;
 
             // On Windows MSVC, vsnprintf is not readily available in the default linked CRT
             // without explicitly linking legacy_stdio_definitions.lib, which complicates Rust
@@ -669,8 +669,8 @@ pub unsafe fn vpx_internal_error(
         }
         if (*info).setjmp != 0 {
             longjmp(
-                &raw mut (*info).jmp as *mut ::core::ffi::c_int,
-                (*info).error_code as ::core::ffi::c_int,
+                &raw mut (*info).jmp as *mut i32,
+                (*info).error_code as i32,
             );
         }
     }

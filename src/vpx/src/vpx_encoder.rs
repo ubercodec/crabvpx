@@ -57,12 +57,12 @@ pub struct vpx_image {
     pub x_chroma_shift: ::core::ffi::c_uint,
     pub y_chroma_shift: ::core::ffi::c_uint,
     pub planes: [*mut ::core::ffi::c_uchar; 4],
-    pub stride: [::core::ffi::c_int; 4],
-    pub bps: ::core::ffi::c_int,
+    pub stride: [i32; 4],
+    pub bps: i32,
     pub user_priv: *mut ::core::ffi::c_void,
     pub img_data: *mut ::core::ffi::c_uchar,
-    pub img_data_owner: ::core::ffi::c_int,
-    pub self_allocd: ::core::ffi::c_int,
+    pub img_data_owner: i32,
+    pub self_allocd: i32,
     pub fb_priv: *mut ::core::ffi::c_void,
 }
 pub type vpx_image_t = vpx_image;
@@ -92,7 +92,7 @@ pub type vpx_codec_flags_t = ::core::ffi::c_long;
 #[repr(C)]
 pub struct vpx_codec_iface {
     pub name: *const ::core::ffi::c_char,
-    pub abi_version: ::core::ffi::c_int,
+    pub abi_version: i32,
     pub caps: vpx_codec_caps_t,
     pub init: vpx_codec_init_fn_t,
     pub destroy: vpx_codec_destroy_fn_t,
@@ -103,7 +103,7 @@ pub struct vpx_codec_iface {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_enc_iface {
-    pub cfg_map_count: ::core::ffi::c_int,
+    pub cfg_map_count: i32,
     pub cfg_maps: *const vpx_codec_enc_cfg_map_t,
     pub encode: vpx_codec_encode_fn_t,
     pub get_cx_data: vpx_codec_get_cx_data_fn_t,
@@ -160,7 +160,7 @@ pub struct vpx_codec_enc_cfg {
     pub kf_min_dist: ::core::ffi::c_uint,
     pub kf_max_dist: ::core::ffi::c_uint,
     pub ss_number_layers: ::core::ffi::c_uint,
-    pub ss_enable_auto_alt_ref: [::core::ffi::c_int; 5],
+    pub ss_enable_auto_alt_ref: [i32; 5],
     pub ss_target_bitrate: [::core::ffi::c_uint; 5],
     pub ts_number_layers: ::core::ffi::c_uint,
     pub ts_target_bitrate: [::core::ffi::c_uint; 5],
@@ -168,8 +168,8 @@ pub struct vpx_codec_enc_cfg {
     pub ts_periodicity: ::core::ffi::c_uint,
     pub ts_layer_id: [::core::ffi::c_uint; 16],
     pub layer_target_bitrate: [::core::ffi::c_uint; 12],
-    pub temporal_layering_mode: ::core::ffi::c_int,
-    pub use_vizier_rc_params: ::core::ffi::c_int,
+    pub temporal_layering_mode: i32,
+    pub use_vizier_rc_params: i32,
     pub active_wq_factor: vpx_rational_t,
     pub err_per_mb_factor: vpx_rational_t,
     pub sr_default_decay_limit: vpx_rational_t,
@@ -190,8 +190,8 @@ pub type vpx_rational_t = vpx_rational;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_rational {
-    pub num: ::core::ffi::c_int,
-    pub den: ::core::ffi::c_int,
+    pub num: i32,
+    pub den: i32,
 }
 pub type vpx_kf_mode = ::core::ffi::c_uint;
 pub const VPX_KF_DISABLED: vpx_kf_mode = 0;
@@ -255,7 +255,7 @@ pub struct vpx_psnr_pkt {
     pub samples: [::core::ffi::c_uint; 4],
     pub sse: [uint64_t; 4],
     pub psnr: [::core::ffi::c_double; 4],
-    pub spatial_layer_id: ::core::ffi::c_int,
+    pub spatial_layer_id: i32,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -265,7 +265,7 @@ pub struct C2RustUnnamed_0 {
     pub pts: vpx_codec_pts_t,
     pub duration: ::core::ffi::c_ulong,
     pub flags: vpx_codec_frame_flags_t,
-    pub partition_id: ::core::ffi::c_int,
+    pub partition_id: i32,
     pub width: [::core::ffi::c_uint; 5],
     pub height: [::core::ffi::c_uint; 5],
     pub spatial_layer_encoded: [uint8_t; 5],
@@ -293,7 +293,7 @@ pub type vpx_codec_enc_cfg_map_t = vpx_codec_enc_cfg_map;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_enc_cfg_map {
-    pub usage: ::core::ffi::c_int,
+    pub usage: i32,
     pub cfg: vpx_codec_enc_cfg_t,
 }
 #[derive(Copy, Clone)]
@@ -315,7 +315,7 @@ pub type vpx_codec_set_fb_fn_t = Option<unsafe fn(
 pub type vpx_release_frame_buffer_cb_fn_t = Option<unsafe fn(
         *mut ::core::ffi::c_void,
         *mut vpx_codec_frame_buffer_t,
-    ) -> ::core::ffi::c_int,
+    ) -> i32,
 >;
 pub type vpx_codec_frame_buffer_t = vpx_codec_frame_buffer;
 #[derive(Copy, Clone)]
@@ -329,7 +329,7 @@ pub type vpx_get_frame_buffer_cb_fn_t = Option<unsafe fn(
         *mut ::core::ffi::c_void,
         size_t,
         *mut vpx_codec_frame_buffer_t,
-    ) -> ::core::ffi::c_int,
+    ) -> i32,
 >;
 pub type vpx_codec_get_frame_fn_t = Option<unsafe fn(*mut vpx_codec_alg_priv_t, *mut vpx_codec_iter_t) -> *mut vpx_image_t,
 >;
@@ -364,7 +364,7 @@ pub type vpx_codec_ctrl_fn_map_t = vpx_codec_ctrl_fn_map;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_ctrl_fn_map {
-    pub ctrl_id: ::core::ffi::c_int,
+    pub ctrl_id: i32,
     pub fn_0: vpx_codec_control_fn_t,
 }
 pub type vpx_codec_control_fn_t =
@@ -466,20 +466,20 @@ pub struct vpx_codec_pkt_list {
 pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
 pub const UINT32_MAX: ::core::ffi::c_uint = 4294967295 as ::core::ffi::c_uint;
 pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
-pub const VPX_IMAGE_ABI_VERSION: ::core::ffi::c_int = 5 as ::core::ffi::c_int;
-pub const VPX_CODEC_ABI_VERSION: ::core::ffi::c_int =
-    4 as ::core::ffi::c_int + VPX_IMAGE_ABI_VERSION;
-pub const VPX_CODEC_CAP_ENCODER: ::core::ffi::c_int = 0x2 as ::core::ffi::c_int;
-pub const VPX_TPL_ABI_VERSION: ::core::ffi::c_int = 5 as ::core::ffi::c_int;
-pub const VPX_EXT_RATECTRL_ABI_VERSION: ::core::ffi::c_int =
-    7 as ::core::ffi::c_int + VPX_TPL_ABI_VERSION;
-pub const VPX_ENCODER_ABI_VERSION: ::core::ffi::c_int =
-    18 as ::core::ffi::c_int + VPX_CODEC_ABI_VERSION + VPX_EXT_RATECTRL_ABI_VERSION;
-pub const VPX_CODEC_CAP_PSNR: ::core::ffi::c_int = 0x10000 as ::core::ffi::c_int;
-pub const VPX_CODEC_CAP_OUTPUT_PARTITION: ::core::ffi::c_int = 0x20000 as ::core::ffi::c_int;
-pub const VPX_CODEC_USE_PSNR: ::core::ffi::c_int = 0x10000 as ::core::ffi::c_int;
-pub const VPX_CODEC_USE_OUTPUT_PARTITION: ::core::ffi::c_int = 0x20000 as ::core::ffi::c_int;
-pub const VPX_CODEC_INTERNAL_ABI_VERSION: ::core::ffi::c_int = 5 as ::core::ffi::c_int;
+pub const VPX_IMAGE_ABI_VERSION: i32 = 5 as i32;
+pub const VPX_CODEC_ABI_VERSION: i32 =
+    4 as i32 + VPX_IMAGE_ABI_VERSION;
+pub const VPX_CODEC_CAP_ENCODER: i32 = 0x2 as i32;
+pub const VPX_TPL_ABI_VERSION: i32 = 5 as i32;
+pub const VPX_EXT_RATECTRL_ABI_VERSION: i32 =
+    7 as i32 + VPX_TPL_ABI_VERSION;
+pub const VPX_ENCODER_ABI_VERSION: i32 =
+    18 as i32 + VPX_CODEC_ABI_VERSION + VPX_EXT_RATECTRL_ABI_VERSION;
+pub const VPX_CODEC_CAP_PSNR: i32 = 0x10000 as i32;
+pub const VPX_CODEC_CAP_OUTPUT_PARTITION: i32 = 0x20000 as i32;
+pub const VPX_CODEC_USE_PSNR: i32 = 0x10000 as i32;
+pub const VPX_CODEC_USE_OUTPUT_PARTITION: i32 = 0x20000 as i32;
+pub const VPX_CODEC_INTERNAL_ABI_VERSION: i32 = 5 as i32;
 unsafe fn get_alg_priv(mut ctx: *mut vpx_codec_ctx_t) -> *mut vpx_codec_alg_priv_t {
     unsafe { (*ctx).priv_0 as *mut vpx_codec_alg_priv_t }
 }
@@ -489,7 +489,7 @@ pub unsafe fn vpx_codec_enc_init_ver(
     mut iface: *const vpx_codec_iface_t,
     mut cfg: *const vpx_codec_enc_cfg_t,
     mut flags: vpx_codec_flags_t,
-    mut ver: ::core::ffi::c_int,
+    mut ver: i32,
 ) -> vpx_codec_err_t {
     unsafe {
         let mut res: vpx_codec_err_t = VPX_CODEC_OK;
@@ -541,10 +541,10 @@ pub unsafe fn vpx_codec_enc_init_multi_ver(
     mut ctx: *mut vpx_codec_ctx_t,
     mut iface: *const vpx_codec_iface_t,
     mut cfg: *const vpx_codec_enc_cfg_t,
-    mut num_enc: ::core::ffi::c_int,
+    mut num_enc: i32,
     mut flags: vpx_codec_flags_t,
     mut dsf: *const vpx_rational_t,
-    mut ver: ::core::ffi::c_int,
+    mut ver: i32,
 ) -> vpx_codec_err_t {
     unsafe {
         let mut res: vpx_codec_err_t = VPX_CODEC_OK;
@@ -553,7 +553,7 @@ pub unsafe fn vpx_codec_enc_init_multi_ver(
         } else if ctx.is_null()
             || iface.is_null()
             || cfg.is_null()
-            || (num_enc > 16 as ::core::ffi::c_int || num_enc < 1 as ::core::ffi::c_int)
+            || (num_enc > 16 as i32 || num_enc < 1 as i32)
             || dsf.is_null()
         {
             res = VPX_CODEC_INVALID_PARAM;
@@ -570,7 +570,7 @@ pub unsafe fn vpx_codec_enc_init_multi_ver(
         {
             res = VPX_CODEC_INCAPABLE;
         } else {
-            let mut i: ::core::ffi::c_int = 0;
+            let mut i: i32 = 0;
             let mut mem_loc: *mut ::core::ffi::c_void =
                 ::core::ptr::null_mut::<::core::ffi::c_void>();
             if (*iface).enc.mr_get_mem_loc.is_none() {
@@ -581,7 +581,7 @@ pub unsafe fn vpx_codec_enc_init_multi_ver(
                 .mr_get_mem_loc
                 .expect("non-null function pointer")(cfg, &raw mut mem_loc);
             if res as u64 == 0 {
-                i = 0 as ::core::ffi::c_int;
+                i = 0 as i32;
                 while i < num_enc {
                     let mut mr_cfg: vpx_codec_priv_enc_mr_cfg_t = vpx_codec_priv_enc_mr_cfg {
                         mr_total_resolutions: 0,
@@ -589,9 +589,9 @@ pub unsafe fn vpx_codec_enc_init_multi_ver(
                         mr_down_sampling_factor: vpx_rational { num: 0, den: 0 },
                         mr_low_res_mode_info: ::core::ptr::null_mut::<::core::ffi::c_void>(),
                     };
-                    if (*dsf).num < 1 as ::core::ffi::c_int
-                        || (*dsf).num > 4096 as ::core::ffi::c_int
-                        || (*dsf).den < 1 as ::core::ffi::c_int
+                    if (*dsf).num < 1 as i32
+                        || (*dsf).num > 4096 as i32
+                        || (*dsf).den < 1 as i32
                         || (*dsf).den > (*dsf).num
                     {
                         res = VPX_CODEC_INVALID_PARAM;
@@ -599,7 +599,7 @@ pub unsafe fn vpx_codec_enc_init_multi_ver(
                         mr_cfg.mr_low_res_mode_info = mem_loc;
                         mr_cfg.mr_total_resolutions = num_enc as ::core::ffi::c_uint;
                         mr_cfg.mr_encoder_id =
-                            (num_enc - 1 as ::core::ffi::c_int - i) as ::core::ffi::c_uint;
+                            (num_enc - 1 as i32 - i) as ::core::ffi::c_uint;
                         mr_cfg.mr_down_sampling_factor = *dsf as vpx_rational;
                         (*ctx).iface = iface;
                         (*ctx).name = (*iface).name;
@@ -707,13 +707,13 @@ pub unsafe fn vpx_codec_encode(
                     deadline,
                 );
             } else {
-                let mut i: ::core::ffi::c_int = 0;
+                let mut i: i32 = 0;
                 ctx = ctx.offset(num_enc.wrapping_sub(1 as ::core::ffi::c_uint) as isize);
                 if !img.is_null() {
                     img = img.offset(num_enc.wrapping_sub(1 as ::core::ffi::c_uint) as isize);
                 }
-                i = num_enc.wrapping_sub(1 as ::core::ffi::c_uint) as ::core::ffi::c_int;
-                while i >= 0 as ::core::ffi::c_int {
+                i = num_enc.wrapping_sub(1 as ::core::ffi::c_uint) as i32;
+                while i >= 0 as i32 {
                     res = (*(*ctx).iface)
                         .enc
                         .encode
@@ -771,7 +771,7 @@ pub unsafe fn vpx_codec_get_cx_data(
         }
         if !pkt.is_null()
             && (*pkt).kind as ::core::ffi::c_uint
-                == VPX_CODEC_CX_FRAME_PKT as ::core::ffi::c_int as ::core::ffi::c_uint
+                == VPX_CODEC_CX_FRAME_PKT as i32 as ::core::ffi::c_uint
         {
             let priv_0: *mut vpx_codec_priv_t = (*ctx).priv_0;
             let dst_buf: *mut ::core::ffi::c_char =
@@ -916,15 +916,15 @@ pub unsafe fn vpx_codec_enc_config_set(
 pub unsafe fn vpx_codec_pkt_list_add(
     mut list: *mut vpx_codec_pkt_list,
     mut pkt: *const vpx_codec_cx_pkt,
-) -> ::core::ffi::c_int {
+) -> i32 {
     unsafe {
         if (*list).cnt < (*list).max {
             let fresh0 = (*list).cnt;
             (*list).cnt = (*list).cnt.wrapping_add(1);
             *(&raw mut (*list).pkts as *mut vpx_codec_cx_pkt).offset(fresh0 as isize) = *pkt;
-            return 0 as ::core::ffi::c_int;
+            return 0 as i32;
         }
-        1 as ::core::ffi::c_int
+        1 as i32
     }
 }
 #[unsafe(no_mangle)]
@@ -942,7 +942,7 @@ pub unsafe fn vpx_codec_pkt_list_get(
             as size_t)
             < (*list).cnt as size_t
         {
-            *iter = pkt.offset(1 as ::core::ffi::c_int as isize) as vpx_codec_iter_t;
+            *iter = pkt.offset(1 as i32 as isize) as vpx_codec_iter_t;
         } else {
             pkt = ::core::ptr::null::<vpx_codec_cx_pkt_t>();
         }

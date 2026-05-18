@@ -31,35 +31,35 @@ unsafe fn uint32_to_mem(mut buf: *mut uint8_t, mut a: uint32_t) {
 }
 static mut bifilter4_coeff: [[uint8_t; 2]; 8] = [
     [
-        128 as ::core::ffi::c_int as uint8_t,
-        0 as ::core::ffi::c_int as uint8_t,
+        128 as i32 as uint8_t,
+        0 as i32 as uint8_t,
     ],
     [
-        112 as ::core::ffi::c_int as uint8_t,
-        16 as ::core::ffi::c_int as uint8_t,
+        112 as i32 as uint8_t,
+        16 as i32 as uint8_t,
     ],
     [
-        96 as ::core::ffi::c_int as uint8_t,
-        32 as ::core::ffi::c_int as uint8_t,
+        96 as i32 as uint8_t,
+        32 as i32 as uint8_t,
     ],
     [
-        80 as ::core::ffi::c_int as uint8_t,
-        48 as ::core::ffi::c_int as uint8_t,
+        80 as i32 as uint8_t,
+        48 as i32 as uint8_t,
     ],
     [
-        64 as ::core::ffi::c_int as uint8_t,
-        64 as ::core::ffi::c_int as uint8_t,
+        64 as i32 as uint8_t,
+        64 as i32 as uint8_t,
     ],
     [
-        48 as ::core::ffi::c_int as uint8_t,
-        80 as ::core::ffi::c_int as uint8_t,
+        48 as i32 as uint8_t,
+        80 as i32 as uint8_t,
     ],
     [
-        32 as ::core::ffi::c_int as uint8_t,
-        96 as ::core::ffi::c_int as uint8_t,
+        32 as i32 as uint8_t,
+        96 as i32 as uint8_t,
     ],
     [
-        16 as ::core::ffi::c_int as uint8_t,
-        112 as ::core::ffi::c_int as uint8_t,
+        16 as i32 as uint8_t,
+        112 as i32 as uint8_t,
     ],
 ];

@@ -3,18 +3,18 @@ pub type vp8_tree_index = ::core::ffi::c_schar;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vp8_token_struct {
-    pub value: ::core::ffi::c_int,
-    pub Len: ::core::ffi::c_int,
+    pub value: i32,
+    pub Len: i32,
 }
 pub type vp8_token = vp8_token_struct;
 pub type uint64_t = u64;
-pub const vp8_prob_half: vp8_prob = 128 as ::core::ffi::c_int as vp8_prob;
+pub const vp8_prob_half: vp8_prob = 128 as i32 as vp8_prob;
 unsafe fn tree2tok(
     p: *mut vp8_token_struct,
     mut t: *const vp8_tree_index,
-    mut i: ::core::ffi::c_int,
-    mut v: ::core::ffi::c_int,
-    mut L: ::core::ffi::c_int,
+    mut i: i32,
+    mut v: i32,
+    mut L: i32,
 ) {
     unsafe {
         v += v;
@@ -23,14 +23,14 @@ unsafe fn tree2tok(
             let fresh0 = i;
             i += 1;
             let j: vp8_tree_index = *t.offset(fresh0 as isize);
-            if j as ::core::ffi::c_int <= 0 as ::core::ffi::c_int {
-                (*p.offset(-(j as ::core::ffi::c_int) as isize)).value = v;
-                (*p.offset(-(j as ::core::ffi::c_int) as isize)).Len = L;
+            if j as i32 <= 0 as i32 {
+                (*p.offset(-(j as i32) as isize)).value = v;
+                (*p.offset(-(j as i32) as isize)).Len = L;
             } else {
-                tree2tok(p, t, j as ::core::ffi::c_int, v, L);
+                tree2tok(p, t, j as i32, v, L);
             }
             v += 1;
-            if !(v & 1 as ::core::ffi::c_int != 0) {
+            if !(v & 1 as i32 != 0) {
                 break;
             }
         }
@@ -45,9 +45,9 @@ pub unsafe fn vp8_tokens_from_tree(
         tree2tok(
             p,
             t,
-            0 as ::core::ffi::c_int,
-            0 as ::core::ffi::c_int,
-            0 as ::core::ffi::c_int,
+            0 as i32,
+            0 as i32,
+            0 as i32,
         );
     }
 }
@@ -55,51 +55,51 @@ pub unsafe fn vp8_tokens_from_tree(
 pub unsafe fn vp8_tokens_from_tree_offset(
     mut p: *mut vp8_token_struct,
     mut t: *const vp8_tree_index,
-    mut offset: ::core::ffi::c_int,
+    mut offset: i32,
 ) {
     unsafe {
         tree2tok(
             p.offset(-(offset as isize)),
             t,
-            0 as ::core::ffi::c_int,
-            0 as ::core::ffi::c_int,
-            0 as ::core::ffi::c_int,
+            0 as i32,
+            0 as i32,
+            0 as i32,
         );
     }
 }
 unsafe fn branch_counts(
-    mut n: ::core::ffi::c_int,
+    mut n: i32,
     mut tok: *const vp8_token,
     mut tree: *const vp8_tree_index,
     mut branch_ct: *mut [::core::ffi::c_uint; 2],
     mut num_events: *const ::core::ffi::c_uint,
 ) {
     unsafe {
-        let tree_len: ::core::ffi::c_int = n - 1 as ::core::ffi::c_int;
-        let mut t: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
+        let tree_len: i32 = n - 1 as i32;
+        let mut t: i32 = 0 as i32;
         loop {
-            let fresh1 = &mut (*branch_ct.offset(t as isize))[1 as ::core::ffi::c_int as usize];
+            let fresh1 = &mut (*branch_ct.offset(t as isize))[1 as i32 as usize];
             *fresh1 = 0 as ::core::ffi::c_uint;
-            (*branch_ct.offset(t as isize))[0 as ::core::ffi::c_int as usize] = *fresh1;
+            (*branch_ct.offset(t as isize))[0 as i32 as usize] = *fresh1;
             t += 1;
             if !(t < tree_len) {
                 break;
             }
         }
-        t = 0 as ::core::ffi::c_int;
+        t = 0 as i32;
         loop {
-            let mut L: ::core::ffi::c_int = (*tok.offset(t as isize)).Len;
-            let enc: ::core::ffi::c_int = (*tok.offset(t as isize)).value;
+            let mut L: i32 = (*tok.offset(t as isize)).Len;
+            let enc: i32 = (*tok.offset(t as isize)).value;
             let ct: ::core::ffi::c_uint = *num_events.offset(t as isize);
             let mut i: vp8_tree_index = 0 as vp8_tree_index;
             loop {
                 L -= 1;
-                let b: ::core::ffi::c_int = enc >> L & 1 as ::core::ffi::c_int;
-                let j: ::core::ffi::c_int = i as ::core::ffi::c_int >> 1 as ::core::ffi::c_int;
+                let b: i32 = enc >> L & 1 as i32;
+                let j: i32 = i as i32 >> 1 as i32;
                 let fresh2 = &mut (*branch_ct.offset(j as isize))[b as usize];
                 *fresh2 = (*fresh2).wrapping_add(ct);
-                i = *tree.offset((i as ::core::ffi::c_int + b) as isize);
-                if !(i as ::core::ffi::c_int > 0 as ::core::ffi::c_int) {
+                i = *tree.offset((i as i32 + b) as isize);
+                if !(i as i32 > 0 as i32) {
                     break;
                 }
             }
@@ -112,31 +112,31 @@ unsafe fn branch_counts(
 }
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_tree_probs_from_distribution(
-    mut n: ::core::ffi::c_int,
+    mut n: i32,
     mut tok: *const vp8_token,
     mut tree: *const vp8_tree_index,
     mut probs: *mut vp8_prob,
     mut branch_ct: *mut [::core::ffi::c_uint; 2],
     mut num_events: *const ::core::ffi::c_uint,
     mut Pfactor: ::core::ffi::c_uint,
-    mut Round: ::core::ffi::c_int,
+    mut Round: i32,
 ) {
     unsafe {
-        let tree_len: ::core::ffi::c_int = n - 1 as ::core::ffi::c_int;
-        let mut t: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
+        let tree_len: i32 = n - 1 as i32;
+        let mut t: i32 = 0 as i32;
         branch_counts(n, tok, tree, branch_ct, num_events);
         loop {
             let c: *const ::core::ffi::c_uint =
                 &raw mut *branch_ct.offset(t as isize) as *mut ::core::ffi::c_uint;
-            let tot: ::core::ffi::c_uint = (*c.offset(0 as ::core::ffi::c_int as isize))
-                .wrapping_add(*c.offset(1 as ::core::ffi::c_int as isize));
+            let tot: ::core::ffi::c_uint = (*c.offset(0 as i32 as isize))
+                .wrapping_add(*c.offset(1 as i32 as isize));
             if tot != 0 {
-                let p: ::core::ffi::c_uint = ((*c.offset(0 as ::core::ffi::c_int as isize)
+                let p: ::core::ffi::c_uint = ((*c.offset(0 as i32 as isize)
                     as uint64_t)
                     .wrapping_mul(Pfactor as uint64_t)
                     .wrapping_add(
                         (if Round != 0 {
-                            tot >> 1 as ::core::ffi::c_int
+                            tot >> 1 as i32
                         } else {
                             0 as ::core::ffi::c_uint
                         }) as uint64_t,
