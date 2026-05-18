@@ -375,9 +375,8 @@ fn decode_macroblock(
                 xd.dst.y_stride,
             );
         } else {
-            let mut DQC: *mut ::core::ffi::c_short =
-                &raw mut xd.dequant_y1 as *mut ::core::ffi::c_short;
-            let mut dst_stride: ::core::ffi::c_int = xd.dst.y_stride;
+            let dst_stride: ::core::ffi::c_int = xd.dst.y_stride;
+            let dst_y_active = unsafe { xd.dst.y_view_mut() };
             if xd.mode_info().mbmi.mb_skip_coeff != 0 {
                 xd.eobs.fill(0);
             }
@@ -405,13 +404,11 @@ fn decode_macroblock(
                     let block_idx = i as usize;
                     let q_offset = block_idx * 16;
                     let q_sub: &mut [i16; 16] = (&mut xd.qcoeff[q_offset..q_offset + 16]).try_into().unwrap();
-                    let dq_ref = unsafe { &*(DQC as *const [i16; 16]) };
+                    let dq_ref = &xd.dequant_y1;
                     
                     let dst_offset = b_offset as usize;
                     let dst_sub_len = 3 * dst_stride as usize + 4;
-                    let dst_sub_slice = unsafe {
-                        core::slice::from_raw_parts_mut(xd.dst.y_buffer.offset(dst_offset as isize), dst_sub_len)
-                    };
+                    let dst_sub_slice = &mut dst_y_active[dst_offset..dst_offset + dst_sub_len];
  
                     if xd.eobs[i as usize] as ::core::ffi::c_int > 1 as ::core::ffi::c_int {
                         vp8_dequant_idct_add_safe(q_sub, dq_ref, dst_sub_slice, dst_stride);
