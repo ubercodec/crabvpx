@@ -1,6 +1,7 @@
 # VP8 Decoder Safety Hints
 
 ## Current Progress (May 2026)
+- **Safe Inter Prediction API**: Refactored `vp8_build_inter_predictors_mb` in `src/vp8/common/reconinter.rs` to take safe reference `&mut MACROBLOCKD`, eliminating raw pointer parameters, `extern "C"` linkage, and `#[unsafe(no_mangle)]`. Updated call sites in `decodeframe.rs` and `threading.rs`. Reduced unsafe count by 2.
 - **Safe Intra Prediction API**: Refactored `vp8_build_intra_predictors_mby_s` and `vp8_build_intra_predictors_mbuv_s` in `src/vp8/common/reconintra.rs` to take safe reference `&MACROBLOCKD`, eliminating raw pointer parameters, `extern "C"` linkage, and `#[unsafe(no_mangle)]`. Updated call sites in `decodeframe.rs` and `threading.rs`. Reduced unsafe count by 4.
 - **Safe Macroblock Decoding API**: Refactored `decode_macroblock` in `src/vp8/decoder/decodeframe.rs` and `mt_decode_macroblock` in `src/vp8/decoder/threading.rs` to take safe references `&mut VP8D_COMP` and `&mut MACROBLOCKD`, eliminating raw pointer parameters, `extern "C"` linkage, and `unsafe` keyword from declaration. Updated call sites in `decodeframe.rs` and `threading.rs`. Reduced unsafe count by 2.
 - **Safe Macroblock Token Decoding API**: Refactored `vp8_decode_mb_tokens` in `src/vp8/decoder/detokenize.rs` to take safe references `&mut VP8D_COMP` and `&mut MACROBLOCKD`, eliminating raw pointer parameters, `extern "C"` linkage, and `#[unsafe(no_mangle)]`. Updated call sites in `decodeframe.rs` and `threading.rs`. Reduced unsafe count by 1.

@@ -165,7 +165,6 @@ unsafe extern "C" {
         dst_stride: ::core::ffi::c_int,
         top_left: ::core::ffi::c_uchar,
     );
-    fn vp8_build_inter_predictors_mb(xd: *mut MACROBLOCKD);
     fn vp8_setup_version(cm: *mut VP8_COMMON);
     fn vp8_init_mbmode_probs(x: *mut VP8_COMMON);
     fn vp8_ac_yquant(QIndex: ::core::ffi::c_int) -> ::core::ffi::c_int;
@@ -495,7 +494,7 @@ fn decode_macroblock(
             }
         }
     } else {
-        vp8_build_inter_predictors_mb(xd as *mut _);
+        crate::vp8::common::reconinter::vp8_build_inter_predictors_mb(xd);
     }
     if (*xd.mode_info_context).mbmi.mb_skip_coeff == 0 {
         if mode as ::core::ffi::c_uint != B_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
