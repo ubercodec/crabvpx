@@ -40,6 +40,10 @@ clean:
 build:
     cargo build --workspace
 
+# Format the Rust workspace
+fmt:
+    cargo fmt --all
+
 # Run linting and formatting checks
 lint:
     cargo fmt --all -- --check
