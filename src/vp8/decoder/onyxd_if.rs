@@ -285,69 +285,67 @@ fn ref_cnt_fb(
     *idx = new_idx;
     buf[new_idx as usize] += 1;
 }
-unsafe extern "C" fn swap_frame_buffers(mut cm: *mut VP8_COMMON) -> ::core::ffi::c_int { unsafe {
+fn swap_frame_buffers(cm: &mut VP8_COMMON) -> ::core::ffi::c_int {
     let mut err: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    if (*cm).copy_buffer_to_arf != 0 {
+    if cm.copy_buffer_to_arf != 0 {
         let mut new_fb: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-        if (*cm).copy_buffer_to_arf == 1 as ::core::ffi::c_int {
-            new_fb = (*cm).lst_fb_idx;
-        } else if (*cm).copy_buffer_to_arf == 2 as ::core::ffi::c_int {
-            new_fb = (*cm).gld_fb_idx;
+        if cm.copy_buffer_to_arf == 1 as ::core::ffi::c_int {
+            new_fb = cm.lst_fb_idx;
+        } else if cm.copy_buffer_to_arf == 2 as ::core::ffi::c_int {
+            new_fb = cm.gld_fb_idx;
         } else {
             err = -(1 as ::core::ffi::c_int);
         }
         ref_cnt_fb(
-            &mut (*cm).fb_idx_ref_cnt,
-            &mut (*cm).alt_fb_idx,
+            &mut cm.fb_idx_ref_cnt,
+            &mut cm.alt_fb_idx,
             new_fb,
         );
     }
-    if (*cm).copy_buffer_to_gf != 0 {
+    if cm.copy_buffer_to_gf != 0 {
         let mut new_fb_0: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-        if (*cm).copy_buffer_to_gf == 1 as ::core::ffi::c_int {
-            new_fb_0 = (*cm).lst_fb_idx;
-        } else if (*cm).copy_buffer_to_gf == 2 as ::core::ffi::c_int {
-            new_fb_0 = (*cm).alt_fb_idx;
+        if cm.copy_buffer_to_gf == 1 as ::core::ffi::c_int {
+            new_fb_0 = cm.lst_fb_idx;
+        } else if cm.copy_buffer_to_gf == 2 as ::core::ffi::c_int {
+            new_fb_0 = cm.alt_fb_idx;
         } else {
             err = -(1 as ::core::ffi::c_int);
         }
         ref_cnt_fb(
-            &mut (*cm).fb_idx_ref_cnt,
-            &mut (*cm).gld_fb_idx,
+            &mut cm.fb_idx_ref_cnt,
+            &mut cm.gld_fb_idx,
             new_fb_0,
         );
     }
-    if (*cm).refresh_golden_frame != 0 {
+    if cm.refresh_golden_frame != 0 {
         ref_cnt_fb(
-            &mut (*cm).fb_idx_ref_cnt,
-            &mut (*cm).gld_fb_idx,
-            (*cm).new_fb_idx,
+            &mut cm.fb_idx_ref_cnt,
+            &mut cm.gld_fb_idx,
+            cm.new_fb_idx,
         );
     }
-    if (*cm).refresh_alt_ref_frame != 0 {
+    if cm.refresh_alt_ref_frame != 0 {
         ref_cnt_fb(
-            &mut (*cm).fb_idx_ref_cnt,
-            &mut (*cm).alt_fb_idx,
-            (*cm).new_fb_idx,
+            &mut cm.fb_idx_ref_cnt,
+            &mut cm.alt_fb_idx,
+            cm.new_fb_idx,
         );
     }
-    if (*cm).refresh_last_frame != 0 {
+    if cm.refresh_last_frame != 0 {
         ref_cnt_fb(
-            &mut (*cm).fb_idx_ref_cnt,
-            &mut (*cm).lst_fb_idx,
-            (*cm).new_fb_idx,
+            &mut cm.fb_idx_ref_cnt,
+            &mut cm.lst_fb_idx,
+            cm.new_fb_idx,
         );
-        (*cm).frame_to_show = (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG)
-            .offset((*cm).lst_fb_idx as isize)
-            as *mut YV12_BUFFER_CONFIG;
+        let lst_fb_idx = cm.lst_fb_idx as usize;
+        cm.frame_to_show = &raw mut cm.yv12_fb[lst_fb_idx] as *mut YV12_BUFFER_CONFIG;
     } else {
-        (*cm).frame_to_show = (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG)
-            .offset((*cm).new_fb_idx as isize)
-            as *mut YV12_BUFFER_CONFIG;
+        let new_fb_idx = cm.new_fb_idx as usize;
+        cm.frame_to_show = &raw mut cm.yv12_fb[new_fb_idx] as *mut YV12_BUFFER_CONFIG;
     }
-    (*cm).fb_idx_ref_cnt[(*cm).new_fb_idx as usize] -= 1;
+    cm.fb_idx_ref_cnt[cm.new_fb_idx as usize] -= 1;
     return err;
-}}
+}
 fn check_fragments_for_errors(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int {
     if pbi.ec_active == 0
         && pbi.fragments.count <= 1
@@ -414,7 +412,7 @@ pub unsafe extern "C" fn vp8dx_receive_compressed_data(
                 ::core::mem::size_of::<[::core::ffi::c_char; 80]>() as size_t,
             );
         }
-    } else if swap_frame_buffers(cm) != 0 {
+    } else if swap_frame_buffers(&mut *cm) != 0 {
         (*pbi).common.error.error_code = VPX_CODEC_ERROR;
     } else {
         if (*cm).show_frame != 0 {
