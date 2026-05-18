@@ -28,106 +28,135 @@ pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
 pub type uint8_t = u8;
-unsafe extern "C" fn extend_plane(
-    src: *mut uint8_t,
-    mut src_stride: ::core::ffi::c_int,
-    mut width: ::core::ffi::c_int,
-    mut height: ::core::ffi::c_int,
-    mut extend_top: ::core::ffi::c_int,
-    mut extend_left: ::core::ffi::c_int,
-    mut extend_bottom: ::core::ffi::c_int,
-    mut extend_right: ::core::ffi::c_int,
-) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    let linesize: ::core::ffi::c_int = extend_left + extend_right + width;
-    let mut src_ptr1: *mut uint8_t = src;
-    let mut src_ptr2: *mut uint8_t = src
-        .offset(width as isize)
-        .offset(-(1 as ::core::ffi::c_int as isize));
-    let mut dst_ptr1: *mut uint8_t = src.offset(-(extend_left as isize));
-    let mut dst_ptr2: *mut uint8_t = src.offset(width as isize);
-    i = 0 as ::core::ffi::c_int;
-    while i < height {
-        memset(
-            dst_ptr1 as *mut ::core::ffi::c_void,
-            *src_ptr1.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            extend_left as size_t,
-        );
-        memset(
-            dst_ptr2 as *mut ::core::ffi::c_void,
-            *src_ptr2.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            extend_right as size_t,
-        );
-        src_ptr1 = src_ptr1.offset(src_stride as isize);
-        src_ptr2 = src_ptr2.offset(src_stride as isize);
-        dst_ptr1 = dst_ptr1.offset(src_stride as isize);
-        dst_ptr2 = dst_ptr2.offset(src_stride as isize);
-        i += 1;
+unsafe fn get_plane_slice<'a>(
+    ptr: *mut u8,
+    stride: usize,
+    height: usize,
+    extend_top: usize,
+    extend_left: usize,
+    extend_bottom: usize,
+) -> &'a mut [u8] {
+    let total_height = extend_top + height + extend_bottom;
+    let total_size = total_height * stride;
+    let start_ptr = ptr.offset(-((extend_top * stride + extend_left) as isize));
+    core::slice::from_raw_parts_mut(start_ptr, total_size)
+}
+
+fn extend_plane(
+    plane: &mut [u8],
+    stride: usize,
+    width: usize,
+    height: usize,
+    extend_top: usize,
+    extend_left: usize,
+    extend_bottom: usize,
+    extend_right: usize,
+) {
+    let linesize = extend_left + width + extend_right;
+    
+    // 1. Extend left/right for active rows.
+    for r in 0..height {
+        let row_idx = extend_top + r;
+        let row_start = row_idx * stride;
+        
+        let src_left_val = plane[row_start + extend_left];
+        let src_right_val = plane[row_start + extend_left + width - 1];
+        
+        // Fill left border
+        for i in 0..extend_left {
+            plane[row_start + i] = src_left_val;
+        }
+        
+        // Fill right border
+        let right_start = row_start + extend_left + width;
+        for i in 0..extend_right {
+            plane[right_start + i] = src_right_val;
+        }
     }
-    src_ptr1 = src.offset(-(extend_left as isize));
-    src_ptr2 = src
-        .offset((src_stride * (height - 1 as ::core::ffi::c_int)) as isize)
-        .offset(-(extend_left as isize));
-    dst_ptr1 = src
-        .offset((src_stride * -extend_top) as isize)
-        .offset(-(extend_left as isize));
-    dst_ptr2 = src
-        .offset((src_stride * height) as isize)
-        .offset(-(extend_left as isize));
-    i = 0 as ::core::ffi::c_int;
-    while i < extend_top {
-        memcpy(
-            dst_ptr1 as *mut ::core::ffi::c_void,
-            src_ptr1 as *const ::core::ffi::c_void,
-            linesize as size_t,
-        );
-        dst_ptr1 = dst_ptr1.offset(src_stride as isize);
-        i += 1;
+    
+    // 2. Extend top rows.
+    let src_top_start = extend_top * stride;
+    for r in 0..extend_top {
+        let dst_start = r * stride;
+        plane.copy_within(src_top_start .. src_top_start + linesize, dst_start);
     }
-    i = 0 as ::core::ffi::c_int;
-    while i < extend_bottom {
-        memcpy(
-            dst_ptr2 as *mut ::core::ffi::c_void,
-            src_ptr2 as *const ::core::ffi::c_void,
-            linesize as size_t,
-        );
-        dst_ptr2 = dst_ptr2.offset(src_stride as isize);
-        i += 1;
+    
+    // 3. Extend bottom rows.
+    let src_bot_start = (extend_top + height - 1) * stride;
+    for r in 0..extend_bottom {
+        let dst_start = (extend_top + height + r) * stride;
+        plane.copy_within(src_bot_start .. src_bot_start + linesize, dst_start);
     }
-}}
-pub fn vp8_yv12_extend_frame_borders_c(ybf: &YV12_BUFFER_CONFIG) { unsafe {
-    let uv_border: ::core::ffi::c_int = ybf.border / 2 as ::core::ffi::c_int;
-    extend_plane(
-        ybf.y_buffer,
-        ybf.y_stride,
-        ybf.y_crop_width,
-        ybf.y_crop_height,
-        ybf.border,
-        ybf.border,
-        ybf.border + ybf.y_height - ybf.y_crop_height,
-        ybf.border + ybf.y_width - ybf.y_crop_width,
-    );
-    extend_plane(
-        ybf.u_buffer,
-        ybf.uv_stride,
-        ybf.uv_crop_width,
-        ybf.uv_crop_height,
-        uv_border,
-        uv_border,
-        uv_border + ybf.uv_height - ybf.uv_crop_height,
-        uv_border + ybf.uv_width - ybf.uv_crop_width,
-    );
-    extend_plane(
-        ybf.v_buffer,
-        ybf.uv_stride,
-        ybf.uv_crop_width,
-        ybf.uv_crop_height,
-        uv_border,
-        uv_border,
-        uv_border + ybf.uv_height - ybf.uv_crop_height,
-        uv_border + ybf.uv_width - ybf.uv_crop_width,
-    );
-}}
+}
+
+pub fn vp8_yv12_extend_frame_borders_c(ybf: &YV12_BUFFER_CONFIG) {
+    let uv_border = ybf.border / 2;
+    
+    let y_extend_bottom = (ybf.border + ybf.y_height - ybf.y_crop_height) as usize;
+    let y_extend_right = (ybf.border + ybf.y_width - ybf.y_crop_width) as usize;
+    
+    let uv_extend_bottom = (uv_border + ybf.uv_height - ybf.uv_crop_height) as usize;
+    let uv_extend_right = (uv_border + ybf.uv_width - ybf.uv_crop_width) as usize;
+
+    unsafe {
+        let y_plane = get_plane_slice(
+            ybf.y_buffer,
+            ybf.y_stride as usize,
+            ybf.y_crop_height as usize,
+            ybf.border as usize,
+            ybf.border as usize,
+            y_extend_bottom,
+        );
+        extend_plane(
+            y_plane,
+            ybf.y_stride as usize,
+            ybf.y_crop_width as usize,
+            ybf.y_crop_height as usize,
+            ybf.border as usize,
+            ybf.border as usize,
+            y_extend_bottom,
+            y_extend_right,
+        );
+
+        let u_plane = get_plane_slice(
+            ybf.u_buffer,
+            ybf.uv_stride as usize,
+            ybf.uv_crop_height as usize,
+            uv_border as usize,
+            uv_border as usize,
+            uv_extend_bottom,
+        );
+        extend_plane(
+            u_plane,
+            ybf.uv_stride as usize,
+            ybf.uv_crop_width as usize,
+            ybf.uv_crop_height as usize,
+            uv_border as usize,
+            uv_border as usize,
+            uv_extend_bottom,
+            uv_extend_right,
+        );
+
+        let v_plane = get_plane_slice(
+            ybf.v_buffer,
+            ybf.uv_stride as usize,
+            ybf.uv_crop_height as usize,
+            uv_border as usize,
+            uv_border as usize,
+            uv_extend_bottom,
+        );
+        extend_plane(
+            v_plane,
+            ybf.uv_stride as usize,
+            ybf.uv_crop_width as usize,
+            ybf.uv_crop_height as usize,
+            uv_border as usize,
+            uv_border as usize,
+            uv_extend_bottom,
+            uv_extend_right,
+        );
+    }
+}
 pub fn vp8_yv12_copy_frame_c(
     src_ybc: &YV12_BUFFER_CONFIG,
     dst_ybc: &mut YV12_BUFFER_CONFIG,
