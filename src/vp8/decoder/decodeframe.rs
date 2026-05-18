@@ -573,114 +573,78 @@ fn get_delta_q(
     ret_val
 }
 
-fn yv12_extend_frame_top_c(ybf: &YV12_BUFFER_CONFIG) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    let mut src_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut dest_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut Border: ::core::ffi::c_uint = 0;
-    let mut plane_stride: ::core::ffi::c_int = 0;
-    Border = ybf.border as ::core::ffi::c_uint;
-    plane_stride = ybf.y_stride;
-    src_ptr1 = ybf.y_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
-    dest_ptr1 =
-        src_ptr1.offset(-(Border.wrapping_mul(plane_stride as ::core::ffi::c_uint) as isize));
-    i = 0 as ::core::ffi::c_int;
-    while i < Border as ::core::ffi::c_int {
-        memcpy(
-            dest_ptr1 as *mut ::core::ffi::c_void,
-            src_ptr1 as *const ::core::ffi::c_void,
-            plane_stride as size_t,
-        );
-        dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
-        i += 1;
+fn yv12_extend_frame_top_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
+    let border = ybf.border as usize;
+
+    // Y plane
+    let y_stride = ybf.y_stride as usize;
+    let y_slice = ybf.y_slice_mut();
+    let y_src_start = border * y_stride;
+    let y_src_end = y_src_start + y_stride;
+
+    for r in 0..border {
+        let dest_start = r * y_stride;
+        y_slice.copy_within(y_src_start..y_src_end, dest_start);
     }
-    plane_stride = ybf.uv_stride;
-    Border = Border.wrapping_div(2 as ::core::ffi::c_uint);
-    src_ptr1 = ybf.u_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
-    dest_ptr1 =
-        src_ptr1.offset(-(Border.wrapping_mul(plane_stride as ::core::ffi::c_uint) as isize));
-    i = 0 as ::core::ffi::c_int;
-    while i < Border as ::core::ffi::c_int {
-        memcpy(
-            dest_ptr1 as *mut ::core::ffi::c_void,
-            src_ptr1 as *const ::core::ffi::c_void,
-            plane_stride as size_t,
-        );
-        dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
-        i += 1;
+
+    // U plane
+    let uv_border = border / 2;
+    let uv_stride = ybf.uv_stride as usize;
+    let u_slice = ybf.u_slice_mut();
+    let u_src_start = uv_border * uv_stride;
+    let u_src_end = u_src_start + uv_stride;
+
+    for r in 0..uv_border {
+        let dest_start = r * uv_stride;
+        u_slice.copy_within(u_src_start..u_src_end, dest_start);
     }
-    src_ptr1 = ybf.v_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
-    dest_ptr1 =
-        src_ptr1.offset(-(Border.wrapping_mul(plane_stride as ::core::ffi::c_uint) as isize));
-    i = 0 as ::core::ffi::c_int;
-    while i < Border as ::core::ffi::c_int {
-        memcpy(
-            dest_ptr1 as *mut ::core::ffi::c_void,
-            src_ptr1 as *const ::core::ffi::c_void,
-            plane_stride as size_t,
-        );
-        dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
-        i += 1;
+
+    // V plane
+    let v_slice = ybf.v_slice_mut();
+    let v_src_start = uv_border * uv_stride;
+    let v_src_end = v_src_start + uv_stride;
+
+    for r in 0..uv_border {
+        let dest_start = r * uv_stride;
+        v_slice.copy_within(v_src_start..v_src_end, dest_start);
     }
 }}
-fn yv12_extend_frame_bottom_c(ybf: &YV12_BUFFER_CONFIG) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    let mut src_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut src_ptr2: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut dest_ptr2: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut Border: ::core::ffi::c_uint = 0;
-    let mut plane_stride: ::core::ffi::c_int = 0;
-    let mut plane_height: ::core::ffi::c_int = 0;
-    Border = ybf.border as ::core::ffi::c_uint;
-    plane_stride = ybf.y_stride;
-    plane_height = ybf.y_height;
-    src_ptr1 = ybf.y_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
-    src_ptr2 = src_ptr1
-        .offset((plane_height * plane_stride) as isize)
-        .offset(-(plane_stride as isize));
-    dest_ptr2 = src_ptr2.offset(plane_stride as isize);
-    i = 0 as ::core::ffi::c_int;
-    while i < Border as ::core::ffi::c_int {
-        memcpy(
-            dest_ptr2 as *mut ::core::ffi::c_void,
-            src_ptr2 as *const ::core::ffi::c_void,
-            plane_stride as size_t,
-        );
-        dest_ptr2 = dest_ptr2.offset(plane_stride as isize);
-        i += 1;
+fn yv12_extend_frame_bottom_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
+    let border = ybf.border as usize;
+
+    // Y plane
+    let y_stride = ybf.y_stride as usize;
+    let y_height = ybf.y_height as usize;
+    let y_slice = ybf.y_slice_mut();
+    let y_src_start = (border + y_height - 1) * y_stride;
+    let y_src_end = y_src_start + y_stride;
+
+    for r in 0..border {
+        let dest_start = (border + y_height + r) * y_stride;
+        y_slice.copy_within(y_src_start..y_src_end, dest_start);
     }
-    plane_stride = ybf.uv_stride;
-    plane_height = ybf.uv_height;
-    Border = Border.wrapping_div(2 as ::core::ffi::c_uint);
-    src_ptr1 = ybf.u_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
-    src_ptr2 = src_ptr1
-        .offset((plane_height * plane_stride) as isize)
-        .offset(-(plane_stride as isize));
-    dest_ptr2 = src_ptr2.offset(plane_stride as isize);
-    i = 0 as ::core::ffi::c_int;
-    while i < Border as ::core::ffi::c_int {
-        memcpy(
-            dest_ptr2 as *mut ::core::ffi::c_void,
-            src_ptr2 as *const ::core::ffi::c_void,
-            plane_stride as size_t,
-        );
-        dest_ptr2 = dest_ptr2.offset(plane_stride as isize);
-        i += 1;
+
+    // U plane
+    let uv_border = border / 2;
+    let uv_stride = ybf.uv_stride as usize;
+    let uv_height = ybf.uv_height as usize;
+    let u_slice = ybf.u_slice_mut();
+    let u_src_start = (uv_border + uv_height - 1) * uv_stride;
+    let u_src_end = u_src_start + uv_stride;
+
+    for r in 0..uv_border {
+        let dest_start = (uv_border + uv_height + r) * uv_stride;
+        u_slice.copy_within(u_src_start..u_src_end, dest_start);
     }
-    src_ptr1 = ybf.v_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
-    src_ptr2 = src_ptr1
-        .offset((plane_height * plane_stride) as isize)
-        .offset(-(plane_stride as isize));
-    dest_ptr2 = src_ptr2.offset(plane_stride as isize);
-    i = 0 as ::core::ffi::c_int;
-    while i < Border as ::core::ffi::c_int {
-        memcpy(
-            dest_ptr2 as *mut ::core::ffi::c_void,
-            src_ptr2 as *const ::core::ffi::c_void,
-            plane_stride as size_t,
-        );
-        dest_ptr2 = dest_ptr2.offset(plane_stride as isize);
-        i += 1;
+
+    // V plane
+    let v_slice = ybf.v_slice_mut();
+    let v_src_start = (uv_border + uv_height - 1) * uv_stride;
+    let v_src_end = v_src_start + uv_stride;
+
+    for r in 0..uv_border {
+        let dest_start = (uv_border + uv_height + r) * uv_stride;
+        v_slice.copy_within(v_src_start..v_src_end, dest_start);
     }
 }}
 fn yv12_extend_frame_left_right_c(
@@ -1066,8 +1030,8 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
         eb_dst[1 as ::core::ffi::c_int as usize],
         eb_dst[2 as ::core::ffi::c_int as usize],
     );
-    yv12_extend_frame_top_c(&*yv12_fb_new);
-    yv12_extend_frame_bottom_c(&*yv12_fb_new);
+    yv12_extend_frame_top_c(&mut *yv12_fb_new);
+    yv12_extend_frame_bottom_c(&mut *yv12_fb_new);
 }}
 fn read_partition_size(
     pbi: &VP8D_COMP,
