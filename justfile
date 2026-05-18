@@ -14,17 +14,21 @@ configure:
     cd libvpx && make clean
     cd libvpx && make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
 
-# Run differential testing (Oracle vs Rust)
+# Run all tests (including differential vector testing)
+test *args:
+    cd harness && cargo test --release -- --nocapture {{args}}
+
+# Alias for backwards compatibility
 compare *args:
-    python3 ./scripts/compare.py {{args}}
+    @just test {{args}}
 
 # Run performance benchmarks with statistical distribution
 bench *args:
-    python3 ./scripts/benchmark.py {{args}}
+    cd harness && cargo run --release --bin benchmark -- --dir ../libvpx-test-data --benchmark {{args}}
 
 # Run complexity and technical debt analysis
 analyze *args:
-    python3 ./scripts/analyze_complexity.py {{args}}
+    cd scripts/complexity_analyzer && cargo run --release -- {{args}}
 
 # Clean output and build artifacts
 clean:
@@ -42,5 +46,5 @@ lint:
     cargo clippy --workspace -- -D warnings
 
 # Run tests in the Rust workspace
-test:
+test-all:
     cargo test --workspace

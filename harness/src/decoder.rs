@@ -3,7 +3,6 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
-#[cfg(not(feature = "rust"))]
 #[allow(unused_imports)]
 pub mod ffi {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -23,18 +22,21 @@ pub trait VideoDecoder {
     fn get_frame(&mut self) -> Result<Option<DecodedFrame>, String>;
 }
 
-#[cfg(not(feature = "rust"))]
 pub struct LibVpxOracleDecoder {
     ctx: ffi::vpx_codec_ctx_t,
     initialized: bool,
+    vpx: ffi::Vpx,
 }
 
-#[cfg(not(feature = "rust"))]
 impl LibVpxOracleDecoder {
     pub fn new() -> Self {
+        let vpx = unsafe {
+            ffi::Vpx::new("../libvpx/libvpx.dylib").expect("Failed to load libvpx.dylib")
+        };
         Self {
             ctx: unsafe { std::mem::zeroed() },
             initialized: false,
+            vpx,
         }
     }
 
@@ -64,24 +66,22 @@ impl LibVpxOracleDecoder {
     }}
 }
 
-#[cfg(not(feature = "rust"))]
 impl Drop for LibVpxOracleDecoder {
     fn drop(&mut self) {
         if self.initialized {
             unsafe {
-                ffi::vpx_codec_destroy(&mut self.ctx);
+                self.vpx.vpx_codec_destroy(&mut self.ctx);
             }
         }
     }
 }
 
-#[cfg(not(feature = "rust"))]
 impl VideoDecoder for LibVpxOracleDecoder {
     fn init(&mut self) -> Result<(), String> {
         let res = unsafe {
-            ffi::vpx_codec_dec_init_ver(
+            self.vpx.vpx_codec_dec_init_ver(
                 &mut self.ctx,
-                ffi::vpx_codec_vp8_dx(),
+                self.vpx.vpx_codec_vp8_dx(),
                 std::ptr::null(),
                 0,
                 ffi::VPX_DECODER_ABI_VERSION as i32,
@@ -101,7 +101,7 @@ impl VideoDecoder for LibVpxOracleDecoder {
         }
 
         let res = unsafe {
-            ffi::vpx_codec_decode(
+            self.vpx.vpx_codec_decode(
                 &mut self.ctx,
                 payload.as_ptr(),
                 payload.len() as u32,
@@ -123,7 +123,7 @@ impl VideoDecoder for LibVpxOracleDecoder {
         }
 
         let mut iter: ffi::vpx_codec_iter_t = std::ptr::null();
-        let img = unsafe { ffi::vpx_codec_get_frame(&mut self.ctx, &mut iter) };
+        let img = unsafe { self.vpx.vpx_codec_get_frame(&mut self.ctx, &mut iter) };
 
         if img.is_null() {
             Ok(None)
@@ -133,12 +133,10 @@ impl VideoDecoder for LibVpxOracleDecoder {
     }
 }
 
-#[cfg(feature = "rust")]
 pub struct CrabVpxDecoder {
     inner: crabvpx::api::Vp8Decoder,
 }
 
-#[cfg(feature = "rust")]
 impl CrabVpxDecoder {
     pub fn new() -> Self {
         Self {
@@ -147,7 +145,6 @@ impl CrabVpxDecoder {
     }
 }
 
-#[cfg(feature = "rust")]
 impl VideoDecoder for CrabVpxDecoder {
     fn init(&mut self) -> Result<(), String> {
         use crabvpx::api::Decoder;
