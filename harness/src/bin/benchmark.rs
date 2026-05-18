@@ -35,7 +35,7 @@ fn main() {
     if let Ok(entries) = fs::read_dir(&args.dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "ivf") {
+            if path.extension().is_some_and(|ext| ext == "ivf") {
                 ivf_files.push(path);
             }
         }
@@ -104,7 +104,7 @@ fn main() {
             }
 
             let mut success_oracle = true;
-            for i in 0..benchmark_iterations {
+            for time_ref in suite_iter_times_oracle.iter_mut() {
                 let mut decoder = LibVpxOracleDecoder::new();
                 if decoder.init().is_err() {
                     success_oracle = false;
@@ -118,14 +118,14 @@ fn main() {
                         break;
                     }
                 }
-                suite_iter_times_oracle[i] += start.elapsed();
+                *time_ref += start.elapsed();
                 if !success_oracle {
                     break;
                 }
             }
 
             let mut success_crab = true;
-            for i in 0..benchmark_iterations {
+            for time_ref in suite_iter_times_crab.iter_mut() {
                 let mut decoder = CrabVpxDecoder::new();
                 if decoder.init().is_err() {
                     success_crab = false;
@@ -139,7 +139,7 @@ fn main() {
                         break;
                     }
                 }
-                suite_iter_times_crab[i] += start.elapsed();
+                *time_ref += start.elapsed();
                 if !success_crab {
                     break;
                 }

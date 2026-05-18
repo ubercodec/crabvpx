@@ -133,7 +133,7 @@ fn gather_file_stats(src_dir: &Path) -> Vec<FileStats> {
     let mut file_stats = Vec::new();
     for entry in WalkDir::new(src_dir).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
-        if path.extension().map_or(false, |ext| ext == "rs") {
+        if path.extension().is_some_and(|ext| ext == "rs") {
             let path_str = path.to_string_lossy().to_string();
             if path_str.contains("target/")
                 || path.file_name().unwrap() == "build.rs"
@@ -169,7 +169,7 @@ fn add_top_files(
     key_fn: fn(&FileStats) -> usize,
 ) {
     report.push_str(&format!("{}\n| File | Count |\n|---|---|\n", title));
-    stats.sort_by(|a, b| key_fn(b).cmp(&key_fn(a)));
+    stats.sort_by_key(|b| std::cmp::Reverse(key_fn(b)));
 
     for stat in stats.iter().take(10) {
         report.push_str(&format!("| `{}` | {} |\n", stat.path, key_fn(stat)));
