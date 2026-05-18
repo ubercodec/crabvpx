@@ -1,4 +1,4 @@
-use crate::vp8::decoder::detokenize::vp8_reset_mb_tokens_context;
+use crate::vp8::decoder::detokenize::{vp8_decode_mb_tokens, vp8_reset_mb_tokens_context};
 
 unsafe extern "C" {
     fn vp8_dc_only_idct_add_neon(
@@ -124,7 +124,7 @@ unsafe extern "C" {
         UPtr: *mut ::core::ffi::c_uchar,
         VPtr: *mut ::core::ffi::c_uchar,
     );
-    fn vp8_decode_mb_tokens(_: *mut VP8D_COMP, _: *mut MACROBLOCKD) -> ::core::ffi::c_int;
+    
     fn vp8_intra4x4_predict(
         above: *mut ::core::ffi::c_uchar,
         yleft: *mut ::core::ffi::c_uchar,
@@ -403,7 +403,7 @@ unsafe extern "C" fn mt_decode_macroblock(
         vp8_reset_mb_tokens_context(&mut *xd);
     } else if vp8dx_bool_error(&(*pbi).mbc[(*xd).current_bc_idx]) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
-        eobtotal = vp8_decode_mb_tokens(pbi, xd);
+        eobtotal = vp8_decode_mb_tokens(&mut *pbi, &mut *xd);
         (*(*xd).mode_info_context).mbmi.mb_skip_coeff =
             (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
     }

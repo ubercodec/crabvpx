@@ -150,13 +150,10 @@ fn GetCoeffs(
         }
     }
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn vp8_decode_mb_tokens(
-    mut pbi: *mut VP8D_COMP,
-    mut x: *mut MACROBLOCKD,
+pub fn vp8_decode_mb_tokens(
+    pbi_mut: &mut VP8D_COMP,
+    x_ref: &mut MACROBLOCKD,
 ) -> ::core::ffi::c_int { unsafe {
-    let pbi_mut = &mut *pbi;
-    let x_ref = &mut *x;
     let bc = &mut pbi_mut.mbc[x_ref.current_bc_idx];
     let len = bc.user_buffer_end.offset_from(bc.user_buffer) as usize;
     let slice = if len == 0 {
