@@ -61,7 +61,7 @@ unsafe fn vpx_read_bit(mut r: *mut VpxReader) -> i32 {
     unsafe { vpx_read(r, 128 as i32) }
 }
 #[inline]
-unsafe fn bswap64(mut x: u64) -> u64 {
+fn bswap64(mut x: u64) -> u64 {
     x.swap_bytes()
 }
 #[unsafe(no_mangle)]

@@ -10,7 +10,7 @@ pub struct LoopFilterInfo {
     pub hev_thr: *const u8,
 }
 pub type Uc = u8;
-unsafe fn vp8_signed_char_clamp(mut t: i32) -> i8 {
+fn vp8_signed_char_clamp(mut t: i32) -> i8 {
     t = if t < -(128 as i32) { -(128 as i32) } else { t };
     t = if t > 127 as i32 { 127 as i32 } else { t };
     t as i8

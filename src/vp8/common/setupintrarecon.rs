@@ -1,5 +1,4 @@
 use std::ffi::c_void;
-unsafe extern "Rust" {}
 pub type VpxColorSpace = u32;
 pub const VPX_CS_SRGB: VpxColorSpace = 7;
 pub const VPX_CS_RESERVED: VpxColorSpace = 6;

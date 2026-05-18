@@ -10,7 +10,7 @@ pub struct OpaquePthreadOnceT {
 }
 pub type DarwinPthreadOnceT = OpaquePthreadOnceT;
 pub type PthreadOnceT = *mut c_void;
-unsafe fn setup_rtcd_internal() {}
+fn setup_rtcd_internal() {}
 pub const _PTHREAD_ONCE_SIG_init: i32 = 0x30b1bcba as i32;
 unsafe fn once(mut func: Option<unsafe fn() -> ()>) {
     unsafe {

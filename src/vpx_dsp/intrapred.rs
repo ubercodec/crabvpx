@@ -1,11 +1,10 @@
 use std::ffi::c_void;
-unsafe extern "Rust" {}
 pub type DarwinPtrdiffT = isize;
 pub type DarwinSizeT = usize;
 pub type PtrdiffT = DarwinPtrdiffT;
 pub type SizeT = DarwinSizeT;
 #[inline]
-unsafe fn clip_pixel(mut val: i32) -> u8 {
+fn clip_pixel(mut val: i32) -> u8 {
     (if val > 255 as i32 {
         255 as i32
     } else if val < 0 as i32 {

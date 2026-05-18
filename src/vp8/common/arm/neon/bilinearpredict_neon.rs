@@ -12,7 +12,7 @@ pub struct Uint32x2x2T {
 pub type SizeT = DarwinSizeT;
 pub type PtrdiffT = DarwinPtrdiffT;
 #[inline]
-unsafe fn uint32_to_mem(mut buf: *mut u8, mut a: u32) {
+fn uint32_to_mem(mut buf: *mut u8, mut a: u32) {
     core::ptr::copy_nonoverlapping(&raw mut a as *const c_void as *const u8, buf as *mut c_void as *mut u8, 4 as SizeT);
 }
 static mut bifilter4_coeff: [[u8; 2]; 8] = [

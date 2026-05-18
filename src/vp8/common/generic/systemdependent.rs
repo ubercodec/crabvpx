@@ -1,4 +1,3 @@
-unsafe extern "Rust" {}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union BModeInfo {
@@ -238,7 +237,7 @@ pub type ClampType = u32;
 pub const RECON_CLAMP_NOTREQUIRED: ClampType = 1;
 pub const RECON_CLAMP_REQUIRED: ClampType = 0;
 pub type Vp8Common = VP8Common;
-unsafe fn get_cpu_count() -> i32 {
+fn get_cpu_count() -> i32 {
     ::std::thread::available_parallelism()
         .map(|p| p.get())
         .unwrap_or(1) as i32

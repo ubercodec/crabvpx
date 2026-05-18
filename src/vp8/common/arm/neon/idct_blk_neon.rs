@@ -11,8 +11,8 @@ pub struct Int32x4x2T {
 }
 static mut cospi8sqrt2minus1: i16 = 20091 as i16;
 static mut sinpi8sqrt2: i16 = 17734 as i16;
-#[no_mangle]
-pub unsafe fn vp8_dequant_idct_add_y_block_neon(
+#[unsafe(no_mangle)]
+pub fn vp8_dequant_idct_add_y_block_neon(
     mut q: *mut i16,
     mut dq: *mut i16,
     mut dst: *mut u8,
@@ -65,8 +65,8 @@ pub unsafe fn vp8_dequant_idct_add_y_block_neon(
         i += 1;
     }
 }
-#[no_mangle]
-pub unsafe fn vp8_dequant_idct_add_uv_block_neon(
+#[unsafe(no_mangle)]
+pub fn vp8_dequant_idct_add_uv_block_neon(
     mut q: *mut i16,
     mut dq: *mut i16,
     mut dst_u: *mut u8,
