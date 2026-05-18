@@ -1,10 +1,4 @@
-pub use crate::vp8::common::types::vp8_prob;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct mv_context {
-    pub prob: [vp8_prob; 19],
-}
-pub type MV_CONTEXT = mv_context;
+pub use crate::vp8::common::types::{mv_context, vp8_prob, MV_CONTEXT};
 pub const vp8_mv_update_probs: [MV_CONTEXT; 2] = [
     mv_context {
         prob: [

@@ -140,7 +140,7 @@ unsafe extern "C" {
         post_ystride: ::core::ffi::c_int,
         y_ptr: *mut ::core::ffi::c_uchar,
     );
-    static vp8_default_mv_context: [MV_CONTEXT; 2];
+
     static vp8_coef_update_probs: [[[[vp8_prob; 11]; 3]; 8]; 4];
     static vp8_mb_feature_data_bits: [::core::ffi::c_int; 2];
     fn memcpy(
@@ -1231,151 +1231,54 @@ fn setup_token_decoder(
             ((*pbi).common.mb_rows - 1 as ::core::ffi::c_int) as ::core::ffi::c_uint;
     }
 }}
-unsafe extern "C" fn init_frame(mut pbi: *mut VP8D_COMP) { unsafe {
-    let pc: *mut VP8_COMMON = &raw mut (*pbi).common;
-    let xd: *mut MACROBLOCKD = &raw mut (*pbi).mb;
-    if (*pc).frame_type as ::core::ffi::c_uint
+fn init_frame(pbi: &mut VP8D_COMP) {
+    if pbi.common.frame_type as ::core::ffi::c_uint
         == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        memcpy(
-            &raw mut (*pc).fc.mvc as *mut MV_CONTEXT as *mut ::core::ffi::c_void,
-            &raw const vp8_default_mv_context as *const MV_CONTEXT as *const ::core::ffi::c_void,
-            ::core::mem::size_of::<[MV_CONTEXT; 2]>() as size_t,
-        );
-        vp8_init_mbmode_probs(&mut *pc);
-        crate::vp8::common::entropy::vp8_default_coef_probs(&mut (*pc).fc.coef_probs);
-        memset(
-            &raw mut (*xd).segment_feature_data as *mut [::core::ffi::c_schar; 4]
-                as *mut ::core::ffi::c_void,
-            0 as ::core::ffi::c_int,
-            ::core::mem::size_of::<[[::core::ffi::c_schar; 4]; 2]>() as size_t,
-        );
-        (*xd).mb_segment_abs_delta = SEGMENT_DELTADATA as ::core::ffi::c_uchar;
-        memset(
-            &raw mut (*xd).ref_lf_deltas as *mut ::core::ffi::c_schar as *mut ::core::ffi::c_void,
-            0 as ::core::ffi::c_int,
-            ::core::mem::size_of::<[::core::ffi::c_schar; 4]>() as size_t,
-        );
-        memset(
-            &raw mut (*xd).mode_lf_deltas as *mut ::core::ffi::c_schar as *mut ::core::ffi::c_void,
-            0 as ::core::ffi::c_int,
-            ::core::mem::size_of::<[::core::ffi::c_schar; 4]>() as size_t,
-        );
-        (*pc).refresh_golden_frame = 1 as ::core::ffi::c_int;
-        (*pc).refresh_alt_ref_frame = 1 as ::core::ffi::c_int;
-        (*pc).copy_buffer_to_gf = 0 as ::core::ffi::c_int;
-        (*pc).copy_buffer_to_arf = 0 as ::core::ffi::c_int;
-        (*pc).ref_frame_sign_bias[GOLDEN_FRAME as ::core::ffi::c_int as usize] =
+        pbi.common.fc.mvc = crate::vp8::common::entropymv::vp8_default_mv_context;
+        vp8_init_mbmode_probs(&mut pbi.common);
+        crate::vp8::common::entropy::vp8_default_coef_probs(&mut pbi.common.fc.coef_probs);
+        pbi.mb.segment_feature_data = [[0; 4]; 2];
+        pbi.mb.mb_segment_abs_delta = SEGMENT_DELTADATA as ::core::ffi::c_uchar;
+        pbi.mb.ref_lf_deltas = [0; 4];
+        pbi.mb.mode_lf_deltas = [0; 4];
+        pbi.common.refresh_golden_frame = 1 as ::core::ffi::c_int;
+        pbi.common.refresh_alt_ref_frame = 1 as ::core::ffi::c_int;
+        pbi.common.copy_buffer_to_gf = 0 as ::core::ffi::c_int;
+        pbi.common.copy_buffer_to_arf = 0 as ::core::ffi::c_int;
+        pbi.common.ref_frame_sign_bias[GOLDEN_FRAME as ::core::ffi::c_int as usize] =
             0 as ::core::ffi::c_int;
-        (*pc).ref_frame_sign_bias[ALTREF_FRAME as ::core::ffi::c_int as usize] =
+        pbi.common.ref_frame_sign_bias[ALTREF_FRAME as ::core::ffi::c_int as usize] =
             0 as ::core::ffi::c_int;
     } else {
-        if (*pc).use_bilinear_mc_filter == 0 {
-            (*xd).subpixel_predict = Some(
-                vp8_sixtap_predict4x4_neon
-                    as unsafe extern "C" fn(
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                    ) -> (),
-            ) as vp8_subpix_fn_t;
-            (*xd).subpixel_predict8x4 = Some(
-                vp8_sixtap_predict8x4_neon
-                    as unsafe extern "C" fn(
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                    ) -> (),
-            ) as vp8_subpix_fn_t;
-            (*xd).subpixel_predict8x8 = Some(
-                vp8_sixtap_predict8x8_neon
-                    as unsafe extern "C" fn(
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                    ) -> (),
-            ) as vp8_subpix_fn_t;
-            (*xd).subpixel_predict16x16 = Some(
-                vp8_sixtap_predict16x16_neon
-                    as unsafe extern "C" fn(
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                    ) -> (),
-            ) as vp8_subpix_fn_t;
+        if pbi.common.use_bilinear_mc_filter == 0 {
+            pbi.mb.subpixel_predict = Some(vp8_sixtap_predict4x4_neon);
+            pbi.mb.subpixel_predict8x4 = Some(vp8_sixtap_predict8x4_neon);
+            pbi.mb.subpixel_predict8x8 = Some(vp8_sixtap_predict8x8_neon);
+            pbi.mb.subpixel_predict16x16 = Some(vp8_sixtap_predict16x16_neon);
         } else {
-            (*xd).subpixel_predict = Some(
-                vp8_bilinear_predict4x4_neon
-                    as unsafe extern "C" fn(
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                    ) -> (),
-            ) as vp8_subpix_fn_t;
-            (*xd).subpixel_predict8x4 = Some(
-                vp8_bilinear_predict8x4_neon
-                    as unsafe extern "C" fn(
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                    ) -> (),
-            ) as vp8_subpix_fn_t;
-            (*xd).subpixel_predict8x8 = Some(
-                vp8_bilinear_predict8x8_neon
-                    as unsafe extern "C" fn(
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                    ) -> (),
-            ) as vp8_subpix_fn_t;
-            (*xd).subpixel_predict16x16 = Some(
-                vp8_bilinear_predict16x16_neon
-                    as unsafe extern "C" fn(
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        ::core::ffi::c_int,
-                        *mut ::core::ffi::c_uchar,
-                        ::core::ffi::c_int,
-                    ) -> (),
-            ) as vp8_subpix_fn_t;
+            pbi.mb.subpixel_predict = Some(vp8_bilinear_predict4x4_neon);
+            pbi.mb.subpixel_predict8x4 = Some(vp8_bilinear_predict8x4_neon);
+            pbi.mb.subpixel_predict8x8 = Some(vp8_bilinear_predict8x8_neon);
+            pbi.mb.subpixel_predict16x16 = Some(vp8_bilinear_predict16x16_neon);
         }
-        if (*pbi).decoded_key_frame != 0 && (*pbi).ec_enabled != 0 && (*pbi).ec_active == 0 {
-            (*pbi).ec_active = 1 as ::core::ffi::c_int;
+        if pbi.decoded_key_frame != 0 && pbi.ec_enabled != 0 && pbi.ec_active == 0 {
+            pbi.ec_active = 1 as ::core::ffi::c_int;
         }
     }
-    (*xd).left_context = &raw mut (*pc).left_context;
-    (*xd).mode_info_context = (*pc).mi;
-    (*xd).frame_type = (*pc).frame_type;
-    (*(*xd).mode_info_context).mbmi.mode = DC_PRED as ::core::ffi::c_int as uint8_t;
-    (*xd).mode_info_stride = (*pc).mode_info_stride;
-    (*xd).corrupted = 0 as ::core::ffi::c_int;
-    (*xd).fullpixel_mask = !(0 as ::core::ffi::c_int);
-    if (*pc).full_pixel != 0 {
-        (*xd).fullpixel_mask = !(7 as ::core::ffi::c_int);
+    pbi.mb.left_context = &raw mut pbi.common.left_context;
+    pbi.mb.mode_info_context = pbi.common.mi;
+    pbi.mb.frame_type = pbi.common.frame_type;
+    unsafe {
+        (*pbi.mb.mode_info_context).mbmi.mode = DC_PRED as ::core::ffi::c_int as uint8_t;
     }
-}}
+    pbi.mb.mode_info_stride = pbi.common.mode_info_stride;
+    pbi.mb.corrupted = 0 as ::core::ffi::c_int;
+    pbi.mb.fullpixel_mask = !(0 as ::core::ffi::c_int);
+    if pbi.common.full_pixel != 0 {
+        pbi.mb.fullpixel_mask = !(7 as ::core::ffi::c_int);
+    }
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
     let bc = &mut (*pbi).mbc[8];
@@ -1520,7 +1423,7 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
                 as *const ::core::ffi::c_char,
         );
     }
-    init_frame(pbi);
+    init_frame(&mut *pbi);
     if vp8dx_start_decode(
         &raw mut *bc,
         data,
