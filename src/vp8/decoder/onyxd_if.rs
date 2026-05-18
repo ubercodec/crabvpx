@@ -208,60 +208,85 @@ pub fn vp8dx_get_reference(
     }
     return pbi.common.error.error_code;
 }
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8dx_set_reference(
-    mut pbi: *mut VP8D_COMP,
-    mut ref_frame_flag: vpx_ref_frame_type,
-    mut sd: *mut YV12_BUFFER_CONFIG,
-) -> vpx_codec_err_t { unsafe {
-    let mut cm: *mut VP8_COMMON = &raw mut (*pbi).common;
-    let mut ref_fb_ptr: *mut ::core::ffi::c_int = ::core::ptr::null_mut::<::core::ffi::c_int>();
-    let mut free_fb: ::core::ffi::c_int = 0;
+pub fn vp8dx_set_reference(
+    pbi: &mut VP8D_COMP,
+    ref_frame_flag: vpx_ref_frame_type,
+    sd: &YV12_BUFFER_CONFIG,
+) -> vpx_codec_err_t {
+    let cm = &mut pbi.common;
+    
+    enum TargetFrame {
+        Last,
+        Gold,
+        Alt,
+    }
+    let target: TargetFrame;
+    
     if ref_frame_flag as ::core::ffi::c_uint
         == VP8_LAST_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        ref_fb_ptr = &raw mut (*cm).lst_fb_idx;
+        target = TargetFrame::Last;
     } else if ref_frame_flag as ::core::ffi::c_uint
         == VP8_GOLD_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        ref_fb_ptr = &raw mut (*cm).gld_fb_idx;
+        target = TargetFrame::Gold;
     } else if ref_frame_flag as ::core::ffi::c_uint
         == VP8_ALTR_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        ref_fb_ptr = &raw mut (*cm).alt_fb_idx;
+        target = TargetFrame::Alt;
     } else {
-        vpx_internal_error(
-            &raw mut (*pbi).common.error,
-            VPX_CODEC_ERROR,
-            b"Invalid reference frame\0" as *const u8 as *const ::core::ffi::c_char,
-        );
-        return (*pbi).common.error.error_code;
+        unsafe {
+            vpx_internal_error(
+                &raw mut cm.error,
+                VPX_CODEC_ERROR,
+                b"Invalid reference frame\0" as *const u8 as *const ::core::ffi::c_char,
+            );
+        }
+        return cm.error.error_code;
     }
-    if (*cm).yv12_fb[*ref_fb_ptr as usize].y_height != (*sd).y_height
-        || (*cm).yv12_fb[*ref_fb_ptr as usize].y_width != (*sd).y_width
-        || (*cm).yv12_fb[*ref_fb_ptr as usize].uv_height != (*sd).uv_height
-        || (*cm).yv12_fb[*ref_fb_ptr as usize].uv_width != (*sd).uv_width
+    
+    let ref_fb_idx = match target {
+        TargetFrame::Last => cm.lst_fb_idx,
+        TargetFrame::Gold => cm.gld_fb_idx,
+        TargetFrame::Alt => cm.alt_fb_idx,
+    };
+    
+    if cm.yv12_fb[ref_fb_idx as usize].y_height != sd.y_height
+        || cm.yv12_fb[ref_fb_idx as usize].y_width != sd.y_width
+        || cm.yv12_fb[ref_fb_idx as usize].uv_height != sd.uv_height
+        || cm.yv12_fb[ref_fb_idx as usize].uv_width != sd.uv_width
     {
-        vpx_internal_error(
-            &raw mut (*pbi).common.error,
-            VPX_CODEC_ERROR,
-            b"Incorrect buffer dimensions\0" as *const u8 as *const ::core::ffi::c_char,
-        );
+        unsafe {
+            vpx_internal_error(
+                &raw mut cm.error,
+                VPX_CODEC_ERROR,
+                b"Incorrect buffer dimensions\0" as *const u8 as *const ::core::ffi::c_char,
+            );
+        }
     } else {
-        free_fb = get_free_fb(&mut *cm);
-        (*cm).fb_idx_ref_cnt[free_fb as usize] -= 1;
+        let free_fb = get_free_fb(cm);
+        let mut temp_idx = ref_fb_idx;
+        
+        cm.fb_idx_ref_cnt[free_fb as usize] -= 1;
         ref_cnt_fb(
-            &mut (*cm).fb_idx_ref_cnt,
-            &mut *ref_fb_ptr,
+            &mut cm.fb_idx_ref_cnt,
+            &mut temp_idx,
             free_fb,
         );
+        
+        match target {
+            TargetFrame::Last => cm.lst_fb_idx = temp_idx,
+            TargetFrame::Gold => cm.gld_fb_idx = temp_idx,
+            TargetFrame::Alt => cm.alt_fb_idx = temp_idx,
+        }
+        
         vp8_yv12_copy_frame_c(
-            &*sd,
-            &mut (*cm).yv12_fb[*ref_fb_ptr as usize],
+            sd,
+            &mut cm.yv12_fb[temp_idx as usize],
         );
     }
-    return (*pbi).common.error.error_code;
-}}
+    return cm.error.error_code;
+}
 fn get_free_fb(cm: &mut VP8_COMMON) -> ::core::ffi::c_int {
     let mut i: ::core::ffi::c_int = 0;
     i = 0 as ::core::ffi::c_int;
