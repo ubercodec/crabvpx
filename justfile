@@ -24,7 +24,7 @@ compare *args:
 
 # Run performance benchmarks with statistical distribution
 bench *args:
-    cd harness && cargo run --release --bin benchmark -- --dir ../libvpx-test-data --benchmark {{args}}
+    cd harness && cargo run --release --bin benchmark -- --dir ../test_data --benchmark {{args}}
 
 # Run complexity and technical debt analysis
 analyze *args:

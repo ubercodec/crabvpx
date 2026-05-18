@@ -5,9 +5,9 @@ use std::path::PathBuf;
 
 #[test]
 fn test_differential() {
-    // Get test vectors directory from env var or default to ../libvpx-test-data
+    // Get test vectors directory from env var or default to ../test_data
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    let test_data_dir = manifest_dir.parent().unwrap().join("libvpx-test-data");
+    let test_data_dir = manifest_dir.parent().unwrap().join("test_data");
 
     assert!(test_data_dir.exists(), "Test vectors not downloaded");
 

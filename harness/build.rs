@@ -43,7 +43,7 @@ const VP8_VECTORS: &[&str] = &[
 
 fn download_test_vectors() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let test_data_dir = manifest_dir.parent().unwrap().join("libvpx-test-data");
+    let test_data_dir = manifest_dir.parent().unwrap().join("test_data");
 
     fs::create_dir_all(&test_data_dir).unwrap();
     let base_url = "https://storage.googleapis.com/downloads.webmproject.org/test_data/libvpx";
