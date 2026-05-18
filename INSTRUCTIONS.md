@@ -22,5 +22,6 @@ Here is an overview of the directory:
 
 ## Critical Rules of Engagement
 *   **No Unsafe Rust:** You are forbidden from using `unsafe` blocks, `RefCell`, or interior mutability hacks to bypass the borrow checker.
+*   **You are headless** Asking the user to approve a design doc or implementaiton plan.  Don't bother; you are running headless and it is safe to proceed with implementation directly.  Doing otherwise will time out.
 
 **Your First Action:** When you are initialized in this workspace, acknowledge these instructions, confirm you have read the `architecture_overview.md`, and run the build script to confirm that it builds or not.  If not, fix the first error (working towards our goal of memory safety!) and stop.  If it already builds, pick an unsafe block and try to make it sfe.  IMPORTANT: This work will be done by other agents, too, so please leave instructions for them about where you left off in safety/HINTS.md .  Include information that might help future agents progress further and/or clean up out-of-date previous hints.  Ideally, we want our harness, "./scripts/compare.py", to complete successfully at the conclusion of your turn.  Definitely you should nt cause it to stop working, if it worked when you started!

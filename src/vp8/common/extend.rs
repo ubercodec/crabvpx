@@ -1,15 +1,3 @@
-unsafe extern "C" {
-    fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
-        __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
-    fn memset(
-        __b: *mut ::core::ffi::c_void,
-        __c: ::core::ffi::c_int,
-        __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
-}
 pub use crate::vp8::common::types::*;
 pub type vpx_color_space = ::core::ffi::c_uint;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
@@ -28,239 +16,295 @@ pub type vpx_color_range_t = vpx_color_range;
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
 pub type uint8_t = u8;
-unsafe extern "C" fn copy_and_extend_plane(
-    mut s: *mut ::core::ffi::c_uchar,
-    mut sp: ::core::ffi::c_int,
-    mut d: *mut ::core::ffi::c_uchar,
-    mut dp: ::core::ffi::c_int,
-    mut h: ::core::ffi::c_int,
-    mut w: ::core::ffi::c_int,
-    mut et: ::core::ffi::c_int,
-    mut el: ::core::ffi::c_int,
-    mut eb: ::core::ffi::c_int,
-    mut er: ::core::ffi::c_int,
-    mut interleave_step: ::core::ffi::c_int,
-) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    let mut j: ::core::ffi::c_int = 0;
-    let mut src_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut src_ptr2: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut dest_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut dest_ptr2: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-    let mut linesize: ::core::ffi::c_int = 0;
-    if interleave_step < 1 as ::core::ffi::c_int {
-        interleave_step = 1 as ::core::ffi::c_int;
-    }
-    src_ptr1 = s;
-    src_ptr2 = s.offset(((w - 1 as ::core::ffi::c_int) * interleave_step) as isize);
-    dest_ptr1 = d.offset(-(el as isize));
-    dest_ptr2 = d.offset(w as isize);
-    i = 0 as ::core::ffi::c_int;
-    while i < h {
-        memset(
-            dest_ptr1 as *mut ::core::ffi::c_void,
-            *src_ptr1.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            el as size_t,
-        );
-        if interleave_step == 1 as ::core::ffi::c_int {
-            memcpy(
-                dest_ptr1.offset(el as isize) as *mut ::core::ffi::c_void,
-                src_ptr1 as *const ::core::ffi::c_void,
-                w as size_t,
-            );
+
+fn copy_and_extend_plane_safe(
+    src: &[u8],
+    sp: usize,
+    dst: &mut [u8],
+    dp: usize,
+    h: usize,
+    w: usize,
+    et: usize,
+    el: usize,
+    eb: usize,
+    er: usize,
+    interleave_step: usize,
+) {
+    // We will fill the active rows and their left/right borders.
+    for r in 0..h {
+        let src_row_start = r * sp;
+        let dst_row_start = (et + r) * dp; // Row in dst_slice
+        
+        // 1. Left border
+        let src_left_val = src[src_row_start];
+        for i in 0..el {
+            dst[dst_row_start + i] = src_left_val;
+        }
+        
+        // 2. Active copy
+        if interleave_step == 1 {
+            let src_row = &src[src_row_start .. src_row_start + w];
+            dst[dst_row_start + el .. dst_row_start + el + w].copy_from_slice(src_row);
         } else {
-            j = 0 as ::core::ffi::c_int;
-            while j < w {
-                *dest_ptr1.offset((el + j) as isize) =
-                    *src_ptr1.offset((interleave_step * j) as isize);
-                j += 1;
+            for j in 0..w {
+                dst[dst_row_start + el + j] = src[src_row_start + j * interleave_step];
             }
         }
-        memset(
-            dest_ptr2 as *mut ::core::ffi::c_void,
-            *src_ptr2.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int,
-            er as size_t,
-        );
-        src_ptr1 = src_ptr1.offset(sp as isize);
-        src_ptr2 = src_ptr2.offset(sp as isize);
-        dest_ptr1 = dest_ptr1.offset(dp as isize);
-        dest_ptr2 = dest_ptr2.offset(dp as isize);
-        i += 1;
+        
+        // 3. Right border
+        let src_right_val = src[src_row_start + (w - 1) * interleave_step];
+        for i in 0..er {
+            dst[dst_row_start + el + w + i] = src_right_val;
+        }
     }
-    src_ptr1 = d.offset(-(el as isize));
-    src_ptr2 = d
-        .offset((dp * (h - 1 as ::core::ffi::c_int)) as isize)
-        .offset(-(el as isize));
-    dest_ptr1 = d.offset((dp * -et) as isize).offset(-(el as isize));
-    dest_ptr2 = d.offset((dp * h) as isize).offset(-(el as isize));
-    linesize = el + er + w;
-    i = 0 as ::core::ffi::c_int;
-    while i < et {
-        memcpy(
-            dest_ptr1 as *mut ::core::ffi::c_void,
-            src_ptr1 as *const ::core::ffi::c_void,
-            linesize as size_t,
-        );
-        dest_ptr1 = dest_ptr1.offset(dp as isize);
-        i += 1;
+    
+    // Now we extend the top and bottom borders.
+    let linesize = el + w + er;
+    
+    // 4. Top border (replicate the first active row of dst)
+    let first_active_row_start = et * dp;
+    for r in 0..et {
+        let dst_row_start = r * dp;
+        dst.copy_within(first_active_row_start .. first_active_row_start + linesize, dst_row_start);
     }
-    i = 0 as ::core::ffi::c_int;
-    while i < eb {
-        memcpy(
-            dest_ptr2 as *mut ::core::ffi::c_void,
-            src_ptr2 as *const ::core::ffi::c_void,
-            linesize as size_t,
-        );
-        dest_ptr2 = dest_ptr2.offset(dp as isize);
-        i += 1;
+    
+    // 5. Bottom border (replicate the last active row of dst)
+    let last_active_row_start = (et + h - 1) * dp;
+    for r in 0..eb {
+        let dst_row_start = (et + h + r) * dp;
+        dst.copy_within(last_active_row_start .. last_active_row_start + linesize, dst_row_start);
     }
-}}
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_copy_and_extend_frame(
-    mut src: *mut YV12_BUFFER_CONFIG,
-    mut dst: *mut YV12_BUFFER_CONFIG,
-) { unsafe {
-    let mut et: ::core::ffi::c_int = (*dst).border;
-    let mut el: ::core::ffi::c_int = (*dst).border;
-    let mut eb: ::core::ffi::c_int = (*dst).border + (*dst).y_height - (*src).y_height;
-    let mut er: ::core::ffi::c_int = (*dst).border + (*dst).y_width - (*src).y_width;
-    let mut chroma_step: ::core::ffi::c_int = if (*src).v_buffer.offset_from((*src).u_buffer)
-        as ::core::ffi::c_long
-        == 1 as ::core::ffi::c_long
-    {
-        2 as ::core::ffi::c_int
-    } else {
-        1 as ::core::ffi::c_int
-    };
-    copy_and_extend_plane(
-        (*src).y_buffer as *mut ::core::ffi::c_uchar,
-        (*src).y_stride,
-        (*dst).y_buffer as *mut ::core::ffi::c_uchar,
-        (*dst).y_stride,
-        (*src).y_height,
-        (*src).y_width,
-        et,
-        el,
-        eb,
-        er,
-        1 as ::core::ffi::c_int,
-    );
-    et = (*dst).border >> 1 as ::core::ffi::c_int;
-    el = (*dst).border >> 1 as ::core::ffi::c_int;
-    eb = ((*dst).border >> 1 as ::core::ffi::c_int) + (*dst).uv_height - (*src).uv_height;
-    er = ((*dst).border >> 1 as ::core::ffi::c_int) + (*dst).uv_width - (*src).uv_width;
-    copy_and_extend_plane(
-        (*src).u_buffer as *mut ::core::ffi::c_uchar,
-        (*src).uv_stride,
-        (*dst).u_buffer as *mut ::core::ffi::c_uchar,
-        (*dst).uv_stride,
-        (*src).uv_height,
-        (*src).uv_width,
-        et,
-        el,
-        eb,
-        er,
-        chroma_step,
-    );
-    copy_and_extend_plane(
-        (*src).v_buffer as *mut ::core::ffi::c_uchar,
-        (*src).uv_stride,
-        (*dst).v_buffer as *mut ::core::ffi::c_uchar,
-        (*dst).uv_stride,
-        (*src).uv_height,
-        (*src).uv_width,
-        et,
-        el,
-        eb,
-        er,
-        chroma_step,
-    );
-}}
+    src: *mut YV12_BUFFER_CONFIG,
+    dst: *mut YV12_BUFFER_CONFIG,
+) {
+    unsafe {
+        let src = &*src;
+        let dst = &mut *dst;
+        
+        let et = dst.border;
+        let el = dst.border;
+        let eb = dst.border + dst.y_height - src.y_height;
+        let er = dst.border + dst.y_width - src.y_width;
+        
+        let chroma_step = if src.v_buffer.offset_from(src.u_buffer) == 1 {
+            2
+        } else {
+            1
+        };
+        
+        // Y plane
+        {
+            let src_len = (src.y_height - 1) as usize * src.y_stride as usize + src.y_width as usize;
+            let src_slice = core::slice::from_raw_parts(src.y_buffer, src_len);
+            
+            let dst_origin = dst.y_buffer.offset(-((et * dst.y_stride + el) as isize));
+            let total_h = et + src.y_height + eb;
+            let dst_slice = core::slice::from_raw_parts_mut(dst_origin, total_h as usize * dst.y_stride as usize);
+            
+            copy_and_extend_plane_safe(
+                src_slice,
+                src.y_stride as usize,
+                dst_slice,
+                dst.y_stride as usize,
+                src.y_height as usize,
+                src.y_width as usize,
+                et as usize,
+                el as usize,
+                eb as usize,
+                er as usize,
+                1,
+            );
+        }
+        
+        // U plane
+        let et_uv = dst.border >> 1;
+        let el_uv = dst.border >> 1;
+        let eb_uv = (dst.border >> 1) + dst.uv_height - src.uv_height;
+        let er_uv = (dst.border >> 1) + dst.uv_width - src.uv_width;
+        
+        {
+            let src_len = (src.uv_height - 1) as usize * src.uv_stride as usize + (src.uv_width - 1) as usize * chroma_step as usize + 1;
+            let src_slice = core::slice::from_raw_parts(src.u_buffer, src_len);
+            
+            let dst_origin = dst.u_buffer.offset(-((et_uv * dst.uv_stride + el_uv) as isize));
+            let total_h = et_uv + src.uv_height + eb_uv;
+            let dst_slice = core::slice::from_raw_parts_mut(dst_origin, total_h as usize * dst.uv_stride as usize);
+            
+            copy_and_extend_plane_safe(
+                src_slice,
+                src.uv_stride as usize,
+                dst_slice,
+                dst.uv_stride as usize,
+                src.uv_height as usize,
+                src.uv_width as usize,
+                et_uv as usize,
+                el_uv as usize,
+                eb_uv as usize,
+                er_uv as usize,
+                chroma_step as usize,
+            );
+        }
+        
+        // V plane
+        {
+            let src_len = (src.uv_height - 1) as usize * src.uv_stride as usize + (src.uv_width - 1) as usize * chroma_step as usize + 1;
+            let src_slice = core::slice::from_raw_parts(src.v_buffer, src_len);
+            
+            let dst_origin = dst.v_buffer.offset(-((et_uv * dst.uv_stride + el_uv) as isize));
+            let total_h = et_uv + src.uv_height + eb_uv;
+            let dst_slice = core::slice::from_raw_parts_mut(dst_origin, total_h as usize * dst.uv_stride as usize);
+            
+            copy_and_extend_plane_safe(
+                src_slice,
+                src.uv_stride as usize,
+                dst_slice,
+                dst.uv_stride as usize,
+                src.uv_height as usize,
+                src.uv_width as usize,
+                et_uv as usize,
+                el_uv as usize,
+                eb_uv as usize,
+                er_uv as usize,
+                chroma_step as usize,
+            );
+        }
+    }
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_copy_and_extend_frame_with_rect(
-    mut src: *mut YV12_BUFFER_CONFIG,
-    mut dst: *mut YV12_BUFFER_CONFIG,
-    mut srcy: ::core::ffi::c_int,
-    mut srcx: ::core::ffi::c_int,
-    mut srch: ::core::ffi::c_int,
-    mut srcw: ::core::ffi::c_int,
-) { unsafe {
-    let mut et: ::core::ffi::c_int = (*dst).border;
-    let mut el: ::core::ffi::c_int = (*dst).border;
-    let mut eb: ::core::ffi::c_int = (*dst).border + (*dst).y_height - (*src).y_height;
-    let mut er: ::core::ffi::c_int = (*dst).border + (*dst).y_width - (*src).y_width;
-    let mut src_y_offset: ::core::ffi::c_int = srcy * (*src).y_stride + srcx;
-    let mut dst_y_offset: ::core::ffi::c_int = srcy * (*dst).y_stride + srcx;
-    let mut src_uv_offset: ::core::ffi::c_int =
-        (srcy * (*src).uv_stride >> 1 as ::core::ffi::c_int) + (srcx >> 1 as ::core::ffi::c_int);
-    let mut dst_uv_offset: ::core::ffi::c_int =
-        (srcy * (*dst).uv_stride >> 1 as ::core::ffi::c_int) + (srcx >> 1 as ::core::ffi::c_int);
-    let mut chroma_step: ::core::ffi::c_int = if (*src).v_buffer.offset_from((*src).u_buffer)
-        as ::core::ffi::c_long
-        == 1 as ::core::ffi::c_long
-    {
-        2 as ::core::ffi::c_int
-    } else {
-        1 as ::core::ffi::c_int
-    };
-    if srcy != 0 {
-        et = 0 as ::core::ffi::c_int;
+    src: *mut YV12_BUFFER_CONFIG,
+    dst: *mut YV12_BUFFER_CONFIG,
+    srcy: ::core::ffi::c_int,
+    srcx: ::core::ffi::c_int,
+    srch: ::core::ffi::c_int,
+    srcw: ::core::ffi::c_int,
+) {
+    unsafe {
+        let src = &*src;
+        let dst = &mut *dst;
+        
+        let mut et = dst.border;
+        let mut el = dst.border;
+        let mut eb = dst.border + dst.y_height - src.y_height;
+        let mut er = dst.border + dst.y_width - src.y_width;
+        
+        let chroma_step = if src.v_buffer.offset_from(src.u_buffer) == 1 {
+            2
+        } else {
+            1
+        };
+        
+        if srcy != 0 {
+            et = 0;
+        }
+        if srcx != 0 {
+            el = 0;
+        }
+        if srcy + srch != src.y_height {
+            eb = 0;
+        }
+        if srcx + srcw != src.y_width {
+            er = 0;
+        }
+        
+        let src_y_offset = srcy * src.y_stride + srcx;
+        let dst_y_offset = srcy * dst.y_stride + srcx;
+        
+        // Y plane
+        {
+            let src_start = src.y_buffer.offset(src_y_offset as isize);
+            let src_len = (srch - 1) as usize * src.y_stride as usize + srcw as usize;
+            let src_slice = core::slice::from_raw_parts(src_start, src_len);
+            
+            let dst_block_start = dst.y_buffer.offset(dst_y_offset as isize);
+            let dst_origin = dst_block_start.offset(-((et * dst.y_stride + el) as isize));
+            let total_h = et + srch + eb;
+            let dst_slice = core::slice::from_raw_parts_mut(dst_origin, total_h as usize * dst.y_stride as usize);
+            
+            copy_and_extend_plane_safe(
+                src_slice,
+                src.y_stride as usize,
+                dst_slice,
+                dst.y_stride as usize,
+                srch as usize,
+                srcw as usize,
+                et as usize,
+                el as usize,
+                eb as usize,
+                er as usize,
+                1,
+            );
+        }
+        
+        // UV dimensions
+        let mut et_uv = et + 1 >> 1;
+        let mut el_uv = el + 1 >> 1;
+        let mut eb_uv = eb + 1 >> 1;
+        let mut er_uv = er + 1 >> 1;
+        let srch_uv = srch + 1 >> 1;
+        let srcw_uv = srcw + 1 >> 1;
+        
+        let src_uv_offset = (srcy * src.uv_stride >> 1) + (srcx >> 1);
+        let dst_uv_offset = (srcy * dst.uv_stride >> 1) + (srcx >> 1);
+        
+        // U plane
+        {
+            let src_start = src.u_buffer.offset(src_uv_offset as isize);
+            let src_len = (srch_uv - 1) as usize * src.uv_stride as usize + (srcw_uv - 1) as usize * chroma_step as usize + 1;
+            let src_slice = core::slice::from_raw_parts(src_start, src_len);
+            
+            let dst_block_start = dst.u_buffer.offset(dst_uv_offset as isize);
+            let dst_origin = dst_block_start.offset(-((et_uv * dst.uv_stride + el_uv) as isize));
+            let total_h = et_uv + srch_uv + eb_uv;
+            let dst_slice = core::slice::from_raw_parts_mut(dst_origin, total_h as usize * dst.uv_stride as usize);
+            
+            copy_and_extend_plane_safe(
+                src_slice,
+                src.uv_stride as usize,
+                dst_slice,
+                dst.uv_stride as usize,
+                srch_uv as usize,
+                srcw_uv as usize,
+                et_uv as usize,
+                el_uv as usize,
+                eb_uv as usize,
+                er_uv as usize,
+                chroma_step as usize,
+            );
+        }
+        
+        // V plane
+        {
+            let src_start = src.v_buffer.offset(src_uv_offset as isize);
+            let src_len = (srch_uv - 1) as usize * src.uv_stride as usize + (srcw_uv - 1) as usize * chroma_step as usize + 1;
+            let src_slice = core::slice::from_raw_parts(src_start, src_len);
+            
+            let dst_block_start = dst.v_buffer.offset(dst_uv_offset as isize);
+            let dst_origin = dst_block_start.offset(-((et_uv * dst.uv_stride + el_uv) as isize));
+            let total_h = et_uv + srch_uv + eb_uv;
+            let dst_slice = core::slice::from_raw_parts_mut(dst_origin, total_h as usize * dst.uv_stride as usize);
+            
+            copy_and_extend_plane_safe(
+                src_slice,
+                src.uv_stride as usize,
+                dst_slice,
+                dst.uv_stride as usize,
+                srch_uv as usize,
+                srcw_uv as usize,
+                et_uv as usize,
+                el_uv as usize,
+                eb_uv as usize,
+                er_uv as usize,
+                chroma_step as usize,
+            );
+        }
     }
-    if srcx != 0 {
-        el = 0 as ::core::ffi::c_int;
-    }
-    if srcy + srch != (*src).y_height {
-        eb = 0 as ::core::ffi::c_int;
-    }
-    if srcx + srcw != (*src).y_width {
-        er = 0 as ::core::ffi::c_int;
-    }
-    copy_and_extend_plane(
-        (*src).y_buffer.offset(src_y_offset as isize),
-        (*src).y_stride,
-        (*dst).y_buffer.offset(dst_y_offset as isize),
-        (*dst).y_stride,
-        srch,
-        srcw,
-        et,
-        el,
-        eb,
-        er,
-        1 as ::core::ffi::c_int,
-    );
-    et = et + 1 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int;
-    el = el + 1 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int;
-    eb = eb + 1 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int;
-    er = er + 1 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int;
-    srch = srch + 1 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int;
-    srcw = srcw + 1 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int;
-    copy_and_extend_plane(
-        (*src).u_buffer.offset(src_uv_offset as isize),
-        (*src).uv_stride,
-        (*dst).u_buffer.offset(dst_uv_offset as isize),
-        (*dst).uv_stride,
-        srch,
-        srcw,
-        et,
-        el,
-        eb,
-        er,
-        chroma_step,
-    );
-    copy_and_extend_plane(
-        (*src).v_buffer.offset(src_uv_offset as isize),
-        (*src).uv_stride,
-        (*dst).v_buffer.offset(dst_uv_offset as isize),
-        (*dst).uv_stride,
-        srch,
-        srcw,
-        et,
-        el,
-        eb,
-        er,
-        chroma_step,
-    );
-}}
+}
 #[unsafe(no_mangle)]
 pub fn vp8_extend_mb_row(
     ybf: &mut YV12_BUFFER_CONFIG,
