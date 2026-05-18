@@ -25,29 +25,29 @@ pub unsafe fn vp8_horizontal_line_5_4_scale_c(
         let mut src: *const u8 = source;
         i = 0 as u32;
         while i < source_width {
-            a = *src.offset(0 as i32 as isize) as u32;
-            b = *src.offset(1 as i32 as isize) as u32;
-            c = *src.offset(2 as i32 as isize) as u32;
-            d = *src.offset(3 as i32 as isize) as u32;
-            e = *src.offset(4 as i32 as isize) as u32;
-            *des.offset(0 as i32 as isize) = a as u8;
-            *des.offset(1 as i32 as isize) =
+            a = *src.offset(0 as isize) as u32;
+            b = *src.offset(1 as isize) as u32;
+            c = *src.offset(2 as isize) as u32;
+            d = *src.offset(3 as isize) as u32;
+            e = *src.offset(4 as isize) as u32;
+            *des.offset(0 as isize) = a as u8;
+            *des.offset(1 as isize) =
                 (b.wrapping_mul(192 as u32)
                     .wrapping_add(c.wrapping_mul(64 as u32))
                     .wrapping_add(128 as u32)
                     >> 8 as i32) as u8;
-            *des.offset(2 as i32 as isize) =
+            *des.offset(2 as isize) =
                 (c.wrapping_mul(128 as u32)
                     .wrapping_add(d.wrapping_mul(128 as u32))
                     .wrapping_add(128 as u32)
                     >> 8 as i32) as u8;
-            *des.offset(3 as i32 as isize) =
+            *des.offset(3 as isize) =
                 (d.wrapping_mul(64 as u32)
                     .wrapping_add(e.wrapping_mul(192 as u32))
                     .wrapping_add(128 as u32)
                     >> 8 as i32) as u8;
-            src = src.offset(5 as i32 as isize);
-            des = des.offset(4 as i32 as isize);
+            src = src.offset(5 as isize);
+            des = des.offset(4 as isize);
             i = i.wrapping_add(5 as u32);
         }
     }
@@ -122,24 +122,24 @@ pub unsafe fn vp8_horizontal_line_5_3_scale_c(
         let mut src: *const u8 = source;
         i = 0 as u32;
         while i < source_width {
-            a = *src.offset(0 as i32 as isize) as u32;
-            b = *src.offset(1 as i32 as isize) as u32;
-            c = *src.offset(2 as i32 as isize) as u32;
-            d = *src.offset(3 as i32 as isize) as u32;
-            e = *src.offset(4 as i32 as isize) as u32;
-            *des.offset(0 as i32 as isize) = a as u8;
-            *des.offset(1 as i32 as isize) =
+            a = *src.offset(0 as isize) as u32;
+            b = *src.offset(1 as isize) as u32;
+            c = *src.offset(2 as isize) as u32;
+            d = *src.offset(3 as isize) as u32;
+            e = *src.offset(4 as isize) as u32;
+            *des.offset(0 as isize) = a as u8;
+            *des.offset(1 as isize) =
                 (b.wrapping_mul(85 as u32)
                     .wrapping_add(c.wrapping_mul(171 as u32))
                     .wrapping_add(128 as u32)
                     >> 8 as i32) as u8;
-            *des.offset(2 as i32 as isize) =
+            *des.offset(2 as isize) =
                 (d.wrapping_mul(171 as u32)
                     .wrapping_add(e.wrapping_mul(85 as u32))
                     .wrapping_add(128 as u32)
                     >> 8 as i32) as u8;
-            src = src.offset(5 as i32 as isize);
-            des = des.offset(3 as i32 as isize);
+            src = src.offset(5 as isize);
+            des = des.offset(3 as isize);
             i = i.wrapping_add(5 as u32);
         }
     }
@@ -205,10 +205,10 @@ pub unsafe fn vp8_horizontal_line_2_1_scale_c(
         let mut src: *const u8 = source;
         i = 0 as u32;
         while i < source_width {
-            a = *src.offset(0 as i32 as isize) as u32;
-            *des.offset(0 as i32 as isize) = a as u8;
-            src = src.offset(2 as i32 as isize);
-            des = des.offset(1 as i32 as isize);
+            a = *src.offset(0 as isize) as u32;
+            *des.offset(0 as isize) = a as u8;
+            src = src.offset(2 as isize);
+            des = des.offset(1 as isize);
             i = i.wrapping_add(2 as u32);
         }
     }

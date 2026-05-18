@@ -412,38 +412,38 @@ unsafe fn lf_init_lut(mut lfi: *mut loop_filter_info_n) {
         filt_lvl = 0 as i32;
         while filt_lvl <= MAX_LOOP_FILTER {
             if filt_lvl >= 40 as i32 {
-                (*lfi).hev_thr_lut[KEY_FRAME as i32 as usize][filt_lvl as usize] =
+                (*lfi).hev_thr_lut[KEY_FRAME as usize][filt_lvl as usize] =
                     2 as u8;
-                (*lfi).hev_thr_lut[INTER_FRAME as i32 as usize][filt_lvl as usize] =
+                (*lfi).hev_thr_lut[INTER_FRAME as usize][filt_lvl as usize] =
                     3 as u8;
             } else if filt_lvl >= 20 as i32 {
-                (*lfi).hev_thr_lut[KEY_FRAME as i32 as usize][filt_lvl as usize] =
+                (*lfi).hev_thr_lut[KEY_FRAME as usize][filt_lvl as usize] =
                     1 as u8;
-                (*lfi).hev_thr_lut[INTER_FRAME as i32 as usize][filt_lvl as usize] =
+                (*lfi).hev_thr_lut[INTER_FRAME as usize][filt_lvl as usize] =
                     2 as u8;
             } else if filt_lvl >= 15 as i32 {
-                (*lfi).hev_thr_lut[KEY_FRAME as i32 as usize][filt_lvl as usize] =
+                (*lfi).hev_thr_lut[KEY_FRAME as usize][filt_lvl as usize] =
                     1 as u8;
-                (*lfi).hev_thr_lut[INTER_FRAME as i32 as usize][filt_lvl as usize] =
+                (*lfi).hev_thr_lut[INTER_FRAME as usize][filt_lvl as usize] =
                     1 as u8;
             } else {
-                (*lfi).hev_thr_lut[KEY_FRAME as i32 as usize][filt_lvl as usize] =
+                (*lfi).hev_thr_lut[KEY_FRAME as usize][filt_lvl as usize] =
                     0 as u8;
-                (*lfi).hev_thr_lut[INTER_FRAME as i32 as usize][filt_lvl as usize] =
+                (*lfi).hev_thr_lut[INTER_FRAME as usize][filt_lvl as usize] =
                     0 as u8;
             }
             filt_lvl += 1;
         }
-        (*lfi).mode_lf_lut[DC_PRED as i32 as usize] = 1 as u8;
-        (*lfi).mode_lf_lut[V_PRED as i32 as usize] = 1 as u8;
-        (*lfi).mode_lf_lut[H_PRED as i32 as usize] = 1 as u8;
-        (*lfi).mode_lf_lut[TM_PRED as i32 as usize] = 1 as u8;
-        (*lfi).mode_lf_lut[B_PRED as i32 as usize] = 0 as u8;
-        (*lfi).mode_lf_lut[ZEROMV as i32 as usize] = 1 as u8;
-        (*lfi).mode_lf_lut[NEARESTMV as i32 as usize] = 2 as u8;
-        (*lfi).mode_lf_lut[NEARMV as i32 as usize] = 2 as u8;
-        (*lfi).mode_lf_lut[NEWMV as i32 as usize] = 2 as u8;
-        (*lfi).mode_lf_lut[SPLITMV as i32 as usize] = 3 as u8;
+        (*lfi).mode_lf_lut[DC_PRED as usize] = 1 as u8;
+        (*lfi).mode_lf_lut[V_PRED as usize] = 1 as u8;
+        (*lfi).mode_lf_lut[H_PRED as usize] = 1 as u8;
+        (*lfi).mode_lf_lut[TM_PRED as usize] = 1 as u8;
+        (*lfi).mode_lf_lut[B_PRED as usize] = 0 as u8;
+        (*lfi).mode_lf_lut[ZEROMV as usize] = 1 as u8;
+        (*lfi).mode_lf_lut[NEARESTMV as usize] = 2 as u8;
+        (*lfi).mode_lf_lut[NEARMV as usize] = 2 as u8;
+        (*lfi).mode_lf_lut[NEWMV as usize] = 2 as u8;
+        (*lfi).mode_lf_lut[SPLITMV as usize] = 3 as u8;
     }
 }
 #[unsafe(no_mangle)]
@@ -537,11 +537,11 @@ pub unsafe fn vp8_loop_filter_frame_init(
             if (*mbd).segmentation_enabled != 0 {
                 if (*mbd).mb_segment_abs_delta as i32 == SEGMENT_ABSDATA {
                     lvl_seg = (*mbd).segment_feature_data
-                        [MB_LVL_ALT_LF as i32 as usize][seg as usize]
+                        [MB_LVL_ALT_LF as usize][seg as usize]
                         as i32;
                 } else {
                     lvl_seg += (*mbd).segment_feature_data
-                        [MB_LVL_ALT_LF as i32 as usize][seg as usize]
+                        [MB_LVL_ALT_LF as usize][seg as usize]
                         as i32;
                 }
                 lvl_seg = if lvl_seg > 0 as i32 {
@@ -560,7 +560,7 @@ pub unsafe fn vp8_loop_filter_frame_init(
                         as *mut [[u8; 4]; 4])
                         .offset(seg as isize)
                         as *mut [u8; 4])
-                        .offset(0 as i32 as isize)
+                        .offset(0 as isize)
                         as *mut u8
                         as *mut core::ffi::c_void,
                     lvl_seg,
@@ -718,9 +718,9 @@ pub unsafe fn vp8_loop_filter_row_normal(
                     );
                 }
             }
-            y_ptr = y_ptr.offset(16 as i32 as isize);
-            u_ptr = u_ptr.offset(8 as i32 as isize);
-            v_ptr = v_ptr.offset(8 as i32 as isize);
+            y_ptr = y_ptr.offset(16 as isize);
+            u_ptr = u_ptr.offset(8 as isize);
+            v_ptr = v_ptr.offset(8 as isize);
             mode_info_context = mode_info_context.offset(1);
             mb_col += 1;
         }
@@ -793,7 +793,7 @@ pub unsafe fn vp8_loop_filter_row_simple(
                     );
                 }
             }
-            y_ptr = y_ptr.offset(16 as i32 as isize);
+            y_ptr = y_ptr.offset(16 as isize);
             mode_info_context = mode_info_context.offset(1);
             mb_col += 1;
         }
@@ -830,7 +830,7 @@ pub unsafe fn vp8_loop_filter_frame(
         u_ptr = (*post).u_buffer as *mut u8;
         v_ptr = (*post).v_buffer as *mut u8;
         if (*cm).filter_type as u32
-            == NORMAL_LOOPFILTER as i32 as u32
+            == NORMAL_LOOPFILTER as u32
         {
             mb_row = 0 as i32;
             while mb_row < mb_rows {
@@ -914,9 +914,9 @@ pub unsafe fn vp8_loop_filter_frame(
                             );
                         }
                     }
-                    y_ptr = y_ptr.offset(16 as i32 as isize);
-                    u_ptr = u_ptr.offset(8 as i32 as isize);
-                    v_ptr = v_ptr.offset(8 as i32 as isize);
+                    y_ptr = y_ptr.offset(16 as isize);
+                    u_ptr = u_ptr.offset(8 as isize);
+                    v_ptr = v_ptr.offset(8 as isize);
                     mode_info_context = mode_info_context.offset(1);
                     mb_col += 1;
                 }
@@ -973,9 +973,9 @@ pub unsafe fn vp8_loop_filter_frame(
                             vp8_loop_filter_bhs_c(y_ptr, post_y_stride, blim);
                         }
                     }
-                    y_ptr = y_ptr.offset(16 as i32 as isize);
-                    u_ptr = u_ptr.offset(8 as i32 as isize);
-                    v_ptr = v_ptr.offset(8 as i32 as isize);
+                    y_ptr = y_ptr.offset(16 as isize);
+                    u_ptr = u_ptr.offset(8 as isize);
+                    v_ptr = v_ptr.offset(8 as isize);
                     mode_info_context = mode_info_context.offset(1);
                     mb_col += 1;
                 }
@@ -1036,7 +1036,7 @@ pub unsafe fn vp8_loop_filter_frame_yonly(
                     as i32;
                 if filter_level != 0 {
                     if (*cm).filter_type as u32
-                        == NORMAL_LOOPFILTER as i32 as u32
+                        == NORMAL_LOOPFILTER as u32
                     {
                         let hev_index: i32 = (*lfi_n).hev_thr_lut
                             [frame_type as usize][filter_level as usize]
@@ -1140,7 +1140,7 @@ pub unsafe fn vp8_loop_filter_frame_yonly(
                         }
                     }
                 }
-                y_ptr = y_ptr.offset(16 as i32 as isize);
+                y_ptr = y_ptr.offset(16 as isize);
                 mode_info_context = mode_info_context.offset(1);
                 mb_col += 1;
             }
@@ -1213,7 +1213,7 @@ pub unsafe fn vp8_loop_filter_partial_frame(
                     as i32;
                 if filter_level != 0 {
                     if (*cm).filter_type as u32
-                        == NORMAL_LOOPFILTER as i32 as u32
+                        == NORMAL_LOOPFILTER as u32
                     {
                         let hev_index: i32 = (*lfi_n).hev_thr_lut
                             [frame_type as usize][filter_level as usize]
@@ -1312,13 +1312,13 @@ pub unsafe fn vp8_loop_filter_partial_frame(
                         }
                     }
                 }
-                y_ptr = y_ptr.offset(16 as i32 as isize);
-                mode_info_context = mode_info_context.offset(1 as i32 as isize);
+                y_ptr = y_ptr.offset(16 as isize);
+                mode_info_context = mode_info_context.offset(1 as isize);
                 mb_col += 1;
             }
             y_ptr = y_ptr
                 .offset(((*post).y_stride * 16 as i32 - (*post).y_width) as isize);
-            mode_info_context = mode_info_context.offset(1 as i32 as isize);
+            mode_info_context = mode_info_context.offset(1 as isize);
             mb_row += 1;
         }
     }

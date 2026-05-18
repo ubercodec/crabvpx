@@ -771,7 +771,7 @@ pub unsafe fn vpx_codec_get_cx_data(
         }
         if !pkt.is_null()
             && (*pkt).kind as u32
-                == VPX_CODEC_CX_FRAME_PKT as i32 as u32
+                == VPX_CODEC_CX_FRAME_PKT as u32
         {
             let priv_0: *mut vpx_codec_priv_t = (*ctx).priv_0;
             let dst_buf: *mut i8 =
@@ -938,11 +938,10 @@ pub unsafe fn vpx_codec_pkt_list_get(
             *iter = &raw mut (*list).pkts as *mut vpx_codec_cx_pkt as vpx_codec_iter_t;
         }
         pkt = *iter as *const vpx_codec_cx_pkt_t;
-        if (pkt.offset_from(&raw mut (*list).pkts as *mut vpx_codec_cx_pkt) as i64
-            as size_t)
+        if (pkt.offset_from(&raw mut (*list).pkts as *mut vpx_codec_cx_pkt) as size_t)
             < (*list).cnt as size_t
         {
-            *iter = pkt.offset(1 as i32 as isize) as vpx_codec_iter_t;
+            *iter = pkt.offset(1 as isize) as vpx_codec_iter_t;
         } else {
             pkt = ::core::ptr::null::<vpx_codec_cx_pkt_t>();
         }

@@ -58,7 +58,7 @@ pub unsafe fn vp8dx_bool_decoder_fill(mut br: *mut BOOL_DECODER) {
         let mut count: i32 = (*br).count;
         let mut shift: i32 = VP8_BD_VALUE_SIZE - CHAR_BIT - (count + CHAR_BIT);
         let mut bytes_left: size_t =
-            (*br).user_buffer_end.offset_from(bufptr) as i64 as size_t;
+            (*br).user_buffer_end.offset_from(bufptr) as size_t;
         let mut bits_left: size_t = bytes_left.wrapping_mul(CHAR_BIT as size_t);
         let mut x: i32 = shift + CHAR_BIT - bits_left as i32;
         let mut loop_end: i32 = 0 as i32;

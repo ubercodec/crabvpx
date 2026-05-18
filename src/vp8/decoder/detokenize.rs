@@ -474,7 +474,7 @@ unsafe fn vp8dx_decode_bool(
             value = value.wrapping_sub(bigsplit);
             bit = 1 as u32;
         }
-        let shift: u8 = vp8_norm[range as u8 as usize];
+        let shift: u8 = vp8_norm[range as usize];
         range <<= shift as i32;
         value <<= shift as i32;
         count -= shift as i32;
@@ -500,65 +500,65 @@ pub unsafe fn vp8_reset_mb_tokens_context(mut x: *mut MACROBLOCKD) {
             (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t).wrapping_sub(1 as size_t),
         );
         if (*(*x).mode_info_context).mbmi.is_4x4 == 0 {
-            let fresh0 = &mut *l_ctx.offset(8 as i32 as isize);
+            let fresh0 = &mut *l_ctx.offset(8 as isize);
             *fresh0 = 0 as ENTROPY_CONTEXT;
-            *a_ctx.offset(8 as i32 as isize) = *fresh0;
+            *a_ctx.offset(8 as isize) = *fresh0;
         }
     }
 }
 static mut kBands: [uint8_t; 17] = [
-    0 as i32 as uint8_t,
-    1 as i32 as uint8_t,
-    2 as i32 as uint8_t,
-    3 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    4 as i32 as uint8_t,
-    5 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    7 as i32 as uint8_t,
-    0 as i32 as uint8_t,
+    0 as uint8_t,
+    1 as uint8_t,
+    2 as uint8_t,
+    3 as uint8_t,
+    6 as uint8_t,
+    4 as uint8_t,
+    5 as uint8_t,
+    6 as uint8_t,
+    6 as uint8_t,
+    6 as uint8_t,
+    6 as uint8_t,
+    6 as uint8_t,
+    6 as uint8_t,
+    6 as uint8_t,
+    6 as uint8_t,
+    7 as uint8_t,
+    0 as uint8_t,
 ];
 static mut kCat3: [uint8_t; 4] = [
-    173 as i32 as uint8_t,
-    148 as i32 as uint8_t,
-    140 as i32 as uint8_t,
-    0 as i32 as uint8_t,
+    173 as uint8_t,
+    148 as uint8_t,
+    140 as uint8_t,
+    0 as uint8_t,
 ];
 static mut kCat4: [uint8_t; 5] = [
-    176 as i32 as uint8_t,
-    155 as i32 as uint8_t,
-    140 as i32 as uint8_t,
-    135 as i32 as uint8_t,
-    0 as i32 as uint8_t,
+    176 as uint8_t,
+    155 as uint8_t,
+    140 as uint8_t,
+    135 as uint8_t,
+    0 as uint8_t,
 ];
 static mut kCat5: [uint8_t; 6] = [
-    180 as i32 as uint8_t,
-    157 as i32 as uint8_t,
-    141 as i32 as uint8_t,
-    134 as i32 as uint8_t,
-    130 as i32 as uint8_t,
-    0 as i32 as uint8_t,
+    180 as uint8_t,
+    157 as uint8_t,
+    141 as uint8_t,
+    134 as uint8_t,
+    130 as uint8_t,
+    0 as uint8_t,
 ];
 static mut kCat6: [uint8_t; 12] = [
-    254 as i32 as uint8_t,
-    254 as i32 as uint8_t,
-    243 as i32 as uint8_t,
-    230 as i32 as uint8_t,
-    196 as i32 as uint8_t,
-    177 as i32 as uint8_t,
-    153 as i32 as uint8_t,
-    140 as i32 as uint8_t,
-    133 as i32 as uint8_t,
-    130 as i32 as uint8_t,
-    129 as i32 as uint8_t,
-    0 as i32 as uint8_t,
+    254 as uint8_t,
+    254 as uint8_t,
+    243 as uint8_t,
+    230 as uint8_t,
+    196 as uint8_t,
+    177 as uint8_t,
+    153 as uint8_t,
+    140 as uint8_t,
+    133 as uint8_t,
+    130 as uint8_t,
+    129 as uint8_t,
+    0 as uint8_t,
 ];
 static mut kCat3456: [*const uint8_t; 4] = {
     [
@@ -569,22 +569,22 @@ static mut kCat3456: [*const uint8_t; 4] = {
     ]
 };
 static mut kZigzag: [uint8_t; 16] = [
-    0 as i32 as uint8_t,
-    1 as i32 as uint8_t,
-    4 as i32 as uint8_t,
-    8 as i32 as uint8_t,
-    5 as i32 as uint8_t,
-    2 as i32 as uint8_t,
-    3 as i32 as uint8_t,
-    6 as i32 as uint8_t,
-    9 as i32 as uint8_t,
-    12 as i32 as uint8_t,
-    13 as i32 as uint8_t,
-    10 as i32 as uint8_t,
-    7 as i32 as uint8_t,
-    11 as i32 as uint8_t,
-    14 as i32 as uint8_t,
-    15 as i32 as uint8_t,
+    0 as uint8_t,
+    1 as uint8_t,
+    4 as uint8_t,
+    8 as uint8_t,
+    5 as uint8_t,
+    2 as uint8_t,
+    3 as uint8_t,
+    6 as uint8_t,
+    9 as uint8_t,
+    12 as uint8_t,
+    13 as uint8_t,
+    10 as uint8_t,
+    7 as uint8_t,
+    11 as uint8_t,
+    14 as uint8_t,
+    15 as uint8_t,
 ];
 unsafe fn GetSigned(
     mut br: *mut BOOL_DECODER,
@@ -627,7 +627,7 @@ unsafe fn GetCoeffs(
             .offset(ctx as isize) as *const uint8_t;
         if vp8dx_decode_bool(
             br,
-            *p.offset(0 as i32 as isize) as i32,
+            *p.offset(0 as isize) as i32,
         ) == 0
         {
             return 0 as i32;
@@ -636,36 +636,36 @@ unsafe fn GetCoeffs(
             n += 1;
             if vp8dx_decode_bool(
                 br,
-                *p.offset(1 as i32 as isize) as i32,
+                *p.offset(1 as isize) as i32,
             ) == 0
             {
                 p = &raw const *(&raw const *prob
                     .offset(*(&raw const kBands as *const uint8_t).offset(n as isize) as isize)
                     as *const [uint8_t; 11])
-                    .offset(0 as i32 as isize) as *const uint8_t;
+                    .offset(0 as isize) as *const uint8_t;
             } else {
                 let mut v: i32 = 0;
                 let mut j: i32 = 0;
                 if vp8dx_decode_bool(
                     br,
-                    *p.offset(2 as i32 as isize) as i32,
+                    *p.offset(2 as isize) as i32,
                 ) == 0
                 {
                     p = &raw const *(&raw const *prob
                         .offset(*(&raw const kBands as *const uint8_t).offset(n as isize) as isize)
                         as *const [uint8_t; 11])
-                        .offset(1 as i32 as isize)
+                        .offset(1 as isize)
                         as *const uint8_t;
                     v = 1 as i32;
                 } else {
                     if vp8dx_decode_bool(
                         br,
-                        *p.offset(3 as i32 as isize) as i32,
+                        *p.offset(3 as isize) as i32,
                     ) == 0
                     {
                         if vp8dx_decode_bool(
                             br,
-                            *p.offset(4 as i32 as isize) as i32,
+                            *p.offset(4 as isize) as i32,
                         ) == 0
                         {
                             v = 2 as i32;
@@ -673,18 +673,18 @@ unsafe fn GetCoeffs(
                             v = 3 as i32
                                 + vp8dx_decode_bool(
                                     br,
-                                    *p.offset(5 as i32 as isize)
+                                    *p.offset(5 as isize)
                                         as i32,
                                 );
                         }
                     } else if vp8dx_decode_bool(
                         br,
-                        *p.offset(6 as i32 as isize) as i32,
+                        *p.offset(6 as isize) as i32,
                     ) == 0
                     {
                         if vp8dx_decode_bool(
                             br,
-                            *p.offset(7 as i32 as isize) as i32,
+                            *p.offset(7 as isize) as i32,
                         ) == 0
                         {
                             v = 5 as i32
@@ -699,7 +699,7 @@ unsafe fn GetCoeffs(
                         let mut tab: *const uint8_t = ::core::ptr::null::<uint8_t>();
                         let bit1: i32 = vp8dx_decode_bool(
                             br,
-                            *p.offset(8 as i32 as isize) as i32,
+                            *p.offset(8 as isize) as i32,
                         )
                             as i32;
                         let bit0: i32 = vp8dx_decode_bool(
@@ -720,7 +720,7 @@ unsafe fn GetCoeffs(
                     p = &raw const *(&raw const *prob
                         .offset(*(&raw const kBands as *const uint8_t).offset(n as isize) as isize)
                         as *const [uint8_t; 11])
-                        .offset(2 as i32 as isize)
+                        .offset(2 as isize)
                         as *const uint8_t;
                 }
                 j = kZigzag[(n - 1 as i32) as usize] as i32;
@@ -728,7 +728,7 @@ unsafe fn GetCoeffs(
                 if n == 16 as i32
                     || vp8dx_decode_bool(
                         br,
-                        *p.offset(0 as i32 as isize) as i32,
+                        *p.offset(0 as isize) as i32,
                     ) == 0
                 {
                     return n;
@@ -761,14 +761,14 @@ pub unsafe fn vp8_decode_mb_tokens(
         let mut l: *mut ENTROPY_CONTEXT = ::core::ptr::null_mut::<ENTROPY_CONTEXT>();
         let mut skip_dc: i32 = 0 as i32;
         qcoeff_ptr = (&raw mut (*x).qcoeff as *mut i16)
-            .offset(0 as i32 as isize)
+            .offset(0 as isize)
             as *mut i16;
         if (*(*x).mode_info_context).mbmi.is_4x4 == 0 {
-            a = a_ctx.offset(8 as i32 as isize);
-            l = l_ctx.offset(8 as i32 as isize);
+            a = a_ctx.offset(8 as isize);
+            l = l_ctx.offset(8 as isize);
             coef_probs = &raw const *(&raw const (*fc).coef_probs
                 as *const [[[vp8_prob; 11]; 3]; 8])
-                .offset(1 as i32 as isize)
+                .offset(1 as isize)
                 as *const [[vp8_prob; 11]; 3] as ProbaArray;
             nonzeros = GetCoeffs(
                 bc,
@@ -777,19 +777,19 @@ pub unsafe fn vp8_decode_mb_tokens(
                 0 as i32,
                 qcoeff_ptr.offset((24 as i32 * 16 as i32) as isize),
             );
-            *l = (nonzeros > 0 as i32) as i32 as ENTROPY_CONTEXT;
+            *l = (nonzeros > 0 as i32) as ENTROPY_CONTEXT;
             *a = *l;
-            *eobs.offset(24 as i32 as isize) = nonzeros as i8;
+            *eobs.offset(24 as isize) = nonzeros as i8;
             eobtotal += nonzeros - 16 as i32;
             coef_probs = &raw const *(&raw const (*fc).coef_probs
                 as *const [[[vp8_prob; 11]; 3]; 8])
-                .offset(0 as i32 as isize)
+                .offset(0 as isize)
                 as *const [[vp8_prob; 11]; 3] as ProbaArray;
             skip_dc = 1 as i32;
         } else {
             coef_probs = &raw const *(&raw const (*fc).coef_probs
                 as *const [[[vp8_prob; 11]; 3]; 8])
-                .offset(3 as i32 as isize)
+                .offset(3 as isize)
                 as *const [[vp8_prob; 11]; 3] as ProbaArray;
             skip_dc = 0 as i32;
         }
@@ -804,19 +804,19 @@ pub unsafe fn vp8_decode_mb_tokens(
                 skip_dc,
                 qcoeff_ptr as *mut int16_t,
             );
-            *l = (nonzeros > 0 as i32) as i32 as ENTROPY_CONTEXT;
+            *l = (nonzeros > 0 as i32) as ENTROPY_CONTEXT;
             *a = *l;
             nonzeros += skip_dc;
             *eobs.offset(i as isize) = nonzeros as i8;
             eobtotal += nonzeros;
-            qcoeff_ptr = qcoeff_ptr.offset(16 as i32 as isize);
+            qcoeff_ptr = qcoeff_ptr.offset(16 as isize);
             i += 1;
         }
         coef_probs = &raw const *(&raw const (*fc).coef_probs as *const [[[vp8_prob; 11]; 3]; 8])
-            .offset(2 as i32 as isize)
+            .offset(2 as isize)
             as *const [[vp8_prob; 11]; 3] as ProbaArray;
-        a_ctx = a_ctx.offset(4 as i32 as isize);
-        l_ctx = l_ctx.offset(4 as i32 as isize);
+        a_ctx = a_ctx.offset(4 as isize);
+        l_ctx = l_ctx.offset(4 as isize);
         i = 16 as i32;
         while i < 24 as i32 {
             a = a_ctx
@@ -831,8 +831,7 @@ pub unsafe fn vp8_decode_mb_tokens(
                         << 1 as i32) as isize,
                 )
                 .offset(
-                    (i & 3 as i32 > 1 as i32) as i32
-                        as isize,
+                    (i & 3 as i32 > 1 as i32) as isize,
                 );
             nonzeros = GetCoeffs(
                 bc,
@@ -841,11 +840,11 @@ pub unsafe fn vp8_decode_mb_tokens(
                 0 as i32,
                 qcoeff_ptr as *mut int16_t,
             );
-            *l = (nonzeros > 0 as i32) as i32 as ENTROPY_CONTEXT;
+            *l = (nonzeros > 0 as i32) as ENTROPY_CONTEXT;
             *a = *l;
             *eobs.offset(i as isize) = nonzeros as i8;
             eobtotal += nonzeros;
-            qcoeff_ptr = qcoeff_ptr.offset(16 as i32 as isize);
+            qcoeff_ptr = qcoeff_ptr.offset(16 as isize);
             i += 1;
         }
         eobtotal

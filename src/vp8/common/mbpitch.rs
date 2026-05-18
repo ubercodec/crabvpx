@@ -233,7 +233,7 @@ pub unsafe fn vp8_setup_block_dptrs(mut x: *mut MACROBLOCKD) {
             while c < 2 as i32 {
                 (*x).block[(16 as i32 + r * 2 as i32 + c) as usize]
                     .predictor = (&raw mut (*x).predictor as *mut u8)
-                    .offset(256 as i32 as isize)
+                    .offset(256 as isize)
                     .offset((r * 4 as i32 * 8 as i32) as isize)
                     .offset((c * 4 as i32) as isize);
                 c += 1;
@@ -246,7 +246,7 @@ pub unsafe fn vp8_setup_block_dptrs(mut x: *mut MACROBLOCKD) {
             while c < 2 as i32 {
                 (*x).block[(20 as i32 + r * 2 as i32 + c) as usize]
                     .predictor = (&raw mut (*x).predictor as *mut u8)
-                    .offset(320 as i32 as isize)
+                    .offset(320 as isize)
                     .offset((r * 4 as i32 * 8 as i32) as isize)
                     .offset((c * 4 as i32) as isize);
                 c += 1;

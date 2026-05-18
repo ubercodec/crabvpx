@@ -62,7 +62,7 @@ unsafe fn vpx_read(
             value = value.wrapping_sub(bigsplit);
             bit = 1 as u32;
         }
-        let shift: u8 = vpx_norm[range as u8 as usize];
+        let shift: u8 = vpx_norm[range as usize];
         range <<= shift as i32;
         value <<= shift as i32;
         count -= shift as i32;
@@ -112,7 +112,7 @@ pub unsafe fn vpx_reader_fill(mut r: *mut vpx_reader) {
         let mut buffer_start: *const uint8_t = buffer;
         let mut value: BD_VALUE = (*r).value;
         let mut count: i32 = (*r).count;
-        let bytes_left: size_t = buffer_end.offset_from(buffer) as i64 as size_t;
+        let bytes_left: size_t = buffer_end.offset_from(buffer) as size_t;
         let bits_left: size_t = bytes_left.wrapping_mul(CHAR_BIT as size_t);
         let mut shift: i32 = BD_VALUE_SIZE - CHAR_BIT - (count + CHAR_BIT);
         if (*r).decrypt_cb.is_some() {
@@ -166,7 +166,7 @@ pub unsafe fn vpx_reader_fill(mut r: *mut vpx_reader) {
         }
         (*r).buffer = (*r)
             .buffer
-            .offset(buffer.offset_from(buffer_start) as i64 as isize);
+            .offset(buffer.offset_from(buffer_start) as isize);
         (*r).value = value;
         (*r).count = count;
     }

@@ -327,10 +327,10 @@ pub unsafe fn vp8_alloc_frame_buffers(
             (*oci).lst_fb_idx = 1 as i32;
             (*oci).gld_fb_idx = 2 as i32;
             (*oci).alt_fb_idx = 3 as i32;
-            (*oci).fb_idx_ref_cnt[0 as i32 as usize] = 1 as i32;
-            (*oci).fb_idx_ref_cnt[1 as i32 as usize] = 1 as i32;
-            (*oci).fb_idx_ref_cnt[2 as i32 as usize] = 1 as i32;
-            (*oci).fb_idx_ref_cnt[3 as i32 as usize] = 1 as i32;
+            (*oci).fb_idx_ref_cnt[0 as usize] = 1 as i32;
+            (*oci).fb_idx_ref_cnt[1 as usize] = 1 as i32;
+            (*oci).fb_idx_ref_cnt[2 as usize] = 1 as i32;
+            (*oci).fb_idx_ref_cnt[3 as usize] = 1 as i32;
             if !(vp8_yv12_alloc_frame_buffer(
                 &raw mut (*oci).temp_scale_frame,
                 width,
@@ -351,7 +351,7 @@ pub unsafe fn vp8_alloc_frame_buffers(
                     (*oci).mi = (*oci)
                         .mip
                         .offset((*oci).mode_info_stride as isize)
-                        .offset(1 as i32 as isize);
+                        .offset(1 as isize);
                     (*oci).above_context = vpx_calloc(
                         (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t)
                             .wrapping_mul((*oci).mb_cols as size_t),

@@ -331,14 +331,14 @@ pub unsafe fn vp8_build_inter_predictors_b(
         } else {
             r = 0 as i32;
             while r < 4 as i32 {
-                *pred_ptr.offset(0 as i32 as isize) =
-                    *ptr.offset(0 as i32 as isize);
-                *pred_ptr.offset(1 as i32 as isize) =
-                    *ptr.offset(1 as i32 as isize);
-                *pred_ptr.offset(2 as i32 as isize) =
-                    *ptr.offset(2 as i32 as isize);
-                *pred_ptr.offset(3 as i32 as isize) =
-                    *ptr.offset(3 as i32 as isize);
+                *pred_ptr.offset(0 as isize) =
+                    *ptr.offset(0 as isize);
+                *pred_ptr.offset(1 as isize) =
+                    *ptr.offset(1 as isize);
+                *pred_ptr.offset(2 as isize) =
+                    *ptr.offset(2 as isize);
+                *pred_ptr.offset(3 as isize) =
+                    *ptr.offset(3 as isize);
                 pred_ptr = pred_ptr.offset(pitch as isize);
                 ptr = ptr.offset(pre_stride as isize);
                 r += 1;
@@ -450,14 +450,14 @@ unsafe fn build_inter_predictors_b(
         } else {
             r = 0 as i32;
             while r < 4 as i32 {
-                *dst.offset(0 as i32 as isize) =
-                    *ptr.offset(0 as i32 as isize);
-                *dst.offset(1 as i32 as isize) =
-                    *ptr.offset(1 as i32 as isize);
-                *dst.offset(2 as i32 as isize) =
-                    *ptr.offset(2 as i32 as isize);
-                *dst.offset(3 as i32 as isize) =
-                    *ptr.offset(3 as i32 as isize);
+                *dst.offset(0 as isize) =
+                    *ptr.offset(0 as isize);
+                *dst.offset(1 as isize) =
+                    *ptr.offset(1 as isize);
+                *dst.offset(2 as isize) =
+                    *ptr.offset(2 as isize);
+                *dst.offset(3 as isize) =
+                    *ptr.offset(3 as isize);
                 dst = dst.offset(dst_stride as isize);
                 ptr = ptr.offset(pre_stride as isize);
                 r += 1;
@@ -472,11 +472,11 @@ pub unsafe fn vp8_build_inter16x16_predictors_mbuv(mut x: *mut MACROBLOCKD) {
         let mut vptr: *mut u8 = ::core::ptr::null_mut::<u8>();
         let mut upred_ptr: *mut u8 = (&raw mut (*x).predictor
             as *mut u8)
-            .offset(256 as i32 as isize)
+            .offset(256 as isize)
             as *mut u8;
         let mut vpred_ptr: *mut u8 = (&raw mut (*x).predictor
             as *mut u8)
-            .offset(320 as i32 as isize)
+            .offset(320 as isize)
             as *mut u8;
         let mut mv_row: i32 =
             (*(*x).mode_info_context).mbmi.mv.as_mv.row as i32;
@@ -886,18 +886,18 @@ unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
         {
             let mut b: *mut BLOCKD = ::core::ptr::null_mut::<BLOCKD>();
             let mut dst_stride: i32 = (*x).dst.y_stride;
-            (*x).block[0 as i32 as usize].bmi =
-                (*(*x).mode_info_context).bmi[0 as i32 as usize];
-            (*x).block[2 as i32 as usize].bmi =
-                (*(*x).mode_info_context).bmi[2 as i32 as usize];
-            (*x).block[8 as i32 as usize].bmi =
-                (*(*x).mode_info_context).bmi[8 as i32 as usize];
-            (*x).block[10 as i32 as usize].bmi =
-                (*(*x).mode_info_context).bmi[10 as i32 as usize];
+            (*x).block[0 as usize].bmi =
+                (*(*x).mode_info_context).bmi[0 as usize];
+            (*x).block[2 as usize].bmi =
+                (*(*x).mode_info_context).bmi[2 as usize];
+            (*x).block[8 as usize].bmi =
+                (*(*x).mode_info_context).bmi[8 as usize];
+            (*x).block[10 as usize].bmi =
+                (*(*x).mode_info_context).bmi[10 as usize];
             if (*(*x).mode_info_context).mbmi.need_to_clamp_mvs != 0 {
                 clamp_mv_to_umv_border(
                     &raw mut (*(&raw mut (*x).block as *mut BLOCKD)
-                        .offset(0 as i32 as isize))
+                        .offset(0 as isize))
                     .bmi
                     .mv
                     .as_mv,
@@ -905,7 +905,7 @@ unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
                 );
                 clamp_mv_to_umv_border(
                     &raw mut (*(&raw mut (*x).block as *mut BLOCKD)
-                        .offset(2 as i32 as isize))
+                        .offset(2 as isize))
                     .bmi
                     .mv
                     .as_mv,
@@ -913,7 +913,7 @@ unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
                 );
                 clamp_mv_to_umv_border(
                     &raw mut (*(&raw mut (*x).block as *mut BLOCKD)
-                        .offset(8 as i32 as isize))
+                        .offset(8 as isize))
                     .bmi
                     .mv
                     .as_mv,
@@ -921,14 +921,14 @@ unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
                 );
                 clamp_mv_to_umv_border(
                     &raw mut (*(&raw mut (*x).block as *mut BLOCKD)
-                        .offset(10 as i32 as isize))
+                        .offset(10 as isize))
                     .bmi
                     .mv
                     .as_mv,
                     x,
                 );
             }
-            b = (&raw mut (*x).block as *mut BLOCKD).offset(0 as i32 as isize)
+            b = (&raw mut (*x).block as *mut BLOCKD).offset(0 as isize)
                 as *mut BLOCKD;
             build_inter_predictors4b(
                 x,
@@ -938,7 +938,7 @@ unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
                 base_pre,
                 dst_stride,
             );
-            b = (&raw mut (*x).block as *mut BLOCKD).offset(2 as i32 as isize)
+            b = (&raw mut (*x).block as *mut BLOCKD).offset(2 as isize)
                 as *mut BLOCKD;
             build_inter_predictors4b(
                 x,
@@ -948,7 +948,7 @@ unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
                 base_pre,
                 dst_stride,
             );
-            b = (&raw mut (*x).block as *mut BLOCKD).offset(8 as i32 as isize)
+            b = (&raw mut (*x).block as *mut BLOCKD).offset(8 as isize)
                 as *mut BLOCKD;
             build_inter_predictors4b(
                 x,
@@ -958,7 +958,7 @@ unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
                 base_pre,
                 dst_stride,
             );
-            b = (&raw mut (*x).block as *mut BLOCKD).offset(10 as i32 as isize)
+            b = (&raw mut (*x).block as *mut BLOCKD).offset(10 as isize)
                 as *mut BLOCKD;
             build_inter_predictors4b(
                 x,

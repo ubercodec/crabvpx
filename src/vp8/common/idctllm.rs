@@ -24,23 +24,23 @@ pub unsafe fn vp8_short_idct4x4llm_c(
         let mut shortpitch: i32 = 4 as i32;
         i = 0 as i32;
         while i < 4 as i32 {
-            a1 = *ip.offset(0 as i32 as isize) as i32
-                + *ip.offset(8 as i32 as isize) as i32;
-            b1 = *ip.offset(0 as i32 as isize) as i32
-                - *ip.offset(8 as i32 as isize) as i32;
-            temp1 = (*ip.offset(4 as i32 as isize) as i32
+            a1 = *ip.offset(0 as isize) as i32
+                + *ip.offset(8 as isize) as i32;
+            b1 = *ip.offset(0 as isize) as i32
+                - *ip.offset(8 as isize) as i32;
+            temp1 = (*ip.offset(4 as isize) as i32
                 * sinpi8sqrt2)
                 >> 16 as i32;
-            temp2 = *ip.offset(12 as i32 as isize) as i32
-                + ((*ip.offset(12 as i32 as isize) as i32
+            temp2 = *ip.offset(12 as isize) as i32
+                + ((*ip.offset(12 as isize) as i32
                     * cospi8sqrt2minus1)
                     >> 16 as i32);
             c1 = temp1 - temp2;
-            temp1 = *ip.offset(4 as i32 as isize) as i32
-                + ((*ip.offset(4 as i32 as isize) as i32
+            temp1 = *ip.offset(4 as isize) as i32
+                + ((*ip.offset(4 as isize) as i32
                     * cospi8sqrt2minus1)
                     >> 16 as i32);
-            temp2 = (*ip.offset(12 as i32 as isize) as i32
+            temp2 = (*ip.offset(12 as isize) as i32
                 * sinpi8sqrt2)
                 >> 16 as i32;
             d1 = temp1 + temp2;
@@ -60,36 +60,36 @@ pub unsafe fn vp8_short_idct4x4llm_c(
         op = &raw mut output as *mut i16;
         i = 0 as i32;
         while i < 4 as i32 {
-            a1 = *ip.offset(0 as i32 as isize) as i32
-                + *ip.offset(2 as i32 as isize) as i32;
-            b1 = *ip.offset(0 as i32 as isize) as i32
-                - *ip.offset(2 as i32 as isize) as i32;
-            temp1 = (*ip.offset(1 as i32 as isize) as i32
+            a1 = *ip.offset(0 as isize) as i32
+                + *ip.offset(2 as isize) as i32;
+            b1 = *ip.offset(0 as isize) as i32
+                - *ip.offset(2 as isize) as i32;
+            temp1 = (*ip.offset(1 as isize) as i32
                 * sinpi8sqrt2)
                 >> 16 as i32;
-            temp2 = *ip.offset(3 as i32 as isize) as i32
-                + ((*ip.offset(3 as i32 as isize) as i32
+            temp2 = *ip.offset(3 as isize) as i32
+                + ((*ip.offset(3 as isize) as i32
                     * cospi8sqrt2minus1)
                     >> 16 as i32);
             c1 = temp1 - temp2;
-            temp1 = *ip.offset(1 as i32 as isize) as i32
-                + ((*ip.offset(1 as i32 as isize) as i32
+            temp1 = *ip.offset(1 as isize) as i32
+                + ((*ip.offset(1 as isize) as i32
                     * cospi8sqrt2minus1)
                     >> 16 as i32);
-            temp2 = (*ip.offset(3 as i32 as isize) as i32
+            temp2 = (*ip.offset(3 as isize) as i32
                 * sinpi8sqrt2)
                 >> 16 as i32;
             d1 = temp1 + temp2;
-            *op.offset(0 as i32 as isize) = ((a1 + d1 + 4 as i32)
+            *op.offset(0 as isize) = ((a1 + d1 + 4 as i32)
                 >> 3 as i32)
                 as i16;
-            *op.offset(3 as i32 as isize) = ((a1 - d1 + 4 as i32)
+            *op.offset(3 as isize) = ((a1 - d1 + 4 as i32)
                 >> 3 as i32)
                 as i16;
-            *op.offset(1 as i32 as isize) = ((b1 + c1 + 4 as i32)
+            *op.offset(1 as isize) = ((b1 + c1 + 4 as i32)
                 >> 3 as i32)
                 as i16;
-            *op.offset(2 as i32 as isize) = ((b1 - c1 + 4 as i32)
+            *op.offset(2 as isize) = ((b1 - c1 + 4 as i32)
                 >> 3 as i32)
                 as i16;
             ip = ip.offset(shortpitch as isize);
@@ -112,7 +112,7 @@ pub unsafe fn vp8_short_idct4x4llm_c(
                 *dst_ptr.offset(c as isize) = a as u8;
                 c += 1;
             }
-            ip = ip.offset(4 as i32 as isize);
+            ip = ip.offset(4 as isize);
             dst_ptr = dst_ptr.offset(dst_stride as isize);
             pred_ptr = pred_ptr.offset(pred_stride as isize);
             r += 1;
@@ -173,18 +173,18 @@ pub unsafe fn vp8_short_inv_walsh4x4_c(
         let mut op: *mut i16 = &raw mut output as *mut i16;
         i = 0 as i32;
         while i < 4 as i32 {
-            a1 = *ip.offset(0 as i32 as isize) as i32
-                + *ip.offset(12 as i32 as isize) as i32;
-            b1 = *ip.offset(4 as i32 as isize) as i32
-                + *ip.offset(8 as i32 as isize) as i32;
-            c1 = *ip.offset(4 as i32 as isize) as i32
-                - *ip.offset(8 as i32 as isize) as i32;
-            d1 = *ip.offset(0 as i32 as isize) as i32
-                - *ip.offset(12 as i32 as isize) as i32;
-            *op.offset(0 as i32 as isize) = (a1 + b1) as i16;
-            *op.offset(4 as i32 as isize) = (c1 + d1) as i16;
-            *op.offset(8 as i32 as isize) = (a1 - b1) as i16;
-            *op.offset(12 as i32 as isize) = (d1 - c1) as i16;
+            a1 = *ip.offset(0 as isize) as i32
+                + *ip.offset(12 as isize) as i32;
+            b1 = *ip.offset(4 as isize) as i32
+                + *ip.offset(8 as isize) as i32;
+            c1 = *ip.offset(4 as isize) as i32
+                - *ip.offset(8 as isize) as i32;
+            d1 = *ip.offset(0 as isize) as i32
+                - *ip.offset(12 as isize) as i32;
+            *op.offset(0 as isize) = (a1 + b1) as i16;
+            *op.offset(4 as isize) = (c1 + d1) as i16;
+            *op.offset(8 as isize) = (a1 - b1) as i16;
+            *op.offset(12 as isize) = (d1 - c1) as i16;
             ip = ip.offset(1);
             op = op.offset(1);
             i += 1;
@@ -193,28 +193,28 @@ pub unsafe fn vp8_short_inv_walsh4x4_c(
         op = &raw mut output as *mut i16;
         i = 0 as i32;
         while i < 4 as i32 {
-            a1 = *ip.offset(0 as i32 as isize) as i32
-                + *ip.offset(3 as i32 as isize) as i32;
-            b1 = *ip.offset(1 as i32 as isize) as i32
-                + *ip.offset(2 as i32 as isize) as i32;
-            c1 = *ip.offset(1 as i32 as isize) as i32
-                - *ip.offset(2 as i32 as isize) as i32;
-            d1 = *ip.offset(0 as i32 as isize) as i32
-                - *ip.offset(3 as i32 as isize) as i32;
+            a1 = *ip.offset(0 as isize) as i32
+                + *ip.offset(3 as isize) as i32;
+            b1 = *ip.offset(1 as isize) as i32
+                + *ip.offset(2 as isize) as i32;
+            c1 = *ip.offset(1 as isize) as i32
+                - *ip.offset(2 as isize) as i32;
+            d1 = *ip.offset(0 as isize) as i32
+                - *ip.offset(3 as isize) as i32;
             a2 = a1 + b1;
             b2 = c1 + d1;
             c2 = a1 - b1;
             d2 = d1 - c1;
-            *op.offset(0 as i32 as isize) =
+            *op.offset(0 as isize) =
                 ((a2 + 3 as i32) >> 3 as i32) as i16;
-            *op.offset(1 as i32 as isize) =
+            *op.offset(1 as isize) =
                 ((b2 + 3 as i32) >> 3 as i32) as i16;
-            *op.offset(2 as i32 as isize) =
+            *op.offset(2 as isize) =
                 ((c2 + 3 as i32) >> 3 as i32) as i16;
-            *op.offset(3 as i32 as isize) =
+            *op.offset(3 as isize) =
                 ((d2 + 3 as i32) >> 3 as i32) as i16;
-            ip = ip.offset(4 as i32 as isize);
-            op = op.offset(4 as i32 as isize);
+            ip = ip.offset(4 as isize);
+            op = op.offset(4 as isize);
             i += 1;
         }
         i = 0 as i32;
@@ -232,7 +232,7 @@ pub unsafe fn vp8_short_inv_walsh4x4_1_c(
     unsafe {
         let mut i: i32 = 0;
         let mut a1: i32 = 0;
-        a1 = (*input.offset(0 as i32 as isize) as i32
+        a1 = (*input.offset(0 as isize) as i32
             + 3 as i32)
             >> 3 as i32;
         i = 0 as i32;

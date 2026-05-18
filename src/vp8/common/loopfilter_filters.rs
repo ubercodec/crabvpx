@@ -107,13 +107,13 @@ unsafe fn vp8_filter(
         let mut Filter1: i8 = 0;
         let mut Filter2: i8 = 0;
         let mut u: i8 = 0;
-        ps1 = (*op1 as i8 as i32 ^ 0x80 as i32)
+        ps1 = (*op1 as i32 ^ 0x80 as i32)
             as i8;
-        ps0 = (*op0 as i8 as i32 ^ 0x80 as i32)
+        ps0 = (*op0 as i32 ^ 0x80 as i32)
             as i8;
-        qs0 = (*oq0 as i8 as i32 ^ 0x80 as i32)
+        qs0 = (*oq0 as i32 ^ 0x80 as i32)
             as i8;
-        qs1 = (*oq1 as i8 as i32 ^ 0x80 as i32)
+        qs1 = (*oq1 as i32 ^ 0x80 as i32)
             as i8;
         filter_value = vp8_signed_char_clamp(ps1 as i32 - qs1 as i32);
         filter_value = (filter_value as i32 & hev as i32)
@@ -163,8 +163,8 @@ unsafe fn loop_filter_horizontal_edge_c(
         let mut i: i32 = 0 as i32;
         loop {
             mask = vp8_filter_mask(
-                *limit.offset(0 as i32 as isize) as uc,
-                *blimit.offset(0 as i32 as isize) as uc,
+                *limit.offset(0 as isize) as uc,
+                *blimit.offset(0 as isize) as uc,
                 *s.offset((-(4 as i32) * p) as isize) as uc,
                 *s.offset((-(3 as i32) * p) as isize) as uc,
                 *s.offset((-(2 as i32) * p) as isize) as uc,
@@ -175,7 +175,7 @@ unsafe fn loop_filter_horizontal_edge_c(
                 *s.offset((3 as i32 * p) as isize) as uc,
             );
             hev = vp8_hevmask(
-                *thresh.offset(0 as i32 as isize) as uc,
+                *thresh.offset(0 as isize) as uc,
                 *s.offset((-(2 as i32) * p) as isize) as uc,
                 *s.offset((-(1 as i32) * p) as isize) as uc,
                 *s.offset((0 as i32 * p) as isize) as uc,
@@ -211,31 +211,31 @@ unsafe fn loop_filter_vertical_edge_c(
         let mut i: i32 = 0 as i32;
         loop {
             mask = vp8_filter_mask(
-                *limit.offset(0 as i32 as isize) as uc,
-                *blimit.offset(0 as i32 as isize) as uc,
+                *limit.offset(0 as isize) as uc,
+                *blimit.offset(0 as isize) as uc,
                 *s.offset(-(4 as i32) as isize) as uc,
                 *s.offset(-(3 as i32) as isize) as uc,
                 *s.offset(-(2 as i32) as isize) as uc,
                 *s.offset(-(1 as i32) as isize) as uc,
-                *s.offset(0 as i32 as isize) as uc,
-                *s.offset(1 as i32 as isize) as uc,
-                *s.offset(2 as i32 as isize) as uc,
-                *s.offset(3 as i32 as isize) as uc,
+                *s.offset(0 as isize) as uc,
+                *s.offset(1 as isize) as uc,
+                *s.offset(2 as isize) as uc,
+                *s.offset(3 as isize) as uc,
             );
             hev = vp8_hevmask(
-                *thresh.offset(0 as i32 as isize) as uc,
+                *thresh.offset(0 as isize) as uc,
                 *s.offset(-(2 as i32) as isize) as uc,
                 *s.offset(-(1 as i32) as isize) as uc,
-                *s.offset(0 as i32 as isize) as uc,
-                *s.offset(1 as i32 as isize) as uc,
+                *s.offset(0 as isize) as uc,
+                *s.offset(1 as isize) as uc,
             ) as i32;
             vp8_filter(
                 mask,
                 hev as uc,
-                s.offset(-(2 as i32 as isize)),
-                s.offset(-(1 as i32 as isize)),
+                s.offset(-(2 as isize)),
+                s.offset(-(1 as isize)),
                 s as *mut uc,
-                s.offset(1 as i32 as isize),
+                s.offset(1 as isize),
             );
             s = s.offset(p as isize);
             i += 1;
@@ -261,22 +261,22 @@ unsafe fn vp8_mbfilter(
         let mut filter_value: i8 = 0;
         let mut Filter1: i8 = 0;
         let mut Filter2: i8 = 0;
-        let mut ps2: i8 = (*op2 as i8 as i32
+        let mut ps2: i8 = (*op2 as i32
             ^ 0x80 as i32)
             as i8;
-        let mut ps1: i8 = (*op1 as i8 as i32
+        let mut ps1: i8 = (*op1 as i32
             ^ 0x80 as i32)
             as i8;
-        let mut ps0: i8 = (*op0 as i8 as i32
+        let mut ps0: i8 = (*op0 as i32
             ^ 0x80 as i32)
             as i8;
-        let mut qs0: i8 = (*oq0 as i8 as i32
+        let mut qs0: i8 = (*oq0 as i32
             ^ 0x80 as i32)
             as i8;
-        let mut qs1: i8 = (*oq1 as i8 as i32
+        let mut qs1: i8 = (*oq1 as i32
             ^ 0x80 as i32)
             as i8;
-        let mut qs2: i8 = (*oq2 as i8 as i32
+        let mut qs2: i8 = (*oq2 as i32
             ^ 0x80 as i32)
             as i8;
         filter_value = vp8_signed_char_clamp(ps1 as i32 - qs1 as i32);
@@ -340,8 +340,8 @@ unsafe fn mbloop_filter_horizontal_edge_c(
         let mut i: i32 = 0 as i32;
         loop {
             mask = vp8_filter_mask(
-                *limit.offset(0 as i32 as isize) as uc,
-                *blimit.offset(0 as i32 as isize) as uc,
+                *limit.offset(0 as isize) as uc,
+                *blimit.offset(0 as isize) as uc,
                 *s.offset((-(4 as i32) * p) as isize) as uc,
                 *s.offset((-(3 as i32) * p) as isize) as uc,
                 *s.offset((-(2 as i32) * p) as isize) as uc,
@@ -352,7 +352,7 @@ unsafe fn mbloop_filter_horizontal_edge_c(
                 *s.offset((3 as i32 * p) as isize) as uc,
             );
             hev = vp8_hevmask(
-                *thresh.offset(0 as i32 as isize) as uc,
+                *thresh.offset(0 as isize) as uc,
                 *s.offset((-(2 as i32) * p) as isize) as uc,
                 *s.offset((-(1 as i32) * p) as isize) as uc,
                 *s.offset((0 as i32 * p) as isize) as uc,
@@ -390,33 +390,33 @@ unsafe fn mbloop_filter_vertical_edge_c(
         let mut i: i32 = 0 as i32;
         loop {
             mask = vp8_filter_mask(
-                *limit.offset(0 as i32 as isize) as uc,
-                *blimit.offset(0 as i32 as isize) as uc,
+                *limit.offset(0 as isize) as uc,
+                *blimit.offset(0 as isize) as uc,
                 *s.offset(-(4 as i32) as isize) as uc,
                 *s.offset(-(3 as i32) as isize) as uc,
                 *s.offset(-(2 as i32) as isize) as uc,
                 *s.offset(-(1 as i32) as isize) as uc,
-                *s.offset(0 as i32 as isize) as uc,
-                *s.offset(1 as i32 as isize) as uc,
-                *s.offset(2 as i32 as isize) as uc,
-                *s.offset(3 as i32 as isize) as uc,
+                *s.offset(0 as isize) as uc,
+                *s.offset(1 as isize) as uc,
+                *s.offset(2 as isize) as uc,
+                *s.offset(3 as isize) as uc,
             );
             hev = vp8_hevmask(
-                *thresh.offset(0 as i32 as isize) as uc,
+                *thresh.offset(0 as isize) as uc,
                 *s.offset(-(2 as i32) as isize) as uc,
                 *s.offset(-(1 as i32) as isize) as uc,
-                *s.offset(0 as i32 as isize) as uc,
-                *s.offset(1 as i32 as isize) as uc,
+                *s.offset(0 as isize) as uc,
+                *s.offset(1 as isize) as uc,
             );
             vp8_mbfilter(
                 mask,
                 hev as uc,
-                s.offset(-(3 as i32 as isize)),
-                s.offset(-(2 as i32 as isize)),
-                s.offset(-(1 as i32 as isize)),
+                s.offset(-(3 as isize)),
+                s.offset(-(2 as isize)),
+                s.offset(-(1 as isize)),
                 s as *mut uc,
-                s.offset(1 as i32 as isize),
-                s.offset(2 as i32 as isize),
+                s.offset(1 as isize),
+                s.offset(2 as isize),
             );
             s = s.offset(p as isize);
             i += 1;
@@ -454,16 +454,16 @@ unsafe fn vp8_simple_filter(
         let mut filter_value: i8 = 0;
         let mut Filter1: i8 = 0;
         let mut Filter2: i8 = 0;
-        let mut p1: i8 = (*op1 as i8 as i32
+        let mut p1: i8 = (*op1 as i32
             ^ 0x80 as i32)
             as i8;
-        let mut p0: i8 = (*op0 as i8 as i32
+        let mut p0: i8 = (*op0 as i32
             ^ 0x80 as i32)
             as i8;
-        let mut q0: i8 = (*oq0 as i8 as i32
+        let mut q0: i8 = (*oq0 as i32
             ^ 0x80 as i32)
             as i8;
-        let mut q1: i8 = (*oq1 as i8 as i32
+        let mut q1: i8 = (*oq1 as i32
             ^ 0x80 as i32)
             as i8;
         let mut u: i8 = 0;
@@ -499,7 +499,7 @@ pub unsafe fn vp8_loop_filter_simple_horizontal_edge_c(
         let mut i: i32 = 0 as i32;
         loop {
             mask = vp8_simple_filter_mask(
-                *blimit.offset(0 as i32 as isize) as uc,
+                *blimit.offset(0 as isize) as uc,
                 *y_ptr.offset((-(2 as i32) * y_stride) as isize) as uc,
                 *y_ptr.offset((-(1 as i32) * y_stride) as isize) as uc,
                 *y_ptr.offset((0 as i32 * y_stride) as isize) as uc,
@@ -531,18 +531,18 @@ pub unsafe fn vp8_loop_filter_simple_vertical_edge_c(
         let mut i: i32 = 0 as i32;
         loop {
             mask = vp8_simple_filter_mask(
-                *blimit.offset(0 as i32 as isize) as uc,
+                *blimit.offset(0 as isize) as uc,
                 *y_ptr.offset(-(2 as i32) as isize) as uc,
                 *y_ptr.offset(-(1 as i32) as isize) as uc,
-                *y_ptr.offset(0 as i32 as isize) as uc,
-                *y_ptr.offset(1 as i32 as isize) as uc,
+                *y_ptr.offset(0 as isize) as uc,
+                *y_ptr.offset(1 as isize) as uc,
             );
             vp8_simple_filter(
                 mask,
-                y_ptr.offset(-(2 as i32 as isize)),
-                y_ptr.offset(-(1 as i32 as isize)),
+                y_ptr.offset(-(2 as isize)),
+                y_ptr.offset(-(1 as isize)),
                 y_ptr as *mut uc,
-                y_ptr.offset(1 as i32 as isize),
+                y_ptr.offset(1 as isize),
             );
             y_ptr = y_ptr.offset(y_stride as isize);
             i += 1;
@@ -723,7 +723,7 @@ pub unsafe fn vp8_loop_filter_bv_c(
 ) {
     unsafe {
         loop_filter_vertical_edge_c(
-            y_ptr.offset(4 as i32 as isize),
+            y_ptr.offset(4 as isize),
             y_stride,
             (*lfi).blim,
             (*lfi).lim,
@@ -731,7 +731,7 @@ pub unsafe fn vp8_loop_filter_bv_c(
             2 as i32,
         );
         loop_filter_vertical_edge_c(
-            y_ptr.offset(8 as i32 as isize),
+            y_ptr.offset(8 as isize),
             y_stride,
             (*lfi).blim,
             (*lfi).lim,
@@ -739,7 +739,7 @@ pub unsafe fn vp8_loop_filter_bv_c(
             2 as i32,
         );
         loop_filter_vertical_edge_c(
-            y_ptr.offset(12 as i32 as isize),
+            y_ptr.offset(12 as isize),
             y_stride,
             (*lfi).blim,
             (*lfi).lim,
@@ -748,7 +748,7 @@ pub unsafe fn vp8_loop_filter_bv_c(
         );
         if !u_ptr.is_null() {
             loop_filter_vertical_edge_c(
-                u_ptr.offset(4 as i32 as isize),
+                u_ptr.offset(4 as isize),
                 uv_stride,
                 (*lfi).blim,
                 (*lfi).lim,
@@ -758,7 +758,7 @@ pub unsafe fn vp8_loop_filter_bv_c(
         }
         if !v_ptr.is_null() {
             loop_filter_vertical_edge_c(
-                v_ptr.offset(4 as i32 as isize),
+                v_ptr.offset(4 as isize),
                 uv_stride,
                 (*lfi).blim,
                 (*lfi).lim,
@@ -776,17 +776,17 @@ pub unsafe fn vp8_loop_filter_bvs_c(
 ) {
     unsafe {
         vp8_loop_filter_simple_vertical_edge_c(
-            y_ptr.offset(4 as i32 as isize),
+            y_ptr.offset(4 as isize),
             y_stride,
             blimit,
         );
         vp8_loop_filter_simple_vertical_edge_c(
-            y_ptr.offset(8 as i32 as isize),
+            y_ptr.offset(8 as isize),
             y_stride,
             blimit,
         );
         vp8_loop_filter_simple_vertical_edge_c(
-            y_ptr.offset(12 as i32 as isize),
+            y_ptr.offset(12 as isize),
             y_stride,
             blimit,
         );

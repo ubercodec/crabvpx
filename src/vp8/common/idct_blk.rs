@@ -41,8 +41,8 @@ pub unsafe fn vp8_dequant_idct_add_y_block_c(
                     vp8_dequant_idct_add_c(q, dq, dst, stride);
                 } else {
                     vp8_dc_only_idct_add_c(
-                        (*q.offset(0 as i32 as isize) as i32
-                            * *dq.offset(0 as i32 as isize) as i32)
+                        (*q.offset(0 as isize) as i32
+                            * *dq.offset(0 as isize) as i32)
                             as i16,
                         dst,
                         stride,
@@ -56,8 +56,8 @@ pub unsafe fn vp8_dequant_idct_add_y_block_c(
                             .wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
-                q = q.offset(16 as i32 as isize);
-                dst = dst.offset(4 as i32 as isize);
+                q = q.offset(16 as isize);
+                dst = dst.offset(4 as isize);
                 j += 1;
             }
             dst =
@@ -88,8 +88,8 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                     vp8_dequant_idct_add_c(q, dq, dst_u, stride);
                 } else {
                     vp8_dc_only_idct_add_c(
-                        (*q.offset(0 as i32 as isize) as i32
-                            * *dq.offset(0 as i32 as isize) as i32)
+                        (*q.offset(0 as isize) as i32
+                            * *dq.offset(0 as isize) as i32)
                             as i16,
                         dst_u,
                         stride,
@@ -103,8 +103,8 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                             .wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
-                q = q.offset(16 as i32 as isize);
-                dst_u = dst_u.offset(4 as i32 as isize);
+                q = q.offset(16 as isize);
+                dst_u = dst_u.offset(4 as isize);
                 j += 1;
             }
             dst_u =
@@ -121,8 +121,8 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                     vp8_dequant_idct_add_c(q, dq, dst_v, stride);
                 } else {
                     vp8_dc_only_idct_add_c(
-                        (*q.offset(0 as i32 as isize) as i32
-                            * *dq.offset(0 as i32 as isize) as i32)
+                        (*q.offset(0 as isize) as i32
+                            * *dq.offset(0 as isize) as i32)
                             as i16,
                         dst_v,
                         stride,
@@ -136,8 +136,8 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                             .wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
-                q = q.offset(16 as i32 as isize);
-                dst_v = dst_v.offset(4 as i32 as isize);
+                q = q.offset(16 as isize);
+                dst_v = dst_v.offset(4 as isize);
                 j += 1;
             }
             dst_v =

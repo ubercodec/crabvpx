@@ -98,7 +98,7 @@ unsafe fn copy_and_extend_plane(
         while i < h {
             memset(
                 dest_ptr1 as *mut core::ffi::c_void,
-                *src_ptr1.offset(0 as i32 as isize) as i32,
+                *src_ptr1.offset(0 as isize) as i32,
                 el as size_t,
             );
             if interleave_step == 1 as i32 {
@@ -117,7 +117,7 @@ unsafe fn copy_and_extend_plane(
             }
             memset(
                 dest_ptr2 as *mut core::ffi::c_void,
-                *src_ptr2.offset(0 as i32 as isize) as i32,
+                *src_ptr2.offset(0 as isize) as i32,
                 er as size_t,
             );
             src_ptr1 = src_ptr1.offset(sp as isize);

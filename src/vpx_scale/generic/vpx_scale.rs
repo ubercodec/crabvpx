@@ -137,8 +137,8 @@ unsafe fn scale1d_2t1_i(
         let mut temp: u32 = 0;
         let mut source_pitch: i32 = source_step;
         source_step *= 2 as i32;
-        *dest.offset(0 as i32 as isize) =
-            *source.offset(0 as i32 as isize);
+        *dest.offset(0 as isize) =
+            *source.offset(0 as isize);
         i = dest_step as u32;
         j = source_step as u32;
         while i < dest_length.wrapping_mul(dest_step as u32) {
@@ -158,7 +158,7 @@ unsafe fn scale1d_2t1_i(
                         as i32) as u32,
             );
             temp >>= 4 as i32;
-            *dest.offset(i as isize) = temp as i8 as u8;
+            *dest.offset(i as isize) = temp as u8;
             i = i.wrapping_add(dest_step as u32);
             j = j.wrapping_add(source_step as u32);
         }
@@ -211,9 +211,7 @@ unsafe fn scale1d_c(
                 .wrapping_mul(left_pixel as u32)
                 .wrapping_add(right_modifier.wrapping_mul(right_pixel as u32))
                 .wrapping_add(round_value)
-                .wrapping_div(dest_scale)
-                as i8
-                as u8;
+                .wrapping_div(dest_scale) as u8;
             right_modifier = right_modifier.wrapping_add(source_scale);
             while right_modifier > dest_scale {
                 right_modifier = right_modifier.wrapping_sub(dest_scale);
@@ -727,7 +725,7 @@ pub unsafe fn vpx_scale_frame(
                         .y_buffer
                         .offset((i * (*dst).y_stride) as isize)
                         .offset(dw as isize)
-                        .offset(-(1 as i32 as isize))
+                        .offset(-(1 as isize))
                         as *mut core::ffi::c_void,
                     *(*dst)
                         .y_buffer
@@ -778,7 +776,7 @@ pub unsafe fn vpx_scale_frame(
                         .u_buffer
                         .offset((i * (*dst).uv_stride) as isize)
                         .offset((dw / 2 as i32) as isize)
-                        .offset(-(1 as i32 as isize))
+                        .offset(-(1 as isize))
                         as *mut core::ffi::c_void,
                     *(*dst).u_buffer.offset(
                         (i * (*dst).uv_stride + dw / 2 as i32
@@ -830,7 +828,7 @@ pub unsafe fn vpx_scale_frame(
                         .v_buffer
                         .offset((i * (*dst).uv_stride) as isize)
                         .offset((dw / 2 as i32) as isize)
-                        .offset(-(1 as i32 as isize))
+                        .offset(-(1 as isize))
                         as *mut core::ffi::c_void,
                     *(*dst).v_buffer.offset(
                         (i * (*dst).uv_stride + dw / 2 as i32

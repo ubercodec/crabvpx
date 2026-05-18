@@ -1123,27 +1123,27 @@ unsafe fn vp8_peek_si_internal(
             }
             (*si).is_kf = 0 as u32;
             if data_sz >= 10 as u32
-                && *clear.offset(0 as i32 as isize) as i32
+                && *clear.offset(0 as isize) as i32
                     & 0x1 as i32
                     == 0
             {
                 (*si).is_kf = 1 as u32;
-                if *clear.offset(3 as i32 as isize) as i32
+                if *clear.offset(3 as isize) as i32
                     != 0x9d as i32
-                    || *clear.offset(4 as i32 as isize) as i32
+                    || *clear.offset(4 as isize) as i32
                         != 0x1 as i32
-                    || *clear.offset(5 as i32 as isize) as i32
+                    || *clear.offset(5 as isize) as i32
                         != 0x2a as i32
                 {
                     return VPX_CODEC_UNSUP_BITSTREAM;
                 }
-                (*si).w = ((*clear.offset(6 as i32 as isize) as i32
-                    | (*clear.offset(7 as i32 as isize) as i32)
+                (*si).w = ((*clear.offset(6 as isize) as i32
+                    | (*clear.offset(7 as isize) as i32)
                         << 8 as i32)
                     & 0x3fff as i32)
                     as u32;
-                (*si).h = ((*clear.offset(8 as i32 as isize) as i32
-                    | (*clear.offset(9 as i32 as isize) as i32)
+                (*si).h = ((*clear.offset(8 as isize) as i32
+                    | (*clear.offset(9 as isize) as i32)
                         << 8 as i32)
                     & 0x3fff as i32)
                     as u32;
@@ -1284,9 +1284,9 @@ unsafe fn update_fragments(
             return 0 as i32;
         }
         if (*ctx).fragments.enabled == 0 {
-            (*ctx).fragments.ptrs[0 as i32 as usize] =
+            (*ctx).fragments.ptrs[0 as usize] =
                 data as *const u8;
-            (*ctx).fragments.sizes[0 as i32 as usize] = data_sz;
+            (*ctx).fragments.sizes[0 as usize] = data_sz;
             (*ctx).fragments.count = 1 as u32;
         }
         1 as i32
@@ -1315,15 +1315,15 @@ unsafe fn vp8_decode(
         ::core::ptr::write_volatile(
             &mut res as *mut vpx_codec_err_t,
             vp8_peek_si_internal(
-                (*ctx).fragments.ptrs[0 as i32 as usize],
-                (*ctx).fragments.sizes[0 as i32 as usize],
+                (*ctx).fragments.ptrs[0 as usize],
+                (*ctx).fragments.sizes[0 as usize],
                 &raw mut (*ctx).si,
                 (*ctx).decrypt_cb,
                 (*ctx).decrypt_state,
             ),
         );
         if res as u32
-            == VPX_CODEC_UNSUP_BITSTREAM as i32 as u32
+            == VPX_CODEC_UNSUP_BITSTREAM as u32
             && (*ctx).si.is_kf == 0
         {
             ::core::ptr::write_volatile(&mut res as *mut vpx_codec_err_t, VPX_CODEC_OK);
@@ -1342,7 +1342,7 @@ unsafe fn vp8_decode(
             && (*ctx).si.w == 0 as u32
         {
             let mut pbi: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize];
+                (*ctx).yv12_frame_buffers.pbi[0 as usize];
             ::core::ptr::write_volatile(&mut res as *mut vpx_codec_err_t, VPX_CODEC_CORRUPT_FRAME);
             vpx_internal_error(
                 &raw mut (*pbi).common.error,
@@ -1359,7 +1359,7 @@ unsafe fn vp8_decode(
         }
         if res as u64 == 0 && (*ctx).restart_threads != 0 {
             let mut pbi_0: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize];
+                (*ctx).yv12_frame_buffers.pbi[0 as usize];
             let pc: *mut VP8_COMMON = &raw mut (*pbi_0).common;
             if setjmp(&raw mut (*pbi_0).common.error.jmp as *mut i32) != 0 {
                 (*pbi_0).common.error.setjmp = 0 as i32;
@@ -1407,7 +1407,7 @@ unsafe fn vp8_decode(
                     as vpx_codec_err_t,
             );
             if res as u32
-                == VPX_CODEC_OK as i32 as u32
+                == VPX_CODEC_OK as u32
             {
                 (*ctx).decoder_init = 1 as i32;
             } else {
@@ -1416,14 +1416,14 @@ unsafe fn vp8_decode(
             }
         }
         if (*ctx).decoder_init != 0 {
-            (*(*ctx).yv12_frame_buffers.pbi[0 as i32 as usize]).decrypt_cb =
+            (*(*ctx).yv12_frame_buffers.pbi[0 as usize]).decrypt_cb =
                 (*ctx).decrypt_cb;
-            (*(*ctx).yv12_frame_buffers.pbi[0 as i32 as usize]).decrypt_state =
+            (*(*ctx).yv12_frame_buffers.pbi[0 as usize]).decrypt_state =
                 (*ctx).decrypt_state;
         }
         if res as u64 == 0 {
             let mut pbi_1: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize];
+                (*ctx).yv12_frame_buffers.pbi[0 as usize];
             let pc_0: *mut VP8_COMMON = &raw mut (*pbi_1).common;
             if resolution_change != 0 {
                 let xd: *mut MACROBLOCKD = &raw mut (*pbi_1).mb;
@@ -1478,7 +1478,7 @@ unsafe fn vp8_decode(
                     vp8mt_alloc_temp_buffers(pbi_1, (*pc_0).Width, 0 as i32);
                 }
                 (*pbi_1).common.error.setjmp = 0 as i32;
-                (*pbi_1).common.fb_idx_ref_cnt[0 as i32 as usize] =
+                (*pbi_1).common.fb_idx_ref_cnt[0 as usize] =
                     0 as i32;
             }
             if setjmp(&raw mut (*pbi_1).common.error.jmp as *mut i32) != 0 {
@@ -1521,7 +1521,7 @@ unsafe fn vp8_get_frame(
     unsafe {
         let mut img: *mut vpx_image_t = ::core::ptr::null_mut::<vpx_image_t>();
         if (*iter).is_null()
-            && !(*ctx).yv12_frame_buffers.pbi[0 as i32 as usize].is_null()
+            && !(*ctx).yv12_frame_buffers.pbi[0 as usize].is_null()
         {
             let mut sd: YV12_BUFFER_CONFIG = yv12_buffer_config {
                 y_width: 0,
@@ -1576,7 +1576,7 @@ unsafe fn vp8_get_frame(
             }
             if 0 as i32
                 == vp8dx_get_raw_frame(
-                    (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize],
+                    (*ctx).yv12_frame_buffers.pbi[0 as usize],
                     &raw mut sd,
                     &raw mut flags,
                 )
@@ -1667,11 +1667,11 @@ unsafe fn vp8_set_reference(
                 flags: 0,
             };
             image2yuvconfig(&raw mut (*frame).img, &raw mut sd);
-            if (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize].is_null() {
+            if (*ctx).yv12_frame_buffers.pbi[0 as usize].is_null() {
                 return VPX_CODEC_CORRUPT_FRAME;
             }
             vp8dx_set_reference(
-                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize],
+                (*ctx).yv12_frame_buffers.pbi[0 as usize],
                 (*frame).frame_type as vpx_ref_frame_type,
                 &raw mut sd,
             )
@@ -1721,11 +1721,11 @@ unsafe fn vp8_get_reference(
                 flags: 0,
             };
             image2yuvconfig(&raw mut (*frame).img, &raw mut sd);
-            if (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize].is_null() {
+            if (*ctx).yv12_frame_buffers.pbi[0 as usize].is_null() {
                 return VPX_CODEC_CORRUPT_FRAME;
             }
             vp8dx_get_reference(
-                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize],
+                (*ctx).yv12_frame_buffers.pbi[0 as usize],
                 (*frame).frame_type as vpx_ref_frame_type,
                 &raw mut sd,
             )
@@ -1741,7 +1741,7 @@ unsafe fn vp8_get_quantizer(
     unsafe {
         let arg: *mut i32 = data as *mut i32;
         let mut pbi: *mut VP8D_COMP =
-            (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize];
+            (*ctx).yv12_frame_buffers.pbi[0 as usize];
         if arg.is_null() {
             return VPX_CODEC_INVALID_PARAM;
         }
@@ -1766,7 +1766,7 @@ unsafe fn vp8_get_last_ref_updates(
         let mut update_info: *mut i32 = data as *mut i32;
         if !update_info.is_null() {
             let mut pbi: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize] as *mut VP8D_COMP;
+                (*ctx).yv12_frame_buffers.pbi[0 as usize] as *mut VP8D_COMP;
             if pbi.is_null() {
                 return VPX_CODEC_CORRUPT_FRAME;
             }
@@ -1788,7 +1788,7 @@ unsafe fn vp8_get_last_ref_frame(
         let mut ref_info: *mut i32 = data as *mut i32;
         if !ref_info.is_null() {
             let mut pbi: *mut VP8D_COMP =
-                (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize] as *mut VP8D_COMP;
+                (*ctx).yv12_frame_buffers.pbi[0 as usize] as *mut VP8D_COMP;
             if !pbi.is_null() {
                 let mut oci: *mut VP8_COMMON = &raw mut (*pbi).common;
                 *ref_info = (if vp8dx_references_buffer(
@@ -1832,7 +1832,7 @@ unsafe fn vp8_get_frame_corrupted(
     unsafe {
         let mut corrupted: *mut i32 = data as *mut i32;
         let mut pbi: *mut VP8D_COMP =
-            (*ctx).yv12_frame_buffers.pbi[0 as i32 as usize] as *mut VP8D_COMP;
+            (*ctx).yv12_frame_buffers.pbi[0 as usize] as *mut VP8D_COMP;
         if !corrupted.is_null() && !pbi.is_null() {
             let frame: *const YV12_BUFFER_CONFIG = (*pbi).common.frame_to_show;
             if frame.is_null() {

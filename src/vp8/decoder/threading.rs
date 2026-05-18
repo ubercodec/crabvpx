@@ -707,7 +707,7 @@ unsafe fn intra_prediction_down_copy(
             .dst
             .y_buffer
             .offset(-(dst_stride as isize))
-            .offset(16 as i32 as isize);
+            .offset(16 as isize);
         let mut src_ptr: *mut u32 = above_right_src as *mut u32;
         let mut dst_ptr0: *mut u32 = above_right_dst
             .offset((4 as i32 * dst_stride) as isize)
@@ -736,19 +736,19 @@ unsafe fn setup_intra_recon_left(
         i = 0 as i32;
         while i < 16 as i32 {
             *y_buffer.offset((y_stride * i) as isize) =
-                129 as i32 as u8;
+                129 as u8;
             i += 1;
         }
         i = 0 as i32;
         while i < 8 as i32 {
             *u_buffer.offset((uv_stride * i) as isize) =
-                129 as i32 as u8;
+                129 as u8;
             i += 1;
         }
         i = 0 as i32;
         while i < 8 as i32 {
             *v_buffer.offset((uv_stride * i) as isize) =
-                129 as i32 as u8;
+                129 as u8;
             i += 1;
         }
     }
@@ -798,7 +798,7 @@ unsafe fn setup_decoding_thread_data(
             (*mbd).mode_ref_lf_delta_enabled = (*xd).mode_ref_lf_delta_enabled;
             (*mbd).mode_ref_lf_delta_update = (*xd).mode_ref_lf_delta_update;
             (*mbd).current_bc = (&raw mut (*pbi).mbc as *mut vp8_reader)
-                .offset(0 as i32 as isize)
+                .offset(0 as isize)
                 as *mut vp8_reader as *mut core::ffi::c_void;
             memcpy(
                 &raw mut (*mbd).dequant_y1_dc as *mut i16
@@ -855,7 +855,7 @@ unsafe fn mt_decode_macroblock(
             let mut eobtotal: i32 = 0;
             eobtotal = vp8_decode_mb_tokens(pbi, xd);
             (*(*xd).mode_info_context).mbmi.mb_skip_coeff =
-                (eobtotal == 0 as i32) as i32 as uint8_t;
+                (eobtotal == 0 as i32) as uint8_t;
         }
         mode = (*(*xd).mode_info_context).mbmi.mode as MB_PREDICTION_MODE;
         if (*xd).segmentation_enabled != 0 {
@@ -866,21 +866,21 @@ unsafe fn mt_decode_macroblock(
         {
             vp8_build_intra_predictors_mbuv_s(
                 xd,
-                (*xd).recon_above[1 as i32 as usize],
-                (*xd).recon_above[2 as i32 as usize],
-                (*xd).recon_left[1 as i32 as usize],
-                (*xd).recon_left[2 as i32 as usize],
-                (*xd).recon_left_stride[1 as i32 as usize],
+                (*xd).recon_above[1 as usize],
+                (*xd).recon_above[2 as usize],
+                (*xd).recon_left[1 as usize],
+                (*xd).recon_left[2 as usize],
+                (*xd).recon_left_stride[1 as usize],
                 (*xd).dst.u_buffer as *mut u8,
                 (*xd).dst.v_buffer as *mut u8,
                 (*xd).dst.uv_stride,
             );
-            if mode as u32 != B_PRED as i32 as u32 {
+            if mode as u32 != B_PRED as u32 {
                 vp8_build_intra_predictors_mby_s(
                     xd,
-                    (*xd).recon_above[0 as i32 as usize],
-                    (*xd).recon_left[0 as i32 as usize],
-                    (*xd).recon_left_stride[0 as i32 as usize],
+                    (*xd).recon_above[0 as usize],
+                    (*xd).recon_left[0 as usize],
+                    (*xd).recon_left_stride[0 as usize],
                     (*xd).dst.y_buffer as *mut u8,
                     (*xd).dst.y_stride,
                 );
@@ -897,8 +897,8 @@ unsafe fn mt_decode_macroblock(
                 }
                 intra_prediction_down_copy(
                     xd,
-                    (*xd).recon_above[0 as i32 as usize]
-                        .offset(16 as i32 as isize),
+                    (*xd).recon_above[0 as usize]
+                        .offset(16 as isize),
                 );
                 i = 0 as i32;
                 while i < 16 as i32 {
@@ -915,7 +915,7 @@ unsafe fn mt_decode_macroblock(
                     let mut left_stride: i32 = 0;
                     let mut top_left: u8 = 0;
                     if i < 4 as i32 && (*pbi).common.filter_level != 0 {
-                        Above = (*xd).recon_above[0 as i32 as usize]
+                        Above = (*xd).recon_above[0 as usize]
                             .offset((*b).offset as isize);
                     } else {
                         Above = dst.offset(-(dst_stride as isize));
@@ -924,10 +924,10 @@ unsafe fn mt_decode_macroblock(
                         && (*pbi).common.filter_level != 0
                     {
                         yleft =
-                            (*xd).recon_left[0 as i32 as usize].offset(i as isize);
+                            (*xd).recon_left[0 as usize].offset(i as isize);
                         left_stride = 1 as i32;
                     } else {
-                        yleft = dst.offset(-(1 as i32 as isize));
+                        yleft = dst.offset(-(1 as isize));
                         left_stride = dst_stride;
                     }
                     if (i == 4 as i32
@@ -935,9 +935,9 @@ unsafe fn mt_decode_macroblock(
                         || i == 12 as i32)
                         && (*pbi).common.filter_level != 0
                     {
-                        top_left = *(*xd).recon_left[0 as i32 as usize]
+                        top_left = *(*xd).recon_left[0 as usize]
                             .offset(i as isize)
-                            .offset(-(1 as i32 as isize));
+                            .offset(-(1 as isize));
                     } else {
                         top_left = *Above.offset(-(1 as i32) as isize);
                     }
@@ -955,9 +955,9 @@ unsafe fn mt_decode_macroblock(
                             vp8_dequant_idct_add_c((*b).qcoeff, DQC, dst, dst_stride);
                         } else {
                             vp8_dc_only_idct_add_c(
-                                (*(*b).qcoeff.offset(0 as i32 as isize)
+                                (*(*b).qcoeff.offset(0 as isize)
                                     as i32
-                                    * *DQC.offset(0 as i32 as isize)
+                                    * *DQC.offset(0 as isize)
                                         as i32)
                                     as i16,
                                 dst,
@@ -982,16 +982,16 @@ unsafe fn mt_decode_macroblock(
             vp8_build_inter_predictors_mb(xd);
         }
         if (*(*xd).mode_info_context).mbmi.mb_skip_coeff == 0 {
-            if mode as u32 != B_PRED as i32 as u32 {
+            if mode as u32 != B_PRED as u32 {
                 let mut DQC_0: *mut i16 =
                     &raw mut (*xd).dequant_y1 as *mut i16;
                 if mode as u32
-                    != SPLITMV as i32 as u32
+                    != SPLITMV as u32
                 {
                     let mut b_0: *mut BLOCKD = (&raw mut (*xd).block as *mut BLOCKD)
-                        .offset(24 as i32 as isize)
+                        .offset(24 as isize)
                         as *mut BLOCKD;
-                    if (*xd).eobs[24 as i32 as usize] as i32
+                    if (*xd).eobs[24 as usize] as i32
                         > 1 as i32
                     {
                         vp8_dequantize_b_c(
@@ -999,7 +999,7 @@ unsafe fn mt_decode_macroblock(
                             &raw mut (*xd).dequant_y2 as *mut i16,
                         );
                         vp8_short_inv_walsh4x4_c(
-                            (*b_0).dqcoeff.offset(0 as i32 as isize)
+                            (*b_0).dqcoeff.offset(0 as isize)
                                 as *mut i16,
                             &raw mut (*xd).qcoeff as *mut i16,
                         );
@@ -1011,14 +1011,14 @@ unsafe fn mt_decode_macroblock(
                             ),
                         );
                     } else {
-                        *(*b_0).dqcoeff.offset(0 as i32 as isize) =
-                            (*(*b_0).qcoeff.offset(0 as i32 as isize)
+                        *(*b_0).dqcoeff.offset(0 as isize) =
+                            (*(*b_0).qcoeff.offset(0 as isize)
                                 as i32
-                                * (*xd).dequant_y2[0 as i32 as usize]
+                                * (*xd).dequant_y2[0 as usize]
                                     as i32)
                                 as i16;
                         vp8_short_inv_walsh4x4_1_c(
-                            (*b_0).dqcoeff.offset(0 as i32 as isize)
+                            (*b_0).dqcoeff.offset(0 as isize)
                                 as *mut i16,
                             &raw mut (*xd).qcoeff as *mut i16,
                         );
@@ -1048,7 +1048,7 @@ unsafe fn mt_decode_macroblock(
                 (*xd).dst.v_buffer as *mut u8,
                 (*xd).dst.uv_stride,
                 (&raw mut (*xd).eobs as *mut i8)
-                    .offset(16 as i32 as isize),
+                    .offset(16 as isize),
             );
         }
     }
@@ -1072,9 +1072,9 @@ unsafe fn mt_decode_mb_rows(
             (1 as i32) << (*pbi).common.multi_token_partition as u32;
         let mut last_mb_row: i32 = start_mb_row;
         let mut yv12_fb_new: *mut YV12_BUFFER_CONFIG =
-            (*pbi).dec_fb_ref[INTRA_FRAME as i32 as usize];
+            (*pbi).dec_fb_ref[INTRA_FRAME as usize];
         let mut yv12_fb_lst: *mut YV12_BUFFER_CONFIG =
-            (*pbi).dec_fb_ref[LAST_FRAME as i32 as usize];
+            (*pbi).dec_fb_ref[LAST_FRAME as usize];
         let mut recon_y_stride: i32 = (*yv12_fb_new).y_stride;
         let mut recon_uv_stride: i32 = (*yv12_fb_new).uv_stride;
         let mut ref_buffer: [[*mut u8; 3]; 4] =
@@ -1083,24 +1083,24 @@ unsafe fn mt_decode_mb_rows(
             [::core::ptr::null_mut::<u8>(); 3];
         let mut i: i32 = 0;
         let mut ref_fb_corrupted: [i32; 4] = [0; 4];
-        ref_fb_corrupted[INTRA_FRAME as i32 as usize] = 0 as i32;
+        ref_fb_corrupted[INTRA_FRAME as usize] = 0 as i32;
         i = 1 as i32;
         while i < MAX_REF_FRAMES as i32 {
             let mut this_fb: *mut YV12_BUFFER_CONFIG = (*pbi).dec_fb_ref[i as usize];
-            ref_buffer[i as usize][0 as i32 as usize] =
+            ref_buffer[i as usize][0 as usize] =
                 (*this_fb).y_buffer as *mut u8;
-            ref_buffer[i as usize][1 as i32 as usize] =
+            ref_buffer[i as usize][1 as usize] =
                 (*this_fb).u_buffer as *mut u8;
-            ref_buffer[i as usize][2 as i32 as usize] =
+            ref_buffer[i as usize][2 as usize] =
                 (*this_fb).v_buffer as *mut u8;
             ref_fb_corrupted[i as usize] = (*this_fb).corrupted;
             i += 1;
         }
-        dst_buffer[0 as i32 as usize] =
+        dst_buffer[0 as usize] =
             (*yv12_fb_new).y_buffer as *mut u8;
-        dst_buffer[1 as i32 as usize] =
+        dst_buffer[1 as usize] =
             (*yv12_fb_new).u_buffer as *mut u8;
-        dst_buffer[2 as i32 as usize] =
+        dst_buffer[2 as usize] =
             (*yv12_fb_new).v_buffer as *mut u8;
         (*xd).up_available = (start_mb_row != 0 as i32) as i32;
         (*xd).mode_info_context = (*pc)
@@ -1143,57 +1143,57 @@ unsafe fn mt_decode_mb_rows(
                 * 16 as i32)
                 << 3 as i32;
             if (*pbi).common.filter_level != 0 {
-                (*xd).recon_above[0 as i32 as usize] =
+                (*xd).recon_above[0 as usize] =
                     (*(*pbi).mt_yabove_row.offset(mb_row as isize))
                         .offset((0 as i32 * 16 as i32) as isize)
-                        .offset(32 as i32 as isize);
-                (*xd).recon_above[1 as i32 as usize] =
+                        .offset(32 as isize);
+                (*xd).recon_above[1 as usize] =
                     (*(*pbi).mt_uabove_row.offset(mb_row as isize))
                         .offset((0 as i32 * 8 as i32) as isize)
-                        .offset(16 as i32 as isize);
-                (*xd).recon_above[2 as i32 as usize] =
+                        .offset(16 as isize);
+                (*xd).recon_above[2 as usize] =
                     (*(*pbi).mt_vabove_row.offset(mb_row as isize))
                         .offset((0 as i32 * 8 as i32) as isize)
-                        .offset(16 as i32 as isize);
-                (*xd).recon_left[0 as i32 as usize] =
+                        .offset(16 as isize);
+                (*xd).recon_left[0 as usize] =
                     *(*pbi).mt_yleft_col.offset(mb_row as isize);
-                (*xd).recon_left[1 as i32 as usize] =
+                (*xd).recon_left[1 as usize] =
                     *(*pbi).mt_uleft_col.offset(mb_row as isize);
-                (*xd).recon_left[2 as i32 as usize] =
+                (*xd).recon_left[2 as usize] =
                     *(*pbi).mt_vleft_col.offset(mb_row as isize);
-                (*xd).recon_left_stride[0 as i32 as usize] = 1 as i32;
-                (*xd).recon_left_stride[1 as i32 as usize] = 1 as i32;
+                (*xd).recon_left_stride[0 as usize] = 1 as i32;
+                (*xd).recon_left_stride[1 as usize] = 1 as i32;
             } else {
-                (*xd).recon_above[0 as i32 as usize] =
-                    dst_buffer[0 as i32 as usize].offset(recon_yoffset as isize);
-                (*xd).recon_above[1 as i32 as usize] =
-                    dst_buffer[1 as i32 as usize].offset(recon_uvoffset as isize);
-                (*xd).recon_above[2 as i32 as usize] =
-                    dst_buffer[2 as i32 as usize].offset(recon_uvoffset as isize);
-                (*xd).recon_left[0 as i32 as usize] = (*xd).recon_above
-                    [0 as i32 as usize]
-                    .offset(-(1 as i32 as isize));
-                (*xd).recon_left[1 as i32 as usize] = (*xd).recon_above
-                    [1 as i32 as usize]
-                    .offset(-(1 as i32 as isize));
-                (*xd).recon_left[2 as i32 as usize] = (*xd).recon_above
-                    [2 as i32 as usize]
-                    .offset(-(1 as i32 as isize));
-                (*xd).recon_above[0 as i32 as usize] = (*xd).recon_above
-                    [0 as i32 as usize]
+                (*xd).recon_above[0 as usize] =
+                    dst_buffer[0 as usize].offset(recon_yoffset as isize);
+                (*xd).recon_above[1 as usize] =
+                    dst_buffer[1 as usize].offset(recon_uvoffset as isize);
+                (*xd).recon_above[2 as usize] =
+                    dst_buffer[2 as usize].offset(recon_uvoffset as isize);
+                (*xd).recon_left[0 as usize] = (*xd).recon_above
+                    [0 as usize]
+                    .offset(-(1 as isize));
+                (*xd).recon_left[1 as usize] = (*xd).recon_above
+                    [1 as usize]
+                    .offset(-(1 as isize));
+                (*xd).recon_left[2 as usize] = (*xd).recon_above
+                    [2 as usize]
+                    .offset(-(1 as isize));
+                (*xd).recon_above[0 as usize] = (*xd).recon_above
+                    [0 as usize]
                     .offset(-((*xd).dst.y_stride as isize));
-                (*xd).recon_above[1 as i32 as usize] = (*xd).recon_above
-                    [1 as i32 as usize]
+                (*xd).recon_above[1 as usize] = (*xd).recon_above
+                    [1 as usize]
                     .offset(-((*xd).dst.uv_stride as isize));
-                (*xd).recon_above[2 as i32 as usize] = (*xd).recon_above
-                    [2 as i32 as usize]
+                (*xd).recon_above[2 as usize] = (*xd).recon_above
+                    [2 as usize]
                     .offset(-((*xd).dst.uv_stride as isize));
-                (*xd).recon_left_stride[0 as i32 as usize] = (*xd).dst.y_stride;
-                (*xd).recon_left_stride[1 as i32 as usize] = (*xd).dst.uv_stride;
+                (*xd).recon_left_stride[0 as usize] = (*xd).dst.y_stride;
+                (*xd).recon_left_stride[1 as usize] = (*xd).dst.uv_stride;
                 setup_intra_recon_left(
-                    (*xd).recon_left[0 as i32 as usize],
-                    (*xd).recon_left[1 as i32 as usize],
-                    (*xd).recon_left[2 as i32 as usize],
+                    (*xd).recon_left[0 as usize],
+                    (*xd).recon_left[1 as usize],
+                    (*xd).recon_left[2 as usize],
                     (*xd).dst.y_stride,
                     (*xd).dst.uv_stride,
                 );
@@ -1211,13 +1211,13 @@ unsafe fn mt_decode_mb_rows(
                 (*xd).mb_to_right_edge = (((*pc).mb_cols - 1 as i32 - mb_col)
                     * 16 as i32)
                     << 3 as i32;
-                (*xd).dst.y_buffer = dst_buffer[0 as i32 as usize]
+                (*xd).dst.y_buffer = dst_buffer[0 as usize]
                     .offset(recon_yoffset as isize)
                     as *mut uint8_t;
-                (*xd).dst.u_buffer = dst_buffer[1 as i32 as usize]
+                (*xd).dst.u_buffer = dst_buffer[1 as usize]
                     .offset(recon_uvoffset as isize)
                     as *mut uint8_t;
-                (*xd).dst.v_buffer = dst_buffer[2 as i32 as usize]
+                (*xd).dst.v_buffer = dst_buffer[2 as usize]
                     .offset(recon_uvoffset as isize)
                     as *mut uint8_t;
                 (*xd).corrupted |=
@@ -1231,8 +1231,7 @@ unsafe fn mt_decode_mb_rows(
                             (*pbi)
                                 .decoding_thread_count
                                 .wrapping_add(1 as u32),
-                        ) as i32
-                            as i32;
+                        ) as i32;
                     }
                     vpx_internal_error(
                         &raw mut (*xd).error_info,
@@ -1246,14 +1245,14 @@ unsafe fn mt_decode_mb_rows(
                     let ref_0: MV_REFERENCE_FRAME =
                         (*(*xd).mode_info_context).mbmi.ref_frame as MV_REFERENCE_FRAME;
                     (*xd).pre.y_buffer =
-                        ref_buffer[ref_0 as usize][0 as i32 as usize]
+                        ref_buffer[ref_0 as usize][0 as usize]
                             .offset(recon_yoffset as isize) as *mut uint8_t;
                     (*xd).pre.u_buffer = ref_buffer[ref_0 as usize]
-                        [1 as i32 as usize]
+                        [1 as usize]
                         .offset(recon_uvoffset as isize)
                         as *mut uint8_t;
                     (*xd).pre.v_buffer = ref_buffer[ref_0 as usize]
-                        [2 as i32 as usize]
+                        [2 as usize]
                         .offset(recon_uvoffset as isize)
                         as *mut uint8_t;
                 } else {
@@ -1264,25 +1263,25 @@ unsafe fn mt_decode_mb_rows(
                 mt_decode_macroblock(pbi, xd, 0 as u32);
                 (*xd).left_available = 1 as i32;
                 (*xd).corrupted |= vp8dx_bool_error((*xd).current_bc as *mut BOOL_DECODER);
-                (*xd).recon_above[0 as i32 as usize] = (*xd).recon_above
-                    [0 as i32 as usize]
-                    .offset(16 as i32 as isize);
-                (*xd).recon_above[1 as i32 as usize] = (*xd).recon_above
-                    [1 as i32 as usize]
-                    .offset(8 as i32 as isize);
-                (*xd).recon_above[2 as i32 as usize] = (*xd).recon_above
-                    [2 as i32 as usize]
-                    .offset(8 as i32 as isize);
+                (*xd).recon_above[0 as usize] = (*xd).recon_above
+                    [0 as usize]
+                    .offset(16 as isize);
+                (*xd).recon_above[1 as usize] = (*xd).recon_above
+                    [1 as usize]
+                    .offset(8 as isize);
+                (*xd).recon_above[2 as usize] = (*xd).recon_above
+                    [2 as usize]
+                    .offset(8 as isize);
                 if (*pbi).common.filter_level == 0 {
-                    (*xd).recon_left[0 as i32 as usize] = (*xd).recon_left
-                        [0 as i32 as usize]
-                        .offset(16 as i32 as isize);
-                    (*xd).recon_left[1 as i32 as usize] = (*xd).recon_left
-                        [1 as i32 as usize]
-                        .offset(8 as i32 as isize);
-                    (*xd).recon_left[2 as i32 as usize] = (*xd).recon_left
-                        [2 as i32 as usize]
-                        .offset(8 as i32 as isize);
+                    (*xd).recon_left[0 as usize] = (*xd).recon_left
+                        [0 as usize]
+                        .offset(16 as isize);
+                    (*xd).recon_left[1 as usize] = (*xd).recon_left
+                        [1 as usize]
+                        .offset(8 as isize);
+                    (*xd).recon_left[2 as usize] = (*xd).recon_left
+                        [2 as usize]
+                        .offset(8 as isize);
                 }
                 if (*pbi).common.filter_level != 0 {
                     let mut skip_lf: i32 = ((*(*xd).mode_info_context).mbmi.mode
@@ -1307,7 +1306,7 @@ unsafe fn mt_decode_mb_rows(
                             (*(*pbi)
                                 .mt_yabove_row
                                 .offset((mb_row + 1 as i32) as isize))
-                            .offset(32 as i32 as isize)
+                            .offset(32 as isize)
                             .offset((mb_col * 16 as i32) as isize)
                                 as *mut core::ffi::c_void,
                             (*xd)
@@ -1321,7 +1320,7 @@ unsafe fn mt_decode_mb_rows(
                             (*(*pbi)
                                 .mt_uabove_row
                                 .offset((mb_row + 1 as i32) as isize))
-                            .offset(16 as i32 as isize)
+                            .offset(16 as isize)
                             .offset((mb_col * 8 as i32) as isize)
                                 as *mut core::ffi::c_void,
                             (*xd)
@@ -1335,7 +1334,7 @@ unsafe fn mt_decode_mb_rows(
                             (*(*pbi)
                                 .mt_vabove_row
                                 .offset((mb_row + 1 as i32) as isize))
-                            .offset(16 as i32 as isize)
+                            .offset(16 as isize)
                             .offset((mb_col * 8 as i32) as isize)
                                 as *mut core::ffi::c_void,
                             (*xd)
@@ -1349,7 +1348,7 @@ unsafe fn mt_decode_mb_rows(
                     if mb_col != (*pc).mb_cols - 1 as i32 {
                         let mut next: *mut MODE_INFO = (*xd)
                             .mode_info_context
-                            .offset(1 as i32 as isize);
+                            .offset(1 as isize);
                         if (*next).mbmi.ref_frame as i32
                             == INTRA_FRAME as i32
                         {
@@ -1380,7 +1379,7 @@ unsafe fn mt_decode_mb_rows(
                     }
                     if filter_level != 0 {
                         if (*pc).filter_type as u32
-                            == NORMAL_LOOPFILTER as i32 as u32
+                            == NORMAL_LOOPFILTER as u32
                         {
                             let mut lfi: loop_filter_info = loop_filter_info {
                                 mblim: ::core::ptr::null::<u8>(),
@@ -1533,9 +1532,9 @@ unsafe fn mt_decode_mb_rows(
             } else {
                 vp8_extend_mb_row(
                     yv12_fb_new,
-                    (*xd).dst.y_buffer.offset(16 as i32 as isize),
-                    (*xd).dst.u_buffer.offset(8 as i32 as isize),
-                    (*xd).dst.v_buffer.offset(8 as i32 as isize),
+                    (*xd).dst.y_buffer.offset(16 as isize),
+                    (*xd).dst.u_buffer.offset(8 as isize),
+                    (*xd).dst.v_buffer.offset(8 as isize),
                 );
             }
             vpx_atomic_store_release(current_mb_col, mb_col + nsync);
@@ -1549,7 +1548,7 @@ unsafe fn mt_decode_mb_rows(
                 (*pbi)
                     .decoding_thread_count
                     .wrapping_add(1 as u32),
-            ) as i32 as i32;
+            ) as i32;
         }
         if last_mb_row
             + (*pbi).decoding_thread_count as i32
@@ -2125,14 +2124,14 @@ pub unsafe fn vp8mt_decode_mb_rows(
         let mut j: i32 = 0;
         let mut filter_level: i32 = (*pc).filter_level;
         let mut yv12_fb_new: *mut YV12_BUFFER_CONFIG =
-            (*pbi).dec_fb_ref[INTRA_FRAME as i32 as usize];
+            (*pbi).dec_fb_ref[INTRA_FRAME as usize];
         if filter_level != 0 {
             memset(
                 (*(*pbi)
                     .mt_yabove_row
-                    .offset(0 as i32 as isize))
+                    .offset(0 as isize))
                 .offset(VP8BORDERINPIXELS as isize)
-                .offset(-(1 as i32 as isize))
+                .offset(-(1 as isize))
                     as *mut core::ffi::c_void,
                 127 as i32,
                 ((*yv12_fb_new).y_width + 5 as i32) as size_t,
@@ -2140,9 +2139,9 @@ pub unsafe fn vp8mt_decode_mb_rows(
             memset(
                 (*(*pbi)
                     .mt_uabove_row
-                    .offset(0 as i32 as isize))
+                    .offset(0 as isize))
                 .offset((VP8BORDERINPIXELS >> 1 as i32) as isize)
-                .offset(-(1 as i32 as isize))
+                .offset(-(1 as isize))
                     as *mut core::ffi::c_void,
                 127 as i32,
                 (((*yv12_fb_new).y_width >> 1 as i32) + 5 as i32)
@@ -2151,9 +2150,9 @@ pub unsafe fn vp8mt_decode_mb_rows(
             memset(
                 (*(*pbi)
                     .mt_vabove_row
-                    .offset(0 as i32 as isize))
+                    .offset(0 as isize))
                 .offset((VP8BORDERINPIXELS >> 1 as i32) as isize)
-                .offset(-(1 as i32 as isize))
+                .offset(-(1 as isize))
                     as *mut core::ffi::c_void,
                 127 as i32,
                 (((*yv12_fb_new).y_width >> 1 as i32) + 5 as i32)
@@ -2164,25 +2163,25 @@ pub unsafe fn vp8mt_decode_mb_rows(
                 memset(
                     (*(*pbi).mt_yabove_row.offset(j as isize))
                         .offset(VP8BORDERINPIXELS as isize)
-                        .offset(-(1 as i32 as isize))
+                        .offset(-(1 as isize))
                         as *mut core::ffi::c_void,
-                    129 as i32 as u8 as i32,
+                    129 as i32,
                     1 as size_t,
                 );
                 memset(
                     (*(*pbi).mt_uabove_row.offset(j as isize))
                         .offset((VP8BORDERINPIXELS >> 1 as i32) as isize)
-                        .offset(-(1 as i32 as isize))
+                        .offset(-(1 as isize))
                         as *mut core::ffi::c_void,
-                    129 as i32 as u8 as i32,
+                    129 as i32,
                     1 as size_t,
                 );
                 memset(
                     (*(*pbi).mt_vabove_row.offset(j as isize))
                         .offset((VP8BORDERINPIXELS >> 1 as i32) as isize)
-                        .offset(-(1 as i32 as isize))
+                        .offset(-(1 as isize))
                         as *mut core::ffi::c_void,
-                    129 as i32 as u8 as i32,
+                    129 as i32,
                     1 as size_t,
                 );
                 j += 1;
@@ -2191,17 +2190,17 @@ pub unsafe fn vp8mt_decode_mb_rows(
             while j < (*pc).mb_rows {
                 memset(
                     *(*pbi).mt_yleft_col.offset(j as isize) as *mut core::ffi::c_void,
-                    129 as i32 as u8 as i32,
+                    129 as i32,
                     16 as size_t,
                 );
                 memset(
                     *(*pbi).mt_uleft_col.offset(j as isize) as *mut core::ffi::c_void,
-                    129 as i32 as u8 as i32,
+                    129 as i32,
                     8 as size_t,
                 );
                 memset(
                     *(*pbi).mt_vleft_col.offset(j as isize) as *mut core::ffi::c_void,
-                    129 as i32 as u8 as i32,
+                    129 as i32,
                     8 as size_t,
                 );
                 j += 1;

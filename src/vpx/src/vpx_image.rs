@@ -112,10 +112,10 @@ unsafe fn img_alloc_helper(
             );
         }
         if !(is_valid_img_fmt(fmt) == 0)
-            && !(d_w > 0x8000000 as i32 as u32
-                || d_h > 0x8000000 as i32 as u32
-                || buf_align > 65536 as i32 as u32
-                || stride_align > 65536 as i32 as u32)
+            && !(d_w > 0x8000000 as u32
+                || d_h > 0x8000000 as u32
+                || buf_align > 65536 as u32
+                || stride_align > 65536 as u32)
         {
             if buf_align == 0 {
                 buf_align = 1 as u32;
@@ -237,7 +237,7 @@ unsafe fn img_alloc_helper(
                                     } else {
                                         (h as uint64_t).wrapping_mul(s)
                                     };
-                                    if alloc_size != alloc_size as size_t as uint64_t {
+                                    if alloc_size != alloc_size as uint64_t {
                                         current_block = 7960401837942226685;
                                     } else {
                                         (*img).img_data =
@@ -401,14 +401,14 @@ pub unsafe fn vpx_img_set_rect(
                 let mut uv_x: u32 = x >> (*img).x_chroma_shift;
                 let mut uv_y: u32 = y >> (*img).y_chroma_shift;
                 if (*img).fmt as u32
-                    == VPX_IMG_FMT_NV12 as i32 as u32
+                    == VPX_IMG_FMT_NV12 as u32
                 {
                     (*img).planes[VPX_PLANE_U as usize] =
                         data.offset(uv_x as isize).offset(uv_y.wrapping_mul(
                             (*img).stride[VPX_PLANE_U as usize] as u32,
                         ) as isize);
                     (*img).planes[VPX_PLANE_V as usize] = (*img).planes[VPX_PLANE_U as usize]
-                        .offset(1 as i32 as isize);
+                        .offset(1 as isize);
                 } else if (*img).fmt as u32
                     & VPX_IMG_FMT_UV_FLIP as u32
                     == 0

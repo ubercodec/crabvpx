@@ -665,7 +665,7 @@ pub unsafe fn vpx_internal_error(
                 (*info).detail[i] = *fmt.add(i);
                 i += 1;
             }
-            (*info).detail[i] = 0 as i32 as i8;
+            (*info).detail[i] = 0 as i8;
         }
         if (*info).setjmp != 0 {
             longjmp(

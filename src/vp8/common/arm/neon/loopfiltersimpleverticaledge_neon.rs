@@ -18,11 +18,11 @@ pub unsafe fn vp8_loop_filter_bvs_neon(
     mut y_stride: i32,
     mut blimit: *const u8,
 ) {
-    y_ptr = y_ptr.offset(4 as i32 as isize);
+    y_ptr = y_ptr.offset(4 as isize);
     vp8_loop_filter_simple_vertical_edge_neon(y_ptr, y_stride, blimit);
-    y_ptr = y_ptr.offset(4 as i32 as isize);
+    y_ptr = y_ptr.offset(4 as isize);
     vp8_loop_filter_simple_vertical_edge_neon(y_ptr, y_stride, blimit);
-    y_ptr = y_ptr.offset(4 as i32 as isize);
+    y_ptr = y_ptr.offset(4 as isize);
     vp8_loop_filter_simple_vertical_edge_neon(y_ptr, y_stride, blimit);
 }
 #[no_mangle]

@@ -174,21 +174,21 @@ pub unsafe fn vp8_loop_filter_bv_neon(
     let mut lim: u8 = *(*lfi).lim;
     let mut hev_thr: u8 = *(*lfi).hev_thr;
     vp8_loop_filter_vertical_edge_y_neon(
-        y_ptr.offset(4 as i32 as isize),
+        y_ptr.offset(4 as isize),
         y_stride,
         blim,
         lim,
         hev_thr,
     );
     vp8_loop_filter_vertical_edge_y_neon(
-        y_ptr.offset(8 as i32 as isize),
+        y_ptr.offset(8 as isize),
         y_stride,
         blim,
         lim,
         hev_thr,
     );
     vp8_loop_filter_vertical_edge_y_neon(
-        y_ptr.offset(12 as i32 as isize),
+        y_ptr.offset(12 as isize),
         y_stride,
         blim,
         lim,
@@ -196,12 +196,12 @@ pub unsafe fn vp8_loop_filter_bv_neon(
     );
     if !u_ptr.is_null() {
         vp8_loop_filter_vertical_edge_uv_neon(
-            u_ptr.offset(4 as i32 as isize),
+            u_ptr.offset(4 as isize),
             uv_stride,
             blim,
             lim,
             hev_thr,
-            v_ptr.offset(4 as i32 as isize),
+            v_ptr.offset(4 as isize),
         );
     }
 }

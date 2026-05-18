@@ -8,7 +8,7 @@ pub struct vp8_token_struct {
 }
 pub type vp8_token = vp8_token_struct;
 pub type uint64_t = u64;
-pub const vp8_prob_half: vp8_prob = 128 as i32 as vp8_prob;
+pub const vp8_prob_half: vp8_prob = 128 as vp8_prob;
 unsafe fn tree2tok(
     p: *mut vp8_token_struct,
     mut t: *const vp8_tree_index,
@@ -78,9 +78,9 @@ unsafe fn branch_counts(
         let tree_len: i32 = n - 1 as i32;
         let mut t: i32 = 0 as i32;
         loop {
-            let fresh1 = &mut (*branch_ct.offset(t as isize))[1 as i32 as usize];
+            let fresh1 = &mut (*branch_ct.offset(t as isize))[1 as usize];
             *fresh1 = 0 as u32;
-            (*branch_ct.offset(t as isize))[0 as i32 as usize] = *fresh1;
+            (*branch_ct.offset(t as isize))[0 as usize] = *fresh1;
             t += 1;
             if !(t < tree_len) {
                 break;
@@ -128,10 +128,10 @@ pub unsafe fn vp8_tree_probs_from_distribution(
         loop {
             let c: *const u32 =
                 &raw mut *branch_ct.offset(t as isize) as *mut u32;
-            let tot: u32 = (*c.offset(0 as i32 as isize))
-                .wrapping_add(*c.offset(1 as i32 as isize));
+            let tot: u32 = (*c.offset(0 as isize))
+                .wrapping_add(*c.offset(1 as isize));
             if tot != 0 {
-                let p: u32 = ((*c.offset(0 as i32 as isize)
+                let p: u32 = ((*c.offset(0 as isize)
                     as uint64_t)
                     .wrapping_mul(Pfactor as uint64_t)
                     .wrapping_add(

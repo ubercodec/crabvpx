@@ -573,15 +573,15 @@ pub unsafe fn vp8dx_get_reference(
         let mut cm: *mut VP8_COMMON = &raw mut (*pbi).common;
         let mut ref_fb_idx: i32 = 0;
         if ref_frame_flag as u32
-            == VP8_LAST_FRAME as i32 as u32
+            == VP8_LAST_FRAME as u32
         {
             ref_fb_idx = (*cm).lst_fb_idx;
         } else if ref_frame_flag as u32
-            == VP8_GOLD_FRAME as i32 as u32
+            == VP8_GOLD_FRAME as u32
         {
             ref_fb_idx = (*cm).gld_fb_idx;
         } else if ref_frame_flag as u32
-            == VP8_ALTR_FRAME as i32 as u32
+            == VP8_ALTR_FRAME as u32
         {
             ref_fb_idx = (*cm).alt_fb_idx;
         } else {
@@ -623,15 +623,15 @@ pub unsafe fn vp8dx_set_reference(
         let mut ref_fb_ptr: *mut i32 = ::core::ptr::null_mut::<i32>();
         let mut free_fb: i32 = 0;
         if ref_frame_flag as u32
-            == VP8_LAST_FRAME as i32 as u32
+            == VP8_LAST_FRAME as u32
         {
             ref_fb_ptr = &raw mut (*cm).lst_fb_idx;
         } else if ref_frame_flag as u32
-            == VP8_GOLD_FRAME as i32 as u32
+            == VP8_GOLD_FRAME as u32
         {
             ref_fb_ptr = &raw mut (*cm).gld_fb_idx;
         } else if ref_frame_flag as u32
-            == VP8_ALTR_FRAME as i32 as u32
+            == VP8_ALTR_FRAME as u32
         {
             ref_fb_ptr = &raw mut (*cm).alt_fb_idx;
         } else {
@@ -767,7 +767,7 @@ unsafe fn check_fragments_for_errors(mut pbi: *mut VP8D_COMP) -> i32 {
     unsafe {
         if (*pbi).ec_active == 0
             && (*pbi).fragments.count <= 1 as u32
-            && (*pbi).fragments.sizes[0 as i32 as usize] == 0 as u32
+            && (*pbi).fragments.sizes[0 as usize] == 0 as u32
         {
             let mut cm: *mut VP8_COMMON = &raw mut (*pbi).common;
             if (*cm).fb_idx_ref_cnt[(*cm).lst_fb_idx as usize] > 1 as i32 {
@@ -802,16 +802,16 @@ pub unsafe fn vp8dx_receive_compressed_data(
             return retcode;
         }
         (*cm).new_fb_idx = get_free_fb(cm);
-        (*pbi).dec_fb_ref[INTRA_FRAME as i32 as usize] =
+        (*pbi).dec_fb_ref[INTRA_FRAME as usize] =
             (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset((*cm).new_fb_idx as isize)
                 as *mut YV12_BUFFER_CONFIG;
-        (*pbi).dec_fb_ref[LAST_FRAME as i32 as usize] =
+        (*pbi).dec_fb_ref[LAST_FRAME as usize] =
             (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset((*cm).lst_fb_idx as isize)
                 as *mut YV12_BUFFER_CONFIG;
-        (*pbi).dec_fb_ref[GOLDEN_FRAME as i32 as usize] =
+        (*pbi).dec_fb_ref[GOLDEN_FRAME as usize] =
             (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset((*cm).gld_fb_idx as isize)
                 as *mut YV12_BUFFER_CONFIG;
-        (*pbi).dec_fb_ref[ALTREF_FRAME as i32 as usize] =
+        (*pbi).dec_fb_ref[ALTREF_FRAME as usize] =
             (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset((*cm).alt_fb_idx as isize)
                 as *mut YV12_BUFFER_CONFIG;
         retcode = vp8_decode_frame(pbi);
@@ -900,19 +900,19 @@ pub unsafe fn vp8_create_decoder_instances(
     mut oxcf: *mut VP8D_CONFIG,
 ) -> i32 {
     unsafe {
-        (*fb).pbi[0 as i32 as usize] = create_decompressor(oxcf);
-        if (*fb).pbi[0 as i32 as usize].is_null() {
+        (*fb).pbi[0 as usize] = create_decompressor(oxcf);
+        if (*fb).pbi[0 as usize].is_null() {
             return VPX_CODEC_ERROR as i32;
         }
         if setjmp(
             &raw mut (**(&raw mut (*fb).pbi as *mut *mut VP8D_COMP)
-                .offset(0 as i32 as isize))
+                .offset(0 as isize))
             .common
             .error
             .jmp as *mut i32,
         ) != 0
         {
-            (*(*fb).pbi[0 as i32 as usize])
+            (*(*fb).pbi[0 as usize])
                 .common
                 .error
                 .setjmp = 0 as i32;
@@ -924,13 +924,13 @@ pub unsafe fn vp8_create_decoder_instances(
             );
             return VPX_CODEC_ERROR as i32;
         }
-        (*(*fb).pbi[0 as i32 as usize])
+        (*(*fb).pbi[0 as usize])
             .common
             .error
             .setjmp = 1 as i32;
-        (*(*fb).pbi[0 as i32 as usize]).max_threads = (*oxcf).max_threads;
-        vp8_decoder_create_threads((*fb).pbi[0 as i32 as usize]);
-        (*(*fb).pbi[0 as i32 as usize])
+        (*(*fb).pbi[0 as usize]).max_threads = (*oxcf).max_threads;
+        vp8_decoder_create_threads((*fb).pbi[0 as usize]);
+        (*(*fb).pbi[0 as usize])
             .common
             .error
             .setjmp = 0 as i32;
@@ -942,13 +942,13 @@ pub unsafe fn vp8_remove_decoder_instances(
     mut fb: *mut frame_buffers,
 ) -> i32 {
     unsafe {
-        let mut pbi: *mut VP8D_COMP = (*fb).pbi[0 as i32 as usize];
+        let mut pbi: *mut VP8D_COMP = (*fb).pbi[0 as usize];
         if pbi.is_null() {
             return VPX_CODEC_ERROR as i32;
         }
         vp8_decoder_remove_threads(pbi);
         remove_decompressor(pbi);
-        (*fb).pbi[0 as i32 as usize] = ::core::ptr::null_mut::<VP8D_COMP>();
+        (*fb).pbi[0 as usize] = ::core::ptr::null_mut::<VP8D_COMP>();
         VPX_CODEC_OK as i32
     }
 }
