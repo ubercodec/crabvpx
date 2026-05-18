@@ -368,7 +368,8 @@ pub fn vp8_mb_init_dequantizer(
     }
 }
 fn decode_macroblock(
-    pbi: &mut VP8D_COMP,
+    common: &VP8_COMMON,
+    mbc: &mut [vp8_reader; 9],
     xd: &mut MACROBLOCKD,
     mb_idx: ::core::ffi::c_uint,
 ) { unsafe {
@@ -380,11 +381,11 @@ fn decode_macroblock(
             &mut *xd.left_context,
             (*xd.mode_info_context).mbmi.is_4x4 != 0,
         );
-    } else if vp8dx_bool_error(&pbi.mbc[xd.current_bc_idx]) == 0 {
+    } else if vp8dx_bool_error(&mbc[xd.current_bc_idx]) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
         eobtotal = vp8_decode_mb_tokens(
-            &mut pbi.mbc[xd.current_bc_idx],
-            &pbi.common.fc,
+            &mut mbc[xd.current_bc_idx],
+            &common.fc,
             &mut xd.qcoeff,
             &mut xd.eobs,
             &mut *xd.above_context,
@@ -396,7 +397,7 @@ fn decode_macroblock(
     }
     mode = (*xd.mode_info_context).mbmi.mode as MB_PREDICTION_MODE;
     if xd.segmentation_enabled != 0 {
-        vp8_mb_init_dequantizer(&pbi.common, xd);
+        vp8_mb_init_dequantizer(common, xd);
     }
     if (*xd.mode_info_context).mbmi.ref_frame as ::core::ffi::c_int
         == INTRA_FRAME as ::core::ffi::c_int
@@ -689,22 +690,21 @@ fn yv12_extend_frame_left_right(
         v_slice[right_border_start..right_border_end].fill(last_val);
     }
 }
-fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
-    let pc: *mut VP8_COMMON = &raw mut pbi.common;
-    let xd: *mut MACROBLOCKD = &raw mut pbi.mb;
-    let mut lf_mic: *mut MODE_INFO = (*xd).mode_info_context;
+fn decode_mb_rows(pbi: &mut VP8D_COMP) {
+    let pc = &mut pbi.common;
+    let xd = &mut pbi.mb;
+    let mut lf_mic: *mut MODE_INFO = unsafe { xd.mode_info_context };
     let mut ibc: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     let mut num_part: ::core::ffi::c_int =
-        (1 as ::core::ffi::c_int) << (*pc).multi_token_partition as ::core::ffi::c_uint;
+        (1 as ::core::ffi::c_int) << pc.multi_token_partition as ::core::ffi::c_uint;
     let mut recon_yoffset: ::core::ffi::c_int = 0;
     let mut recon_uvoffset: ::core::ffi::c_int = 0;
     let mut mb_row: ::core::ffi::c_int = 0;
     let mut mb_col: ::core::ffi::c_int = 0;
     let mut mb_idx: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    let mut yv12_fb_new: *mut YV12_BUFFER_CONFIG =
-        pbi.dec_fb_ref[INTRA_FRAME as ::core::ffi::c_int as usize];
-    let mut recon_y_stride: ::core::ffi::c_int = (*yv12_fb_new).y_stride;
-    let mut recon_uv_stride: ::core::ffi::c_int = (*yv12_fb_new).uv_stride;
+    let yv12_fb_new = unsafe { &mut *pbi.dec_fb_ref[INTRA_FRAME as ::core::ffi::c_int as usize] };
+    let mut recon_y_stride: ::core::ffi::c_int = yv12_fb_new.y_stride;
+    let mut recon_uv_stride: ::core::ffi::c_int = yv12_fb_new.uv_stride;
     let mut ref_buffer: [[*mut ::core::ffi::c_uchar; 3]; 4] =
         [[::core::ptr::null_mut::<::core::ffi::c_uchar>(); 3]; 4];
     let mut dst_buffer: [*mut ::core::ffi::c_uchar; 3] =
@@ -717,35 +717,37 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
     ref_fb_corrupted[INTRA_FRAME as ::core::ffi::c_int as usize] = 0 as ::core::ffi::c_int;
     i = 1 as ::core::ffi::c_int;
     while i < MAX_REF_FRAMES as ::core::ffi::c_int {
-        let mut this_fb: *mut YV12_BUFFER_CONFIG = pbi.dec_fb_ref[i as usize];
-        ref_buffer[i as usize][0 as ::core::ffi::c_int as usize] =
-            (*this_fb).y_buffer as *mut ::core::ffi::c_uchar;
-        ref_buffer[i as usize][1 as ::core::ffi::c_int as usize] =
-            (*this_fb).u_buffer as *mut ::core::ffi::c_uchar;
-        ref_buffer[i as usize][2 as ::core::ffi::c_int as usize] =
-            (*this_fb).v_buffer as *mut ::core::ffi::c_uchar;
-        ref_fb_corrupted[i as usize] = (*this_fb).corrupted;
+        unsafe {
+            let this_fb: *mut YV12_BUFFER_CONFIG = pbi.dec_fb_ref[i as usize];
+            ref_buffer[i as usize][0 as ::core::ffi::c_int as usize] =
+                (*this_fb).y_buffer as *mut ::core::ffi::c_uchar;
+            ref_buffer[i as usize][1 as ::core::ffi::c_int as usize] =
+                (*this_fb).u_buffer as *mut ::core::ffi::c_uchar;
+            ref_buffer[i as usize][2 as ::core::ffi::c_int as usize] =
+                (*this_fb).v_buffer as *mut ::core::ffi::c_uchar;
+            ref_fb_corrupted[i as usize] = (*this_fb).corrupted;
+        }
         i += 1;
     }
     dst_buffer[0 as ::core::ffi::c_int as usize] =
-        (*yv12_fb_new).y_buffer as *mut ::core::ffi::c_uchar;
+        yv12_fb_new.y_buffer as *mut ::core::ffi::c_uchar;
     lf_dst[0 as ::core::ffi::c_int as usize] = dst_buffer[0 as ::core::ffi::c_int as usize];
     dst_buffer[1 as ::core::ffi::c_int as usize] =
-        (*yv12_fb_new).u_buffer as *mut ::core::ffi::c_uchar;
+        yv12_fb_new.u_buffer as *mut ::core::ffi::c_uchar;
     lf_dst[1 as ::core::ffi::c_int as usize] = dst_buffer[1 as ::core::ffi::c_int as usize];
     dst_buffer[2 as ::core::ffi::c_int as usize] =
-        (*yv12_fb_new).v_buffer as *mut ::core::ffi::c_uchar;
+        yv12_fb_new.v_buffer as *mut ::core::ffi::c_uchar;
     lf_dst[2 as ::core::ffi::c_int as usize] = dst_buffer[2 as ::core::ffi::c_int as usize];
-    (*xd).up_available = 0 as ::core::ffi::c_int;
-    if (*pc).filter_level != 0 {
-        let filter_level = (*pc).filter_level;
-        vp8_loop_filter_frame_init(&mut *pc, &*xd, filter_level);
+    xd.up_available = 0 as ::core::ffi::c_int;
+    if pc.filter_level != 0 {
+        let filter_level = pc.filter_level;
+        vp8_loop_filter_frame_init(pc, xd, filter_level);
     }
-    vp8_setup_intra_recon_top_line(&mut *yv12_fb_new);
+    vp8_setup_intra_recon_top_line(yv12_fb_new);
     mb_row = 0 as ::core::ffi::c_int;
-    while mb_row < (*pc).mb_rows {
+    while mb_row < pc.mb_rows {
         if num_part > 1 as ::core::ffi::c_int {
-            (*xd).current_bc_idx = ibc as usize;
+            xd.current_bc_idx = ibc as usize;
             ibc += 1;
             if ibc == num_part {
                 ibc = 0 as ::core::ffi::c_int;
@@ -753,187 +755,206 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
         }
         recon_yoffset = mb_row * recon_y_stride * 16 as ::core::ffi::c_int;
         recon_uvoffset = mb_row * recon_uv_stride * 8 as ::core::ffi::c_int;
-        (*xd).above_context = (*pc).above_context;
-        memset(
-            (*xd).left_context as *mut ::core::ffi::c_void,
-            0 as ::core::ffi::c_int,
-            ::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t,
-        );
-        (*xd).left_available = 0 as ::core::ffi::c_int;
-        (*xd).mb_to_top_edge = -((mb_row * 16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int);
-        (*xd).mb_to_bottom_edge = (((*pc).mb_rows - 1 as ::core::ffi::c_int - mb_row)
+        xd.above_context = pc.above_context;
+        unsafe {
+            *xd.left_context = ENTROPY_CONTEXT_PLANES {
+                y1: [0; 4],
+                u: [0; 2],
+                v: [0; 2],
+                y2: 0,
+            };
+        }
+        xd.left_available = 0 as ::core::ffi::c_int;
+        xd.mb_to_top_edge = -((mb_row * 16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int);
+        xd.mb_to_bottom_edge = ((pc.mb_rows - 1 as ::core::ffi::c_int - mb_row)
             * 16 as ::core::ffi::c_int)
             << 3 as ::core::ffi::c_int;
-        (*xd).recon_above[0 as ::core::ffi::c_int as usize] =
-            dst_buffer[0 as ::core::ffi::c_int as usize].offset(recon_yoffset as isize);
-        (*xd).recon_above[1 as ::core::ffi::c_int as usize] =
-            dst_buffer[1 as ::core::ffi::c_int as usize].offset(recon_uvoffset as isize);
-        (*xd).recon_above[2 as ::core::ffi::c_int as usize] =
-            dst_buffer[2 as ::core::ffi::c_int as usize].offset(recon_uvoffset as isize);
-        (*xd).recon_left[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
-            [0 as ::core::ffi::c_int as usize]
-            .offset(-(1 as ::core::ffi::c_int as isize));
-        (*xd).recon_left[1 as ::core::ffi::c_int as usize] = (*xd).recon_above
-            [1 as ::core::ffi::c_int as usize]
-            .offset(-(1 as ::core::ffi::c_int as isize));
-        (*xd).recon_left[2 as ::core::ffi::c_int as usize] = (*xd).recon_above
-            [2 as ::core::ffi::c_int as usize]
-            .offset(-(1 as ::core::ffi::c_int as isize));
-        (*xd).recon_above[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
-            [0 as ::core::ffi::c_int as usize]
-            .offset(-((*xd).dst.y_stride as isize));
-        (*xd).recon_above[1 as ::core::ffi::c_int as usize] = (*xd).recon_above
-            [1 as ::core::ffi::c_int as usize]
-            .offset(-((*xd).dst.uv_stride as isize));
-        (*xd).recon_above[2 as ::core::ffi::c_int as usize] = (*xd).recon_above
-            [2 as ::core::ffi::c_int as usize]
-            .offset(-((*xd).dst.uv_stride as isize));
-        (*xd).recon_left_stride[0 as ::core::ffi::c_int as usize] = (*xd).dst.y_stride;
-        (*xd).recon_left_stride[1 as ::core::ffi::c_int as usize] = (*xd).dst.uv_stride;
+        unsafe {
+            xd.recon_above[0 as ::core::ffi::c_int as usize] =
+                dst_buffer[0 as ::core::ffi::c_int as usize].offset(recon_yoffset as isize);
+            xd.recon_above[1 as ::core::ffi::c_int as usize] =
+                dst_buffer[1 as ::core::ffi::c_int as usize].offset(recon_uvoffset as isize);
+            xd.recon_above[2 as ::core::ffi::c_int as usize] =
+                dst_buffer[2 as ::core::ffi::c_int as usize].offset(recon_uvoffset as isize);
+            xd.recon_left[0 as ::core::ffi::c_int as usize] = xd.recon_above
+                [0 as ::core::ffi::c_int as usize]
+                .offset(-(1 as ::core::ffi::c_int as isize));
+            xd.recon_left[1 as ::core::ffi::c_int as usize] = xd.recon_above
+                [1 as ::core::ffi::c_int as usize]
+                .offset(-(1 as ::core::ffi::c_int as isize));
+            xd.recon_left[2 as ::core::ffi::c_int as usize] = xd.recon_above
+                [2 as ::core::ffi::c_int as usize]
+                .offset(-(1 as ::core::ffi::c_int as isize));
+            xd.recon_above[0 as ::core::ffi::c_int as usize] = xd.recon_above
+                [0 as ::core::ffi::c_int as usize]
+                .offset(-(xd.dst.y_stride as isize));
+            xd.recon_above[1 as ::core::ffi::c_int as usize] = xd.recon_above
+                [1 as ::core::ffi::c_int as usize]
+                .offset(-(xd.dst.uv_stride as isize));
+            xd.recon_above[2 as ::core::ffi::c_int as usize] = xd.recon_above
+                [2 as ::core::ffi::c_int as usize]
+                .offset(-(xd.dst.uv_stride as isize));
+        }
+        xd.recon_left_stride[0 as ::core::ffi::c_int as usize] = xd.dst.y_stride;
+        xd.recon_left_stride[1 as ::core::ffi::c_int as usize] = xd.dst.uv_stride;
         setup_intra_recon_left(
-            &mut *yv12_fb_new,
+            yv12_fb_new,
             mb_row,
         );
         mb_col = 0 as ::core::ffi::c_int;
-        while mb_col < (*pc).mb_cols {
-            (*xd).mb_to_left_edge =
-                -((mb_col * 16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int);
-            (*xd).mb_to_right_edge = (((*pc).mb_cols - 1 as ::core::ffi::c_int - mb_col)
-                * 16 as ::core::ffi::c_int)
-                << 3 as ::core::ffi::c_int;
-            (*xd).dst.y_buffer = dst_buffer[0 as ::core::ffi::c_int as usize]
-                .offset(recon_yoffset as isize) as *mut uint8_t;
-            (*xd).dst.u_buffer = dst_buffer[1 as ::core::ffi::c_int as usize]
-                .offset(recon_uvoffset as isize) as *mut uint8_t;
-            (*xd).dst.v_buffer = dst_buffer[2 as ::core::ffi::c_int as usize]
-                .offset(recon_uvoffset as isize) as *mut uint8_t;
-            if (*(*xd).mode_info_context).mbmi.ref_frame as ::core::ffi::c_int
-                >= LAST_FRAME as ::core::ffi::c_int
-            {
-                let ref_0: MV_REFERENCE_FRAME =
-                    (*(*xd).mode_info_context).mbmi.ref_frame as MV_REFERENCE_FRAME;
-                (*xd).pre.y_buffer = ref_buffer[ref_0 as usize][0 as ::core::ffi::c_int as usize]
-                    .offset(recon_yoffset as isize)
-                    as *mut uint8_t;
-                (*xd).pre.u_buffer = ref_buffer[ref_0 as usize][1 as ::core::ffi::c_int as usize]
-                    .offset(recon_uvoffset as isize)
-                    as *mut uint8_t;
-                (*xd).pre.v_buffer = ref_buffer[ref_0 as usize][2 as ::core::ffi::c_int as usize]
-                    .offset(recon_uvoffset as isize)
-                    as *mut uint8_t;
-            } else {
-                (*xd).pre.y_buffer = ::core::ptr::null_mut::<uint8_t>();
-                (*xd).pre.u_buffer = ::core::ptr::null_mut::<uint8_t>();
-                (*xd).pre.v_buffer = ::core::ptr::null_mut::<uint8_t>();
+        while mb_col < pc.mb_cols {
+            unsafe {
+                xd.mb_to_left_edge =
+                    -((mb_col * 16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int);
+                xd.mb_to_right_edge = ((pc.mb_cols - 1 as ::core::ffi::c_int - mb_col)
+                    * 16 as ::core::ffi::c_int)
+                    << 3 as ::core::ffi::c_int;
+                xd.dst.y_buffer = dst_buffer[0 as ::core::ffi::c_int as usize]
+                    .offset(recon_yoffset as isize) as *mut uint8_t;
+                xd.dst.u_buffer = dst_buffer[1 as ::core::ffi::c_int as usize]
+                    .offset(recon_uvoffset as isize) as *mut uint8_t;
+                xd.dst.v_buffer = dst_buffer[2 as ::core::ffi::c_int as usize]
+                    .offset(recon_uvoffset as isize) as *mut uint8_t;
+                
+                let ref_frame = (*xd.mode_info_context).mbmi.ref_frame;
+                if ref_frame as ::core::ffi::c_int
+                    >= LAST_FRAME as ::core::ffi::c_int
+                {
+                    let ref_0: MV_REFERENCE_FRAME = ref_frame as MV_REFERENCE_FRAME;
+                    xd.pre.y_buffer = ref_buffer[ref_0 as usize][0 as ::core::ffi::c_int as usize]
+                        .offset(recon_yoffset as isize)
+                        as *mut uint8_t;
+                    xd.pre.u_buffer = ref_buffer[ref_0 as usize][1 as ::core::ffi::c_int as usize]
+                        .offset(recon_uvoffset as isize)
+                        as *mut uint8_t;
+                    xd.pre.v_buffer = ref_buffer[ref_0 as usize][2 as ::core::ffi::c_int as usize]
+                        .offset(recon_uvoffset as isize)
+                        as *mut uint8_t;
+                } else {
+                    xd.pre.y_buffer = ::core::ptr::null_mut::<uint8_t>();
+                    xd.pre.u_buffer = ::core::ptr::null_mut::<uint8_t>();
+                    xd.pre.v_buffer = ::core::ptr::null_mut::<uint8_t>();
+                }
+                xd.corrupted |= ref_fb_corrupted[ref_frame as usize];
+                
+                decode_macroblock(pc, &mut pbi.mbc, xd, mb_idx as ::core::ffi::c_uint);
+                
+                mb_idx += 1;
+                xd.left_available = 1 as ::core::ffi::c_int;
+                xd.corrupted |= vp8dx_bool_error(&pbi.mbc[xd.current_bc_idx]);
+                
+                xd.recon_above[0 as ::core::ffi::c_int as usize] = xd.recon_above
+                    [0 as ::core::ffi::c_int as usize]
+                    .offset(16 as ::core::ffi::c_int as isize);
+                xd.recon_above[1 as ::core::ffi::c_int as usize] = xd.recon_above
+                    [1 as ::core::ffi::c_int as usize]
+                    .offset(8 as ::core::ffi::c_int as isize);
+                xd.recon_above[2 as ::core::ffi::c_int as usize] = xd.recon_above
+                    [2 as ::core::ffi::c_int as usize]
+                    .offset(8 as ::core::ffi::c_int as isize);
+                xd.recon_left[0 as ::core::ffi::c_int as usize] = xd.recon_left
+                    [0 as ::core::ffi::c_int as usize]
+                    .offset(16 as ::core::ffi::c_int as isize);
+                xd.recon_left[1 as ::core::ffi::c_int as usize] = xd.recon_left
+                    [1 as ::core::ffi::c_int as usize]
+                    .offset(8 as ::core::ffi::c_int as isize);
+                xd.recon_left[2 as ::core::ffi::c_int as usize] = xd.recon_left
+                    [2 as ::core::ffi::c_int as usize]
+                    .offset(8 as ::core::ffi::c_int as isize);
+                
+                recon_yoffset += 16 as ::core::ffi::c_int;
+                recon_uvoffset += 8 as ::core::ffi::c_int;
+                
+                xd.mode_info_context = xd.mode_info_context.offset(1);
+                xd.above_context = xd.above_context.offset(1);
             }
-            (*xd).corrupted |= ref_fb_corrupted[(*(*xd).mode_info_context).mbmi.ref_frame as usize];
-            decode_macroblock(pbi, &mut *xd, mb_idx as ::core::ffi::c_uint);
-            mb_idx += 1;
-            (*xd).left_available = 1 as ::core::ffi::c_int;
-            (*xd).corrupted |= vp8dx_bool_error(&pbi.mbc[(*xd).current_bc_idx]);
-            (*xd).recon_above[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [0 as ::core::ffi::c_int as usize]
-                .offset(16 as ::core::ffi::c_int as isize);
-            (*xd).recon_above[1 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [1 as ::core::ffi::c_int as usize]
-                .offset(8 as ::core::ffi::c_int as isize);
-            (*xd).recon_above[2 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [2 as ::core::ffi::c_int as usize]
-                .offset(8 as ::core::ffi::c_int as isize);
-            (*xd).recon_left[0 as ::core::ffi::c_int as usize] = (*xd).recon_left
-                [0 as ::core::ffi::c_int as usize]
-                .offset(16 as ::core::ffi::c_int as isize);
-            (*xd).recon_left[1 as ::core::ffi::c_int as usize] = (*xd).recon_left
-                [1 as ::core::ffi::c_int as usize]
-                .offset(8 as ::core::ffi::c_int as isize);
-            (*xd).recon_left[2 as ::core::ffi::c_int as usize] = (*xd).recon_left
-                [2 as ::core::ffi::c_int as usize]
-                .offset(8 as ::core::ffi::c_int as isize);
-            recon_yoffset += 16 as ::core::ffi::c_int;
-            recon_uvoffset += 8 as ::core::ffi::c_int;
-            (*xd).mode_info_context = (*xd).mode_info_context.offset(1);
-            (*xd).above_context = (*xd).above_context.offset(1);
             mb_col += 1;
         }
         vp8_extend_mb_row(
-            &mut *yv12_fb_new,
+            yv12_fb_new,
             mb_row,
         );
-        (*xd).mode_info_context = (*xd).mode_info_context.offset(1);
-        (*xd).up_available = 1 as ::core::ffi::c_int;
-        if (*pc).filter_level != 0 {
+        unsafe {
+            xd.mode_info_context = xd.mode_info_context.offset(1);
+        }
+        xd.up_available = 1 as ::core::ffi::c_int;
+        if pc.filter_level != 0 {
             if mb_row > 0 as ::core::ffi::c_int {
-                if (*pc).filter_type as ::core::ffi::c_uint
-                    == NORMAL_LOOPFILTER as ::core::ffi::c_int as ::core::ffi::c_uint
-                {
-                    vp8_loop_filter_row_normal(
-                        pc as *mut VP8Common,
-                        lf_mic as *mut modeinfo,
-                        mb_row - 1 as ::core::ffi::c_int,
-                        recon_y_stride,
-                        recon_uv_stride,
-                        lf_dst[0 as ::core::ffi::c_int as usize],
-                        lf_dst[1 as ::core::ffi::c_int as usize],
-                        lf_dst[2 as ::core::ffi::c_int as usize],
-                    );
-                } else {
-                    vp8_loop_filter_row_simple(
-                        pc as *mut VP8Common,
-                        lf_mic as *mut modeinfo,
-                        mb_row - 1 as ::core::ffi::c_int,
-                        recon_y_stride,
-                        lf_dst[0 as ::core::ffi::c_int as usize],
-                    );
+                unsafe {
+                    if pc.filter_type as ::core::ffi::c_uint
+                        == NORMAL_LOOPFILTER as ::core::ffi::c_int as ::core::ffi::c_uint
+                    {
+                        vp8_loop_filter_row_normal(
+                            pc as *mut VP8Common,
+                            lf_mic as *mut modeinfo,
+                            mb_row - 1 as ::core::ffi::c_int,
+                            recon_y_stride,
+                            recon_uv_stride,
+                            lf_dst[0 as ::core::ffi::c_int as usize],
+                            lf_dst[1 as ::core::ffi::c_int as usize],
+                            lf_dst[2 as ::core::ffi::c_int as usize],
+                        );
+                    } else {
+                        vp8_loop_filter_row_simple(
+                            pc as *mut VP8Common,
+                            lf_mic as *mut modeinfo,
+                            mb_row - 1 as ::core::ffi::c_int,
+                            recon_y_stride,
+                            lf_dst[0 as ::core::ffi::c_int as usize],
+                        );
+                    }
+                    if mb_row > 1 as ::core::ffi::c_int {
+                        yv12_extend_frame_left_right(yv12_fb_new, extended_row);
+                        extended_row += 1;
+                    }
+                    lf_dst[0 as ::core::ffi::c_int as usize] = lf_dst[0 as ::core::ffi::c_int as usize]
+                        .offset((recon_y_stride * 16 as ::core::ffi::c_int) as isize);
+                    lf_dst[1 as ::core::ffi::c_int as usize] = lf_dst[1 as ::core::ffi::c_int as usize]
+                        .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
+                    lf_dst[2 as ::core::ffi::c_int as usize] = lf_dst[2 as ::core::ffi::c_int as usize]
+                        .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
+                    lf_mic = lf_mic.offset(pc.mb_cols as isize);
+                    lf_mic = lf_mic.offset(1);
                 }
-                if mb_row > 1 as ::core::ffi::c_int {
-                    yv12_extend_frame_left_right(&mut *yv12_fb_new, extended_row);
-                    extended_row += 1;
-                }
-                lf_dst[0 as ::core::ffi::c_int as usize] = lf_dst[0 as ::core::ffi::c_int as usize]
-                    .offset((recon_y_stride * 16 as ::core::ffi::c_int) as isize);
-                lf_dst[1 as ::core::ffi::c_int as usize] = lf_dst[1 as ::core::ffi::c_int as usize]
-                    .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
-                lf_dst[2 as ::core::ffi::c_int as usize] = lf_dst[2 as ::core::ffi::c_int as usize]
-                    .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
-                lf_mic = lf_mic.offset((*pc).mb_cols as isize);
-                lf_mic = lf_mic.offset(1);
             }
         } else if mb_row > 0 as ::core::ffi::c_int {
-            yv12_extend_frame_left_right(&mut *yv12_fb_new, extended_row);
+            yv12_extend_frame_left_right(yv12_fb_new, extended_row);
             extended_row += 1;
         }
         mb_row += 1;
     }
-    if (*pc).filter_level != 0 {
-        if (*pc).filter_type as ::core::ffi::c_uint
-            == NORMAL_LOOPFILTER as ::core::ffi::c_int as ::core::ffi::c_uint
-        {
-            vp8_loop_filter_row_normal(
-                pc as *mut VP8Common,
-                lf_mic as *mut modeinfo,
-                mb_row - 1 as ::core::ffi::c_int,
-                recon_y_stride,
-                recon_uv_stride,
-                lf_dst[0 as ::core::ffi::c_int as usize],
-                lf_dst[1 as ::core::ffi::c_int as usize],
-                lf_dst[2 as ::core::ffi::c_int as usize],
-            );
-        } else {
-            vp8_loop_filter_row_simple(
-                pc as *mut VP8Common,
-                lf_mic as *mut modeinfo,
-                mb_row - 1 as ::core::ffi::c_int,
-                recon_y_stride,
-                lf_dst[0 as ::core::ffi::c_int as usize],
-            );
+    if pc.filter_level != 0 {
+        unsafe {
+            if pc.filter_type as ::core::ffi::c_uint
+                == NORMAL_LOOPFILTER as ::core::ffi::c_int as ::core::ffi::c_uint
+            {
+                vp8_loop_filter_row_normal(
+                    pc as *mut VP8Common,
+                    lf_mic as *mut modeinfo,
+                    mb_row - 1 as ::core::ffi::c_int,
+                    recon_y_stride,
+                    recon_uv_stride,
+                    lf_dst[0 as ::core::ffi::c_int as usize],
+                    lf_dst[1 as ::core::ffi::c_int as usize],
+                    lf_dst[2 as ::core::ffi::c_int as usize],
+                );
+            } else {
+                vp8_loop_filter_row_simple(
+                    pc as *mut VP8Common,
+                    lf_mic as *mut modeinfo,
+                    mb_row - 1 as ::core::ffi::c_int,
+                    recon_y_stride,
+                    lf_dst[0 as ::core::ffi::c_int as usize],
+                );
+            }
         }
-        yv12_extend_frame_left_right(&mut *yv12_fb_new, extended_row);
+        yv12_extend_frame_left_right(yv12_fb_new, extended_row);
         extended_row += 1;
     }
-    yv12_extend_frame_left_right(&mut *yv12_fb_new, extended_row);
-    yv12_extend_frame_top_c(&mut *yv12_fb_new);
-    yv12_extend_frame_bottom_c(&mut *yv12_fb_new);
-}}
+    yv12_extend_frame_left_right(yv12_fb_new, extended_row);
+    yv12_extend_frame_top_c(yv12_fb_new);
+    yv12_extend_frame_bottom_c(yv12_fb_new);
+}
 fn read_partition_size(
     pbi: &VP8D_COMP,
     cx_size: &[u8],
