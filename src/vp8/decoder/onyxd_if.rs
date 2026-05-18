@@ -397,57 +397,62 @@ fn check_fragments_for_errors(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int {
     }
     return 1;
 }
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8dx_receive_compressed_data(
-    mut pbi: *mut VP8D_COMP,
-) -> ::core::ffi::c_int { unsafe {
-    let mut cm: *mut VP8_COMMON = &raw mut (*pbi).common;
-    let mut retcode: ::core::ffi::c_int = -(1 as ::core::ffi::c_int);
-    (*pbi).common.error.error_code = VPX_CODEC_OK;
-    retcode = check_fragments_for_errors(&mut *pbi);
-    if retcode <= 0 as ::core::ffi::c_int {
+pub fn vp8dx_receive_compressed_data_safe(
+    pbi: &mut VP8D_COMP,
+) -> ::core::ffi::c_int {
+    let mut retcode: ::core::ffi::c_int = -1;
+    pbi.common.error.error_code = VPX_CODEC_OK;
+    
+    retcode = check_fragments_for_errors(pbi);
+    if retcode <= 0 {
         return retcode;
     }
-    (*cm).new_fb_idx = get_free_fb(&mut *cm);
-    (*pbi).dec_fb_ref[INTRA_FRAME as ::core::ffi::c_int as usize] =
-        (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset((*cm).new_fb_idx as isize)
-            as *mut YV12_BUFFER_CONFIG;
-    (*pbi).dec_fb_ref[LAST_FRAME as ::core::ffi::c_int as usize] =
-        (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset((*cm).lst_fb_idx as isize)
-            as *mut YV12_BUFFER_CONFIG;
-    (*pbi).dec_fb_ref[GOLDEN_FRAME as ::core::ffi::c_int as usize] =
-        (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset((*cm).gld_fb_idx as isize)
-            as *mut YV12_BUFFER_CONFIG;
-    (*pbi).dec_fb_ref[ALTREF_FRAME as ::core::ffi::c_int as usize] =
-        (&raw mut (*cm).yv12_fb as *mut YV12_BUFFER_CONFIG).offset((*cm).alt_fb_idx as isize)
-            as *mut YV12_BUFFER_CONFIG;
-    retcode = vp8_decode_frame(pbi);
-    if retcode < 0 as ::core::ffi::c_int {
-        if (*cm).fb_idx_ref_cnt[(*cm).new_fb_idx as usize] > 0 as ::core::ffi::c_int {
-            (*cm).fb_idx_ref_cnt[(*cm).new_fb_idx as usize] -= 1;
+    
+    let new_fb_idx = get_free_fb(&mut pbi.common);
+    pbi.common.new_fb_idx = new_fb_idx;
+    
+    let lst_fb_idx = pbi.common.lst_fb_idx;
+    let gld_fb_idx = pbi.common.gld_fb_idx;
+    let alt_fb_idx = pbi.common.alt_fb_idx;
+    
+    pbi.dec_fb_ref[INTRA_FRAME as usize] = &raw mut pbi.common.yv12_fb[new_fb_idx as usize];
+    pbi.dec_fb_ref[LAST_FRAME as usize] = &raw mut pbi.common.yv12_fb[lst_fb_idx as usize];
+    pbi.dec_fb_ref[GOLDEN_FRAME as usize] = &raw mut pbi.common.yv12_fb[gld_fb_idx as usize];
+    pbi.dec_fb_ref[ALTREF_FRAME as usize] = &raw mut pbi.common.yv12_fb[alt_fb_idx as usize];
+    
+    // vp8_decode_frame still requires raw pointer
+    retcode = unsafe { vp8_decode_frame(pbi as *mut VP8D_COMP) };
+    
+    if retcode < 0 {
+        if pbi.common.fb_idx_ref_cnt[new_fb_idx as usize] > 0 {
+            pbi.common.fb_idx_ref_cnt[new_fb_idx as usize] -= 1;
         }
-        (*pbi).common.error.error_code = VPX_CODEC_ERROR;
-        if (*pbi).mb.error_info.error_code as ::core::ffi::c_uint != 0 as ::core::ffi::c_uint {
-            (*pbi).common.error.error_code = (*pbi).mb.error_info.error_code;
-            memcpy(
-                &raw mut (*pbi).common.error.detail as *mut ::core::ffi::c_char
-                    as *mut ::core::ffi::c_void,
-                &raw mut (*pbi).mb.error_info.detail as *mut ::core::ffi::c_char
-                    as *const ::core::ffi::c_void,
-                ::core::mem::size_of::<[::core::ffi::c_char; 80]>() as size_t,
-            );
+        pbi.common.error.error_code = VPX_CODEC_ERROR;
+        if pbi.mb.error_info.error_code != 0 {
+            pbi.common.error.error_code = pbi.mb.error_info.error_code;
+            pbi.common.error.detail = pbi.mb.error_info.detail;
         }
-    } else if swap_frame_buffers(&mut *cm) != 0 {
-        (*pbi).common.error.error_code = VPX_CODEC_ERROR;
+    } else if swap_frame_buffers(&mut pbi.common) != 0 {
+        pbi.common.error.error_code = VPX_CODEC_ERROR;
     } else {
-        if (*cm).show_frame != 0 {
-            (*cm).current_video_frame = (*cm).current_video_frame.wrapping_add(1);
-            (*cm).show_frame_mi = (*cm).mi;
+        if pbi.common.show_frame != 0 {
+            pbi.common.current_video_frame = pbi.common.current_video_frame.wrapping_add(1);
+            pbi.common.show_frame_mi = pbi.common.mi;
         }
-        (*pbi).ready_for_new_data = 0 as ::core::ffi::c_int;
+        pbi.ready_for_new_data = 0;
     }
     return retcode;
-}}
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn vp8dx_receive_compressed_data(
+    pbi: *mut VP8D_COMP,
+) -> ::core::ffi::c_int {
+    if pbi.is_null() {
+        return -1;
+    }
+    unsafe { vp8dx_receive_compressed_data_safe(&mut *pbi) }
+}
 pub fn vp8dx_get_raw_frame(
     pbi: &mut VP8D_COMP,
     sd: &mut YV12_BUFFER_CONFIG,
