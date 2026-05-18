@@ -68,6 +68,7 @@ pub struct vp8_extra_bit_struct {
     pub Len: ::core::ffi::c_int,
     pub base_val: ::core::ffi::c_int,
 }
+unsafe impl Sync for vp8_extra_bit_struct {}
 pub const ZERO_TOKEN: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
 pub const ONE_TOKEN: ::core::ffi::c_int = 1 as ::core::ffi::c_int;
 pub const TWO_TOKEN: ::core::ffi::c_int = 2 as ::core::ffi::c_int;
@@ -1832,30 +1833,30 @@ pub static mut vp8_coef_encodings: [vp8_token; 12] = [
         Len: 1 as ::core::ffi::c_int,
     },
 ];
-static mut Pcat1: [vp8_prob; 1] = [159 as ::core::ffi::c_int as vp8_prob];
-static mut Pcat2: [vp8_prob; 2] = [
+static Pcat1: [vp8_prob; 1] = [159 as ::core::ffi::c_int as vp8_prob];
+static Pcat2: [vp8_prob; 2] = [
     165 as ::core::ffi::c_int as vp8_prob,
     145 as ::core::ffi::c_int as vp8_prob,
 ];
-static mut Pcat3: [vp8_prob; 3] = [
+static Pcat3: [vp8_prob; 3] = [
     173 as ::core::ffi::c_int as vp8_prob,
     148 as ::core::ffi::c_int as vp8_prob,
     140 as ::core::ffi::c_int as vp8_prob,
 ];
-static mut Pcat4: [vp8_prob; 4] = [
+static Pcat4: [vp8_prob; 4] = [
     176 as ::core::ffi::c_int as vp8_prob,
     155 as ::core::ffi::c_int as vp8_prob,
     140 as ::core::ffi::c_int as vp8_prob,
     135 as ::core::ffi::c_int as vp8_prob,
 ];
-static mut Pcat5: [vp8_prob; 5] = [
+static Pcat5: [vp8_prob; 5] = [
     180 as ::core::ffi::c_int as vp8_prob,
     157 as ::core::ffi::c_int as vp8_prob,
     141 as ::core::ffi::c_int as vp8_prob,
     134 as ::core::ffi::c_int as vp8_prob,
     130 as ::core::ffi::c_int as vp8_prob,
 ];
-static mut Pcat6: [vp8_prob; 11] = [
+static Pcat6: [vp8_prob; 11] = [
     254 as ::core::ffi::c_int as vp8_prob,
     254 as ::core::ffi::c_int as vp8_prob,
     243 as ::core::ffi::c_int as vp8_prob,
@@ -1868,17 +1869,17 @@ static mut Pcat6: [vp8_prob; 11] = [
     130 as ::core::ffi::c_int as vp8_prob,
     129 as ::core::ffi::c_int as vp8_prob,
 ];
-static mut cat1: [vp8_tree_index; 2] = [
+static cat1: [vp8_tree_index; 2] = [
     0 as ::core::ffi::c_int as vp8_tree_index,
     0 as ::core::ffi::c_int as vp8_tree_index,
 ];
-static mut cat2: [vp8_tree_index; 4] = [
+static cat2: [vp8_tree_index; 4] = [
     2 as ::core::ffi::c_int as vp8_tree_index,
     2 as ::core::ffi::c_int as vp8_tree_index,
     0 as ::core::ffi::c_int as vp8_tree_index,
     0 as ::core::ffi::c_int as vp8_tree_index,
 ];
-static mut cat3: [vp8_tree_index; 6] = [
+static cat3: [vp8_tree_index; 6] = [
     2 as ::core::ffi::c_int as vp8_tree_index,
     2 as ::core::ffi::c_int as vp8_tree_index,
     4 as ::core::ffi::c_int as vp8_tree_index,
@@ -1886,7 +1887,7 @@ static mut cat3: [vp8_tree_index; 6] = [
     0 as ::core::ffi::c_int as vp8_tree_index,
     0 as ::core::ffi::c_int as vp8_tree_index,
 ];
-static mut cat4: [vp8_tree_index; 8] = [
+static cat4: [vp8_tree_index; 8] = [
     2 as ::core::ffi::c_int as vp8_tree_index,
     2 as ::core::ffi::c_int as vp8_tree_index,
     4 as ::core::ffi::c_int as vp8_tree_index,
@@ -1896,7 +1897,7 @@ static mut cat4: [vp8_tree_index; 8] = [
     0 as ::core::ffi::c_int as vp8_tree_index,
     0 as ::core::ffi::c_int as vp8_tree_index,
 ];
-static mut cat5: [vp8_tree_index; 10] = [
+static cat5: [vp8_tree_index; 10] = [
     2 as ::core::ffi::c_int as vp8_tree_index,
     2 as ::core::ffi::c_int as vp8_tree_index,
     4 as ::core::ffi::c_int as vp8_tree_index,
@@ -1908,7 +1909,7 @@ static mut cat5: [vp8_tree_index; 10] = [
     0 as ::core::ffi::c_int as vp8_tree_index,
     0 as ::core::ffi::c_int as vp8_tree_index,
 ];
-static mut cat6: [vp8_tree_index; 22] = [
+static cat6: [vp8_tree_index; 22] = [
     2 as ::core::ffi::c_int as vp8_tree_index,
     2 as ::core::ffi::c_int as vp8_tree_index,
     4 as ::core::ffi::c_int as vp8_tree_index,
@@ -1933,8 +1934,7 @@ static mut cat6: [vp8_tree_index; 22] = [
     0 as ::core::ffi::c_int as vp8_tree_index,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_extra_bits: [vp8_extra_bit_struct; 12] = unsafe {
-    [
+pub static vp8_extra_bits: [vp8_extra_bit_struct; 12] = [
         vp8_extra_bit_struct {
             tree: ::core::ptr::null::<vp8_tree_index>(),
             prob: ::core::ptr::null::<vp8_prob>(),
@@ -2008,7 +2008,7 @@ pub static mut vp8_extra_bits: [vp8_extra_bit_struct; 12] = unsafe {
             base_val: 0 as ::core::ffi::c_int,
         },
     ]
-};
+;
 static default_coef_probs: [[[[vp8_prob; 11]; 3]; 8]; 4] = [
     [
         [
