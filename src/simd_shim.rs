@@ -1,6 +1,8 @@
 #![cfg(not(target_arch = "aarch64"))]
 
 use core::ffi::{c_uchar, c_int, c_short, c_void, c_char};
+use crate::vp8::common::types::BLOCKD;
+use crate::vp8::common::dequantize::vp8_dequantize_b_c;
 pub type ptrdiff_t = isize;
 
 unsafe extern "C" {
@@ -15,7 +17,6 @@ unsafe extern "C" {
     fn vp8_dequant_idct_add_c(input: *mut c_short, dq: *mut c_short, dest: *mut c_uchar, stride: c_int);
     fn vp8_dequant_idct_add_uv_block_c(q: *mut c_short, dq: *mut c_short, dst_u: *mut c_uchar, dst_v: *mut c_uchar, stride: c_int, eobs: *mut c_char);
     fn vp8_dequant_idct_add_y_block_c(q: *mut c_short, dq: *mut c_short, dst: *mut c_uchar, stride: c_int, eobs: *mut c_char);
-    fn vp8_dequantize_b_c(d: *mut c_void, DQC: *mut c_short);
     fn vp8_loop_filter_bh_c(y_ptr: *mut c_uchar, u_ptr: *mut c_uchar, v_ptr: *mut c_uchar, y_stride: c_int, uv_stride: c_int, lfi: *mut c_void);
     fn vp8_loop_filter_bv_c(y_ptr: *mut c_uchar, u_ptr: *mut c_uchar, v_ptr: *mut c_uchar, y_stride: c_int, uv_stride: c_int, lfi: *mut c_void);
     fn vp8_loop_filter_mbh_c(y_ptr: *mut c_uchar, u_ptr: *mut c_uchar, v_ptr: *mut c_uchar, y_stride: c_int, uv_stride: c_int, lfi: *mut c_void);
@@ -141,7 +142,9 @@ pub unsafe extern "C" fn vp8_dequant_idct_add_y_block_neon(q: *mut c_short, dq: 
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_dequantize_b_neon(d: *mut c_void, DQC: *mut c_short) {
-    vp8_dequantize_b_c(d, DQC);
+    let d_ref = &mut *(d as *mut BLOCKD);
+    let dqc_slice = std::slice::from_raw_parts(DQC as *const i16, 16);
+    vp8_dequantize_b_c(d_ref, dqc_slice);
 }
 
 #[unsafe(no_mangle)]

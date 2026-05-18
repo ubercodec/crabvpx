@@ -17,22 +17,18 @@ pub type uint32_t = u32;
 
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_dequantize_b_c(
-    mut d: *mut BLOCKD,
-    mut DQC: *mut ::core::ffi::c_short,
-) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    let mut DQ: *mut ::core::ffi::c_short = (*d).dqcoeff;
-    let mut Q: *mut ::core::ffi::c_short = (*d).qcoeff;
-    i = 0 as ::core::ffi::c_int;
-    while i < 16 as ::core::ffi::c_int {
-        *DQ.offset(i as isize) = (*Q.offset(i as isize) as ::core::ffi::c_int
-            * *DQC.offset(i as isize) as ::core::ffi::c_int)
-            as ::core::ffi::c_short;
-        i += 1;
+pub fn vp8_dequantize_b_c(
+    d: &mut BLOCKD,
+    DQC: &[i16],
+) {
+    assert!(!d.dqcoeff.is_null(), "dqcoeff is null");
+    assert!(!d.qcoeff.is_null(), "qcoeff is null");
+    let dq = unsafe { std::slice::from_raw_parts_mut(d.dqcoeff, 16) };
+    let q = unsafe { std::slice::from_raw_parts(d.qcoeff, 16) };
+    for i in 0..16 {
+        dq[i] = (q[i] as i32 * DQC[i] as i32) as i16;
     }
-}}
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_dequant_idct_add_c(
     mut input: *mut ::core::ffi::c_short,
