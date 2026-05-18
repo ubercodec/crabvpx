@@ -1,14 +1,12 @@
-#![allow(warnings)]
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(unused_assignments)]
 #![allow(unused_mut)]
+#![allow(clashing_extern_declarations)]
 #![feature(c_variadic)]
-#![feature(core_intrinsics)]
 #![feature(extern_types)]
-#![feature(raw_ref_op)]
 
 pub mod api;
 pub mod thread_shim;
@@ -61,9 +59,6 @@ pub mod vpx {
 } // mod vpx
 pub mod vpx_config;
 pub mod vpx_dsp {
-    pub mod arm {
-        pub mod intrapred_neon;
-    } // mod arm
     pub mod bitreader;
     pub mod bitreader_buffer;
     pub mod intrapred;
@@ -74,9 +69,6 @@ pub mod vpx_dsp {
 pub mod vpx_mem {
     pub mod vpx_mem;
 } // mod vpx_mem
-pub mod vpx_ports {
-    pub mod aarch64_cpudetect;
-} // mod vpx_ports
 pub mod vpx_scale {
     pub mod generic {
         pub mod gen_scalers;

@@ -1,8 +1,8 @@
 use crate::vp8::vp8_dx_iface::vpx_codec_vp8_dx;
 use crate::vpx::src::vpx_codec::vpx_codec_destroy;
 use crate::vpx::src::vpx_decoder::{
-    vpx_codec_ctx_t, vpx_codec_dec_init_ver, vpx_codec_decode, vpx_codec_get_frame,
-    vpx_codec_iter_t, VPX_CODEC_OK, VPX_DECODER_ABI_VERSION,
+    VPX_CODEC_OK, VPX_DECODER_ABI_VERSION, vpx_codec_ctx_t, vpx_codec_dec_init_ver,
+    vpx_codec_decode, vpx_codec_get_frame, vpx_codec_iter_t,
 };
 
 /// A representation of a decoded video frame's metadata and hash.
@@ -128,8 +128,16 @@ impl Decoder for Vp8Decoder {
             for plane in 0..3 {
                 let data = img.planes[plane];
                 let stride = img.stride[plane] as usize;
-                let w = if plane == 0 { img.d_w } else { (img.d_w + 1) >> 1 };
-                let h = if plane == 0 { img.d_h } else { (img.d_h + 1) >> 1 };
+                let w = if plane == 0 {
+                    img.d_w
+                } else {
+                    (img.d_w + 1) >> 1
+                };
+                let h = if plane == 0 {
+                    img.d_h
+                } else {
+                    (img.d_h + 1) >> 1
+                };
 
                 for row in 0..h {
                     let row_ptr = unsafe { data.add(row as usize * stride) };

@@ -148,10 +148,10 @@ pub const NORMAL_LOOPFILTER: LOOPFILTERTYPE = 0;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_filter_info_n {
-    pub mblim: [[::core::ffi::c_uchar; 1]; 64],
-    pub blim: [[::core::ffi::c_uchar; 1]; 64],
-    pub lim: [[::core::ffi::c_uchar; 1]; 64],
-    pub hev_thr: [[::core::ffi::c_uchar; 1]; 4],
+    pub mblim: [[::core::ffi::c_uchar; 16]; 64],
+    pub blim: [[::core::ffi::c_uchar; 16]; 64],
+    pub lim: [[::core::ffi::c_uchar; 16]; 64],
+    pub hev_thr: [[::core::ffi::c_uchar; 16]; 4],
     pub lvl: [[[::core::ffi::c_uchar; 4]; 4]; 4],
     pub hev_thr_lut: [[::core::ffi::c_uchar; 64]; 2],
     pub mode_lf_lut: [::core::ffi::c_uchar; 10],
@@ -245,16 +245,20 @@ pub const RECON_CLAMP_NOTREQUIRED: CLAMP_TYPE = 1;
 pub const RECON_CLAMP_REQUIRED: CLAMP_TYPE = 0;
 pub type VP8_COMMON = VP8Common;
 pub const _SC_NPROCESSORS_ONLN: ::core::ffi::c_int = 58 as ::core::ffi::c_int;
-unsafe extern "C" fn get_cpu_count() -> ::core::ffi::c_int { unsafe {
-    let mut core_count: ::core::ffi::c_int = 16 as ::core::ffi::c_int;
-    core_count = sysconf(_SC_NPROCESSORS_ONLN) as ::core::ffi::c_int;
-    return if core_count > 0 as ::core::ffi::c_int {
-        core_count
-    } else {
-        1 as ::core::ffi::c_int
-    };
-}}
+unsafe extern "C" fn get_cpu_count() -> ::core::ffi::c_int {
+    unsafe {
+        let mut core_count: ::core::ffi::c_int = 16 as ::core::ffi::c_int;
+        core_count = sysconf(_SC_NPROCESSORS_ONLN) as ::core::ffi::c_int;
+        return if core_count > 0 as ::core::ffi::c_int {
+            core_count
+        } else {
+            1 as ::core::ffi::c_int
+        };
+    }
+}
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_machine_specific_config(mut ctx: *mut VP8_COMMON) { unsafe {
-    (*ctx).processor_core_count = get_cpu_count();
-}}
+pub unsafe extern "C" fn vp8_machine_specific_config(mut ctx: *mut VP8_COMMON) {
+    unsafe {
+        (*ctx).processor_core_count = get_cpu_count();
+    }
+}

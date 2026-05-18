@@ -250,10 +250,10 @@ pub struct mv_context {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct loop_filter_info_n {
-    pub mblim: [[::core::ffi::c_uchar; 1]; 64],
-    pub blim: [[::core::ffi::c_uchar; 1]; 64],
-    pub lim: [[::core::ffi::c_uchar; 1]; 64],
-    pub hev_thr: [[::core::ffi::c_uchar; 1]; 4],
+    pub mblim: [[::core::ffi::c_uchar; 16]; 64],
+    pub blim: [[::core::ffi::c_uchar; 16]; 64],
+    pub lim: [[::core::ffi::c_uchar; 16]; 64],
+    pub hev_thr: [[::core::ffi::c_uchar; 16]; 4],
     pub lvl: [[[::core::ffi::c_uchar; 4]; 4]; 4],
     pub hev_thr_lut: [[::core::ffi::c_uchar; 64]; 2],
     pub mode_lf_lut: [::core::ffi::c_uchar; 10],
@@ -2130,7 +2130,7 @@ static mut cat6: [vp8_tree_index; 22] = [
     0 as ::core::ffi::c_int as vp8_tree_index,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_extra_bits: [vp8_extra_bit_struct; 12] = unsafe {
+pub static mut vp8_extra_bits: [vp8_extra_bit_struct; 12] = {
     [
         vp8_extra_bit_struct {
             tree: ::core::ptr::null::<vp8_tree_index>(),
@@ -3529,11 +3529,14 @@ static mut default_coef_probs: [[[[vp8_prob; 11]; 3]; 8]; 4] = [
     ],
 ];
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_default_coef_probs(mut pc: *mut VP8_COMMON) { unsafe {
-    memcpy(
-        &raw mut (*pc).fc.coef_probs as *mut [[[vp8_prob; 11]; 3]; 8] as *mut ::core::ffi::c_void,
-        &raw const default_coef_probs as *const [[[vp8_prob; 11]; 3]; 8]
-            as *const ::core::ffi::c_void,
-        ::core::mem::size_of::<[[[[vp8_prob; 11]; 3]; 8]; 4]>() as size_t,
-    );
-}}
+pub unsafe extern "C" fn vp8_default_coef_probs(mut pc: *mut VP8_COMMON) {
+    unsafe {
+        memcpy(
+            &raw mut (*pc).fc.coef_probs as *mut [[[vp8_prob; 11]; 3]; 8]
+                as *mut ::core::ffi::c_void,
+            &raw const default_coef_probs as *const [[[vp8_prob; 11]; 3]; 8]
+                as *const ::core::ffi::c_void,
+            ::core::mem::size_of::<[[[[vp8_prob; 11]; 3]; 8]; 4]>() as size_t,
+        );
+    }
+}

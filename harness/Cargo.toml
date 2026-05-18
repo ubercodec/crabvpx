@@ -1,7 +1,7 @@
 [package]
 name = "harness"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [features]
 default = ["oracle"]
@@ -15,4 +15,4 @@ crabvpx = { path = "../", optional = true }
 md5 = "0.7"
 
 [build-dependencies]
-bindgen = "0.69"
+bindgen = "0.71"
