@@ -967,30 +967,31 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
 fn read_partition_size(
     pbi: &VP8D_COMP,
     cx_size: &[u8],
-) -> ::core::ffi::c_uint { unsafe {
+) -> ::core::ffi::c_uint {
     let mut temp: [::core::ffi::c_uchar; 3] = [0; 3];
     let mut data_slice = cx_size;
-    if pbi.decrypt_cb.is_some() {
-        pbi.decrypt_cb.expect("non-null function pointer")(
-            pbi.decrypt_state,
-            cx_size.as_ptr(),
-            &raw mut temp as *mut ::core::ffi::c_uchar,
-            3 as ::core::ffi::c_int,
-        );
+    if let Some(decrypt_cb) = pbi.decrypt_cb {
+        unsafe {
+            decrypt_cb(
+                pbi.decrypt_state,
+                cx_size.as_ptr(),
+                temp.as_mut_ptr(),
+                3 as ::core::ffi::c_int,
+            );
+        }
         data_slice = &temp;
     }
-    return (data_slice[0] as ::core::ffi::c_int
+    (data_slice[0] as ::core::ffi::c_int
         + ((data_slice[1] as ::core::ffi::c_int) << 8)
-        + ((data_slice[2] as ::core::ffi::c_int) << 16)) as ::core::ffi::c_uint;
-}}
+        + ((data_slice[2] as ::core::ffi::c_int) << 16)) as ::core::ffi::c_uint
+}
 fn read_available_partition_size(
     pbi: &mut VP8D_COMP,
     token_part_sizes: &[u8],
     fragment: &[u8],
     i: ::core::ffi::c_int,
     num_part: ::core::ffi::c_int,
-) -> ::core::ffi::c_uint { unsafe {
-    let pc: *mut VP8_COMMON = &raw mut pbi.common;
+) -> ::core::ffi::c_uint {
     let mut partition_size: ::core::ffi::c_uint = 0;
     let bytes_left = fragment.len();
     if i < num_part - 1 {
@@ -1000,11 +1001,13 @@ fn read_available_partition_size(
         } else if pbi.ec_active != 0 {
             partition_size = bytes_left as ::core::ffi::c_uint;
         } else {
-            vpx_internal_error(
-                &raw mut (*pc).error,
-                VPX_CODEC_CORRUPT_FRAME,
-                b"Truncated partition size data\0" as *const u8 as *const ::core::ffi::c_char,
-            );
+            unsafe {
+                vpx_internal_error(
+                    &mut pbi.common.error,
+                    VPX_CODEC_CORRUPT_FRAME,
+                    b"Truncated partition size data\0" as *const u8 as *const ::core::ffi::c_char,
+                );
+            }
         }
     } else {
         partition_size = bytes_left as ::core::ffi::c_uint;
@@ -1013,17 +1016,19 @@ fn read_available_partition_size(
         if pbi.ec_active != 0 {
             partition_size = bytes_left as ::core::ffi::c_uint;
         } else {
-            vpx_internal_error(
-                &raw mut (*pc).error,
-                VPX_CODEC_CORRUPT_FRAME,
-                b"Truncated packet or corrupt partition %d length\0" as *const u8
-                    as *const ::core::ffi::c_char,
-                i + 1,
-            );
+            unsafe {
+                vpx_internal_error(
+                    &mut pbi.common.error,
+                    VPX_CODEC_CORRUPT_FRAME,
+                    b"Truncated packet or corrupt partition %d length\0" as *const u8
+                        as *const ::core::ffi::c_char,
+                    i + 1,
+                );
+            }
         }
     }
-    return partition_size;
-}}
+    partition_size
+}
 fn setup_token_decoder(
     pbi: &mut VP8D_COMP,
     token_part_sizes: &[u8],
