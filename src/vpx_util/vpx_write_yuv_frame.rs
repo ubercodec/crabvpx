@@ -87,4 +87,4 @@ pub struct Yv12BufferConfig {
     pub flags: i32,
 }
 #[unsafe(no_mangle)]
-pub unsafe fn vpx_write_yuv_frame(_yuv_file: *mut FILE, _s: *mut Yv12BufferConfig) {}
+pub fn vpx_write_yuv_frame(_yuv_file: *mut FILE, _s: *mut Yv12BufferConfig) {}

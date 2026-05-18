@@ -83,8 +83,8 @@ pub type LoopfilterYNeon = unsafe fn(
     u8,
     u8,
 ) -> ();
-#[no_mangle]
-pub unsafe fn vp8_loop_filter_mbh_neon(
+#[unsafe(no_mangle)]
+pub fn vp8_loop_filter_mbh_neon(
     mut y_ptr: *mut u8,
     mut u_ptr: *mut u8,
     mut v_ptr: *mut u8,
@@ -100,8 +100,8 @@ pub unsafe fn vp8_loop_filter_mbh_neon(
         vp8_mbloop_filter_horizontal_edge_uv_neon(u_ptr, uv_stride, mblim, lim, hev_thr, v_ptr);
     }
 }
-#[no_mangle]
-pub unsafe fn vp8_loop_filter_mbv_neon(
+#[unsafe(no_mangle)]
+pub fn vp8_loop_filter_mbv_neon(
     mut y_ptr: *mut u8,
     mut u_ptr: *mut u8,
     mut v_ptr: *mut u8,
@@ -117,8 +117,8 @@ pub unsafe fn vp8_loop_filter_mbv_neon(
         vp8_mbloop_filter_vertical_edge_uv_neon(u_ptr, uv_stride, mblim, lim, hev_thr, v_ptr);
     }
 }
-#[no_mangle]
-pub unsafe fn vp8_loop_filter_bh_neon(
+#[unsafe(no_mangle)]
+pub fn vp8_loop_filter_bh_neon(
     mut y_ptr: *mut u8,
     mut u_ptr: *mut u8,
     mut v_ptr: *mut u8,
@@ -161,8 +161,8 @@ pub unsafe fn vp8_loop_filter_bh_neon(
         );
     }
 }
-#[no_mangle]
-pub unsafe fn vp8_loop_filter_bv_neon(
+#[unsafe(no_mangle)]
+pub fn vp8_loop_filter_bv_neon(
     mut y_ptr: *mut u8,
     mut u_ptr: *mut u8,
     mut v_ptr: *mut u8,

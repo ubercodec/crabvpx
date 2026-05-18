@@ -438,15 +438,15 @@ pub const VERSION_PACKED: i32 = VERSION_MAJOR << 16 as i32 | VERSION_MINOR << 8 
 pub const VERSION_STRING_NOSP: [i8; 23] =
     unsafe { ::core::mem::transmute::<[u8; 23], [i8; 23]>(*b"v1.16.0-122-ge9efe034e\0") };
 #[unsafe(no_mangle)]
-pub unsafe fn vpx_codec_version() -> i32 {
+pub fn vpx_codec_version() -> i32 {
     VERSION_PACKED
 }
 #[unsafe(no_mangle)]
-pub unsafe fn vpx_codec_version_str() -> *const i8 {
+pub fn vpx_codec_version_str() -> *const i8 {
     VERSION_STRING_NOSP.as_ptr()
 }
 #[unsafe(no_mangle)]
-pub unsafe fn vpx_codec_version_extra_str() -> *const i8 {
+pub fn vpx_codec_version_extra_str() -> *const i8 {
     VERSION_EXTRA.as_ptr()
 }
 #[unsafe(no_mangle)]
@@ -460,7 +460,7 @@ pub unsafe fn vpx_codec_iface_name(mut iface: *const VpxCodecIfaceT) -> *const i
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe fn vpx_codec_err_to_string(mut err: VpxCodecErrT) -> *const i8 {
+pub fn vpx_codec_err_to_string(mut err: VpxCodecErrT) -> *const i8 {
     match err as u32 {
         0 => return b"Success\0" as *const u8 as *const i8,
         1 => {

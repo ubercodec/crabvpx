@@ -623,7 +623,7 @@ pub unsafe fn vpx_codec_enc_config_default(
         res
     }
 }
-unsafe fn floating_point_init() {}
+fn floating_point_init() {}
 unsafe fn floating_point_restore() {}
 #[unsafe(no_mangle)]
 pub unsafe fn vpx_codec_encode(

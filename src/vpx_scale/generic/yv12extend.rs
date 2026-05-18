@@ -1,5 +1,4 @@
 use std::ffi::c_void;
-unsafe extern "Rust" {}
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct Yv12BufferConfig {

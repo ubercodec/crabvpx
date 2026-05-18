@@ -1,7 +1,7 @@
 pub type VpxProb = u8;
 pub type VpxTreeIndex = i8;
 #[inline]
-unsafe fn get_prob(mut num: u32, mut den: u32) -> VpxProb {
+fn get_prob(mut num: u32, mut den: u32) -> VpxProb {
     let p: i32 = (num as u64)
         .wrapping_mul(256 as u64)
         .wrapping_add((den >> 1 as i32) as u64)
@@ -10,7 +10,7 @@ unsafe fn get_prob(mut num: u32, mut den: u32) -> VpxProb {
     clipped_prob as VpxProb
 }
 #[inline]
-unsafe fn weighted_prob(mut prob1: i32, mut prob2: i32, mut factor: i32) -> VpxProb {
+fn weighted_prob(mut prob1: i32, mut prob2: i32, mut factor: i32) -> VpxProb {
     ((prob1 * (256 as i32 - factor) + prob2 * factor + ((1 as i32) << (8 as i32 - 1 as i32)))
         >> 8 as i32) as VpxProb
 }

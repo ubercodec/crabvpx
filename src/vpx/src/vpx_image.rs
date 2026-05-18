@@ -72,7 +72,7 @@ pub const VPX_PLANE_Y: i32 = 0 as i32;
 pub const VPX_PLANE_U: i32 = 1 as i32;
 pub const VPX_PLANE_V: i32 = 2 as i32;
 pub const VPX_PLANE_ALPHA: i32 = 3 as i32;
-unsafe fn is_valid_img_fmt(mut fmt: VpxImgFmtT) -> i32 {
+fn is_valid_img_fmt(mut fmt: VpxImgFmtT) -> i32 {
     match fmt as u32 {
         769 | 258 | 261 | 262 | 263 | 265 | 2306 | 2309 | 2310 | 2311 => 1 as i32,
         _ => 0 as i32,

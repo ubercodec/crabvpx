@@ -1607,7 +1607,7 @@ unsafe fn vp8_get_quantizer(mut ctx: *mut VpxCodecAlgPrivT, mut data: *mut c_voi
         VPX_CODEC_OK
     }
 }
-unsafe fn vp8_set_postproc(_ctx: *mut VpxCodecAlgPrivT, _args: *mut c_void) -> VpxCodecErrT {
+fn vp8_set_postproc(_ctx: *mut VpxCodecAlgPrivT, _args: *mut c_void) -> VpxCodecErrT {
     VPX_CODEC_INCAPABLE
 }
 unsafe fn vp8_get_last_ref_updates(
@@ -1785,7 +1785,7 @@ pub static mut vpx_codec_vp8_dx_algo: VpxCodecIfaceT = VpxCodecIface {
     },
 };
 #[unsafe(no_mangle)]
-pub unsafe fn vpx_codec_vp8_dx() -> *const VpxCodecIfaceT {
+pub fn vpx_codec_vp8_dx() -> *const VpxCodecIfaceT {
     &raw const vpx_codec_vp8_dx_algo
 }
 pub const __ATOMIC_ACQUIRE: i32 = 2 as i32;

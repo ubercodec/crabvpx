@@ -1,5 +1,4 @@
 use std::ffi::c_void;
-unsafe extern "Rust" {}
 pub type Vp8Prob = u8;
 pub type Vp8TreeIndex = i8;
 pub type Vp8TreeP = *const Vp8TreeIndex;

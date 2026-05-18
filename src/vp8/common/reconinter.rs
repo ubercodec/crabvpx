@@ -1,5 +1,4 @@
 use std::ffi::c_void;
-unsafe extern "Rust" {}
 pub type DarwinSizeT = usize;
 pub type SizeT = DarwinSizeT;
 #[derive(Copy, Clone)]
