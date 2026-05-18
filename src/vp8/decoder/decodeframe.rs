@@ -254,34 +254,51 @@ unsafe extern "C" fn vpx_atomic_load_acquire(
     return (*(&raw const (*atomic).value as *const core::sync::atomic::AtomicI32)).load(core::sync::atomic::Ordering::Acquire);
 }}
 
-#[inline]
-unsafe extern "C" fn setup_intra_recon_left(
-    mut y_buffer: *mut ::core::ffi::c_uchar,
-    mut u_buffer: *mut ::core::ffi::c_uchar,
-    mut v_buffer: *mut ::core::ffi::c_uchar,
-    mut y_stride: ::core::ffi::c_int,
-    mut uv_stride: ::core::ffi::c_int,
-) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    i = 0 as ::core::ffi::c_int;
-    while i < 16 as ::core::ffi::c_int {
-        *y_buffer.offset((y_stride * i) as isize) =
-            129 as ::core::ffi::c_int as ::core::ffi::c_uchar;
-        i += 1;
+fn setup_intra_recon_left(
+    ybf: &mut YV12_BUFFER_CONFIG,
+    mb_row: ::core::ffi::c_int,
+) {
+    let y_border = ybf.border as usize;
+    let y_stride = ybf.y_stride as usize;
+    let uv_border = (ybf.border / 2) as usize;
+    let uv_stride = ybf.uv_stride as usize;
+    let mb_row = mb_row as usize;
+
+    unsafe {
+        let y_slice = ybf.y_slice_mut();
+        let y_base = (y_border + mb_row * 16) * y_stride + y_border - 1;
+        for i in 0..16 {
+            let idx = y_base + i * y_stride;
+            if idx < y_slice.len() {
+                y_slice[idx] = 129;
+            } else {
+                debug_assert!(false, "Y slice overflow in setup_intra_recon_left");
+            }
+        }
+
+        let u_slice = ybf.u_slice_mut();
+        let u_base = (uv_border + mb_row * 8) * uv_stride + uv_border - 1;
+        for i in 0..8 {
+            let idx = u_base + i * uv_stride;
+            if idx < u_slice.len() {
+                u_slice[idx] = 129;
+            } else {
+                debug_assert!(false, "U slice overflow in setup_intra_recon_left");
+            }
+        }
+
+        let v_slice = ybf.v_slice_mut();
+        let v_base = (uv_border + mb_row * 8) * uv_stride + uv_border - 1;
+        for i in 0..8 {
+            let idx = v_base + i * uv_stride;
+            if idx < v_slice.len() {
+                v_slice[idx] = 129;
+            } else {
+                debug_assert!(false, "V slice overflow in setup_intra_recon_left");
+            }
+        }
     }
-    i = 0 as ::core::ffi::c_int;
-    while i < 8 as ::core::ffi::c_int {
-        *u_buffer.offset((uv_stride * i) as isize) =
-            129 as ::core::ffi::c_int as ::core::ffi::c_uchar;
-        i += 1;
-    }
-    i = 0 as ::core::ffi::c_int;
-    while i < 8 as ::core::ffi::c_int {
-        *v_buffer.offset((uv_stride * i) as isize) =
-            129 as ::core::ffi::c_int as ::core::ffi::c_uchar;
-        i += 1;
-    }
-}}
+}
 pub fn vp8cx_init_de_quantizer(pbi: &mut VP8D_COMP) {
     let pc = &mut pbi.common;
     let mut Q: ::core::ffi::c_int = 0;
@@ -824,11 +841,8 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
         (*xd).recon_left_stride[0 as ::core::ffi::c_int as usize] = (*xd).dst.y_stride;
         (*xd).recon_left_stride[1 as ::core::ffi::c_int as usize] = (*xd).dst.uv_stride;
         setup_intra_recon_left(
-            (*xd).recon_left[0 as ::core::ffi::c_int as usize],
-            (*xd).recon_left[1 as ::core::ffi::c_int as usize],
-            (*xd).recon_left[2 as ::core::ffi::c_int as usize],
-            (*xd).dst.y_stride,
-            (*xd).dst.uv_stride,
+            &mut *yv12_fb_new,
+            mb_row,
         );
         mb_col = 0 as ::core::ffi::c_int;
         while mb_col < (*pc).mb_cols {
