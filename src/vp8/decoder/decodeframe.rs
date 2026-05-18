@@ -688,8 +688,8 @@ fn yv12_extend_frame_bottom_c(ybf: &YV12_BUFFER_CONFIG) { unsafe {
         i += 1;
     }
 }}
-unsafe extern "C" fn yv12_extend_frame_left_right_c(
-    mut ybf: *mut YV12_BUFFER_CONFIG,
+fn yv12_extend_frame_left_right_c(
+    ybf: &YV12_BUFFER_CONFIG,
     mut y_src: *mut ::core::ffi::c_uchar,
     mut u_src: *mut ::core::ffi::c_uchar,
     mut v_src: *mut ::core::ffi::c_uchar,
@@ -703,10 +703,10 @@ unsafe extern "C" fn yv12_extend_frame_left_right_c(
     let mut plane_stride: ::core::ffi::c_int = 0;
     let mut plane_height: ::core::ffi::c_int = 0;
     let mut plane_width: ::core::ffi::c_int = 0;
-    Border = (*ybf).border as ::core::ffi::c_uint;
-    plane_stride = (*ybf).y_stride;
+    Border = ybf.border as ::core::ffi::c_uint;
+    plane_stride = ybf.y_stride;
     plane_height = 16 as ::core::ffi::c_int;
-    plane_width = (*ybf).y_width;
+    plane_width = ybf.y_width;
     src_ptr1 = y_src;
     src_ptr2 = src_ptr1
         .offset(plane_width as isize)
@@ -731,9 +731,9 @@ unsafe extern "C" fn yv12_extend_frame_left_right_c(
         dest_ptr2 = dest_ptr2.offset(plane_stride as isize);
         i += 1;
     }
-    plane_stride = (*ybf).uv_stride;
+    plane_stride = ybf.uv_stride;
     plane_height = 8 as ::core::ffi::c_int;
-    plane_width = (*ybf).uv_width;
+    plane_width = ybf.uv_width;
     Border = Border.wrapping_div(2 as ::core::ffi::c_uint);
     src_ptr1 = u_src;
     src_ptr2 = src_ptr1
@@ -991,7 +991,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
                 }
                 if mb_row > 1 as ::core::ffi::c_int {
                     yv12_extend_frame_left_right_c(
-                        yv12_fb_new,
+                        &*yv12_fb_new,
                         eb_dst[0 as ::core::ffi::c_int as usize],
                         eb_dst[1 as ::core::ffi::c_int as usize],
                         eb_dst[2 as ::core::ffi::c_int as usize],
@@ -1017,7 +1017,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
             }
         } else if mb_row > 0 as ::core::ffi::c_int {
             yv12_extend_frame_left_right_c(
-                yv12_fb_new,
+                &*yv12_fb_new,
                 eb_dst[0 as ::core::ffi::c_int as usize],
                 eb_dst[1 as ::core::ffi::c_int as usize],
                 eb_dst[2 as ::core::ffi::c_int as usize],
@@ -1055,7 +1055,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
             );
         }
         yv12_extend_frame_left_right_c(
-            yv12_fb_new,
+            &*yv12_fb_new,
             eb_dst[0 as ::core::ffi::c_int as usize],
             eb_dst[1 as ::core::ffi::c_int as usize],
             eb_dst[2 as ::core::ffi::c_int as usize],
@@ -1068,7 +1068,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
             .offset((recon_uv_stride * 8 as ::core::ffi::c_int) as isize);
     }
     yv12_extend_frame_left_right_c(
-        yv12_fb_new,
+        &*yv12_fb_new,
         eb_dst[0 as ::core::ffi::c_int as usize],
         eb_dst[1 as ::core::ffi::c_int as usize],
         eb_dst[2 as ::core::ffi::c_int as usize],
