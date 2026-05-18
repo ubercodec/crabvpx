@@ -9,6 +9,9 @@ use crate::vp8::common::reconintra::intra_prediction_down_copy;
 use crate::vp8::common::idctllm::vp8_short_inv_walsh4x4_1_safe;
 use crate::vp8::common::dequantize::vp8_dequantize_b_safe;
 use crate::vp8::common::idctllm::vp8_short_inv_walsh4x4_safe;
+use crate::vp8::common::idct_blk::{vp8_dequant_idct_add_y_block_safe, vp8_dequant_idct_add_uv_block_safe};
+use crate::vp8::common::dequantize::vp8_dequant_idct_add_safe;
+use crate::vp8::common::idctllm::vp8_dc_only_idct_add_safe;
 
 unsafe extern "C" {
     fn vp8dx_decode_bool(br: *mut BOOL_DECODER, probability: ::core::ffi::c_int) -> ::core::ffi::c_int;
@@ -45,34 +48,7 @@ unsafe extern "C" {
         dst_ptr: *mut ::core::ffi::c_uchar,
         dst_pitch: ::core::ffi::c_int,
     );
-    fn vp8_dc_only_idct_add_neon(
-        input_dc: ::core::ffi::c_short,
-        pred_ptr: *mut ::core::ffi::c_uchar,
-        pred_stride: ::core::ffi::c_int,
-        dst_ptr: *mut ::core::ffi::c_uchar,
-        dst_stride: ::core::ffi::c_int,
-    );
-    fn vp8_dequant_idct_add_neon(
-        input: *mut ::core::ffi::c_short,
-        dq: *mut ::core::ffi::c_short,
-        dest: *mut ::core::ffi::c_uchar,
-        stride: ::core::ffi::c_int,
-    );
-    fn vp8_dequant_idct_add_uv_block_neon(
-        q: *mut ::core::ffi::c_short,
-        dq: *mut ::core::ffi::c_short,
-        dst_u: *mut ::core::ffi::c_uchar,
-        dst_v: *mut ::core::ffi::c_uchar,
-        stride: ::core::ffi::c_int,
-        eobs: *mut ::core::ffi::c_char,
-    );
-    fn vp8_dequant_idct_add_y_block_neon(
-        q: *mut ::core::ffi::c_short,
-        dq: *mut ::core::ffi::c_short,
-        dst: *mut ::core::ffi::c_uchar,
-        stride: ::core::ffi::c_int,
-        eobs: *mut ::core::ffi::c_char,
-    );
+
     fn vp8_dequantize_b_neon(_: *mut blockd, DQC: *mut ::core::ffi::c_short);
     fn vp8_short_inv_walsh4x4_neon(
         input: *mut ::core::ffi::c_short,
@@ -438,27 +414,37 @@ fn decode_macroblock(
                     *Above.offset(-(1 as ::core::ffi::c_int) as isize);
                 vp8_intra4x4_predict(Above, yleft, left_stride, b_mode, dst, dst_stride, top_left);
                 if xd.eobs[i as usize] != 0 {
+                    let block_idx = i as usize;
+                    let q_offset = block_idx * 16;
+                    let q_sub: &mut [i16; 16] = (&mut xd.qcoeff[q_offset..q_offset + 16]).try_into().unwrap();
+                    let dq_ref = &*(DQC as *const [i16; 16]);
+                    
+                    let dst_offset = (*b).offset as usize;
+                    let dst_sub_len = 3 * dst_stride as usize + 4;
+                    let dst_sub_slice = core::slice::from_raw_parts_mut(xd.dst.y_buffer.offset(dst_offset as isize), dst_sub_len);
+
                     if xd.eobs[i as usize] as ::core::ffi::c_int > 1 as ::core::ffi::c_int {
-                        vp8_dequant_idct_add_neon((*b).qcoeff, DQC, dst, dst_stride);
+                        vp8_dequant_idct_add_safe(q_sub, dq_ref, dst_sub_slice, dst_stride);
                     } else {
-                        vp8_dc_only_idct_add_neon(
-                            (*(*b).qcoeff.offset(0 as ::core::ffi::c_int as isize)
-                                as ::core::ffi::c_int
-                                * *DQC.offset(0 as ::core::ffi::c_int as isize)
-                                    as ::core::ffi::c_int)
-                                as ::core::ffi::c_short,
-                            dst,
-                            dst_stride,
-                            dst,
+                        let input_dc = q_sub[0] * dq_ref[0];
+                        
+                        let mut pred = [0u8; 16];
+                        for r in 0..4 {
+                            for c in 0..4 {
+                                pred[r * 4 + c] = dst_sub_slice[r * dst_stride as usize + c];
+                            }
+                        }
+                        
+                        vp8_dc_only_idct_add_safe(
+                            input_dc,
+                            &pred,
+                            4,
+                            dst_sub_slice,
                             dst_stride,
                         );
-                        memset(
-                            (*b).qcoeff as *mut ::core::ffi::c_void,
-                            0 as ::core::ffi::c_int,
-                            (2 as size_t).wrapping_mul(
-                                ::core::mem::size_of::<::core::ffi::c_short>() as size_t,
-                            ),
-                        );
+                        
+                        q_sub[0] = 0;
+                        q_sub[1] = 0;
                     }
                 }
                 i += 1;
@@ -469,9 +455,7 @@ fn decode_macroblock(
     }
     if (*xd.mode_info_context).mbmi.mb_skip_coeff == 0 {
         if mode as ::core::ffi::c_uint != B_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
-            let mut DQC_0: *mut ::core::ffi::c_short =
-                &raw mut xd.dequant_y1 as *mut ::core::ffi::c_short;
-            if mode as ::core::ffi::c_uint != SPLITMV as ::core::ffi::c_int as ::core::ffi::c_uint {
+            let dq_y: &[i16; 16] = if mode as ::core::ffi::c_uint != SPLITMV as ::core::ffi::c_int as ::core::ffi::c_uint {
                 if xd.eobs[24 as ::core::ffi::c_int as usize] as ::core::ffi::c_int
                     > 1 as ::core::ffi::c_int
                 {
@@ -494,25 +478,32 @@ fn decode_macroblock(
                     );
                     xd.qcoeff[24 * 16 .. 24 * 16 + 2].fill(0);
                 }
-                DQC_0 = &raw mut xd.dequant_y1_dc as *mut ::core::ffi::c_short;
-            }
-            vp8_dequant_idct_add_y_block_neon(
-                &raw mut xd.qcoeff as *mut ::core::ffi::c_short,
-                DQC_0,
-                xd.dst.y_buffer as *mut ::core::ffi::c_uchar,
-                xd.dst.y_stride,
-                &raw mut xd.eobs as *mut ::core::ffi::c_char,
-            );
+                &xd.dequant_y1_dc
+            } else {
+                &xd.dequant_y1
+            };
+
+            let q_y: &mut [i16; 256] = (&mut xd.qcoeff[0..256]).try_into().unwrap();
+            let dst_len = 15 * xd.dst.y_stride as usize + 16;
+            let dst_slice = core::slice::from_raw_parts_mut(xd.dst.y_buffer, dst_len);
+            let eobs_y: &[::core::ffi::c_char; 16] = (&xd.eobs[0..16]).try_into().unwrap();
+
+            vp8_dequant_idct_add_y_block_safe(q_y, dq_y, dst_slice, xd.dst.y_stride, eobs_y);
         }
-        vp8_dequant_idct_add_uv_block_neon(
-            (&raw mut xd.qcoeff as *mut ::core::ffi::c_short)
-                .offset((16 as ::core::ffi::c_int * 16 as ::core::ffi::c_int) as isize),
-            &raw mut xd.dequant_uv as *mut ::core::ffi::c_short,
-            xd.dst.u_buffer as *mut ::core::ffi::c_uchar,
-            xd.dst.v_buffer as *mut ::core::ffi::c_uchar,
+
+        let q_uv: &mut [i16; 128] = (&mut xd.qcoeff[256..384]).try_into().unwrap();
+        let dst_u_len = 7 * xd.dst.uv_stride as usize + 8;
+        let dst_u_slice = core::slice::from_raw_parts_mut(xd.dst.u_buffer, dst_u_len);
+        let dst_v_slice = core::slice::from_raw_parts_mut(xd.dst.v_buffer, dst_u_len);
+        let eobs_uv: &[::core::ffi::c_char; 8] = (&xd.eobs[16..24]).try_into().unwrap();
+
+        vp8_dequant_idct_add_uv_block_safe(
+            q_uv,
+            &xd.dequant_uv,
+            dst_u_slice,
+            dst_v_slice,
             xd.dst.uv_stride,
-            (&raw mut xd.eobs as *mut ::core::ffi::c_char)
-                .offset(16 as ::core::ffi::c_int as isize),
+            eobs_uv,
         );
     }
 }}

@@ -5,7 +5,7 @@ pub fn vp8_dequant_idct_add_y_block_safe(
     dq: &[i16; 16],
     dst: &mut [u8],
     stride: i32,
-    eobs: &[i8; 16],
+    eobs: &[::core::ffi::c_char; 16],
 ) {
     let stride_sz = stride as usize;
     assert!(dst.len() >= 15 * stride_sz + 16, "dst buffer too small");
@@ -54,7 +54,7 @@ pub fn vp8_dequant_idct_add_uv_block_safe(
     dst_u: &mut [u8],
     dst_v: &mut [u8],
     stride: i32,
-    eobs: &[i8; 8],
+    eobs: &[::core::ffi::c_char; 8],
 ) {
     let stride_sz = stride as usize;
     assert!(dst_u.len() >= 7 * stride_sz + 8, "dst_u buffer too small");
@@ -146,7 +146,7 @@ pub unsafe extern "C" fn vp8_dequant_idct_add_y_block_c(
     unsafe {
         let q_ref = &mut *(q as *mut [i16; 256]);
         let dq_ref = &*(dq as *const [i16; 16]);
-        let eobs_ref = &*(eobs as *const [i8; 16]);
+        let eobs_ref = &*(eobs as *const [::core::ffi::c_char; 16]);
         
         let dst_len = 15 * stride as usize + 16;
         let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
@@ -167,7 +167,7 @@ pub unsafe extern "C" fn vp8_dequant_idct_add_uv_block_c(
     unsafe {
         let q_ref = &mut *(q as *mut [i16; 128]);
         let dq_ref = &*(dq as *const [i16; 16]);
-        let eobs_ref = &*(eobs as *const [i8; 8]);
+        let eobs_ref = &*(eobs as *const [::core::ffi::c_char; 8]);
         
         let dst_len = 7 * stride as usize + 8;
         let dst_u_slice = core::slice::from_raw_parts_mut(dst_u, dst_len);
