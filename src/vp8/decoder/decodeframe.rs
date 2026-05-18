@@ -1,3 +1,4 @@
+use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
 use std::ffi::c_void;
 unsafe extern "Rust" {
     fn vp8_bilinear_predict16x16_c(
@@ -312,40 +313,7 @@ pub struct MbModeInfo {
     pub need_to_clamp_mvs: u8,
     pub segment_id: u8,
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Yv12BufferConfig {
-    pub y_width: i32,
-    pub y_height: i32,
-    pub y_crop_width: i32,
-    pub y_crop_height: i32,
-    pub y_stride: i32,
-    pub uv_width: i32,
-    pub uv_height: i32,
-    pub uv_crop_width: i32,
-    pub uv_crop_height: i32,
-    pub uv_stride: i32,
-    pub alpha_width: i32,
-    pub alpha_height: i32,
-    pub alpha_stride: i32,
-    pub y_buffer: *mut u8,
-    pub u_buffer: *mut u8,
-    pub v_buffer: *mut u8,
-    pub alpha_buffer: *mut u8,
-    pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: usize,
-    pub border: i32,
-    pub frame_size: usize,
-    pub subsampling_x: i32,
-    pub subsampling_y: i32,
-    pub bit_depth: u32,
-    pub color_space: u32,
-    pub color_range: u32,
-    pub render_width: i32,
-    pub render_height: i32,
-    pub corrupted: i32,
-    pub flags: i32,
-}
+
 pub const VPX_CR_FULL_RANGE: u32 = 1;
 pub const VPX_CR_STUDIO_RANGE: u32 = 0;
 pub const VPX_CS_SRGB: u32 = 7;
@@ -823,8 +791,7 @@ unsafe fn decode_macroblock(mut pbi: *mut Vp8dComp, mut xd: *mut MACROBLOCKD, _m
                     let mut b: *mut BLOCKD =
                         (&raw mut (*xd).block as *mut BLOCKD).offset(i as isize) as *mut BLOCKD;
                     let mut dst: *mut u8 = (*xd).dst.y_buffer.offset((*b).offset as isize);
-                    let mut b_mode: u32 =
-                        (*(*xd).mode_info_context).bmi[i as usize].as_mode;
+                    let mut b_mode: u32 = (*(*xd).mode_info_context).bmi[i as usize].as_mode;
                     let mut Above: *mut u8 = dst.offset(-(dst_stride as isize));
                     let mut yleft: *mut u8 = dst.offset(-(1 as isize));
                     let mut left_stride: i32 = dst_stride;
@@ -1241,8 +1208,7 @@ unsafe fn decode_mb_rows(mut pbi: *mut Vp8dComp) {
                 (*xd).dst.v_buffer =
                     dst_buffer[2 as usize].offset(recon_uvoffset as isize) as *mut u8;
                 if (*(*xd).mode_info_context).mbmi.ref_frame as i32 >= LAST_FRAME as i32 {
-                    let ref_0: u32 =
-                        (*(*xd).mode_info_context).mbmi.ref_frame as u32;
+                    let ref_0: u32 = (*(*xd).mode_info_context).mbmi.ref_frame as u32;
                     (*xd).pre.y_buffer = ref_buffer[ref_0 as usize][0 as usize]
                         .offset(recon_yoffset as isize)
                         as *mut u8;
@@ -1482,10 +1448,10 @@ unsafe fn setup_token_decoder(mut pbi: *mut Vp8dComp, mut token_part_sizes: *con
             let mut fragment_end: *const u8 =
                 (*pbi).fragments.ptrs[fragment_idx as usize].offset(fragment_size as isize);
             if fragment_idx == 0 as u32 {
-                let mut ext_first_part_size: isize =
-                    token_part_sizes.offset_from((*pbi).fragments.ptrs[0 as usize]) as isize
-                        + (3 as u32).wrapping_mul(num_token_partitions.wrapping_sub(1 as u32))
-                            as isize;
+                let mut ext_first_part_size: isize = token_part_sizes
+                    .offset_from((*pbi).fragments.ptrs[0 as usize])
+                    as isize
+                    + (3 as u32).wrapping_mul(num_token_partitions.wrapping_sub(1 as u32)) as isize;
                 if fragment_size < ext_first_part_size as u32 {
                     vpx_internal_error(
                         &raw mut (*pbi).common.error,
@@ -1837,8 +1803,7 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
             (*xd).update_mb_segmentation_map = 0 as u8;
             (*xd).update_mb_segmentation_data = 0 as u8;
         }
-        (*pc).filter_type =
-            vp8dx_decode_bool(bc as *mut BoolDecoder, vp8_prob_half as i32) as u32;
+        (*pc).filter_type = vp8dx_decode_bool(bc as *mut BoolDecoder, vp8_prob_half as i32) as u32;
         (*pc).filter_level = vp8_decode_value(bc as *mut BoolDecoder, 6 as i32);
         (*pc).sharpness_level = vp8_decode_value(bc as *mut BoolDecoder, 3 as i32);
         (*xd).mode_ref_lf_delta_update = 0 as u8;

@@ -1,3 +1,4 @@
+use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
 use std::ffi::c_void;
 unsafe extern "Rust" {
     fn vp8_horizontal_line_2_1_scale_c(
@@ -47,40 +48,7 @@ unsafe extern "Rust" {
         dest_width: u32,
     );
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Yv12BufferConfig {
-    pub y_width: i32,
-    pub y_height: i32,
-    pub y_crop_width: i32,
-    pub y_crop_height: i32,
-    pub y_stride: i32,
-    pub uv_width: i32,
-    pub uv_height: i32,
-    pub uv_crop_width: i32,
-    pub uv_crop_height: i32,
-    pub uv_stride: i32,
-    pub alpha_width: i32,
-    pub alpha_height: i32,
-    pub alpha_stride: i32,
-    pub y_buffer: *mut u8,
-    pub u_buffer: *mut u8,
-    pub v_buffer: *mut u8,
-    pub alpha_buffer: *mut u8,
-    pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: usize,
-    pub border: i32,
-    pub frame_size: usize,
-    pub subsampling_x: i32,
-    pub subsampling_y: i32,
-    pub bit_depth: u32,
-    pub color_space: u32,
-    pub color_range: u32,
-    pub render_width: i32,
-    pub render_height: i32,
-    pub corrupted: i32,
-    pub flags: i32,
-}
+
 pub const VPX_CR_FULL_RANGE: u32 = 1;
 pub const VPX_CR_STUDIO_RANGE: u32 = 0;
 pub const VPX_CS_SRGB: u32 = 7;

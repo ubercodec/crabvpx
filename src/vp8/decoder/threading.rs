@@ -1,3 +1,4 @@
+use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
 use std::ffi::c_void;
 unsafe extern "Rust" {
     fn vp8_dc_only_idct_add_c(
@@ -76,12 +77,7 @@ unsafe extern "Rust" {
     // static mut mach_task_self_: u32;
     fn semaphore_signal(semaphore: SemaphoreT) -> i32;
     fn semaphore_wait(semaphore: SemaphoreT) -> i32;
-    fn semaphore_create(
-        task: u32,
-        semaphore: *mut SemaphoreT,
-        policy: i32,
-        value: i32,
-    ) -> i32;
+    fn semaphore_create(task: u32, semaphore: *mut SemaphoreT, policy: i32, value: i32) -> i32;
     fn semaphore_destroy(task: u32, semaphore: SemaphoreT) -> i32;
     fn vp8_mb_init_dequantizer(pbi: *mut Vp8dComp, xd: *mut MACROBLOCKD);
     fn vpx_memalign(align: usize, size: usize) -> *mut c_void;
@@ -266,40 +262,7 @@ pub struct MbModeInfo {
     pub need_to_clamp_mvs: u8,
     pub segment_id: u8,
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Yv12BufferConfig {
-    pub y_width: i32,
-    pub y_height: i32,
-    pub y_crop_width: i32,
-    pub y_crop_height: i32,
-    pub y_stride: i32,
-    pub uv_width: i32,
-    pub uv_height: i32,
-    pub uv_crop_width: i32,
-    pub uv_crop_height: i32,
-    pub uv_stride: i32,
-    pub alpha_width: i32,
-    pub alpha_height: i32,
-    pub alpha_stride: i32,
-    pub y_buffer: *mut u8,
-    pub u_buffer: *mut u8,
-    pub v_buffer: *mut u8,
-    pub alpha_buffer: *mut u8,
-    pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: usize,
-    pub border: i32,
-    pub frame_size: usize,
-    pub subsampling_x: i32,
-    pub subsampling_y: i32,
-    pub bit_depth: u32,
-    pub color_space: u32,
-    pub color_range: u32,
-    pub render_width: i32,
-    pub render_height: i32,
-    pub corrupted: i32,
-    pub flags: i32,
-}
+
 pub const VPX_CR_FULL_RANGE: u32 = 1;
 pub const VPX_CR_STUDIO_RANGE: u32 = 0;
 pub const VPX_CS_SRGB: u32 = 7;
@@ -773,8 +736,7 @@ unsafe fn mt_decode_macroblock(mut pbi: *mut Vp8dComp, mut xd: *mut MACROBLOCKD,
                     let mut b: *mut BLOCKD =
                         (&raw mut (*xd).block as *mut BLOCKD).offset(i as isize) as *mut BLOCKD;
                     let mut dst: *mut u8 = (*xd).dst.y_buffer.offset((*b).offset as isize);
-                    let mut b_mode: u32 =
-                        (*(*xd).mode_info_context).bmi[i as usize].as_mode;
+                    let mut b_mode: u32 = (*(*xd).mode_info_context).bmi[i as usize].as_mode;
                     let mut Above: *mut u8 = ::core::ptr::null_mut::<u8>();
                     let mut yleft: *mut u8 = ::core::ptr::null_mut::<u8>();
                     let mut left_stride: i32 = 0;
@@ -1040,8 +1002,7 @@ unsafe fn mt_decode_mb_rows(
                     );
                 }
                 if (*(*xd).mode_info_context).mbmi.ref_frame as i32 >= LAST_FRAME as i32 {
-                    let ref_0: u32 =
-                        (*(*xd).mode_info_context).mbmi.ref_frame as u32;
+                    let ref_0: u32 = (*(*xd).mode_info_context).mbmi.ref_frame as u32;
                     (*xd).pre.y_buffer = ref_buffer[ref_0 as usize][0 as usize]
                         .offset(recon_yoffset as isize)
                         as *mut u8;

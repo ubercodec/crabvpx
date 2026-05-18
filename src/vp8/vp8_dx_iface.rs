@@ -1,3 +1,4 @@
+use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
 use std::ffi::c_void;
 unsafe extern "Rust" {
     fn vp8_rtcd();
@@ -194,40 +195,7 @@ pub struct MbModeInfo {
     pub need_to_clamp_mvs: u8,
     pub segment_id: u8,
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Yv12BufferConfig {
-    pub y_width: i32,
-    pub y_height: i32,
-    pub y_crop_width: i32,
-    pub y_crop_height: i32,
-    pub y_stride: i32,
-    pub uv_width: i32,
-    pub uv_height: i32,
-    pub uv_crop_width: i32,
-    pub uv_crop_height: i32,
-    pub uv_stride: i32,
-    pub alpha_width: i32,
-    pub alpha_height: i32,
-    pub alpha_stride: i32,
-    pub y_buffer: *mut u8,
-    pub u_buffer: *mut u8,
-    pub v_buffer: *mut u8,
-    pub alpha_buffer: *mut u8,
-    pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: usize,
-    pub border: i32,
-    pub frame_size: usize,
-    pub subsampling_x: i32,
-    pub subsampling_y: i32,
-    pub bit_depth: u32,
-    pub color_space: u32,
-    pub color_range: u32,
-    pub render_width: i32,
-    pub render_height: i32,
-    pub corrupted: i32,
-    pub flags: i32,
-}
+
 pub const VPX_CR_FULL_RANGE: u32 = 1;
 pub const VPX_CR_STUDIO_RANGE: u32 = 0;
 pub const VPX_CS_SRGB: u32 = 7;
@@ -738,16 +706,8 @@ pub type VpxCodecEncConfigSetFnT =
 pub type VpxCodecGetCxDataFnT =
     Option<unsafe fn(*mut VpxCodecAlgPrivT, *mut VpxCodecIterT) -> *const VpxCodecCxPktT>;
 pub type VpxCodecIterT = *const c_void;
-pub type VpxCodecEncodeFnT = Option<
-    unsafe fn(
-        *mut VpxCodecAlgPrivT,
-        *const VpxImageT,
-        i64,
-        u64,
-        i64,
-        u64,
-    ) -> u32,
->;
+pub type VpxCodecEncodeFnT =
+    Option<unsafe fn(*mut VpxCodecAlgPrivT, *const VpxImageT, i64, u64, i64, u64) -> u32>;
 pub type VpxCodecEncCfgMapT = VpxCodecEncCfgMap;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -790,8 +750,7 @@ pub type VpxCodecDecodeFnT =
     Option<unsafe fn(*mut VpxCodecAlgPrivT, *const u8, u32, *mut c_void) -> u32>;
 pub type VpxCodecGetSiFnT =
     Option<unsafe fn(*mut VpxCodecAlgPrivT, *mut VpxCodecStreamInfoT) -> u32>;
-pub type VpxCodecPeekSiFnT =
-    Option<unsafe fn(*const u8, u32, *mut VpxCodecStreamInfoT) -> u32>;
+pub type VpxCodecPeekSiFnT = Option<unsafe fn(*const u8, u32, *mut VpxCodecStreamInfoT) -> u32>;
 pub type VpxCodecCtrlFnMapT = VpxCodecCtrlFnMap;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -802,8 +761,7 @@ pub struct VpxCodecCtrlFnMap {
 pub type VpxCodecControlFnT = Option<unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32>;
 pub type VaList = BuiltinVaList;
 pub type VpxCodecDestroyFnT = Option<unsafe fn(*mut VpxCodecAlgPrivT) -> u32>;
-pub type VpxCodecInitFnT =
-    Option<unsafe fn(*mut VpxCodecCtxT, *mut VpxCodecPrivEncMrCfgT) -> u32>;
+pub type VpxCodecInitFnT = Option<unsafe fn(*mut VpxCodecCtxT, *mut VpxCodecPrivEncMrCfgT) -> u32>;
 pub type VpxCodecPrivEncMrCfgT = VpxCodecPrivEncMrCfg;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -1031,10 +989,7 @@ unsafe fn vp8_peek_si(
 ) -> u32 {
     unsafe { vp8_peek_si_internal(data, data_sz, si, None, NULL) }
 }
-unsafe fn vp8_get_si(
-    mut ctx: *mut VpxCodecAlgPrivT,
-    mut si: *mut VpxCodecStreamInfoT,
-) -> u32 {
+unsafe fn vp8_get_si(mut ctx: *mut VpxCodecAlgPrivT, mut si: *mut VpxCodecStreamInfoT) -> u32 {
     unsafe {
         let mut sz: u32 = 0;
         if (*si).sz as usize >= ::core::mem::size_of::<Vp8StreamInfoT>() as usize {
@@ -1423,10 +1378,7 @@ unsafe fn vp8_get_frame(
         img
     }
 }
-unsafe fn image2yuvconfig(
-    mut img: *const VpxImageT,
-    mut yv12: *mut Yv12BufferConfig,
-) -> u32 {
+unsafe fn image2yuvconfig(mut img: *const VpxImageT, mut yv12: *mut Yv12BufferConfig) -> u32 {
     unsafe {
         let y_w: i32 = (*img).d_w as i32;
         let y_h: i32 = (*img).d_h as i32;
@@ -1571,10 +1523,7 @@ unsafe fn vp8_get_quantizer(mut ctx: *mut VpxCodecAlgPrivT, mut data: *mut c_voi
 fn vp8_set_postproc(_ctx: *mut VpxCodecAlgPrivT, _args: *mut c_void) -> u32 {
     VPX_CODEC_INCAPABLE
 }
-unsafe fn vp8_get_last_ref_updates(
-    mut ctx: *mut VpxCodecAlgPrivT,
-    mut data: *mut c_void,
-) -> u32 {
+unsafe fn vp8_get_last_ref_updates(mut ctx: *mut VpxCodecAlgPrivT, mut data: *mut c_void) -> u32 {
     unsafe {
         let mut update_info: *mut i32 = data as *mut i32;
         if !update_info.is_null() {
@@ -1591,10 +1540,7 @@ unsafe fn vp8_get_last_ref_updates(
         }
     }
 }
-unsafe fn vp8_get_last_ref_frame(
-    mut ctx: *mut VpxCodecAlgPrivT,
-    mut data: *mut c_void,
-) -> u32 {
+unsafe fn vp8_get_last_ref_frame(mut ctx: *mut VpxCodecAlgPrivT, mut data: *mut c_void) -> u32 {
     unsafe {
         let mut ref_info: *mut i32 = data as *mut i32;
         if !ref_info.is_null() {
@@ -1627,10 +1573,7 @@ unsafe fn vp8_get_last_ref_frame(
         }
     }
 }
-unsafe fn vp8_get_frame_corrupted(
-    mut ctx: *mut VpxCodecAlgPrivT,
-    mut data: *mut c_void,
-) -> u32 {
+unsafe fn vp8_get_frame_corrupted(mut ctx: *mut VpxCodecAlgPrivT, mut data: *mut c_void) -> u32 {
     unsafe {
         let mut corrupted: *mut i32 = data as *mut i32;
         let mut pbi: *mut Vp8dComp = (*ctx).yv12_frame_buffers.pbi[0 as usize] as *mut Vp8dComp;
@@ -1663,54 +1606,41 @@ static mut vp8_ctf_maps: [VpxCodecCtrlFnMapT; 9] = {
     [
         VpxCodecCtrlFnMap {
             ctrl_id: VP8_SET_REFERENCE as i32,
-            fn_0: Some(
-                vp8_set_reference as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
-            ),
+            fn_0: Some(vp8_set_reference as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32),
         },
         VpxCodecCtrlFnMap {
             ctrl_id: VP8_COPY_REFERENCE as i32,
-            fn_0: Some(
-                vp8_get_reference as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
-            ),
+            fn_0: Some(vp8_get_reference as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32),
         },
         VpxCodecCtrlFnMap {
             ctrl_id: VP8_SET_POSTPROC as i32,
-            fn_0: Some(
-                vp8_set_postproc as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
-            ),
+            fn_0: Some(vp8_set_postproc as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32),
         },
         VpxCodecCtrlFnMap {
             ctrl_id: VP8D_GET_LAST_REF_UPDATES as i32,
             fn_0: Some(
-                vp8_get_last_ref_updates
-                    as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
+                vp8_get_last_ref_updates as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
             ),
         },
         VpxCodecCtrlFnMap {
             ctrl_id: VP8D_GET_FRAME_CORRUPTED as i32,
             fn_0: Some(
-                vp8_get_frame_corrupted
-                    as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
+                vp8_get_frame_corrupted as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
             ),
         },
         VpxCodecCtrlFnMap {
             ctrl_id: VP8D_GET_LAST_REF_USED as i32,
             fn_0: Some(
-                vp8_get_last_ref_frame
-                    as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
+                vp8_get_last_ref_frame as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
             ),
         },
         VpxCodecCtrlFnMap {
             ctrl_id: VPXD_GET_LAST_QUANTIZER as i32,
-            fn_0: Some(
-                vp8_get_quantizer as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
-            ),
+            fn_0: Some(vp8_get_quantizer as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32),
         },
         VpxCodecCtrlFnMap {
             ctrl_id: VPXD_SET_DECRYPTOR as i32,
-            fn_0: Some(
-                vp8_set_decryptor as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32,
-            ),
+            fn_0: Some(vp8_set_decryptor as unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32),
         },
         VpxCodecCtrlFnMap {
             ctrl_id: -(1 as i32),
@@ -1768,32 +1698,19 @@ unsafe fn run_static_initializers() {
                     0 as i32
                 })
                 | VPX_CODEC_CAP_INPUT_FRAGMENTS) as i64,
-            init: Some(
-                vp8_init
-                    as unsafe fn(*mut VpxCodecCtxT, *mut VpxCodecPrivEncMrCfgT) -> u32,
-            ),
+            init: Some(vp8_init as unsafe fn(*mut VpxCodecCtxT, *mut VpxCodecPrivEncMrCfgT) -> u32),
             destroy: Some(vp8_destroy as unsafe fn(*mut VpxCodecAlgPrivT) -> u32),
             ctrl_maps: &raw const vp8_ctf_maps as *const VpxCodecCtrlFnMapT,
             dec: VpxCodecDecIface {
                 peek_si: Some(
-                    vp8_peek_si
-                        as unsafe fn(*const u8, u32, *mut VpxCodecStreamInfoT) -> u32,
+                    vp8_peek_si as unsafe fn(*const u8, u32, *mut VpxCodecStreamInfoT) -> u32,
                 ),
                 get_si: Some(
-                    vp8_get_si
-                        as unsafe fn(
-                            *mut VpxCodecAlgPrivT,
-                            *mut VpxCodecStreamInfoT,
-                        ) -> u32,
+                    vp8_get_si as unsafe fn(*mut VpxCodecAlgPrivT, *mut VpxCodecStreamInfoT) -> u32,
                 ),
                 decode: Some(
                     vp8_decode
-                        as unsafe fn(
-                            *mut VpxCodecAlgPrivT,
-                            *const u8,
-                            u32,
-                            *mut c_void,
-                        ) -> u32,
+                        as unsafe fn(*mut VpxCodecAlgPrivT, *const u8, u32, *mut c_void) -> u32,
                 ),
                 get_frame: Some(
                     vp8_get_frame

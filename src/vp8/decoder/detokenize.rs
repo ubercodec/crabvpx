@@ -1,3 +1,4 @@
+use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
 use std::ffi::c_void;
 unsafe extern "Rust" {
     static vp8_norm: [u8; 256];
@@ -48,40 +49,7 @@ pub struct VpxInternalErrorInfo {
     pub setjmp: bool,
     pub jmp: JmpBuf,
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Yv12BufferConfig {
-    pub y_width: i32,
-    pub y_height: i32,
-    pub y_crop_width: i32,
-    pub y_crop_height: i32,
-    pub y_stride: i32,
-    pub uv_width: i32,
-    pub uv_height: i32,
-    pub uv_crop_width: i32,
-    pub uv_crop_height: i32,
-    pub uv_stride: i32,
-    pub alpha_width: i32,
-    pub alpha_height: i32,
-    pub alpha_stride: i32,
-    pub y_buffer: *mut u8,
-    pub u_buffer: *mut u8,
-    pub v_buffer: *mut u8,
-    pub alpha_buffer: *mut u8,
-    pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: usize,
-    pub border: i32,
-    pub frame_size: usize,
-    pub subsampling_x: i32,
-    pub subsampling_y: i32,
-    pub bit_depth: u32,
-    pub color_space: u32,
-    pub color_range: u32,
-    pub render_width: i32,
-    pub render_height: i32,
-    pub corrupted: i32,
-    pub flags: i32,
-}
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MV {
@@ -603,8 +571,7 @@ pub unsafe fn vp8_decode_mb_tokens(mut dx: *mut Vp8dComp, mut x: *mut MACROBLOCK
             a = a_ctx.offset(8 as isize);
             l = l_ctx.offset(8 as isize);
             coef_probs = &raw const *(&raw const (*fc).coef_probs as *const [[[u8; 11]; 3]; 8])
-                .offset(1 as isize) as *const [[u8; 11]; 3]
-                as ProbaArray;
+                .offset(1 as isize) as *const [[u8; 11]; 3] as ProbaArray;
             nonzeros = get_coeffs(
                 bc,
                 coef_probs,
@@ -617,13 +584,11 @@ pub unsafe fn vp8_decode_mb_tokens(mut dx: *mut Vp8dComp, mut x: *mut MACROBLOCK
             *eobs.offset(24 as isize) = nonzeros as i8;
             eobtotal += nonzeros - 16 as i32;
             coef_probs = &raw const *(&raw const (*fc).coef_probs as *const [[[u8; 11]; 3]; 8])
-                .offset(0 as isize) as *const [[u8; 11]; 3]
-                as ProbaArray;
+                .offset(0 as isize) as *const [[u8; 11]; 3] as ProbaArray;
             skip_dc = 1 as i32;
         } else {
             coef_probs = &raw const *(&raw const (*fc).coef_probs as *const [[[u8; 11]; 3]; 8])
-                .offset(3 as isize) as *const [[u8; 11]; 3]
-                as ProbaArray;
+                .offset(3 as isize) as *const [[u8; 11]; 3] as ProbaArray;
             skip_dc = 0 as i32;
         }
         i = 0 as i32;

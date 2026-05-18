@@ -1,43 +1,19 @@
+use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
 use std::ffi::c_void;
 unsafe extern "Rust" {
-    fn vpx_dc_128_predictor_16x16_c(
-        dst: *mut u8,
-        stride: isize,
-        above: *const u8,
-        left: *const u8,
-    );
-    fn vpx_dc_128_predictor_8x8_c(
-        dst: *mut u8,
-        stride: isize,
-        above: *const u8,
-        left: *const u8,
-    );
+    fn vpx_dc_128_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
+    fn vpx_dc_128_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
     fn vpx_dc_left_predictor_16x16_c(
         dst: *mut u8,
         stride: isize,
         above: *const u8,
         left: *const u8,
     );
-    fn vpx_dc_left_predictor_8x8_c(
-        dst: *mut u8,
-        stride: isize,
-        above: *const u8,
-        left: *const u8,
-    );
+    fn vpx_dc_left_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
     fn vpx_dc_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
     fn vpx_dc_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_dc_top_predictor_16x16_c(
-        dst: *mut u8,
-        stride: isize,
-        above: *const u8,
-        left: *const u8,
-    );
-    fn vpx_dc_top_predictor_8x8_c(
-        dst: *mut u8,
-        stride: isize,
-        above: *const u8,
-        left: *const u8,
-    );
+    fn vpx_dc_top_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
+    fn vpx_dc_top_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
     fn vpx_h_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
     fn vpx_h_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
     fn vpx_tm_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
@@ -198,40 +174,7 @@ pub struct MbModeInfo {
     pub need_to_clamp_mvs: u8,
     pub segment_id: u8,
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Yv12BufferConfig {
-    pub y_width: i32,
-    pub y_height: i32,
-    pub y_crop_width: i32,
-    pub y_crop_height: i32,
-    pub y_stride: i32,
-    pub uv_width: i32,
-    pub uv_height: i32,
-    pub uv_crop_width: i32,
-    pub uv_crop_height: i32,
-    pub uv_stride: i32,
-    pub alpha_width: i32,
-    pub alpha_height: i32,
-    pub alpha_stride: i32,
-    pub y_buffer: *mut u8,
-    pub u_buffer: *mut u8,
-    pub v_buffer: *mut u8,
-    pub alpha_buffer: *mut u8,
-    pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: usize,
-    pub border: i32,
-    pub frame_size: usize,
-    pub subsampling_x: i32,
-    pub subsampling_y: i32,
-    pub bit_depth: u32,
-    pub color_space: u32,
-    pub color_range: u32,
-    pub render_width: i32,
-    pub render_height: i32,
-    pub corrupted: i32,
-    pub flags: i32,
-}
+
 pub const VPX_CR_FULL_RANGE: u32 = 1;
 pub const VPX_CR_STUDIO_RANGE: u32 = 0;
 pub const VPX_CS_SRGB: u32 = 7;
@@ -275,39 +218,36 @@ static mut pred: [[IntraPredFn; 2]; 4] = [[None; 2]; 4];
 static mut dc_pred: [[[IntraPredFn; 2]; 2]; 2] = [[[None; 2]; 2]; 2];
 unsafe fn vp8_init_intra_predictors_internal() {
     unsafe {
-        pred[V_PRED as usize][SIZE_16 as usize] = Some(
-            vpx_v_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
-        ) as IntraPredFn;
-        pred[H_PRED as usize][SIZE_16 as usize] = Some(
-            vpx_h_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
-        ) as IntraPredFn;
-        pred[TM_PRED as usize][SIZE_16 as usize] = Some(
-            vpx_tm_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
-        ) as IntraPredFn;
+        pred[V_PRED as usize][SIZE_16 as usize] =
+            Some(vpx_v_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> ())
+                as IntraPredFn;
+        pred[H_PRED as usize][SIZE_16 as usize] =
+            Some(vpx_h_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> ())
+                as IntraPredFn;
+        pred[TM_PRED as usize][SIZE_16 as usize] =
+            Some(vpx_tm_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> ())
+                as IntraPredFn;
         dc_pred[0 as usize][0 as usize][SIZE_16 as usize] = Some(
-            vpx_dc_128_predictor_16x16_c
-                as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
+            vpx_dc_128_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
         ) as IntraPredFn;
         dc_pred[0 as usize][1 as usize][SIZE_16 as usize] = Some(
-            vpx_dc_top_predictor_16x16_c
-                as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
+            vpx_dc_top_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
         ) as IntraPredFn;
         dc_pred[1 as usize][0 as usize][SIZE_16 as usize] = Some(
-            vpx_dc_left_predictor_16x16_c
-                as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
+            vpx_dc_left_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
         ) as IntraPredFn;
-        dc_pred[1 as usize][1 as usize][SIZE_16 as usize] = Some(
-            vpx_dc_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
-        ) as IntraPredFn;
+        dc_pred[1 as usize][1 as usize][SIZE_16 as usize] =
+            Some(vpx_dc_predictor_16x16_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> ())
+                as IntraPredFn;
         pred[V_PRED as usize][SIZE_8 as usize] =
             Some(vpx_v_predictor_8x8_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> ())
                 as IntraPredFn;
         pred[H_PRED as usize][SIZE_8 as usize] =
             Some(vpx_h_predictor_8x8_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> ())
                 as IntraPredFn;
-        pred[TM_PRED as usize][SIZE_8 as usize] = Some(
-            vpx_tm_predictor_8x8_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
-        ) as IntraPredFn;
+        pred[TM_PRED as usize][SIZE_8 as usize] =
+            Some(vpx_tm_predictor_8x8_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> ())
+                as IntraPredFn;
         dc_pred[0 as usize][0 as usize][SIZE_8 as usize] = Some(
             vpx_dc_128_predictor_8x8_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
         ) as IntraPredFn;
@@ -317,9 +257,9 @@ unsafe fn vp8_init_intra_predictors_internal() {
         dc_pred[1 as usize][0 as usize][SIZE_8 as usize] = Some(
             vpx_dc_left_predictor_8x8_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
         ) as IntraPredFn;
-        dc_pred[1 as usize][1 as usize][SIZE_8 as usize] = Some(
-            vpx_dc_predictor_8x8_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> (),
-        ) as IntraPredFn;
+        dc_pred[1 as usize][1 as usize][SIZE_8 as usize] =
+            Some(vpx_dc_predictor_8x8_c as unsafe fn(*mut u8, isize, *const u8, *const u8) -> ())
+                as IntraPredFn;
         vp8_init_intra4x4_predictors_internal();
     }
 }
@@ -369,8 +309,7 @@ pub unsafe fn vp8_build_intra_predictors_mbuv_s(
     mut pred_stride: i32,
 ) {
     unsafe {
-        let mut uvmode: u32 =
-            (*(*x).mode_info_context).mbmi.uv_mode as u32;
+        let mut uvmode: u32 = (*(*x).mode_info_context).mbmi.uv_mode as u32;
         let mut uleft_col: [u8; 8] = [0; 8];
         let mut vleft_col: [u8; 8] = [0; 8];
         let mut i: i32 = 0;

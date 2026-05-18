@@ -1,3 +1,4 @@
+use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
 use std::ffi::c_void;
 unsafe extern "Rust" {
     static vp8_norm: [u8; 256];
@@ -50,40 +51,7 @@ pub const VPX_CODEC_ABI_MISMATCH: u32 = 3;
 pub const VPX_CODEC_MEM_ERROR: u32 = 2;
 pub const VPX_CODEC_ERROR: u32 = 1;
 pub const VPX_CODEC_OK: u32 = 0;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Yv12BufferConfig {
-    pub y_width: i32,
-    pub y_height: i32,
-    pub y_crop_width: i32,
-    pub y_crop_height: i32,
-    pub y_stride: i32,
-    pub uv_width: i32,
-    pub uv_height: i32,
-    pub uv_crop_width: i32,
-    pub uv_crop_height: i32,
-    pub uv_stride: i32,
-    pub alpha_width: i32,
-    pub alpha_height: i32,
-    pub alpha_stride: i32,
-    pub y_buffer: *mut u8,
-    pub u_buffer: *mut u8,
-    pub v_buffer: *mut u8,
-    pub alpha_buffer: *mut u8,
-    pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: usize,
-    pub border: i32,
-    pub frame_size: usize,
-    pub subsampling_x: i32,
-    pub subsampling_y: i32,
-    pub bit_depth: u32,
-    pub color_space: u32,
-    pub color_range: u32,
-    pub render_width: i32,
-    pub render_height: i32,
-    pub corrupted: i32,
-    pub flags: i32,
-}
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct Vp8dComp {
@@ -590,11 +558,7 @@ unsafe fn left_block_mode(mut cur_mb: *const ModeInfo, mut b: i32) -> u32 {
     }
 }
 #[inline]
-unsafe fn above_block_mode(
-    mut cur_mb: *const ModeInfo,
-    mut b: i32,
-    mut mi_stride: i32,
-) -> u32 {
+unsafe fn above_block_mode(mut cur_mb: *const ModeInfo, mut b: i32, mut mi_stride: i32) -> u32 {
     unsafe {
         if b >> 2 as i32 == 0 {
             cur_mb = cur_mb.offset(-(mi_stride as isize));
@@ -632,15 +596,13 @@ unsafe fn read_ymode(mut bc: *mut Vp8Reader, mut p: *const u8) -> u32 {
 }
 unsafe fn read_kf_ymode(mut bc: *mut Vp8Reader, mut p: *const u8) -> u32 {
     unsafe {
-        let i: i32 =
-            vp8_treed_read(bc, &raw const vp8_kf_ymode_tree as *const i8, p) as i32;
+        let i: i32 = vp8_treed_read(bc, &raw const vp8_kf_ymode_tree as *const i8, p) as i32;
         i as u32
     }
 }
 unsafe fn read_uv_mode(mut bc: *mut Vp8Reader, mut p: *const u8) -> u32 {
     unsafe {
-        let i: i32 =
-            vp8_treed_read(bc, &raw const vp8_uv_mode_tree as *const i8, p) as i32;
+        let i: i32 = vp8_treed_read(bc, &raw const vp8_uv_mode_tree as *const i8, p) as i32;
         i as u32
     }
 }
@@ -659,8 +621,7 @@ unsafe fn read_kf_modes(mut pbi: *mut Vp8dComp, mut mi: *mut ModeInfo) {
                 let L: u32 = left_block_mode(mi, i) as u32;
                 (*mi).bmi[i as usize].as_mode = read_bmode(
                     bc,
-                    &raw const *(&raw const *(&raw const vp8_kf_bmode_prob
-                        as *const [[u8; 9]; 10])
+                    &raw const *(&raw const *(&raw const vp8_kf_bmode_prob as *const [[u8; 9]; 10])
                         .offset(A as isize) as *const [u8; 9])
                         .offset(L as isize) as *const u8,
                 );
@@ -670,8 +631,7 @@ unsafe fn read_kf_modes(mut pbi: *mut Vp8dComp, mut mi: *mut ModeInfo) {
                 }
             }
         }
-        (*mi).mbmi.uv_mode =
-            read_uv_mode(bc, &raw const vp8_kf_uv_mode_prob as *const u8) as u8;
+        (*mi).mbmi.uv_mode = read_uv_mode(bc, &raw const vp8_kf_uv_mode_prob as *const u8) as u8;
     }
 }
 unsafe fn read_mvcomponent(mut r: *mut Vp8Reader, mut mvc: *const MvContext) -> i32 {
@@ -846,8 +806,7 @@ unsafe fn get_sub_mv_ref_prob(left: u32, above: u32) -> *const u8 {
         let mut lea: i32 = (left == above) as i32;
         let mut prob: *const u8 = ::core::ptr::null::<u8>();
         prob = &raw const *(&raw const vp8_sub_mv_ref_prob3 as *const [u8; 3])
-            .offset((aez << 2 as i32 | lez << 1 as i32 | lea) as isize)
-            as *const u8;
+            .offset((aez << 2 as i32 | lez << 1 as i32 | lea) as isize) as *const u8;
         prob
     }
 }
@@ -1175,8 +1134,7 @@ unsafe fn read_mb_modes_mv(
             }
         } else {
             (*mbmi).mv.as_int = 0 as u32;
-            (*mbmi).mode =
-                read_ymode(bc, &raw mut (*pbi).common.fc.ymode_prob as *mut u8) as u8;
+            (*mbmi).mode = read_ymode(bc, &raw mut (*pbi).common.fc.ymode_prob as *mut u8) as u8;
             if (*mbmi).mode as i32 == B_PRED as i32 {
                 let mut j: i32 = 0 as i32;
                 (*mbmi).is_4x4 = 1 as u8;

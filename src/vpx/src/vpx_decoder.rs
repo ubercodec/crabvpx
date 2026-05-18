@@ -242,16 +242,8 @@ pub const VPX_CODEC_PSNR_PKT: u32 = 3;
 pub const VPX_CODEC_FPMB_STATS_PKT: u32 = 2;
 pub const VPX_CODEC_STATS_PKT: u32 = 1;
 pub const VPX_CODEC_CX_FRAME_PKT: u32 = 0;
-pub type VpxCodecEncodeFnT = Option<
-    unsafe fn(
-        *mut VpxCodecAlgPrivT,
-        *const VpxImageT,
-        i64,
-        u64,
-        i64,
-        u64,
-    ) -> u32,
->;
+pub type VpxCodecEncodeFnT =
+    Option<unsafe fn(*mut VpxCodecAlgPrivT, *const VpxImageT, i64, u64, i64, u64) -> u32>;
 pub type VpxCodecEncCfgMapT = VpxCodecEncCfgMap;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -303,8 +295,7 @@ pub struct VpxCodecStreamInfo {
     pub h: u32,
     pub is_kf: u32,
 }
-pub type VpxCodecPeekSiFnT =
-    Option<unsafe fn(*const u8, u32, *mut VpxCodecStreamInfoT) -> u32>;
+pub type VpxCodecPeekSiFnT = Option<unsafe fn(*const u8, u32, *mut VpxCodecStreamInfoT) -> u32>;
 pub type VpxCodecCtrlFnMapT = VpxCodecCtrlFnMap;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -315,8 +306,7 @@ pub struct VpxCodecCtrlFnMap {
 pub type VpxCodecControlFnT = Option<unsafe fn(*mut VpxCodecAlgPrivT, *mut c_void) -> u32>;
 pub type VaList = BuiltinVaList;
 pub type VpxCodecDestroyFnT = Option<unsafe fn(*mut VpxCodecAlgPrivT) -> u32>;
-pub type VpxCodecInitFnT =
-    Option<unsafe fn(*mut VpxCodecCtxT, *mut VpxCodecPrivEncMrCfgT) -> u32>;
+pub type VpxCodecInitFnT = Option<unsafe fn(*mut VpxCodecCtxT, *mut VpxCodecPrivEncMrCfgT) -> u32>;
 pub type VpxCodecPrivEncMrCfgT = VpxCodecPrivEncMrCfg;
 #[derive(Copy, Clone)]
 #[repr(C)]

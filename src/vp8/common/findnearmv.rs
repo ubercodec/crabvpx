@@ -1,3 +1,4 @@
+use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
 use std::ffi::c_void;
 unsafe extern "Rust" {
     static vp8_mode_contexts: [[i32; 4]; 6];
@@ -44,40 +45,7 @@ pub struct VpxInternalErrorInfo {
     pub setjmp: bool,
     pub jmp: JmpBuf,
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Yv12BufferConfig {
-    pub y_width: i32,
-    pub y_height: i32,
-    pub y_crop_width: i32,
-    pub y_crop_height: i32,
-    pub y_stride: i32,
-    pub uv_width: i32,
-    pub uv_height: i32,
-    pub uv_crop_width: i32,
-    pub uv_crop_height: i32,
-    pub uv_stride: i32,
-    pub alpha_width: i32,
-    pub alpha_height: i32,
-    pub alpha_stride: i32,
-    pub y_buffer: *mut u8,
-    pub u_buffer: *mut u8,
-    pub v_buffer: *mut u8,
-    pub alpha_buffer: *mut u8,
-    pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: usize,
-    pub border: i32,
-    pub frame_size: usize,
-    pub subsampling_x: i32,
-    pub subsampling_y: i32,
-    pub bit_depth: u32,
-    pub color_space: u32,
-    pub color_range: u32,
-    pub render_width: i32,
-    pub render_height: i32,
-    pub corrupted: i32,
-    pub flags: i32,
-}
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct EntropyContextPlanes {
@@ -439,10 +407,7 @@ pub unsafe fn vp8_find_near_mvs_bias(
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_mv_ref_probs(
-    mut p: *mut u8,
-    mut near_mv_ref_ct: *const i32,
-) -> *mut u8 {
+pub unsafe fn vp8_mv_ref_probs(mut p: *mut u8, mut near_mv_ref_ct: *const i32) -> *mut u8 {
     unsafe {
         *p.offset(0 as isize) =
             vp8_mode_contexts[*near_mv_ref_ct.offset(0 as isize) as usize][0 as usize] as u8;

@@ -6,13 +6,7 @@ pub struct Vp8TokenStruct {
 }
 pub type Vp8Token = Vp8TokenStruct;
 pub const vp8_prob_half: u8 = 128 as u8;
-unsafe fn tree2tok(
-    p: *mut Vp8TokenStruct,
-    mut t: *const i8,
-    mut i: i32,
-    mut v: i32,
-    mut L: i32,
-) {
+unsafe fn tree2tok(p: *mut Vp8TokenStruct, mut t: *const i8, mut i: i32, mut v: i32, mut L: i32) {
     unsafe {
         v += v;
         L += 1;

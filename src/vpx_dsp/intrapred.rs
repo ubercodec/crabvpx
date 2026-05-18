@@ -57,9 +57,8 @@ unsafe fn d207_predictor(
         while r >= 0 as i32 {
             c = 0 as i32;
             while c < bs - 2 as i32 {
-                *dst.offset((r as isize * stride + c as isize) as isize) = *dst.offset(
-                    ((r + 1 as i32) as isize * stride + c as isize - 2 as isize) as isize,
-                );
+                *dst.offset((r as isize * stride + c as isize) as isize) = *dst
+                    .offset(((r + 1 as i32) as isize * stride + c as isize - 2 as isize) as isize);
                 c += 1;
             }
             r -= 1;
@@ -96,8 +95,7 @@ unsafe fn d63_predictor(
         while r < bs {
             core::ptr::copy_nonoverlapping(
                 (dst.offset((r >> 1 as i32) as isize) as *const c_void) as *const u8,
-                (dst.offset(((r + 0 as i32) as isize * stride) as isize) as *mut c_void)
-                    as *mut u8,
+                (dst.offset(((r + 0 as i32) as isize * stride) as isize) as *mut c_void) as *mut u8,
                 (size as usize) as usize,
             );
             core::ptr::write_bytes(
@@ -108,8 +106,7 @@ unsafe fn d63_predictor(
             );
             core::ptr::copy_nonoverlapping(
                 (dst.offset(stride).offset((r >> 1 as i32) as isize) as *const c_void) as *const u8,
-                (dst.offset(((r + 1 as i32) as isize * stride) as isize) as *mut c_void)
-                    as *mut u8,
+                (dst.offset(((r + 1 as i32) as isize * stride) as isize) as *mut c_void) as *mut u8,
                 (size as usize) as usize,
             );
             core::ptr::write_bytes(
@@ -220,9 +217,8 @@ unsafe fn d117_predictor(
         while r < bs {
             c = 1 as i32;
             while c < bs {
-                *dst.offset(c as isize) = *dst.offset(
-                    (-(2 as i32) as isize * stride + c as isize - 1 as isize) as isize,
-                );
+                *dst.offset(c as isize) =
+                    *dst.offset((-(2 as i32) as isize * stride + c as isize - 1 as isize) as isize);
                 c += 1;
             }
             dst = dst.offset(stride);
@@ -348,8 +344,7 @@ unsafe fn d153_predictor(
         while r < bs {
             c = 0 as i32;
             while c < bs - 2 as i32 {
-                *dst.offset(c as isize) =
-                    *dst.offset((-stride + c as isize - 2 as isize) as isize);
+                *dst.offset(c as isize) = *dst.offset((-stride + c as isize - 2 as isize) as isize);
                 c += 1;
             }
             dst = dst.offset(stride);
@@ -622,8 +617,7 @@ pub unsafe fn vpx_d207_predictor_4x4_c(
         let J: i32 = *left.offset(1 as isize) as i32;
         let K: i32 = *left.offset(2 as isize) as i32;
         let L: i32 = *left.offset(3 as isize) as i32;
-        *dst.offset(0 as isize + 0 as isize * stride) =
-            ((I + J + 1 as i32) >> 1 as i32) as u8;
+        *dst.offset(0 as isize + 0 as isize * stride) = ((I + J + 1 as i32) >> 1 as i32) as u8;
         let fresh21 = &mut *dst.offset(0 as isize + 1 as isize * stride);
         *fresh21 = ((J + K + 1 as i32) >> 1 as i32) as u8;
         *dst.offset(2 as isize + 0 as isize * stride) = *fresh21;
@@ -666,8 +660,7 @@ pub unsafe fn vpx_d63_predictor_4x4_c(
         let E: i32 = *above.offset(4 as isize) as i32;
         let F: i32 = *above.offset(5 as isize) as i32;
         let G: i32 = *above.offset(6 as isize) as i32;
-        *dst.offset(0 as isize + 0 as isize * stride) =
-            ((A + B + 1 as i32) >> 1 as i32) as u8;
+        *dst.offset(0 as isize + 0 as isize * stride) = ((A + B + 1 as i32) >> 1 as i32) as u8;
         let fresh48 = &mut *dst.offset(0 as isize + 2 as isize * stride);
         *fresh48 = ((B + C + 1 as i32) >> 1 as i32) as u8;
         *dst.offset(1 as isize + 0 as isize * stride) = *fresh48;
@@ -677,8 +670,7 @@ pub unsafe fn vpx_d63_predictor_4x4_c(
         let fresh50 = &mut *dst.offset(2 as isize + 2 as isize * stride);
         *fresh50 = ((D + E + 1 as i32) >> 1 as i32) as u8;
         *dst.offset(3 as isize + 0 as isize * stride) = *fresh50;
-        *dst.offset(3 as isize + 2 as isize * stride) =
-            ((E + F + 1 as i32) >> 1 as i32) as u8;
+        *dst.offset(3 as isize + 2 as isize * stride) = ((E + F + 1 as i32) >> 1 as i32) as u8;
         *dst.offset(0 as isize + 1 as isize * stride) =
             ((A + 2 as i32 * B + C + 2 as i32) >> 2 as i32) as u8;
         let fresh51 = &mut *dst.offset(0 as isize + 3 as isize * stride);
@@ -710,8 +702,7 @@ pub unsafe fn vpx_d63e_predictor_4x4_c(
         let F: i32 = *above.offset(5 as isize) as i32;
         let G: i32 = *above.offset(6 as isize) as i32;
         let H: i32 = *above.offset(7 as isize) as i32;
-        *dst.offset(0 as isize + 0 as isize * stride) =
-            ((A + B + 1 as i32) >> 1 as i32) as u8;
+        *dst.offset(0 as isize + 0 as isize * stride) = ((A + B + 1 as i32) >> 1 as i32) as u8;
         let fresh54 = &mut *dst.offset(0 as isize + 2 as isize * stride);
         *fresh54 = ((B + C + 1 as i32) >> 1 as i32) as u8;
         *dst.offset(1 as isize + 0 as isize * stride) = *fresh54;
@@ -852,8 +843,7 @@ pub unsafe fn vpx_d117_predictor_4x4_c(
         let fresh2 = &mut *dst.offset(3 as isize + 2 as isize * stride);
         *fresh2 = ((B + C + 1 as i32) >> 1 as i32) as u8;
         *dst.offset(2 as isize + 0 as isize * stride) = *fresh2;
-        *dst.offset(3 as isize + 0 as isize * stride) =
-            ((C + D + 1 as i32) >> 1 as i32) as u8;
+        *dst.offset(3 as isize + 0 as isize * stride) = ((C + D + 1 as i32) >> 1 as i32) as u8;
         *dst.offset(0 as isize + 3 as isize * stride) =
             ((K + 2 as i32 * J + I + 2 as i32) >> 2 as i32) as u8;
         *dst.offset(0 as isize + 2 as isize * stride) =
@@ -942,8 +932,7 @@ pub unsafe fn vpx_d153_predictor_4x4_c(
         let fresh17 = &mut *dst.offset(2 as isize + 3 as isize * stride);
         *fresh17 = ((K + J + 1 as i32) >> 1 as i32) as u8;
         *dst.offset(0 as isize + 2 as isize * stride) = *fresh17;
-        *dst.offset(0 as isize + 3 as isize * stride) =
-            ((L + K + 1 as i32) >> 1 as i32) as u8;
+        *dst.offset(0 as isize + 3 as isize * stride) = ((L + K + 1 as i32) >> 1 as i32) as u8;
         *dst.offset(3 as isize + 0 as isize * stride) =
             ((A + 2 as i32 * B + C + 2 as i32) >> 2 as i32) as u8;
         *dst.offset(2 as isize + 0 as isize * stride) =
