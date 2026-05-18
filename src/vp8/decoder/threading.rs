@@ -3,6 +3,7 @@ use crate::vp8::common::vp8_loopfilter::vp8_loop_filter_frame_init;
 use crate::vp8::decoder::decodeframe::vp8_mb_init_dequantizer;
 use crate::vp8::common::mbpitch::vp8_setup_block_dptrs;
 use crate::vp8::common::extend::vp8_extend_mb_row;
+use crate::vp8::common::reconintra::intra_prediction_down_copy;
 unsafe extern "C" {
     fn vp8_dc_only_idct_add_neon(
         input_dc: ::core::ffi::c_short,
@@ -234,31 +235,7 @@ unsafe extern "C" fn vp8_atomic_spin_wait(
 ) { unsafe {
     while mb_col > vpx_atomic_load_acquire(last_row_current_mb_col) - nsync {}
 }}
-#[inline]
-unsafe extern "C" fn intra_prediction_down_copy(
-    mut xd: *mut MACROBLOCKD,
-    mut above_right_src: *mut ::core::ffi::c_uchar,
-) { unsafe {
-    let mut dst_stride: ::core::ffi::c_int = (*xd).dst.y_stride;
-    let mut above_right_dst: *mut ::core::ffi::c_uchar = (*xd)
-        .dst
-        .y_buffer
-        .offset(-(dst_stride as isize))
-        .offset(16 as ::core::ffi::c_int as isize);
-    let mut src_ptr: *mut ::core::ffi::c_uint = above_right_src as *mut ::core::ffi::c_uint;
-    let mut dst_ptr0: *mut ::core::ffi::c_uint = above_right_dst
-        .offset((4 as ::core::ffi::c_int * dst_stride) as isize)
-        as *mut ::core::ffi::c_uint;
-    let mut dst_ptr1: *mut ::core::ffi::c_uint = above_right_dst
-        .offset((8 as ::core::ffi::c_int * dst_stride) as isize)
-        as *mut ::core::ffi::c_uint;
-    let mut dst_ptr2: *mut ::core::ffi::c_uint = above_right_dst
-        .offset((12 as ::core::ffi::c_int * dst_stride) as isize)
-        as *mut ::core::ffi::c_uint;
-    *dst_ptr0 = *src_ptr;
-    *dst_ptr1 = *src_ptr;
-    *dst_ptr2 = *src_ptr;
-}}
+
 #[inline]
 unsafe extern "C" fn setup_intra_recon_left(
     mut y_buffer: *mut ::core::ffi::c_uchar,
@@ -394,7 +371,7 @@ fn mt_decode_macroblock(
                 );
             }
             intra_prediction_down_copy(
-                xd as *mut _,
+                xd,
                 xd.recon_above[0 as ::core::ffi::c_int as usize]
                     .offset(16 as ::core::ffi::c_int as isize),
             );

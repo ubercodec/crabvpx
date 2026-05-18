@@ -5,6 +5,7 @@ use crate::vp8::common::vp8_loopfilter::vp8_loop_filter_frame_init;
 use crate::vp8::common::quant_common::{vp8_ac_yquant, vp8_dc_quant, vp8_dc2quant, vp8_ac2quant, vp8_dc_uv_quant, vp8_ac_uv_quant};
 use crate::vpx_scale::generic::yv12extend::vp8_yv12_extend_frame_borders_c;
 use crate::vp8::common::extend::vp8_extend_mb_row;
+use crate::vp8::common::reconintra::intra_prediction_down_copy;
 
 unsafe extern "C" {
     fn vp8dx_decode_bool(br: *mut BOOL_DECODER, probability: ::core::ffi::c_int) -> ::core::ffi::c_int;
@@ -254,31 +255,7 @@ unsafe extern "C" fn vpx_atomic_load_acquire(
 ) -> ::core::ffi::c_int { unsafe {
     return (*(&raw const (*atomic).value as *const core::sync::atomic::AtomicI32)).load(core::sync::atomic::Ordering::Acquire);
 }}
-#[inline]
-unsafe extern "C" fn intra_prediction_down_copy(
-    mut xd: *mut MACROBLOCKD,
-    mut above_right_src: *mut ::core::ffi::c_uchar,
-) { unsafe {
-    let mut dst_stride: ::core::ffi::c_int = (*xd).dst.y_stride;
-    let mut above_right_dst: *mut ::core::ffi::c_uchar = (*xd)
-        .dst
-        .y_buffer
-        .offset(-(dst_stride as isize))
-        .offset(16 as ::core::ffi::c_int as isize);
-    let mut src_ptr: *mut ::core::ffi::c_uint = above_right_src as *mut ::core::ffi::c_uint;
-    let mut dst_ptr0: *mut ::core::ffi::c_uint = above_right_dst
-        .offset((4 as ::core::ffi::c_int * dst_stride) as isize)
-        as *mut ::core::ffi::c_uint;
-    let mut dst_ptr1: *mut ::core::ffi::c_uint = above_right_dst
-        .offset((8 as ::core::ffi::c_int * dst_stride) as isize)
-        as *mut ::core::ffi::c_uint;
-    let mut dst_ptr2: *mut ::core::ffi::c_uint = above_right_dst
-        .offset((12 as ::core::ffi::c_int * dst_stride) as isize)
-        as *mut ::core::ffi::c_uint;
-    *dst_ptr0 = *src_ptr;
-    *dst_ptr1 = *src_ptr;
-    *dst_ptr2 = *src_ptr;
-}}
+
 #[inline]
 unsafe extern "C" fn setup_intra_recon_left(
     mut y_buffer: *mut ::core::ffi::c_uchar,
@@ -439,7 +416,7 @@ fn decode_macroblock(
                 );
             }
             intra_prediction_down_copy(
-                xd as *mut _,
+                xd,
                 xd.recon_above[0 as ::core::ffi::c_int as usize]
                     .offset(16 as ::core::ffi::c_int as isize),
             );

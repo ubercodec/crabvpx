@@ -225,3 +225,31 @@ pub fn vp8_build_intra_predictors_mbuv_s(
 }
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_init_intra_predictors() {}
+
+pub fn intra_prediction_down_copy(
+    xd: &mut MACROBLOCKD,
+    above_right_src: *const u8,
+) {
+    let dst_stride = xd.dst.y_stride as usize;
+    let border = xd.dst.border as usize;
+
+    // Safety: we assume above_right_src points to at least 4 valid bytes.
+    // Use read_unaligned to avoid UB if the pointer is not aligned.
+    let src_val = unsafe { core::ptr::read_unaligned(above_right_src as *const u32) };
+
+    // Safety: xd.dst must be valid.
+    let y_slice = unsafe { xd.dst.y_slice_mut() };
+
+    let base_idx = (border - 1) * dst_stride + border + 16;
+
+    let src_bytes = src_val.to_ne_bytes();
+
+    let idx0 = base_idx + 4 * dst_stride;
+    let idx1 = base_idx + 8 * dst_stride;
+    let idx2 = base_idx + 12 * dst_stride;
+
+    y_slice[idx0..idx0 + 4].copy_from_slice(&src_bytes);
+    y_slice[idx1..idx1 + 4].copy_from_slice(&src_bytes);
+    y_slice[idx2..idx2 + 4].copy_from_slice(&src_bytes);
+}
+
