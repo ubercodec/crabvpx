@@ -1,15 +1,4 @@
-unsafe extern "C" {
-    fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
-        __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
-    fn memset(
-        __b: *mut ::core::ffi::c_void,
-        __c: ::core::ffi::c_int,
-        __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
-}
+
 pub use crate::vp8::common::types::*;
 pub type vpx_color_range_t = vpx_color_range;
 pub type vpx_color_range = ::core::ffi::c_uint;
@@ -160,65 +149,69 @@ pub fn vp8_yv12_extend_frame_borders_c(ybf: &YV12_BUFFER_CONFIG) {
 pub fn vp8_yv12_copy_frame_c(
     src_ybc: &YV12_BUFFER_CONFIG,
     dst_ybc: &mut YV12_BUFFER_CONFIG,
-) { unsafe {
-    let mut row: ::core::ffi::c_int = 0;
-    let mut src: *const uint8_t = src_ybc.y_buffer;
-    let mut dst: *mut uint8_t = dst_ybc.y_buffer;
-    row = 0 as ::core::ffi::c_int;
-    while row < src_ybc.y_height {
-        memcpy(
-            dst as *mut ::core::ffi::c_void,
-            src as *const ::core::ffi::c_void,
-            src_ybc.y_width as size_t,
-        );
-        src = src.offset(src_ybc.y_stride as isize);
-        dst = dst.offset(dst_ybc.y_stride as isize);
-        row += 1;
+) {
+    let src_border = src_ybc.border as usize;
+    let dst_border = dst_ybc.border as usize;
+    let src_y_stride = src_ybc.y_stride as usize;
+    let dst_y_stride = dst_ybc.y_stride as usize;
+    let y_height = src_ybc.y_height as usize;
+    let y_width = src_ybc.y_width as usize;
+
+    // Copy Y, U, and V planes
+    unsafe {
+        let src_y = src_ybc.y_slice();
+        let dst_y = dst_ybc.y_slice_mut();
+        for r in 0..y_height {
+            let src_start = (src_border + r) * src_y_stride + src_border;
+            let dst_start = (dst_border + r) * dst_y_stride + dst_border;
+            dst_y[dst_start..dst_start + y_width].copy_from_slice(&src_y[src_start..src_start + y_width]);
+        }
+
+        let src_uv_border = src_border / 2;
+        let dst_uv_border = dst_border / 2;
+        let src_uv_stride = src_ybc.uv_stride as usize;
+        let dst_uv_stride = dst_ybc.uv_stride as usize;
+        let uv_height = src_ybc.uv_height as usize;
+        let uv_width = src_ybc.uv_width as usize;
+
+        let src_u = src_ybc.u_slice();
+        let dst_u = dst_ybc.u_slice_mut();
+        for r in 0..uv_height {
+            let src_start = (src_uv_border + r) * src_uv_stride + src_uv_border;
+            let dst_start = (dst_uv_border + r) * dst_uv_stride + dst_uv_border;
+            dst_u[dst_start..dst_start + uv_width].copy_from_slice(&src_u[src_start..src_start + uv_width]);
+        }
+
+        let src_v = src_ybc.v_slice();
+        let dst_v = dst_ybc.v_slice_mut();
+        for r in 0..uv_height {
+            let src_start = (src_uv_border + r) * src_uv_stride + src_uv_border;
+            let dst_start = (dst_uv_border + r) * dst_uv_stride + dst_uv_border;
+            dst_v[dst_start..dst_start + uv_width].copy_from_slice(&src_v[src_start..src_start + uv_width]);
+        }
     }
-    src = src_ybc.u_buffer;
-    dst = dst_ybc.u_buffer;
-    row = 0 as ::core::ffi::c_int;
-    while row < src_ybc.uv_height {
-        memcpy(
-            dst as *mut ::core::ffi::c_void,
-            src as *const ::core::ffi::c_void,
-            src_ybc.uv_width as size_t,
-        );
-        src = src.offset(src_ybc.uv_stride as isize);
-        dst = dst.offset(dst_ybc.uv_stride as isize);
-        row += 1;
-    }
-    src = src_ybc.v_buffer;
-    dst = dst_ybc.v_buffer;
-    row = 0 as ::core::ffi::c_int;
-    while row < src_ybc.uv_height {
-        memcpy(
-            dst as *mut ::core::ffi::c_void,
-            src as *const ::core::ffi::c_void,
-            src_ybc.uv_width as size_t,
-        );
-        src = src.offset(src_ybc.uv_stride as isize);
-        dst = dst.offset(dst_ybc.uv_stride as isize);
-        row += 1;
-    }
+
     vp8_yv12_extend_frame_borders_c(dst_ybc);
-}}
+}
 pub fn vpx_yv12_copy_y_c(
     src_ybc: &YV12_BUFFER_CONFIG,
     dst_ybc: &mut YV12_BUFFER_CONFIG,
-) { unsafe {
-    let mut row: ::core::ffi::c_int = 0;
-    let mut src: *const uint8_t = src_ybc.y_buffer;
-    let mut dst: *mut uint8_t = dst_ybc.y_buffer;
-    row = 0 as ::core::ffi::c_int;
-    while row < src_ybc.y_height {
-        memcpy(
-            dst as *mut ::core::ffi::c_void,
-            src as *const ::core::ffi::c_void,
-            src_ybc.y_width as size_t,
-        );
-        src = src.offset(src_ybc.y_stride as isize);
-        dst = dst.offset(dst_ybc.y_stride as isize);
-        row += 1;
+) {
+    let src_border = src_ybc.border as usize;
+    let dst_border = dst_ybc.border as usize;
+    let src_y_stride = src_ybc.y_stride as usize;
+    let dst_y_stride = dst_ybc.y_stride as usize;
+    let y_height = src_ybc.y_height as usize;
+    let y_width = src_ybc.y_width as usize;
+
+    // Copy Y plane row by row
+    unsafe {
+        let src_y = src_ybc.y_slice();
+        let dst_y = dst_ybc.y_slice_mut();
+        for r in 0..y_height {
+            let src_start = (src_border + r) * src_y_stride + src_border;
+            let dst_start = (dst_border + r) * dst_y_stride + dst_border;
+            dst_y[dst_start..dst_start + y_width].copy_from_slice(&src_y[src_start..src_start + y_width]);
+        }
     }
-}}
+}
