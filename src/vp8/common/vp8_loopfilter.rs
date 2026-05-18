@@ -112,44 +112,44 @@ pub const PARTIAL_FRAME_FRACTION: ::core::ffi::c_int = 8 as ::core::ffi::c_int;
 pub const SIMD_WIDTH: ::core::ffi::c_int = 1 as ::core::ffi::c_int;
 pub const MAX_MB_SEGMENTS: ::core::ffi::c_int = 4 as ::core::ffi::c_int;
 pub const SEGMENT_ABSDATA: ::core::ffi::c_int = 1 as ::core::ffi::c_int;
-unsafe extern "C" fn lf_init_lut(mut lfi: *mut loop_filter_info_n) { unsafe {
+fn lf_init_lut(lfi: &mut loop_filter_info_n) {
     let mut filt_lvl: ::core::ffi::c_int = 0;
     filt_lvl = 0 as ::core::ffi::c_int;
     while filt_lvl <= MAX_LOOP_FILTER {
         if filt_lvl >= 40 as ::core::ffi::c_int {
-            (*lfi).hev_thr_lut[KEY_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
+            lfi.hev_thr_lut[KEY_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
                 2 as ::core::ffi::c_uchar;
-            (*lfi).hev_thr_lut[INTER_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
+            lfi.hev_thr_lut[INTER_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
                 3 as ::core::ffi::c_uchar;
         } else if filt_lvl >= 20 as ::core::ffi::c_int {
-            (*lfi).hev_thr_lut[KEY_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
+            lfi.hev_thr_lut[KEY_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
                 1 as ::core::ffi::c_uchar;
-            (*lfi).hev_thr_lut[INTER_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
+            lfi.hev_thr_lut[INTER_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
                 2 as ::core::ffi::c_uchar;
         } else if filt_lvl >= 15 as ::core::ffi::c_int {
-            (*lfi).hev_thr_lut[KEY_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
+            lfi.hev_thr_lut[KEY_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
                 1 as ::core::ffi::c_uchar;
-            (*lfi).hev_thr_lut[INTER_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
+            lfi.hev_thr_lut[INTER_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
                 1 as ::core::ffi::c_uchar;
         } else {
-            (*lfi).hev_thr_lut[KEY_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
+            lfi.hev_thr_lut[KEY_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
                 0 as ::core::ffi::c_uchar;
-            (*lfi).hev_thr_lut[INTER_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
+            lfi.hev_thr_lut[INTER_FRAME as ::core::ffi::c_int as usize][filt_lvl as usize] =
                 0 as ::core::ffi::c_uchar;
         }
         filt_lvl += 1;
     }
-    (*lfi).mode_lf_lut[DC_PRED as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
-    (*lfi).mode_lf_lut[V_PRED as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
-    (*lfi).mode_lf_lut[H_PRED as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
-    (*lfi).mode_lf_lut[TM_PRED as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
-    (*lfi).mode_lf_lut[B_PRED as ::core::ffi::c_int as usize] = 0 as ::core::ffi::c_uchar;
-    (*lfi).mode_lf_lut[ZEROMV as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
-    (*lfi).mode_lf_lut[NEARESTMV as ::core::ffi::c_int as usize] = 2 as ::core::ffi::c_uchar;
-    (*lfi).mode_lf_lut[NEARMV as ::core::ffi::c_int as usize] = 2 as ::core::ffi::c_uchar;
-    (*lfi).mode_lf_lut[NEWMV as ::core::ffi::c_int as usize] = 2 as ::core::ffi::c_uchar;
-    (*lfi).mode_lf_lut[SPLITMV as ::core::ffi::c_int as usize] = 3 as ::core::ffi::c_uchar;
-}}
+    lfi.mode_lf_lut[DC_PRED as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
+    lfi.mode_lf_lut[V_PRED as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
+    lfi.mode_lf_lut[H_PRED as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
+    lfi.mode_lf_lut[TM_PRED as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
+    lfi.mode_lf_lut[B_PRED as ::core::ffi::c_int as usize] = 0 as ::core::ffi::c_uchar;
+    lfi.mode_lf_lut[ZEROMV as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_uchar;
+    lfi.mode_lf_lut[NEARESTMV as ::core::ffi::c_int as usize] = 2 as ::core::ffi::c_uchar;
+    lfi.mode_lf_lut[NEARMV as ::core::ffi::c_int as usize] = 2 as ::core::ffi::c_uchar;
+    lfi.mode_lf_lut[NEWMV as ::core::ffi::c_int as usize] = 2 as ::core::ffi::c_uchar;
+    lfi.mode_lf_lut[SPLITMV as ::core::ffi::c_int as usize] = 3 as ::core::ffi::c_uchar;
+}
 #[unsafe(no_mangle)]
 pub fn vp8_loop_filter_update_sharpness(
     lfi: &mut loop_filter_info_n,
@@ -184,7 +184,7 @@ pub unsafe extern "C" fn vp8_loop_filter_init(mut cm: *mut VP8_COMMON) { unsafe 
     let mut i: ::core::ffi::c_int = 0;
     vp8_loop_filter_update_sharpness(&mut (*cm).lf_info, (*cm).sharpness_level);
     (*cm).last_sharpness_level = (*cm).sharpness_level;
-    lf_init_lut(lfi);
+    lf_init_lut(&mut (*cm).lf_info);
     i = 0 as ::core::ffi::c_int;
     while i < 4 as ::core::ffi::c_int {
         memset(

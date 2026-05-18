@@ -54,7 +54,7 @@ pub const vp8_mv_update_probs: [MV_CONTEXT; 2] = [
     },
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_default_mv_context: [MV_CONTEXT; 2] = [
+pub static vp8_default_mv_context: [MV_CONTEXT; 2] = [
     mv_context {
         prob: [
             162 as ::core::ffi::c_int as vp8_prob,
