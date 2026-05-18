@@ -1,5 +1,6 @@
 use crate::vp8::decoder::detokenize::{vp8_decode_mb_tokens, vp8_reset_mb_tokens_context};
 use crate::vp8::common::vp8_loopfilter::vp8_loop_filter_frame_init;
+use crate::vp8::decoder::decodeframe::vp8_mb_init_dequantizer;
 
 unsafe extern "C" {
     fn vp8_dc_only_idct_add_neon(
@@ -109,7 +110,6 @@ unsafe extern "C" {
         __c: ::core::ffi::c_int,
         __len: size_t,
     ) -> *mut ::core::ffi::c_void;
-    fn vp8_mb_init_dequantizer(pbi: &mut VP8D_COMP, xd: &mut MACROBLOCKD);
     fn vpx_memalign(align: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_malloc(size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_calloc(num: size_t, size: size_t) -> *mut ::core::ffi::c_void;
@@ -385,7 +385,7 @@ fn mt_decode_macroblock(
     }
     mode = (*xd.mode_info_context).mbmi.mode as MB_PREDICTION_MODE;
     if xd.segmentation_enabled != 0 {
-        vp8_mb_init_dequantizer(pbi, xd);
+        vp8_mb_init_dequantizer(&pbi.common, xd);
     }
     if (*xd.mode_info_context).mbmi.ref_frame as ::core::ffi::c_int
         == INTRA_FRAME as ::core::ffi::c_int

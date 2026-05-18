@@ -340,15 +340,13 @@ pub unsafe extern "C" fn vp8cx_init_de_quantizer(mut pbi: *mut VP8D_COMP) { unsa
         Q += 1;
     }
 }}
-#[unsafe(no_mangle)]
-pub extern "C" fn vp8_mb_init_dequantizer(
-    pbi: &mut VP8D_COMP,
+pub fn vp8_mb_init_dequantizer(
+    pc: &VP8_COMMON,
     xd: &mut MACROBLOCKD,
 ) { unsafe {
     let mut i: ::core::ffi::c_int = 0;
     let mut QIndex: ::core::ffi::c_int = 0;
     let mbmi = &mut (*xd.mode_info_context).mbmi;
-    let pc = &mut pbi.common;
     if xd.segmentation_enabled != 0 {
         if xd.mb_segment_abs_delta as ::core::ffi::c_int == SEGMENT_ABSDATA {
             QIndex = xd.segment_feature_data[MB_LVL_ALT_Q as ::core::ffi::c_int as usize]
@@ -406,7 +404,7 @@ fn decode_macroblock(
     }
     mode = (*xd.mode_info_context).mbmi.mode as MB_PREDICTION_MODE;
     if xd.segmentation_enabled != 0 {
-        vp8_mb_init_dequantizer(pbi, xd);
+        vp8_mb_init_dequantizer(&pbi.common, xd);
     }
     if (*xd.mode_info_context).mbmi.ref_frame as ::core::ffi::c_int
         == INTRA_FRAME as ::core::ffi::c_int
@@ -1685,7 +1683,7 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
     if q_update != 0 {
         vp8cx_init_de_quantizer(pbi);
     }
-    vp8_mb_init_dequantizer(&mut *pbi, &mut (*pbi).mb);
+    vp8_mb_init_dequantizer(&(*pbi).common, &mut (*pbi).mb);
     if (*pc).frame_type as ::core::ffi::c_uint
         != KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
