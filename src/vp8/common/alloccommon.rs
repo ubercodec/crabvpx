@@ -93,14 +93,14 @@ pub fn vp8_de_alloc_frame_buffers(oci: &mut VP8_COMMON) {
     oci.frame_to_show = ::core::ptr::null_mut::<YV12_BUFFER_CONFIG>();
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_alloc_frame_buffers(
-    mut oci: *mut VP8_COMMON,
+pub fn vp8_alloc_frame_buffers(
+    oci: &mut VP8_COMMON,
     mut width: ::core::ffi::c_int,
     mut height: ::core::ffi::c_int,
-) -> ::core::ffi::c_int { unsafe {
+) -> ::core::ffi::c_int {
     let mut current_block: u64;
     let mut i: ::core::ffi::c_int = 0;
-    vp8_de_alloc_frame_buffers(&mut *oci);
+    vp8_de_alloc_frame_buffers(oci);
     if width & 0xf as ::core::ffi::c_int != 0 as ::core::ffi::c_int {
         width += 16 as ::core::ffi::c_int - (width & 0xf as ::core::ffi::c_int);
     }
@@ -113,13 +113,14 @@ pub unsafe extern "C" fn vp8_alloc_frame_buffers(
             current_block = 10886091980245723256;
             break;
         }
-        if vp8_yv12_alloc_frame_buffer(
-            (&raw mut (*oci).yv12_fb as *mut YV12_BUFFER_CONFIG).offset(i as isize)
-                as *mut YV12_BUFFER_CONFIG,
-            width,
-            height,
-            VP8BORDERINPIXELS,
-        ) < 0 as ::core::ffi::c_int
+        if unsafe {
+            vp8_yv12_alloc_frame_buffer(
+                &mut oci.yv12_fb[i as usize] as *mut YV12_BUFFER_CONFIG,
+                width,
+                height,
+                VP8BORDERINPIXELS,
+            )
+        } < 0 as ::core::ffi::c_int
         {
             current_block = 9271424053274658668;
             break;
@@ -128,41 +129,48 @@ pub unsafe extern "C" fn vp8_alloc_frame_buffers(
     }
     match current_block {
         10886091980245723256 => {
-            (*oci).new_fb_idx = 0 as ::core::ffi::c_int;
-            (*oci).lst_fb_idx = 1 as ::core::ffi::c_int;
-            (*oci).gld_fb_idx = 2 as ::core::ffi::c_int;
-            (*oci).alt_fb_idx = 3 as ::core::ffi::c_int;
-            (*oci).fb_idx_ref_cnt[0 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
-            (*oci).fb_idx_ref_cnt[1 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
-            (*oci).fb_idx_ref_cnt[2 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
-            (*oci).fb_idx_ref_cnt[3 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
-            if !(vp8_yv12_alloc_frame_buffer(
-                &raw mut (*oci).temp_scale_frame,
-                width,
-                16 as ::core::ffi::c_int,
-                VP8BORDERINPIXELS,
-            ) < 0 as ::core::ffi::c_int)
+            oci.new_fb_idx = 0 as ::core::ffi::c_int;
+            oci.lst_fb_idx = 1 as ::core::ffi::c_int;
+            oci.gld_fb_idx = 2 as ::core::ffi::c_int;
+            oci.alt_fb_idx = 3 as ::core::ffi::c_int;
+            oci.fb_idx_ref_cnt[0 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
+            oci.fb_idx_ref_cnt[1 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
+            oci.fb_idx_ref_cnt[2 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
+            oci.fb_idx_ref_cnt[3 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
+            if !(unsafe {
+                vp8_yv12_alloc_frame_buffer(
+                    &mut oci.temp_scale_frame as *mut YV12_BUFFER_CONFIG,
+                    width,
+                    16 as ::core::ffi::c_int,
+                    VP8BORDERINPIXELS,
+                )
+            } < 0 as ::core::ffi::c_int)
             {
-                (*oci).mb_rows = height >> 4 as ::core::ffi::c_int;
-                (*oci).mb_cols = width >> 4 as ::core::ffi::c_int;
-                (*oci).MBs = (*oci).mb_rows * (*oci).mb_cols;
-                (*oci).mode_info_stride = (*oci).mb_cols + 1 as ::core::ffi::c_int;
-                (*oci).mip = vpx_calloc(
-                    (((*oci).mb_cols + 1 as ::core::ffi::c_int)
-                        * ((*oci).mb_rows + 1 as ::core::ffi::c_int)) as size_t,
-                    ::core::mem::size_of::<MODE_INFO>() as size_t,
-                ) as *mut MODE_INFO;
-                if !(*oci).mip.is_null() {
-                    (*oci).mi = (*oci)
-                        .mip
-                        .offset((*oci).mode_info_stride as isize)
-                        .offset(1 as ::core::ffi::c_int as isize);
-                    (*oci).above_context = vpx_calloc(
-                        (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t)
-                            .wrapping_mul((*oci).mb_cols as size_t),
-                        1 as size_t,
-                    ) as *mut ENTROPY_CONTEXT_PLANES;
-                    if !(*oci).above_context.is_null() {
+                oci.mb_rows = height >> 4 as ::core::ffi::c_int;
+                oci.mb_cols = width >> 4 as ::core::ffi::c_int;
+                oci.MBs = oci.mb_rows * oci.mb_cols;
+                oci.mode_info_stride = oci.mb_cols + 1 as ::core::ffi::c_int;
+                oci.mip = unsafe {
+                    vpx_calloc(
+                        ((oci.mb_cols + 1 as ::core::ffi::c_int)
+                            * (oci.mb_rows + 1 as ::core::ffi::c_int)) as size_t,
+                        ::core::mem::size_of::<MODE_INFO>() as size_t,
+                    )
+                } as *mut MODE_INFO;
+                if !oci.mip.is_null() {
+                    oci.mi = unsafe {
+                        oci.mip
+                            .offset(oci.mode_info_stride as isize)
+                            .offset(1 as ::core::ffi::c_int as isize)
+                    };
+                    oci.above_context = unsafe {
+                        vpx_calloc(
+                            (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t)
+                                .wrapping_mul(oci.mb_cols as size_t),
+                            1 as size_t,
+                        )
+                    } as *mut ENTROPY_CONTEXT_PLANES;
+                    if !oci.above_context.is_null() {
                         return 0 as ::core::ffi::c_int;
                     }
                 }
@@ -170,9 +178,9 @@ pub unsafe extern "C" fn vp8_alloc_frame_buffers(
         }
         _ => {}
     }
-    vp8_de_alloc_frame_buffers(&mut *oci);
+    vp8_de_alloc_frame_buffers(oci);
     return 1 as ::core::ffi::c_int;
-}}
+}
 pub fn vp8_setup_version(cm: &mut VP8_COMMON) {
     match cm.version {
         0 => {

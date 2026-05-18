@@ -19,11 +19,6 @@ unsafe extern "C" {
         fmt: *const ::core::ffi::c_char,
         ...
     );
-    fn vp8_alloc_frame_buffers(
-        oci: *mut VP8_COMMON,
-        width: ::core::ffi::c_int,
-        height: ::core::ffi::c_int,
-    ) -> ::core::ffi::c_int;
     fn vpx_calloc(num: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_free(memblk: *mut ::core::ffi::c_void);
     fn vp8dx_receive_compressed_data(pbi: *mut VP8D_COMP) -> ::core::ffi::c_int;
@@ -68,6 +63,7 @@ pub type uint32_t = u32;
 pub type uint64_t = u64;
 pub use crate::vp8::common::types::*;
 use crate::vp8::common::mbpitch::vp8_build_block_doffsets;
+use crate::vp8::common::alloccommon::vp8_alloc_frame_buffers;
 
 pub type vpx_color_range_t = vpx_color_range;
 pub type vpx_color_range = ::core::ffi::c_uint;
@@ -1018,7 +1014,7 @@ unsafe extern "C" fn vp8_decode(
             if vpx_atomic_load_acquire(&raw mut (*pbi_1).b_multithreaded_rd) != 0 {
                 vp8mt_de_alloc_temp_buffers(pbi_1, (*pc_0).mb_rows);
             }
-            if vp8_alloc_frame_buffers(pc_0, (*pc_0).Width, (*pc_0).Height) != 0 {
+            if vp8_alloc_frame_buffers(&mut *pc_0, (*pc_0).Width, (*pc_0).Height) != 0 {
                 vpx_internal_error(
                     &raw mut (*pc_0).error,
                     VPX_CODEC_MEM_ERROR,
