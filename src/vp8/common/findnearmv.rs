@@ -34,19 +34,18 @@ pub const CNT_INTRA: C2RustUnnamed_1 = 0;
 pub const CNT_SPLITMV: C2RustUnnamed_1 = 3;
 pub type C2RustUnnamed_1 = ::core::ffi::c_uint;
 #[inline]
-unsafe extern "C" fn mv_bias(
-    mut refmb_ref_frame_sign_bias: ::core::ffi::c_int,
-    mut refframe: ::core::ffi::c_int,
-    mut mvp: *mut int_mv,
-    mut ref_frame_sign_bias: *const ::core::ffi::c_int,
-) { unsafe {
-    if refmb_ref_frame_sign_bias != *ref_frame_sign_bias.offset(refframe as isize) {
-        (*mvp).as_mv.row = ((*mvp).as_mv.row as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
-            as ::core::ffi::c_short;
-        (*mvp).as_mv.col = ((*mvp).as_mv.col as ::core::ffi::c_int * -(1 as ::core::ffi::c_int))
-            as ::core::ffi::c_short;
+fn mv_bias(
+    neighbor_sign_bias: ::core::ffi::c_int,
+    current_ref_frame: ::core::ffi::c_int,
+    mvp: &mut int_mv,
+    ref_frame_sign_bias: &[::core::ffi::c_int],
+) {
+    if current_ref_frame != ref_frame_sign_bias[neighbor_sign_bias as usize] {
+        let mv = mvp.as_mv_mut();
+        mv.row = -mv.row;
+        mv.col = -mv.col;
     }
-}}
+}
 pub const LEFT_TOP_MARGIN: ::core::ffi::c_int =
     (16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
 pub const RIGHT_BOTTOM_MARGIN: ::core::ffi::c_int =
@@ -151,6 +150,7 @@ pub unsafe extern "C" fn vp8_find_near_mvs(
     mut refframe: ::core::ffi::c_int,
     mut ref_frame_sign_bias: *mut ::core::ffi::c_int,
 ) { unsafe {
+    let ref_frame_sign_bias_slice = core::slice::from_raw_parts(ref_frame_sign_bias, 4);
     let mut above: *const MODE_INFO = here.offset(-((*xd).mode_info_stride as isize));
     let mut left: *const MODE_INFO = here.offset(-(1 as ::core::ffi::c_int as isize));
     let mut aboveleft: *const MODE_INFO = above.offset(-(1 as ::core::ffi::c_int as isize));
@@ -174,10 +174,10 @@ pub unsafe extern "C" fn vp8_find_near_mvs(
             mv = mv.offset(1);
             (*mv).as_int = (*above).mbmi.mv.as_int;
             mv_bias(
-                *ref_frame_sign_bias.offset((*above).mbmi.ref_frame as isize),
+                ref_frame_sign_bias_slice[(*above).mbmi.ref_frame as usize],
                 refframe,
-                mv,
-                ref_frame_sign_bias,
+                &mut *mv,
+                ref_frame_sign_bias_slice,
             );
             cntx = cntx.offset(1);
         }
@@ -188,10 +188,10 @@ pub unsafe extern "C" fn vp8_find_near_mvs(
             let mut this_mv: int_mv = int_mv { as_int: 0 };
             this_mv.as_int = (*left).mbmi.mv.as_int;
             mv_bias(
-                *ref_frame_sign_bias.offset((*left).mbmi.ref_frame as isize),
+                ref_frame_sign_bias_slice[(*left).mbmi.ref_frame as usize],
                 refframe,
-                &raw mut this_mv,
-                ref_frame_sign_bias,
+                &mut this_mv,
+                ref_frame_sign_bias_slice,
             );
             if this_mv.as_int != (*mv).as_int {
                 mv = mv.offset(1);
@@ -209,10 +209,10 @@ pub unsafe extern "C" fn vp8_find_near_mvs(
             let mut this_mv_0: int_mv = int_mv { as_int: 0 };
             this_mv_0.as_int = (*aboveleft).mbmi.mv.as_int;
             mv_bias(
-                *ref_frame_sign_bias.offset((*aboveleft).mbmi.ref_frame as isize),
+                ref_frame_sign_bias_slice[(*aboveleft).mbmi.ref_frame as usize],
                 refframe,
-                &raw mut this_mv_0,
-                ref_frame_sign_bias,
+                &mut this_mv_0,
+                ref_frame_sign_bias_slice,
             );
             if this_mv_0.as_int != (*mv).as_int {
                 mv = mv.offset(1);
