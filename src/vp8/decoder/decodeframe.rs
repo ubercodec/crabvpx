@@ -578,15 +578,15 @@ fn get_delta_q(
     ret_val
 }
 
-unsafe extern "C" fn yv12_extend_frame_top_c(mut ybf: *mut YV12_BUFFER_CONFIG) { unsafe {
+fn yv12_extend_frame_top_c(ybf: &YV12_BUFFER_CONFIG) { unsafe {
     let mut i: ::core::ffi::c_int = 0;
     let mut src_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
     let mut dest_ptr1: *mut ::core::ffi::c_uchar = ::core::ptr::null_mut::<::core::ffi::c_uchar>();
     let mut Border: ::core::ffi::c_uint = 0;
     let mut plane_stride: ::core::ffi::c_int = 0;
-    Border = (*ybf).border as ::core::ffi::c_uint;
-    plane_stride = (*ybf).y_stride;
-    src_ptr1 = (*ybf).y_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
+    Border = ybf.border as ::core::ffi::c_uint;
+    plane_stride = ybf.y_stride;
+    src_ptr1 = ybf.y_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
     dest_ptr1 =
         src_ptr1.offset(-(Border.wrapping_mul(plane_stride as ::core::ffi::c_uint) as isize));
     i = 0 as ::core::ffi::c_int;
@@ -599,9 +599,9 @@ unsafe extern "C" fn yv12_extend_frame_top_c(mut ybf: *mut YV12_BUFFER_CONFIG) {
         dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
         i += 1;
     }
-    plane_stride = (*ybf).uv_stride;
+    plane_stride = ybf.uv_stride;
     Border = Border.wrapping_div(2 as ::core::ffi::c_uint);
-    src_ptr1 = (*ybf).u_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
+    src_ptr1 = ybf.u_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
     dest_ptr1 =
         src_ptr1.offset(-(Border.wrapping_mul(plane_stride as ::core::ffi::c_uint) as isize));
     i = 0 as ::core::ffi::c_int;
@@ -614,7 +614,7 @@ unsafe extern "C" fn yv12_extend_frame_top_c(mut ybf: *mut YV12_BUFFER_CONFIG) {
         dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
         i += 1;
     }
-    src_ptr1 = (*ybf).v_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
+    src_ptr1 = ybf.v_buffer.offset(-(Border as isize)) as *mut ::core::ffi::c_uchar;
     dest_ptr1 =
         src_ptr1.offset(-(Border.wrapping_mul(plane_stride as ::core::ffi::c_uint) as isize));
     i = 0 as ::core::ffi::c_int;
@@ -1073,7 +1073,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) { unsafe {
         eb_dst[1 as ::core::ffi::c_int as usize],
         eb_dst[2 as ::core::ffi::c_int as usize],
     );
-    yv12_extend_frame_top_c(yv12_fb_new);
+    yv12_extend_frame_top_c(&*yv12_fb_new);
     yv12_extend_frame_bottom_c(yv12_fb_new);
 }}
 fn read_partition_size(
