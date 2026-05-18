@@ -1,11 +1,4 @@
 unsafe extern "C" {
-    fn vp8_yv12_alloc_frame_buffer(
-        ybf: *mut YV12_BUFFER_CONFIG,
-        width: ::core::ffi::c_int,
-        height: ::core::ffi::c_int,
-        border: ::core::ffi::c_int,
-    ) -> ::core::ffi::c_int;
-    fn vp8_yv12_de_alloc_frame_buffer(ybf: *mut YV12_BUFFER_CONFIG) -> ::core::ffi::c_int;
     fn vpx_calloc(num: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_free(memblk: *mut ::core::ffi::c_void);
     fn memset(
@@ -15,6 +8,9 @@ unsafe extern "C" {
     ) -> *mut ::core::ffi::c_void;
     fn vp8_machine_specific_config(_: *mut VP8Common);
 }
+use crate::vpx_scale::generic::yv12config::{
+    vp8_yv12_alloc_frame_buffer_safe, vp8_yv12_de_alloc_frame_buffer_safe,
+};
 use crate::vp8::common::entropymode::{vp8_default_bmode_probs, vp8_init_mbmode_probs};
 
 pub use crate::vp8::common::types::*;
@@ -72,17 +68,12 @@ pub fn vp8_de_alloc_frame_buffers(oci: &mut VP8_COMMON) {
     let mut i: ::core::ffi::c_int = 0;
     i = 0 as ::core::ffi::c_int;
     while i < NUM_YV12_BUFFERS {
-        unsafe {
-            vp8_yv12_de_alloc_frame_buffer(
-                (&raw mut oci.yv12_fb as *mut YV12_BUFFER_CONFIG).offset(i as isize)
-                    as *mut YV12_BUFFER_CONFIG,
-            );
-        }
+        vp8_yv12_de_alloc_frame_buffer_safe(&mut oci.yv12_fb[i as usize]);
         oci.fb_idx_ref_cnt[i as usize] = 0 as ::core::ffi::c_int;
         i += 1;
     }
+    vp8_yv12_de_alloc_frame_buffer_safe(&mut oci.temp_scale_frame);
     unsafe {
-        vp8_yv12_de_alloc_frame_buffer(&raw mut oci.temp_scale_frame);
         vpx_free(oci.above_context as *mut ::core::ffi::c_void);
         vpx_free(oci.mip as *mut ::core::ffi::c_void);
     }
@@ -113,15 +104,12 @@ pub fn vp8_alloc_frame_buffers(
             current_block = 10886091980245723256;
             break;
         }
-        if unsafe {
-            vp8_yv12_alloc_frame_buffer(
-                &mut oci.yv12_fb[i as usize] as *mut YV12_BUFFER_CONFIG,
-                width,
-                height,
-                VP8BORDERINPIXELS,
-            )
-        } < 0 as ::core::ffi::c_int
-        {
+        if vp8_yv12_alloc_frame_buffer_safe(
+            &mut oci.yv12_fb[i as usize],
+            width,
+            height,
+            VP8BORDERINPIXELS,
+        ).is_err() {
             current_block = 9271424053274658668;
             break;
         }
@@ -137,14 +125,12 @@ pub fn vp8_alloc_frame_buffers(
             oci.fb_idx_ref_cnt[1 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
             oci.fb_idx_ref_cnt[2 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
             oci.fb_idx_ref_cnt[3 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
-            if !(unsafe {
-                vp8_yv12_alloc_frame_buffer(
-                    &mut oci.temp_scale_frame as *mut YV12_BUFFER_CONFIG,
-                    width,
-                    16 as ::core::ffi::c_int,
-                    VP8BORDERINPIXELS,
-                )
-            } < 0 as ::core::ffi::c_int)
+            if vp8_yv12_alloc_frame_buffer_safe(
+                &mut oci.temp_scale_frame,
+                width,
+                16 as ::core::ffi::c_int,
+                VP8BORDERINPIXELS,
+            ).is_ok()
             {
                 oci.mb_rows = height >> 4 as ::core::ffi::c_int;
                 oci.mb_cols = width >> 4 as ::core::ffi::c_int;
