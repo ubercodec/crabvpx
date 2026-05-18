@@ -1,7 +1,6 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
     static vpx_norm: [uint8_t; 256];
-    fn memcpy(__dst: *mut c_void, __src: *const c_void, __n: size_t) -> *mut c_void;
 }
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
@@ -121,10 +120,7 @@ pub unsafe fn vpx_reader_fill(mut r: *mut vpx_reader) {
             let bits: i32 = (shift as u32 & 0xfffffff8 as u32).wrapping_add(CHAR_BIT as u32) as i32;
             let mut nv: BD_VALUE = 0;
             let mut big_endian_values: BD_VALUE = 0;
-            memcpy(
-                &raw mut big_endian_values as *mut c_void,
-                buffer as *const c_void,
-                ::core::mem::size_of::<BD_VALUE>() as size_t,
+            core::ptr::copy_nonoverlapping(buffer as *const c_void as *const u8, &raw mut big_endian_values as *mut c_void as *mut u8, ::core::mem::size_of::<BD_VALUE>() as size_t,
             );
             big_endian_values = BSwap64(big_endian_values as uint64_t) as BD_VALUE;
             nv = big_endian_values >> (BD_VALUE_SIZE - bits);

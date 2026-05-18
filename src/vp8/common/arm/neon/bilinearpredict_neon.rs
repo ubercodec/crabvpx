@@ -1,11 +1,6 @@
 use std::ffi::c_void;
 use std::arch::aarch64::*;
 extern "Rust" {
-    fn memcpy(
-        __dst: *mut c_void,
-        __src: *const c_void,
-        __n: size_t,
-    ) -> *mut c_void;
 }
 pub type int8_t = i8;
 pub type int32_t = i32;
@@ -24,11 +19,7 @@ pub type size_t = __darwin_size_t;
 pub type ptrdiff_t = __darwin_ptrdiff_t;
 #[inline]
 unsafe fn uint32_to_mem(mut buf: *mut uint8_t, mut a: uint32_t) {
-    memcpy(
-        buf as *mut c_void,
-        &raw mut a as *const c_void,
-        4 as size_t,
-    );
+    core::ptr::copy_nonoverlapping(&raw mut a as *const c_void as *const u8, buf as *mut c_void as *mut u8, 4 as size_t);
 }
 static mut bifilter4_coeff: [[uint8_t; 2]; 8] = [
     [

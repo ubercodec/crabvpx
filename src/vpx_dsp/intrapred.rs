@@ -1,7 +1,5 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
-    fn memcpy(__dst: *mut c_void, __src: *const c_void, __n: size_t) -> *mut c_void;
-    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
 }
 pub type __darwin_ptrdiff_t = isize;
 pub type __darwin_size_t = usize;
@@ -107,28 +105,12 @@ unsafe fn d63_predictor(
         r = 2 as i32;
         size = bs - 2 as i32;
         while r < bs {
-            memcpy(
-                dst.offset(((r + 0 as i32) as ptrdiff_t * stride) as isize) as *mut c_void,
-                dst.offset((r >> 1 as i32) as isize) as *const c_void,
-                size as size_t,
-            );
-            memset(
-                dst.offset(((r + 0 as i32) as ptrdiff_t * stride) as isize)
-                    .offset(size as isize) as *mut c_void,
-                *above.offset((bs - 1 as i32) as isize) as i32,
-                (bs - size) as size_t,
-            );
-            memcpy(
-                dst.offset(((r + 1 as i32) as ptrdiff_t * stride) as isize) as *mut c_void,
-                dst.offset(stride).offset((r >> 1 as i32) as isize) as *const c_void,
-                size as size_t,
-            );
-            memset(
-                dst.offset(((r + 1 as i32) as ptrdiff_t * stride) as isize)
-                    .offset(size as isize) as *mut c_void,
-                *above.offset((bs - 1 as i32) as isize) as i32,
-                (bs - size) as size_t,
-            );
+            core::ptr::copy_nonoverlapping((dst.offset((r >> 1 as i32) as isize) as *const c_void) as *const u8, (dst.offset(((r + 0 as i32) as ptrdiff_t * stride) as isize) as *mut c_void) as *mut u8, (size as size_t) as usize);
+            core::ptr::write_bytes(dst.offset(((r + 0 as i32) as ptrdiff_t * stride) as isize)
+                    .offset(size as isize) as *mut c_void as *mut u8, *above.offset((bs - 1 as i32) as isize) as i32 as u8, (bs - size) as size_t);
+            core::ptr::copy_nonoverlapping((dst.offset(stride).offset((r >> 1 as i32) as isize) as *const c_void) as *const u8, (dst.offset(((r + 1 as i32) as ptrdiff_t * stride) as isize) as *mut c_void) as *mut u8, (size as size_t) as usize);
+            core::ptr::write_bytes(dst.offset(((r + 1 as i32) as ptrdiff_t * stride) as isize)
+                    .offset(size as isize) as *mut c_void as *mut u8, *above.offset((bs - 1 as i32) as isize) as i32 as u8, (bs - size) as size_t);
             r += 2 as i32;
             size -= 1;
         }
@@ -161,16 +143,8 @@ unsafe fn d45_predictor(
         x = 1 as i32;
         size = bs - 2 as i32;
         while x < bs {
-            memcpy(
-                dst as *mut c_void,
-                dst_row0.offset(x as isize) as *const c_void,
-                size as size_t,
-            );
-            memset(
-                dst.offset(size as isize) as *mut c_void,
-                above_right as i32,
-                (x + 1 as i32) as size_t,
-            );
+            core::ptr::copy_nonoverlapping((dst_row0.offset(x as isize) as *const c_void) as *const u8, (dst as *mut c_void) as *mut u8, (size as size_t) as usize);
+            core::ptr::write_bytes(dst.offset(size as isize) as *mut c_void as *mut u8, above_right as i32 as u8, (x + 1 as i32) as size_t);
             dst = dst.offset(stride);
             x += 1;
             size -= 1;
@@ -287,14 +261,10 @@ unsafe fn d135_predictor(
         }
         i = 0 as i32;
         while i < bs {
-            memcpy(
-                dst.offset((i as ptrdiff_t * stride) as isize) as *mut c_void,
-                (&raw mut border as *mut uint8_t)
+            core::ptr::copy_nonoverlapping(((&raw mut border as *mut uint8_t)
                     .offset(bs as isize)
                     .offset(-(1 as isize))
-                    .offset(-(i as isize)) as *const c_void,
-                bs as size_t,
-            );
+                    .offset(-(i as isize)) as *const c_void) as *const u8, (dst.offset((i as ptrdiff_t * stride) as isize) as *mut c_void) as *mut u8, (bs as size_t) as usize);
             i += 1;
         }
     }
@@ -380,7 +350,7 @@ unsafe fn v_predictor(
         let mut r: i32 = 0;
         r = 0 as i32;
         while r < bs {
-            memcpy(dst as *mut c_void, above as *const c_void, bs as size_t);
+            core::ptr::copy_nonoverlapping(above as *const c_void as *const u8, dst as *mut c_void as *mut u8, bs as size_t);
             dst = dst.offset(stride);
             r += 1;
         }
@@ -398,11 +368,7 @@ unsafe fn h_predictor(
         let mut r: i32 = 0;
         r = 0 as i32;
         while r < bs {
-            memset(
-                dst as *mut c_void,
-                *left.offset(r as isize) as i32,
-                bs as size_t,
-            );
+            core::ptr::write_bytes(dst as *mut c_void as *mut u8, *left.offset(r as isize) as i32 as u8, bs as size_t);
             dst = dst.offset(stride);
             r += 1;
         }
@@ -446,7 +412,7 @@ unsafe fn dc_128_predictor(
         let mut r: i32 = 0;
         r = 0 as i32;
         while r < bs {
-            memset(dst as *mut c_void, 128 as i32, bs as size_t);
+            core::ptr::write_bytes(dst as *mut c_void as *mut u8, 128 as i32 as u8, bs as size_t);
             dst = dst.offset(stride);
             r += 1;
         }
@@ -473,7 +439,7 @@ unsafe fn dc_left_predictor(
         expected_dc = (sum + (bs >> 1 as i32)) / bs;
         r = 0 as i32;
         while r < bs {
-            memset(dst as *mut c_void, expected_dc, bs as size_t);
+            core::ptr::write_bytes(dst as *mut c_void as *mut u8, expected_dc as u8, bs as size_t);
             dst = dst.offset(stride);
             r += 1;
         }
@@ -500,7 +466,7 @@ unsafe fn dc_top_predictor(
         expected_dc = (sum + (bs >> 1 as i32)) / bs;
         r = 0 as i32;
         while r < bs {
-            memset(dst as *mut c_void, expected_dc, bs as size_t);
+            core::ptr::write_bytes(dst as *mut c_void as *mut u8, expected_dc as u8, bs as size_t);
             dst = dst.offset(stride);
             r += 1;
         }
@@ -529,7 +495,7 @@ unsafe fn dc_predictor(
         expected_dc = (sum + (count >> 1 as i32)) / count;
         r = 0 as i32;
         while r < bs {
-            memset(dst as *mut c_void, expected_dc, bs as size_t);
+            core::ptr::write_bytes(dst as *mut c_void as *mut u8, expected_dc as u8, bs as size_t);
             dst = dst.offset(stride);
             r += 1;
         }
@@ -548,26 +514,10 @@ pub unsafe fn vpx_he_predictor_4x4_c(
         let J: i32 = *left.offset(1 as isize) as i32;
         let K: i32 = *left.offset(2 as isize) as i32;
         let L: i32 = *left.offset(3 as isize) as i32;
-        memset(
-            dst.offset(stride * 0 as ptrdiff_t) as *mut c_void,
-            (H + 2 as i32 * I + J + 2 as i32) >> 2 as i32,
-            4 as size_t,
-        );
-        memset(
-            dst.offset(stride * 1 as ptrdiff_t) as *mut c_void,
-            (I + 2 as i32 * J + K + 2 as i32) >> 2 as i32,
-            4 as size_t,
-        );
-        memset(
-            dst.offset(stride * 2 as ptrdiff_t) as *mut c_void,
-            (J + 2 as i32 * K + L + 2 as i32) >> 2 as i32,
-            4 as size_t,
-        );
-        memset(
-            dst.offset(stride * 3 as ptrdiff_t) as *mut c_void,
-            (K + 2 as i32 * L + L + 2 as i32) >> 2 as i32,
-            4 as size_t,
-        );
+        core::ptr::write_bytes((dst.offset(stride * 0 as ptrdiff_t) as *mut c_void) as *mut u8, ((H + 2 as i32 * I + J + 2 as i32) >> 2 as i32) as u8, (4 as size_t) as usize);
+        core::ptr::write_bytes((dst.offset(stride * 1 as ptrdiff_t) as *mut c_void) as *mut u8, ((I + 2 as i32 * J + K + 2 as i32) >> 2 as i32) as u8, (4 as size_t) as usize);
+        core::ptr::write_bytes((dst.offset(stride * 2 as ptrdiff_t) as *mut c_void) as *mut u8, ((J + 2 as i32 * K + L + 2 as i32) >> 2 as i32) as u8, (4 as size_t) as usize);
+        core::ptr::write_bytes((dst.offset(stride * 3 as ptrdiff_t) as *mut c_void) as *mut u8, ((K + 2 as i32 * L + L + 2 as i32) >> 2 as i32) as u8, (4 as size_t) as usize);
     }
 }
 #[unsafe(no_mangle)]
@@ -588,21 +538,9 @@ pub unsafe fn vpx_ve_predictor_4x4_c(
         *dst.offset(1 as isize) = ((I + 2 as i32 * J + K + 2 as i32) >> 2 as i32) as uint8_t;
         *dst.offset(2 as isize) = ((J + 2 as i32 * K + L + 2 as i32) >> 2 as i32) as uint8_t;
         *dst.offset(3 as isize) = ((K + 2 as i32 * L + M + 2 as i32) >> 2 as i32) as uint8_t;
-        memcpy(
-            dst.offset(stride * 1 as ptrdiff_t) as *mut c_void,
-            dst as *const c_void,
-            4 as size_t,
-        );
-        memcpy(
-            dst.offset(stride * 2 as ptrdiff_t) as *mut c_void,
-            dst as *const c_void,
-            4 as size_t,
-        );
-        memcpy(
-            dst.offset(stride * 3 as ptrdiff_t) as *mut c_void,
-            dst as *const c_void,
-            4 as size_t,
-        );
+        core::ptr::copy_nonoverlapping((dst as *const c_void) as *const u8, (dst.offset(stride * 1 as ptrdiff_t) as *mut c_void) as *mut u8, (4 as size_t) as usize);
+        core::ptr::copy_nonoverlapping((dst as *const c_void) as *const u8, (dst.offset(stride * 2 as ptrdiff_t) as *mut c_void) as *mut u8, (4 as size_t) as usize);
+        core::ptr::copy_nonoverlapping((dst as *const c_void) as *const u8, (dst.offset(stride * 3 as ptrdiff_t) as *mut c_void) as *mut u8, (4 as size_t) as usize);
     }
 }
 #[unsafe(no_mangle)]

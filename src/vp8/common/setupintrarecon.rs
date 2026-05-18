@@ -1,6 +1,5 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
-    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
 }
 pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
@@ -58,14 +57,10 @@ pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
     unsafe {
         let mut i: i32 = 0;
-        memset(
-            (*ybf)
+        core::ptr::write_bytes((*ybf)
                 .y_buffer
                 .offset(-(1 as isize))
-                .offset(-((*ybf).y_stride as isize)) as *mut c_void,
-            127 as i32,
-            ((*ybf).y_width + 5 as i32) as size_t,
-        );
+                .offset(-((*ybf).y_stride as isize)) as *mut c_void as *mut u8, 127 as i32 as u8, ((*ybf).y_width + 5 as i32) as size_t);
         i = 0 as i32;
         while i < (*ybf).y_height {
             *(*ybf)
@@ -73,14 +68,10 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
                 .offset(((*ybf).y_stride * i - 1 as i32) as isize) = 129 as uint8_t;
             i += 1;
         }
-        memset(
-            (*ybf)
+        core::ptr::write_bytes((*ybf)
                 .u_buffer
                 .offset(-(1 as isize))
-                .offset(-((*ybf).uv_stride as isize)) as *mut c_void,
-            127 as i32,
-            ((*ybf).uv_width + 5 as i32) as size_t,
-        );
+                .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8, 127 as i32 as u8, ((*ybf).uv_width + 5 as i32) as size_t);
         i = 0 as i32;
         while i < (*ybf).uv_height {
             *(*ybf)
@@ -88,14 +79,10 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
                 .offset(((*ybf).uv_stride * i - 1 as i32) as isize) = 129 as uint8_t;
             i += 1;
         }
-        memset(
-            (*ybf)
+        core::ptr::write_bytes((*ybf)
                 .v_buffer
                 .offset(-(1 as isize))
-                .offset(-((*ybf).uv_stride as isize)) as *mut c_void,
-            127 as i32,
-            ((*ybf).uv_width + 5 as i32) as size_t,
-        );
+                .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8, 127 as i32 as u8, ((*ybf).uv_width + 5 as i32) as size_t);
         i = 0 as i32;
         while i < (*ybf).uv_height {
             *(*ybf)
@@ -108,29 +95,17 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut YV12_BUFFER_CONFIG) {
     unsafe {
-        memset(
-            (*ybf)
+        core::ptr::write_bytes((*ybf)
                 .y_buffer
                 .offset(-(1 as isize))
-                .offset(-((*ybf).y_stride as isize)) as *mut c_void,
-            127 as i32,
-            ((*ybf).y_width + 5 as i32) as size_t,
-        );
-        memset(
-            (*ybf)
+                .offset(-((*ybf).y_stride as isize)) as *mut c_void as *mut u8, 127 as i32 as u8, ((*ybf).y_width + 5 as i32) as size_t);
+        core::ptr::write_bytes((*ybf)
                 .u_buffer
                 .offset(-(1 as isize))
-                .offset(-((*ybf).uv_stride as isize)) as *mut c_void,
-            127 as i32,
-            ((*ybf).uv_width + 5 as i32) as size_t,
-        );
-        memset(
-            (*ybf)
+                .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8, 127 as i32 as u8, ((*ybf).uv_width + 5 as i32) as size_t);
+        core::ptr::write_bytes((*ybf)
                 .v_buffer
                 .offset(-(1 as isize))
-                .offset(-((*ybf).uv_stride as isize)) as *mut c_void,
-            127 as i32,
-            ((*ybf).uv_width + 5 as i32) as size_t,
-        );
+                .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8, 127 as i32 as u8, ((*ybf).uv_width + 5 as i32) as size_t);
     }
 }

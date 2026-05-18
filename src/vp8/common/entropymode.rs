@@ -1,6 +1,5 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
-    fn memcpy(__dst: *mut c_void, __src: *const c_void, __n: size_t) -> *mut c_void;
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -1785,30 +1784,15 @@ pub static mut vp8_small_mvtree: [vp8_tree_index; 14] = [
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_init_mbmode_probs(mut x: *mut VP8_COMMON) {
     unsafe {
-        memcpy(
-            &raw mut (*x).fc.ymode_prob as *mut vp8_prob as *mut c_void,
-            &raw const vp8_ymode_prob as *const vp8_prob as *const c_void,
-            ::core::mem::size_of::<[vp8_prob; 4]>() as size_t,
-        );
-        memcpy(
-            &raw mut (*x).fc.uv_mode_prob as *mut vp8_prob as *mut c_void,
-            &raw const vp8_uv_mode_prob as *const vp8_prob as *const c_void,
-            ::core::mem::size_of::<[vp8_prob; 3]>() as size_t,
-        );
-        memcpy(
-            &raw mut (*x).fc.sub_mv_ref_prob as *mut vp8_prob as *mut c_void,
-            &raw const sub_mv_ref_prob as *const vp8_prob as *const c_void,
-            ::core::mem::size_of::<[vp8_prob; 3]>() as size_t,
-        );
+        core::ptr::copy_nonoverlapping(&raw const vp8_ymode_prob as *const vp8_prob as *const c_void as *const u8, &raw mut (*x).fc.ymode_prob as *mut vp8_prob as *mut c_void as *mut u8, ::core::mem::size_of::<[vp8_prob; 4]>() as size_t);
+        core::ptr::copy_nonoverlapping(&raw const vp8_uv_mode_prob as *const vp8_prob as *const c_void as *const u8, &raw mut (*x).fc.uv_mode_prob as *mut vp8_prob as *mut c_void as *mut u8, ::core::mem::size_of::<[vp8_prob; 3]>() as size_t);
+        core::ptr::copy_nonoverlapping(&raw const sub_mv_ref_prob as *const vp8_prob as *const c_void as *const u8, &raw mut (*x).fc.sub_mv_ref_prob as *mut vp8_prob as *mut c_void as *mut u8, ::core::mem::size_of::<[vp8_prob; 3]>() as size_t);
     }
 }
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_default_bmode_probs(mut dest: *mut vp8_prob) {
     unsafe {
-        memcpy(
-            dest as *mut c_void,
-            &raw const vp8_bmode_prob as *const vp8_prob as *const c_void,
-            ::core::mem::size_of::<[vp8_prob; 9]>() as size_t,
+        core::ptr::copy_nonoverlapping(&raw const vp8_bmode_prob as *const vp8_prob as *const c_void as *const u8, dest as *mut c_void as *mut u8, ::core::mem::size_of::<[vp8_prob; 9]>() as size_t,
         );
     }
 }

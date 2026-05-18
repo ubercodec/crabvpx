@@ -2,7 +2,6 @@ use std::ffi::c_void;
 unsafe extern "Rust" {
     fn calloc(__count: size_t, __size: size_t) -> *mut c_void;
     fn free(_: *mut c_void);
-    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
     fn vpx_memalign(align: size_t, size: size_t) -> *mut c_void;
     fn vpx_free(memblk: *mut c_void);
 }
@@ -102,10 +101,7 @@ unsafe fn img_alloc_helper(
         let mut stride_in_bytes: i32 = 0;
         let mut align: u32 = 0;
         if !img.is_null() {
-            memset(
-                img as *mut c_void,
-                0 as i32,
-                ::core::mem::size_of::<vpx_image_t>() as size_t,
+            core::ptr::write_bytes(img as *mut c_void as *mut u8, 0 as i32 as u8, ::core::mem::size_of::<vpx_image_t>() as size_t,
             );
         }
         if !(is_valid_img_fmt(fmt) == 0)

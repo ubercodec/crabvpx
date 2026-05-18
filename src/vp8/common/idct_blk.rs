@@ -8,7 +8,6 @@ unsafe extern "Rust" {
         dst_stride: i32,
     );
     fn vp8_dequant_idct_add_c(input: *mut i16, dq: *mut i16, dest: *mut u8, stride: i32);
-    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
 }
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
@@ -39,10 +38,7 @@ pub unsafe fn vp8_dequant_idct_add_y_block_c(
                         dst,
                         stride,
                     );
-                    memset(
-                        q as *mut c_void,
-                        0 as i32,
-                        (2 as size_t).wrapping_mul(::core::mem::size_of::<i16>() as size_t),
+                    core::ptr::write_bytes(q as *mut c_void as *mut u8, 0 as i32 as u8, (2 as size_t).wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
                 q = q.offset(16 as isize);
@@ -82,10 +78,7 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                         dst_u,
                         stride,
                     );
-                    memset(
-                        q as *mut c_void,
-                        0 as i32,
-                        (2 as size_t).wrapping_mul(::core::mem::size_of::<i16>() as size_t),
+                    core::ptr::write_bytes(q as *mut c_void as *mut u8, 0 as i32 as u8, (2 as size_t).wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
                 q = q.offset(16 as isize);
@@ -111,10 +104,7 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                         dst_v,
                         stride,
                     );
-                    memset(
-                        q as *mut c_void,
-                        0 as i32,
-                        (2 as size_t).wrapping_mul(::core::mem::size_of::<i16>() as size_t),
+                    core::ptr::write_bytes(q as *mut c_void as *mut u8, 0 as i32 as u8, (2 as size_t).wrapping_mul(::core::mem::size_of::<i16>() as size_t),
                     );
                 }
                 q = q.offset(16 as isize);

@@ -1,6 +1,5 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
-    fn memcpy(__dst: *mut c_void, __src: *const c_void, __n: size_t) -> *mut c_void;
 }
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
@@ -207,11 +206,7 @@ pub unsafe fn vp8_vertical_band_2_1_scale_c(
     mut dest_width: u32,
 ) {
     unsafe {
-        memcpy(
-            dest as *mut c_void,
-            source as *const c_void,
-            dest_width as size_t,
-        );
+        core::ptr::copy_nonoverlapping(source as *const c_void as *const u8, dest as *mut c_void as *mut u8, dest_width as size_t);
     }
 }
 #[unsafe(no_mangle)]

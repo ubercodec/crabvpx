@@ -1,11 +1,6 @@
 use std::ffi::c_void;
 use std::arch::aarch64::*;
 unsafe extern "Rust" {
-    fn memcpy(
-        __dst: *mut c_void,
-        __src: *const c_void,
-        __n: size_t,
-    ) -> *mut c_void;
 }
 pub type int8_t = i8;
 pub type int16_t = i16;
@@ -31,21 +26,13 @@ pub type size_t = __darwin_size_t;
 #[inline]
 unsafe fn load_replicate_u8_4x1(mut buf: *const uint8_t) -> uint8x8_t {
     let mut a: uint32_t = 0;
-    memcpy(
-        &raw mut a as *mut c_void,
-        buf as *const c_void,
-        4 as size_t,
-    );
+    core::ptr::copy_nonoverlapping(buf as *const c_void as *const u8, &raw mut a as *mut c_void as *mut u8, 4 as size_t);
     return vreinterpret_u8_u32(vdup_n_u32(a));
 }
 #[inline]
 unsafe fn load_unaligned_u8_4x1(mut buf: *const uint8_t) -> uint8x8_t {
     let mut a: uint32_t = 0;
-    memcpy(
-        &raw mut a as *mut c_void,
-        buf as *const c_void,
-        4 as size_t,
-    );
+    core::ptr::copy_nonoverlapping(buf as *const c_void as *const u8, &raw mut a as *mut c_void as *mut u8, 4 as size_t);
     let mut a_u32 = vdup_n_u32(0);
     a_u32 = vset_lane_u32(a, a_u32, 0);
     return vreinterpret_u8_u32(a_u32);

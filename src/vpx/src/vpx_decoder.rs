@@ -1,7 +1,6 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
     pub type vpx_codec_alg_priv;
-    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
     fn vpx_codec_destroy(ctx: *mut vpx_codec_ctx_t) -> vpx_codec_err_t;
 }
 pub type __builtin_va_list = *mut i8;
@@ -481,10 +480,7 @@ pub unsafe fn vpx_codec_dec_init_ver(
         } else if (*iface).caps & VPX_CODEC_CAP_DECODER as vpx_codec_caps_t == 0 {
             res = VPX_CODEC_INCAPABLE;
         } else {
-            memset(
-                ctx as *mut c_void,
-                0 as i32,
-                ::core::mem::size_of::<vpx_codec_ctx_t>() as size_t,
+            core::ptr::write_bytes(ctx as *mut c_void as *mut u8, 0 as i32 as u8, ::core::mem::size_of::<vpx_codec_ctx_t>() as size_t,
             );
             (*ctx).iface = iface;
             (*ctx).name = (*iface).name;

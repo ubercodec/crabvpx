@@ -2,7 +2,6 @@ use std::ffi::c_void;
 unsafe extern "Rust" {
     static vp8_norm: [u8; 256];
     fn vp8dx_bool_decoder_fill(br: *mut BOOL_DECODER);
-    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
 }
 pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
@@ -468,15 +467,9 @@ pub unsafe fn vp8_reset_mb_tokens_context(mut x: *mut MACROBLOCKD) {
     unsafe {
         let mut a_ctx: *mut ENTROPY_CONTEXT = (*x).above_context as *mut ENTROPY_CONTEXT;
         let mut l_ctx: *mut ENTROPY_CONTEXT = (*x).left_context as *mut ENTROPY_CONTEXT;
-        memset(
-            a_ctx as *mut c_void,
-            0 as i32,
-            (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t).wrapping_sub(1 as size_t),
+        core::ptr::write_bytes(a_ctx as *mut c_void as *mut u8, 0 as i32 as u8, (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t).wrapping_sub(1 as size_t),
         );
-        memset(
-            l_ctx as *mut c_void,
-            0 as i32,
-            (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t).wrapping_sub(1 as size_t),
+        core::ptr::write_bytes(l_ctx as *mut c_void as *mut u8, 0 as i32 as u8, (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t).wrapping_sub(1 as size_t),
         );
         if (*(*x).mode_info_context).mbmi.is_4x4 == 0 {
             let fresh0 = &mut *l_ctx.offset(8 as isize);

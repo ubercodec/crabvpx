@@ -1,6 +1,5 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
-    fn memcpy(__dst: *mut c_void, __src: *const c_void, __n: size_t) -> *mut c_void;
     fn vpx_d117_predictor_4x4_c(
         dst: *mut uint8_t,
         stride: ptrdiff_t,
@@ -149,7 +148,7 @@ pub unsafe fn vp8_intra4x4_predict(
         Left[1 as usize] = *yleft.offset(left_stride as isize);
         Left[2 as usize] = *yleft.offset((2 as i32 * left_stride) as isize);
         Left[3 as usize] = *yleft.offset((3 as i32 * left_stride) as isize);
-        memcpy(Above as *mut c_void, above as *const c_void, 8 as size_t);
+        core::ptr::copy_nonoverlapping(above as *const c_void as *const u8, Above as *mut c_void as *mut u8, 8 as size_t);
         *Above.offset(-(1 as i32) as isize) = top_left;
         pred[b_mode as usize].expect("non-null function pointer")(
             dst as *mut uint8_t,

@@ -1,7 +1,6 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
     pub type vpx_codec_alg_priv;
-    fn memcpy(__dst: *mut c_void, __src: *const c_void, __n: size_t) -> *mut c_void;
     fn vpx_codec_destroy(ctx: *mut vpx_codec_ctx_t) -> vpx_codec_err_t;
 }
 pub type __builtin_va_list = *mut i8;
@@ -750,11 +749,7 @@ pub unsafe fn vpx_codec_get_cx_data(
                     <= (*priv_0).enc.cx_data_dst_buf.sz
             {
                 let mut modified_pkt: *mut vpx_codec_cx_pkt_t = &raw mut (*priv_0).enc.cx_data_pkt;
-                memcpy(
-                    dst_buf.offset((*priv_0).enc.cx_data_pad_before as isize) as *mut c_void,
-                    (*pkt).data.raw.buf,
-                    (*pkt).data.raw.sz,
-                );
+                core::ptr::copy_nonoverlapping((*pkt).data.raw.buf as *const u8, dst_buf.offset((*priv_0).enc.cx_data_pad_before as isize) as *mut c_void as *mut u8, (*pkt).data.raw.sz);
                 *modified_pkt = *pkt;
                 (*modified_pkt).data.raw.buf = dst_buf as *mut c_void;
                 (*modified_pkt).data.raw.sz = (*modified_pkt).data.raw.sz.wrapping_add(
