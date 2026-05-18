@@ -218,16 +218,15 @@ unsafe extern "C" fn vp8_init_intra_predictors_internal() { unsafe {
     ) as intra_pred_fn;
     vp8_init_intra4x4_predictors_internal();
 }}
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_build_intra_predictors_mby_s(
-    mut x: *mut MACROBLOCKD,
+pub fn vp8_build_intra_predictors_mby_s(
+    x: &MACROBLOCKD,
     mut yabove_row: *mut ::core::ffi::c_uchar,
     mut yleft: *mut ::core::ffi::c_uchar,
     mut left_stride: ::core::ffi::c_int,
     mut ypred_ptr: *mut ::core::ffi::c_uchar,
     mut y_stride: ::core::ffi::c_int,
 ) { unsafe {
-    let mut mode: MB_PREDICTION_MODE = (*(*x).mode_info_context).mbmi.mode as MB_PREDICTION_MODE;
+    let mut mode: MB_PREDICTION_MODE = (*x.mode_info_context).mbmi.mode as MB_PREDICTION_MODE;
     let mut yleft_col: [uint8_t; 16] = [0; 16];
     let mut i: ::core::ffi::c_int = 0;
     let mut fn_0: intra_pred_fn = None;
@@ -237,7 +236,7 @@ pub unsafe extern "C" fn vp8_build_intra_predictors_mby_s(
         i += 1;
     }
     if mode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
-        fn_0 = dc_pred[(*x).left_available as usize][(*x).up_available as usize]
+        fn_0 = dc_pred[x.left_available as usize][x.up_available as usize]
             [SIZE_16 as ::core::ffi::c_int as usize];
     } else {
         fn_0 = pred[mode as usize][SIZE_16 as ::core::ffi::c_int as usize];
@@ -249,9 +248,8 @@ pub unsafe extern "C" fn vp8_build_intra_predictors_mby_s(
         &raw mut yleft_col as *mut uint8_t,
     );
 }}
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_build_intra_predictors_mbuv_s(
-    mut x: *mut MACROBLOCKD,
+pub fn vp8_build_intra_predictors_mbuv_s(
+    x: &MACROBLOCKD,
     mut uabove_row: *mut ::core::ffi::c_uchar,
     mut vabove_row: *mut ::core::ffi::c_uchar,
     mut uleft: *mut ::core::ffi::c_uchar,
@@ -262,7 +260,7 @@ pub unsafe extern "C" fn vp8_build_intra_predictors_mbuv_s(
     mut pred_stride: ::core::ffi::c_int,
 ) { unsafe {
     let mut uvmode: MB_PREDICTION_MODE =
-        (*(*x).mode_info_context).mbmi.uv_mode as MB_PREDICTION_MODE;
+        (*x.mode_info_context).mbmi.uv_mode as MB_PREDICTION_MODE;
     let mut uleft_col: [::core::ffi::c_uchar; 8] = [0; 8];
     let mut vleft_col: [::core::ffi::c_uchar; 8] = [0; 8];
     let mut i: ::core::ffi::c_int = 0;
@@ -274,7 +272,7 @@ pub unsafe extern "C" fn vp8_build_intra_predictors_mbuv_s(
         i += 1;
     }
     if uvmode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
-        fn_0 = dc_pred[(*x).left_available as usize][(*x).up_available as usize]
+        fn_0 = dc_pred[x.left_available as usize][x.up_available as usize]
             [SIZE_8 as ::core::ffi::c_int as usize];
     } else {
         fn_0 = pred[uvmode as usize][SIZE_8 as ::core::ffi::c_int as usize];

@@ -1,6 +1,7 @@
 # VP8 Decoder Safety Hints
 
 ## Current Progress (May 2026)
+- **Safe Intra Prediction API**: Refactored `vp8_build_intra_predictors_mby_s` and `vp8_build_intra_predictors_mbuv_s` in `src/vp8/common/reconintra.rs` to take safe reference `&MACROBLOCKD`, eliminating raw pointer parameters, `extern "C"` linkage, and `#[unsafe(no_mangle)]`. Updated call sites in `decodeframe.rs` and `threading.rs`. Reduced unsafe count by 4.
 - **Safe Macroblock Decoding API**: Refactored `decode_macroblock` in `src/vp8/decoder/decodeframe.rs` and `mt_decode_macroblock` in `src/vp8/decoder/threading.rs` to take safe references `&mut VP8D_COMP` and `&mut MACROBLOCKD`, eliminating raw pointer parameters, `extern "C"` linkage, and `unsafe` keyword from declaration. Updated call sites in `decodeframe.rs` and `threading.rs`. Reduced unsafe count by 2.
 - **Safe Macroblock Token Decoding API**: Refactored `vp8_decode_mb_tokens` in `src/vp8/decoder/detokenize.rs` to take safe references `&mut VP8D_COMP` and `&mut MACROBLOCKD`, eliminating raw pointer parameters, `extern "C"` linkage, and `#[unsafe(no_mangle)]`. Updated call sites in `decodeframe.rs` and `threading.rs`. Reduced unsafe count by 1.
 - **Safe Macroblock Token Context Reset API**: Refactored `vp8_reset_mb_tokens_context` in `src/vp8/decoder/detokenize.rs` to take safe reference `&mut MACROBLOCKD`, eliminating raw pointer parameter and `extern "C"` linkage. Updated call sites in `decodeframe.rs` and `threading.rs`. Reduced unsafe count by 1.
@@ -54,7 +55,7 @@
 - **Duplicated Structs**: Struct definitions like `YV12_BUFFER_CONFIG` and `VP8Common` were duplicated by `c2rust` across dozens of files. Do not attempt to deduplicate them yet; maintain raw pointer boundaries between modules to avoid FFI type mismatches.
 
 ## Next Steps for Future Agents
-1. **PRIORITY: Safe API Refactoring (Phase 4)**: Now that all core structs (`MACROBLOCKD`, `VP8_COMMON`, `VP8D_COMP`) are centralized into `src/vp8/common/types.rs`, agents can proceed with Phase 4 of [struct_deduplication_strategy.md](struct_deduplication_strategy.md). Refactor inter-module function signatures (like `decode_macroblock`) to take safe Rust references (`&mut MACROBLOCKD`) instead of raw pointers. (`vp8_reset_mb_tokens_context` and `vp8_decode_mb_tokens` have been refactored).
+1. **PRIORITY: Safe API Refactoring (Phase 4)**: Now that all core structs (`MACROBLOCKD`, `VP8_COMMON`, `VP8D_COMP`) are centralized into `src/vp8/common/types.rs`, agents can proceed with Phase 4 of [struct_deduplication_strategy.md](struct_deduplication_strategy.md). Refactor inter-module function signatures (like `decode_macroblock`) to take safe Rust references (`&mut MACROBLOCKD`) instead of raw pointers. (`vp8_reset_mb_tokens_context`, `vp8_decode_mb_tokens`, `vp8_build_intra_predictors_mby_s`, and `vp8_build_intra_predictors_mbuv_s` have been refactored).
 2. **Module-Internal Refactoring**: While API refactoring is underway, agents can continue refactoring module-internal functions that do not cross FFI boundaries.
 
 

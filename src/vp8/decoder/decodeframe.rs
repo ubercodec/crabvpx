@@ -176,25 +176,6 @@ unsafe extern "C" {
         -> ::core::ffi::c_int;
     fn vp8_ac_uv_quant(QIndex: ::core::ffi::c_int, Delta: ::core::ffi::c_int)
         -> ::core::ffi::c_int;
-    fn vp8_build_intra_predictors_mby_s(
-        x: *mut MACROBLOCKD,
-        yabove_row: *mut ::core::ffi::c_uchar,
-        yleft: *mut ::core::ffi::c_uchar,
-        left_stride: ::core::ffi::c_int,
-        ypred_ptr: *mut ::core::ffi::c_uchar,
-        y_stride: ::core::ffi::c_int,
-    );
-    fn vp8_build_intra_predictors_mbuv_s(
-        x: *mut MACROBLOCKD,
-        uabove_row: *mut ::core::ffi::c_uchar,
-        vabove_row: *mut ::core::ffi::c_uchar,
-        uleft: *mut ::core::ffi::c_uchar,
-        vleft: *mut ::core::ffi::c_uchar,
-        left_stride: ::core::ffi::c_int,
-        upred_ptr: *mut ::core::ffi::c_uchar,
-        vpred_ptr: *mut ::core::ffi::c_uchar,
-        pred_stride: ::core::ffi::c_int,
-    );
     fn vp8_setup_intra_recon_top_line(ybf: *mut YV12_BUFFER_CONFIG);
     fn vp8_decode_mode_mvs(_: *mut VP8D_COMP);
     fn vp8_extend_mb_row(
@@ -435,8 +416,8 @@ fn decode_macroblock(
     if (*xd.mode_info_context).mbmi.ref_frame as ::core::ffi::c_int
         == INTRA_FRAME as ::core::ffi::c_int
     {
-        vp8_build_intra_predictors_mbuv_s(
-            xd as *mut _,
+        crate::vp8::common::reconintra::vp8_build_intra_predictors_mbuv_s(
+            xd,
             xd.recon_above[1 as ::core::ffi::c_int as usize],
             xd.recon_above[2 as ::core::ffi::c_int as usize],
             xd.recon_left[1 as ::core::ffi::c_int as usize],
@@ -447,8 +428,8 @@ fn decode_macroblock(
             xd.dst.uv_stride,
         );
         if mode as ::core::ffi::c_uint != B_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
-            vp8_build_intra_predictors_mby_s(
-                xd as *mut _,
+            crate::vp8::common::reconintra::vp8_build_intra_predictors_mby_s(
+                xd,
                 xd.recon_above[0 as ::core::ffi::c_int as usize],
                 xd.recon_left[0 as ::core::ffi::c_int as usize],
                 xd.recon_left_stride[0 as ::core::ffi::c_int as usize],
