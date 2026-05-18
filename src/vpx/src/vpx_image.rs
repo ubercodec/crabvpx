@@ -7,8 +7,6 @@ unsafe extern "Rust" {
 }
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
-pub type uint8_t = u8;
-pub type uint64_t = u64;
 pub type vpx_img_fmt = u32;
 pub const VPX_IMG_FMT_I44016: vpx_img_fmt = 2311;
 pub const VPX_IMG_FMT_I44416: vpx_img_fmt = 2310;
@@ -97,7 +95,7 @@ unsafe fn img_alloc_helper(
         let mut xcs: u32 = 0;
         let mut ycs: u32 = 0;
         let mut bps: u32 = 0;
-        let mut s: uint64_t = 0;
+        let mut s: u64 = 0;
         let mut stride_in_bytes: i32 = 0;
         let mut align: u32 = 0;
         if !img.is_null() {
@@ -170,25 +168,25 @@ unsafe fn img_alloc_helper(
                         h = d_h.wrapping_add(align) & !align;
                     }
                     s = if fmt as u32 & VPX_IMG_FMT_PLANAR as u32 != 0 {
-                        w as uint64_t
+                        w as u64
                     } else {
-                        (bps as uint64_t)
-                            .wrapping_mul(w as uint64_t)
-                            .wrapping_div(8 as uint64_t)
+                        (bps as u64)
+                            .wrapping_mul(w as u64)
+                            .wrapping_div(8 as u64)
                     };
                     s = if fmt as u32 & VPX_IMG_FMT_HIGHBITDEPTH as u32 != 0 {
-                        s.wrapping_mul(2 as uint64_t)
+                        s.wrapping_mul(2 as u64)
                     } else {
                         s
                     };
                     s = s
-                        .wrapping_add(stride_align as uint64_t)
-                        .wrapping_sub(1 as uint64_t)
-                        & !(stride_align as uint64_t).wrapping_sub(1 as uint64_t);
-                    if !(s > INT_MAX as uint64_t) {
+                        .wrapping_add(stride_align as u64)
+                        .wrapping_sub(1 as u64)
+                        & !(stride_align as u64).wrapping_sub(1 as u64);
+                    if !(s > INT_MAX as u64) {
                         stride_in_bytes = s as i32;
                         s = if fmt as u32 & VPX_IMG_FMT_HIGHBITDEPTH as u32 != 0 {
-                            s.wrapping_div(2 as uint64_t)
+                            s.wrapping_div(2 as u64)
                         } else {
                             s
                         };
@@ -211,21 +209,21 @@ unsafe fn img_alloc_helper(
                             _ => {
                                 (*img).img_data = img_data;
                                 if img_data.is_null() {
-                                    let mut alloc_size: uint64_t = 0;
+                                    let mut alloc_size: u64 = 0;
                                     alloc_size = if fmt as u32 & VPX_IMG_FMT_PLANAR as u32 != 0 {
-                                        (h as uint64_t)
+                                        (h as u64)
                                             .wrapping_mul(s)
-                                            .wrapping_mul(bps as uint64_t)
-                                            .wrapping_div(8 as uint64_t)
+                                            .wrapping_mul(bps as u64)
+                                            .wrapping_div(8 as u64)
                                     } else {
-                                        (h as uint64_t).wrapping_mul(s)
+                                        (h as u64).wrapping_mul(s)
                                     };
-                                    if alloc_size != alloc_size as uint64_t {
+                                    if alloc_size != alloc_size as u64 {
                                         current_block = 7960401837942226685;
                                     } else {
                                         (*img).img_data =
                                             vpx_memalign(buf_align as size_t, alloc_size as size_t)
-                                                as *mut uint8_t
+                                                as *mut u8
                                                 as *mut u8;
                                         (*img).img_data_owner = 1 as i32;
                                         current_block = 17233182392562552756;

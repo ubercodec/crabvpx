@@ -26,8 +26,6 @@ pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
-pub type uint8_t = u8;
-pub type uint32_t = u32;
 pub type vpx_codec_err_t = u32;
 pub const VPX_CODEC_LIST_END: vpx_codec_err_t = 9;
 pub const VPX_CODEC_INVALID_PARAM: vpx_codec_err_t = 8;
@@ -65,11 +63,11 @@ pub struct yv12_buffer_config {
     pub alpha_width: i32,
     pub alpha_height: i32,
     pub alpha_stride: i32,
-    pub y_buffer: *mut uint8_t,
-    pub u_buffer: *mut uint8_t,
-    pub v_buffer: *mut uint8_t,
-    pub alpha_buffer: *mut uint8_t,
-    pub buffer_alloc: *mut uint8_t,
+    pub y_buffer: *mut u8,
+    pub u_buffer: *mut u8,
+    pub v_buffer: *mut u8,
+    pub alpha_buffer: *mut u8,
+    pub buffer_alloc: *mut u8,
     pub buffer_alloc_sz: size_t,
     pub border: i32,
     pub frame_size: size_t,
@@ -93,7 +91,7 @@ pub struct MV {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union int_mv {
-    pub as_int: uint32_t,
+    pub as_int: u32,
     pub as_mv: MV,
 }
 pub type ENTROPY_CONTEXT = i8;
@@ -133,15 +131,15 @@ pub union b_mode_info {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MB_MODE_INFO {
-    pub mode: uint8_t,
-    pub uv_mode: uint8_t,
-    pub ref_frame: uint8_t,
-    pub is_4x4: uint8_t,
+    pub mode: u8,
+    pub uv_mode: u8,
+    pub ref_frame: u8,
+    pub is_4x4: u8,
     pub mv: int_mv,
-    pub partitioning: uint8_t,
-    pub mb_skip_coeff: uint8_t,
-    pub need_to_clamp_mvs: uint8_t,
-    pub segment_id: uint8_t,
+    pub partitioning: u8,
+    pub mb_skip_coeff: u8,
+    pub need_to_clamp_mvs: u8,
+    pub segment_id: u8,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]

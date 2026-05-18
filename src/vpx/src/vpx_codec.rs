@@ -7,11 +7,7 @@ unsafe extern "Rust" {
 pub type __builtin_va_list = *mut i8;
 pub type va_list = __builtin_va_list;
 pub type __darwin_size_t = usize;
-pub type int64_t = i64;
 pub type size_t = __darwin_size_t;
-pub type uint8_t = u8;
-pub type uint32_t = u32;
-pub type uint64_t = u64;
 pub type vpx_img_fmt = u32;
 pub const VPX_IMG_FMT_I44016: vpx_img_fmt = 2311;
 pub const VPX_IMG_FMT_I44416: vpx_img_fmt = 2310;
@@ -207,7 +203,7 @@ pub type vpx_enc_pass = u32;
 pub const VPX_RC_LAST_PASS: vpx_enc_pass = 2;
 pub const VPX_RC_FIRST_PASS: vpx_enc_pass = 1;
 pub const VPX_RC_ONE_PASS: vpx_enc_pass = 0;
-pub type vpx_codec_er_flags_t = uint32_t;
+pub type vpx_codec_er_flags_t = u32;
 pub type vpx_bit_depth_t = vpx_bit_depth;
 pub type vpx_bit_depth = u32;
 pub const VPX_BITS_12: vpx_bit_depth = 12;
@@ -245,7 +241,7 @@ pub union C2RustUnnamed {
 #[repr(C)]
 pub struct vpx_psnr_pkt {
     pub samples: [u32; 4],
-    pub sse: [uint64_t; 4],
+    pub sse: [u64; 4],
     pub psnr: [f64; 4],
     pub spatial_layer_id: i32,
 }
@@ -260,10 +256,10 @@ pub struct C2RustUnnamed_0 {
     pub partition_id: i32,
     pub width: [u32; 5],
     pub height: [u32; 5],
-    pub spatial_layer_encoded: [uint8_t; 5],
+    pub spatial_layer_encoded: [u8; 5],
 }
-pub type vpx_codec_frame_flags_t = uint32_t;
-pub type vpx_codec_pts_t = int64_t;
+pub type vpx_codec_frame_flags_t = u32;
+pub type vpx_codec_pts_t = i64;
 pub type vpx_codec_cx_pkt_kind = u32;
 pub const VPX_CODEC_CUSTOM_PKT: vpx_codec_cx_pkt_kind = 256;
 pub const VPX_CODEC_PSNR_PKT: vpx_codec_cx_pkt_kind = 3;
@@ -312,7 +308,7 @@ pub type vpx_codec_frame_buffer_t = vpx_codec_frame_buffer;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_frame_buffer {
-    pub data: *mut uint8_t,
+    pub data: *mut u8,
     pub size: size_t,
     pub priv_0: *mut c_void,
 }
@@ -321,7 +317,7 @@ pub type vpx_get_frame_buffer_cb_fn_t =
 pub type vpx_codec_get_frame_fn_t =
     Option<unsafe fn(*mut vpx_codec_alg_priv_t, *mut vpx_codec_iter_t) -> *mut vpx_image_t>;
 pub type vpx_codec_decode_fn_t = Option<
-    unsafe fn(*mut vpx_codec_alg_priv_t, *const uint8_t, u32, *mut c_void) -> vpx_codec_err_t,
+    unsafe fn(*mut vpx_codec_alg_priv_t, *const u8, u32, *mut c_void) -> vpx_codec_err_t,
 >;
 pub type vpx_codec_get_si_fn_t =
     Option<unsafe fn(*mut vpx_codec_alg_priv_t, *mut vpx_codec_stream_info_t) -> vpx_codec_err_t>;
@@ -335,7 +331,7 @@ pub struct vpx_codec_stream_info {
     pub is_kf: u32,
 }
 pub type vpx_codec_peek_si_fn_t =
-    Option<unsafe fn(*const uint8_t, u32, *mut vpx_codec_stream_info_t) -> vpx_codec_err_t>;
+    Option<unsafe fn(*const u8, u32, *mut vpx_codec_stream_info_t) -> vpx_codec_err_t>;
 pub type vpx_codec_ctrl_fn_map_t = vpx_codec_ctrl_fn_map;
 #[derive(Copy, Clone)]
 #[repr(C)]

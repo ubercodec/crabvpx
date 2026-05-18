@@ -1,7 +1,4 @@
 use std::arch::aarch64::*;
-pub type int8_t = i8;
-pub type int16_t = i16;
-pub type uint32_t = u32;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct int16x8x2_t {
@@ -27,7 +24,7 @@ pub union b_mode_info {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union int_mv {
-    pub as_int: uint32_t,
+    pub as_int: u32,
     pub as_mv: MV,
 }
 #[derive(Copy, Clone)]

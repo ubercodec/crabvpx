@@ -28,7 +28,7 @@ pub union b_mode_info {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union int_mv {
-    pub as_int: uint32_t,
+    pub as_int: u32,
     pub as_mv: MV,
 }
 #[derive(Copy, Clone)]
@@ -37,7 +37,6 @@ pub struct MV {
     pub row: i16,
     pub col: i16,
 }
-pub type uint32_t = u32;
 pub type B_PREDICTION_MODE = u32;
 pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
 pub const NEW4X4: B_PREDICTION_MODE = 13;

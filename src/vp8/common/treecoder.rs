@@ -7,7 +7,6 @@ pub struct vp8_token_struct {
     pub len: i32,
 }
 pub type vp8_token = vp8_token_struct;
-pub type uint64_t = u64;
 pub const vp8_prob_half: vp8_prob = 128 as vp8_prob;
 unsafe fn tree2tok(
     p: *mut vp8_token_struct,
@@ -120,14 +119,14 @@ pub unsafe fn vp8_tree_probs_from_distribution(
             let c: *const u32 = &raw mut *branch_ct.offset(t as isize) as *mut u32;
             let tot: u32 = (*c.offset(0 as isize)).wrapping_add(*c.offset(1 as isize));
             if tot != 0 {
-                let p: u32 = ((*c.offset(0 as isize) as uint64_t)
-                    .wrapping_mul(pfactor as uint64_t)
+                let p: u32 = ((*c.offset(0 as isize) as u64)
+                    .wrapping_mul(pfactor as u64)
                     .wrapping_add(
                         (if round != 0 {
                             tot >> 1 as i32
                         } else {
                             0 as u32
-                        }) as uint64_t,
+                        }) as u64,
                     ) as u32)
                     .wrapping_div(tot);
                 *probs.offset(t as isize) = (if p < 256 as u32 {

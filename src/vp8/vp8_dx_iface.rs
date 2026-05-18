@@ -58,11 +58,7 @@ pub struct _opaque_pthread_t {
     pub __opaque: [i8; 8176],
 }
 pub type __darwin_pthread_t = *mut _opaque_pthread_t;
-pub type int64_t = i64;
 pub type size_t = __darwin_size_t;
-pub type uint8_t = u8;
-pub type uint32_t = u32;
-pub type uint64_t = u64;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct blockd {
@@ -83,7 +79,7 @@ pub union b_mode_info {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union int_mv {
-    pub as_int: uint32_t,
+    pub as_int: u32,
     pub as_mv: MV,
 }
 #[derive(Copy, Clone)]
@@ -202,15 +198,15 @@ pub struct modeinfo {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MB_MODE_INFO {
-    pub mode: uint8_t,
-    pub uv_mode: uint8_t,
-    pub ref_frame: uint8_t,
-    pub is_4x4: uint8_t,
+    pub mode: u8,
+    pub uv_mode: u8,
+    pub ref_frame: u8,
+    pub is_4x4: u8,
     pub mv: int_mv,
-    pub partitioning: uint8_t,
-    pub mb_skip_coeff: uint8_t,
-    pub need_to_clamp_mvs: uint8_t,
-    pub segment_id: uint8_t,
+    pub partitioning: u8,
+    pub mb_skip_coeff: u8,
+    pub need_to_clamp_mvs: u8,
+    pub segment_id: u8,
 }
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 #[derive(Copy, Clone)]
@@ -229,11 +225,11 @@ pub struct yv12_buffer_config {
     pub alpha_width: i32,
     pub alpha_height: i32,
     pub alpha_stride: i32,
-    pub y_buffer: *mut uint8_t,
-    pub u_buffer: *mut uint8_t,
-    pub v_buffer: *mut uint8_t,
-    pub alpha_buffer: *mut uint8_t,
-    pub buffer_alloc: *mut uint8_t,
+    pub y_buffer: *mut u8,
+    pub u_buffer: *mut u8,
+    pub v_buffer: *mut u8,
+    pub alpha_buffer: *mut u8,
+    pub buffer_alloc: *mut u8,
     pub buffer_alloc_sz: size_t,
     pub border: i32,
     pub frame_size: size_t,
@@ -432,7 +428,7 @@ pub type vpx_enc_pass = u32;
 pub const VPX_RC_LAST_PASS: vpx_enc_pass = 2;
 pub const VPX_RC_FIRST_PASS: vpx_enc_pass = 1;
 pub const VPX_RC_ONE_PASS: vpx_enc_pass = 0;
-pub type vpx_codec_er_flags_t = uint32_t;
+pub type vpx_codec_er_flags_t = u32;
 pub type vpx_bit_depth_t = vpx_bit_depth;
 pub type vpx_bit_depth = u32;
 pub const VPX_BITS_12: vpx_bit_depth = 12;
@@ -726,7 +722,7 @@ pub union C2RustUnnamed_0 {
 #[repr(C)]
 pub struct vpx_psnr_pkt {
     pub samples: [u32; 4],
-    pub sse: [uint64_t; 4],
+    pub sse: [u64; 4],
     pub psnr: [f64; 4],
     pub spatial_layer_id: i32,
 }
@@ -741,10 +737,10 @@ pub struct C2RustUnnamed_1 {
     pub partition_id: i32,
     pub width: [u32; 5],
     pub height: [u32; 5],
-    pub spatial_layer_encoded: [uint8_t; 5],
+    pub spatial_layer_encoded: [u8; 5],
 }
-pub type vpx_codec_frame_flags_t = uint32_t;
-pub type vpx_codec_pts_t = int64_t;
+pub type vpx_codec_frame_flags_t = u32;
+pub type vpx_codec_pts_t = i64;
 pub type vpx_codec_cx_pkt_kind = u32;
 pub const VPX_CODEC_CUSTOM_PKT: vpx_codec_cx_pkt_kind = 256;
 pub const VPX_CODEC_PSNR_PKT: vpx_codec_cx_pkt_kind = 3;
@@ -829,7 +825,7 @@ pub type vpx_codec_frame_buffer_t = vpx_codec_frame_buffer;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_codec_frame_buffer {
-    pub data: *mut uint8_t,
+    pub data: *mut u8,
     pub size: size_t,
     pub priv_0: *mut c_void,
 }
@@ -838,12 +834,12 @@ pub type vpx_get_frame_buffer_cb_fn_t =
 pub type vpx_codec_get_frame_fn_t =
     Option<unsafe fn(*mut vpx_codec_alg_priv_t, *mut vpx_codec_iter_t) -> *mut vpx_image_t>;
 pub type vpx_codec_decode_fn_t = Option<
-    unsafe fn(*mut vpx_codec_alg_priv_t, *const uint8_t, u32, *mut c_void) -> vpx_codec_err_t,
+    unsafe fn(*mut vpx_codec_alg_priv_t, *const u8, u32, *mut c_void) -> vpx_codec_err_t,
 >;
 pub type vpx_codec_get_si_fn_t =
     Option<unsafe fn(*mut vpx_codec_alg_priv_t, *mut vpx_codec_stream_info_t) -> vpx_codec_err_t>;
 pub type vpx_codec_peek_si_fn_t =
-    Option<unsafe fn(*const uint8_t, u32, *mut vpx_codec_stream_info_t) -> vpx_codec_err_t>;
+    Option<unsafe fn(*const u8, u32, *mut vpx_codec_stream_info_t) -> vpx_codec_err_t>;
 pub type vpx_codec_ctrl_fn_map_t = vpx_codec_ctrl_fn_map;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -1028,7 +1024,7 @@ unsafe fn vp8_destroy(mut ctx: *mut vpx_codec_alg_priv_t) -> vpx_codec_err_t {
     }
 }
 unsafe fn vp8_peek_si_internal(
-    mut data: *const uint8_t,
+    mut data: *const u8,
     mut data_sz: u32,
     mut si: *mut vpx_codec_stream_info_t,
     mut decrypt_cb: vpx_decrypt_cb,
@@ -1042,12 +1038,12 @@ unsafe fn vp8_peek_si_internal(
         if data.offset(data_sz as isize) <= data {
             res = VPX_CODEC_INVALID_PARAM;
         } else {
-            let mut clear_buffer: [uint8_t; 10] = [0; 10];
-            let mut clear: *const uint8_t = data;
+            let mut clear_buffer: [u8; 10] = [0; 10];
+            let mut clear: *const u8 = data;
             if decrypt_cb.is_some() {
                 let mut n: i32 =
-                    (if (::core::mem::size_of::<[uint8_t; 10]>() as usize) < data_sz as usize {
-                        ::core::mem::size_of::<[uint8_t; 10]>() as usize
+                    (if (::core::mem::size_of::<[u8; 10]>() as usize) < data_sz as usize {
+                        ::core::mem::size_of::<[u8; 10]>() as usize
                     } else {
                         data_sz as usize
                     }) as i32;
@@ -1057,7 +1053,7 @@ unsafe fn vp8_peek_si_internal(
                     &raw mut clear_buffer as *mut u8,
                     n,
                 );
-                clear = &raw mut clear_buffer as *mut uint8_t;
+                clear = &raw mut clear_buffer as *mut u8;
             }
             (*si).is_kf = 0 as u32;
             if data_sz >= 10 as u32 && *clear.offset(0 as isize) as i32 & 0x1 as i32 == 0 {
@@ -1087,7 +1083,7 @@ unsafe fn vp8_peek_si_internal(
     }
 }
 unsafe fn vp8_peek_si(
-    mut data: *const uint8_t,
+    mut data: *const u8,
     mut data_sz: u32,
     mut si: *mut vpx_codec_stream_info_t,
 ) -> vpx_codec_err_t {
@@ -1164,7 +1160,7 @@ unsafe fn yuvconfig2image(
 }
 unsafe fn update_fragments(
     mut ctx: *mut vpx_codec_alg_priv_t,
-    mut data: *const uint8_t,
+    mut data: *const u8,
     mut data_sz: u32,
     mut res: *mut vpx_codec_err_t,
 ) -> i32 {
@@ -1213,7 +1209,7 @@ unsafe fn update_fragments(
 }
 unsafe fn vp8_decode(
     mut ctx: *mut vpx_codec_alg_priv_t,
-    mut data: *const uint8_t,
+    mut data: *const u8,
     mut data_sz: u32,
     mut user_priv: *mut c_void,
 ) -> vpx_codec_err_t {
@@ -1437,11 +1433,11 @@ unsafe fn vp8_get_frame(
                 alpha_width: 0,
                 alpha_height: 0,
                 alpha_stride: 0,
-                y_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                u_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                v_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                alpha_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                buffer_alloc: ::core::ptr::null_mut::<uint8_t>(),
+                y_buffer: ::core::ptr::null_mut::<u8>(),
+                u_buffer: ::core::ptr::null_mut::<u8>(),
+                v_buffer: ::core::ptr::null_mut::<u8>(),
+                alpha_buffer: ::core::ptr::null_mut::<u8>(),
+                buffer_alloc: ::core::ptr::null_mut::<u8>(),
                 buffer_alloc_sz: 0,
                 border: 0,
                 frame_size: 0,
@@ -1499,9 +1495,9 @@ unsafe fn image2yuvconfig(
         let uv_w: i32 = (*img).d_w.wrapping_add(1 as u32).wrapping_div(2 as u32) as i32;
         let uv_h: i32 = (*img).d_h.wrapping_add(1 as u32).wrapping_div(2 as u32) as i32;
         let mut res: vpx_codec_err_t = VPX_CODEC_OK;
-        (*yv12).y_buffer = (*img).planes[VPX_PLANE_Y as usize] as *mut uint8_t;
-        (*yv12).u_buffer = (*img).planes[VPX_PLANE_U as usize] as *mut uint8_t;
-        (*yv12).v_buffer = (*img).planes[VPX_PLANE_V as usize] as *mut uint8_t;
+        (*yv12).y_buffer = (*img).planes[VPX_PLANE_Y as usize] as *mut u8;
+        (*yv12).u_buffer = (*img).planes[VPX_PLANE_U as usize] as *mut u8;
+        (*yv12).v_buffer = (*img).planes[VPX_PLANE_V as usize] as *mut u8;
         (*yv12).y_crop_width = y_w;
         (*yv12).y_crop_height = y_h;
         (*yv12).y_width = y_w;
@@ -1540,11 +1536,11 @@ unsafe fn vp8_set_reference(
                 alpha_width: 0,
                 alpha_height: 0,
                 alpha_stride: 0,
-                y_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                u_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                v_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                alpha_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                buffer_alloc: ::core::ptr::null_mut::<uint8_t>(),
+                y_buffer: ::core::ptr::null_mut::<u8>(),
+                u_buffer: ::core::ptr::null_mut::<u8>(),
+                v_buffer: ::core::ptr::null_mut::<u8>(),
+                alpha_buffer: ::core::ptr::null_mut::<u8>(),
+                buffer_alloc: ::core::ptr::null_mut::<u8>(),
                 buffer_alloc_sz: 0,
                 border: 0,
                 frame_size: 0,
@@ -1594,11 +1590,11 @@ unsafe fn vp8_get_reference(
                 alpha_width: 0,
                 alpha_height: 0,
                 alpha_stride: 0,
-                y_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                u_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                v_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                alpha_buffer: ::core::ptr::null_mut::<uint8_t>(),
-                buffer_alloc: ::core::ptr::null_mut::<uint8_t>(),
+                y_buffer: ::core::ptr::null_mut::<u8>(),
+                u_buffer: ::core::ptr::null_mut::<u8>(),
+                v_buffer: ::core::ptr::null_mut::<u8>(),
+                alpha_buffer: ::core::ptr::null_mut::<u8>(),
+                buffer_alloc: ::core::ptr::null_mut::<u8>(),
                 buffer_alloc_sz: 0,
                 border: 0,
                 frame_size: 0,
@@ -1866,7 +1862,7 @@ unsafe fn run_static_initializers() {
                 peek_si: Some(
                     vp8_peek_si
                         as unsafe fn(
-                            *const uint8_t,
+                            *const u8,
                             u32,
                             *mut vpx_codec_stream_info_t,
                         ) -> vpx_codec_err_t,
@@ -1882,7 +1878,7 @@ unsafe fn run_static_initializers() {
                     vp8_decode
                         as unsafe fn(
                             *mut vpx_codec_alg_priv_t,
-                            *const uint8_t,
+                            *const u8,
                             u32,
                             *mut c_void,
                         ) -> vpx_codec_err_t,

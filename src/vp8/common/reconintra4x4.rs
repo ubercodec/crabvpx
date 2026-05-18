@@ -1,71 +1,70 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
     fn vpx_d117_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
     fn vpx_d135_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
     fn vpx_d153_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
     fn vpx_d207_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
     fn vpx_d45e_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
     fn vpx_d63e_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
     fn vpx_dc_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
     fn vpx_he_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
     fn vpx_tm_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
     fn vpx_ve_predictor_4x4_c(
-        dst: *mut uint8_t,
+        dst: *mut u8,
         stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
+        above: *const u8,
+        left: *const u8,
     );
 }
 pub type __darwin_ptrdiff_t = isize;
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
 pub type ptrdiff_t = __darwin_ptrdiff_t;
-pub type uint8_t = u8;
 pub type B_PREDICTION_MODE = u32;
 pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
 pub const NEW4X4: B_PREDICTION_MODE = 13;
@@ -83,50 +82,50 @@ pub const B_VE_PRED: B_PREDICTION_MODE = 2;
 pub const B_TM_PRED: B_PREDICTION_MODE = 1;
 pub const B_DC_PRED: B_PREDICTION_MODE = 0;
 pub type intra_pred_fn =
-    Option<unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> ()>;
+    Option<unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> ()>;
 static mut pred: [intra_pred_fn; 10] = [None; 10];
 #[unsafe(no_mangle)]
 pub unsafe fn vp8_init_intra4x4_predictors_internal() {
     unsafe {
         pred[B_DC_PRED as usize] = Some(
             vpx_dc_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
         pred[B_TM_PRED as usize] = Some(
             vpx_tm_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
         pred[B_VE_PRED as usize] = Some(
             vpx_ve_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
         pred[B_HE_PRED as usize] = Some(
             vpx_he_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
         pred[B_LD_PRED as usize] = Some(
             vpx_d45e_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
         pred[B_RD_PRED as usize] = Some(
             vpx_d135_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
         pred[B_VR_PRED as usize] = Some(
             vpx_d117_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
         pred[B_VL_PRED as usize] = Some(
             vpx_d63e_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
         pred[B_HD_PRED as usize] = Some(
             vpx_d153_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
         pred[B_HU_PRED as usize] = Some(
             vpx_d207_predictor_4x4_c
-                as unsafe fn(*mut uint8_t, ptrdiff_t, *const uint8_t, *const uint8_t) -> (),
+                as unsafe fn(*mut u8, ptrdiff_t, *const u8, *const u8) -> (),
         ) as intra_pred_fn;
     }
 }
@@ -155,7 +154,7 @@ pub unsafe fn vp8_intra4x4_predict(
         );
         *Above.offset(-(1 as i32) as isize) = top_left;
         pred[b_mode as usize].expect("non-null function pointer")(
-            dst as *mut uint8_t,
+            dst as *mut u8,
             dst_stride as ptrdiff_t,
             Above,
             &raw mut left as *mut u8,

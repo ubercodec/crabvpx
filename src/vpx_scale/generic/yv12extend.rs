@@ -16,11 +16,11 @@ pub struct yv12_buffer_config {
     pub alpha_width: i32,
     pub alpha_height: i32,
     pub alpha_stride: i32,
-    pub y_buffer: *mut uint8_t,
-    pub u_buffer: *mut uint8_t,
-    pub v_buffer: *mut uint8_t,
-    pub alpha_buffer: *mut uint8_t,
-    pub buffer_alloc: *mut uint8_t,
+    pub y_buffer: *mut u8,
+    pub u_buffer: *mut u8,
+    pub v_buffer: *mut u8,
+    pub alpha_buffer: *mut u8,
+    pub buffer_alloc: *mut u8,
     pub buffer_alloc_sz: size_t,
     pub border: i32,
     pub frame_size: size_t,
@@ -50,10 +50,9 @@ pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
-pub type uint8_t = u8;
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 unsafe fn extend_plane(
-    src: *mut uint8_t,
+    src: *mut u8,
     mut src_stride: i32,
     mut width: i32,
     mut height: i32,
@@ -65,10 +64,10 @@ unsafe fn extend_plane(
     unsafe {
         let mut i: i32 = 0;
         let linesize: i32 = extend_left + extend_right + width;
-        let mut src_ptr1: *mut uint8_t = src;
-        let mut src_ptr2: *mut uint8_t = src.offset(width as isize).offset(-(1 as isize));
-        let mut dst_ptr1: *mut uint8_t = src.offset(-(extend_left as isize));
-        let mut dst_ptr2: *mut uint8_t = src.offset(width as isize);
+        let mut src_ptr1: *mut u8 = src;
+        let mut src_ptr2: *mut u8 = src.offset(width as isize).offset(-(1 as isize));
+        let mut dst_ptr1: *mut u8 = src.offset(-(extend_left as isize));
+        let mut dst_ptr2: *mut u8 = src.offset(width as isize);
         i = 0 as i32;
         while i < height {
             core::ptr::write_bytes(
@@ -162,8 +161,8 @@ pub unsafe fn vp8_yv12_copy_frame_c(
 ) {
     unsafe {
         let mut row: i32 = 0;
-        let mut src: *const uint8_t = (*src_ybc).y_buffer;
-        let mut dst: *mut uint8_t = (*dst_ybc).y_buffer;
+        let mut src: *const u8 = (*src_ybc).y_buffer;
+        let mut dst: *mut u8 = (*dst_ybc).y_buffer;
         row = 0 as i32;
         while row < (*src_ybc).y_height {
             core::ptr::copy_nonoverlapping(
@@ -211,8 +210,8 @@ pub unsafe fn vpx_yv12_copy_y_c(
 ) {
     unsafe {
         let mut row: i32 = 0;
-        let mut src: *const uint8_t = (*src_ybc).y_buffer;
-        let mut dst: *mut uint8_t = (*dst_ybc).y_buffer;
+        let mut src: *const u8 = (*src_ybc).y_buffer;
+        let mut dst: *mut u8 = (*dst_ybc).y_buffer;
         row = 0 as i32;
         while row < (*src_ybc).y_height {
             core::ptr::copy_nonoverlapping(

@@ -1,11 +1,9 @@
 use std::ffi::c_void;
 unsafe extern "Rust" {
-    static vpx_norm: [uint8_t; 256];
+    static vpx_norm: [u8; 256];
 }
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
-pub type uint8_t = u8;
-pub type uint64_t = u64;
 pub type vpx_decrypt_cb = Option<unsafe fn(*mut c_void, *const u8, *mut u8, i32) -> ()>;
 pub type BD_VALUE = size_t;
 #[derive(Copy, Clone)]
@@ -14,11 +12,11 @@ pub struct vpx_reader {
     pub value: BD_VALUE,
     pub range: u32,
     pub count: i32,
-    pub buffer_end: *const uint8_t,
-    pub buffer: *const uint8_t,
+    pub buffer_end: *const u8,
+    pub buffer: *const u8,
     pub decrypt_cb: vpx_decrypt_cb,
     pub decrypt_state: *mut c_void,
-    pub clear_buffer: [uint8_t; 9],
+    pub clear_buffer: [u8; 9],
 }
 pub const CHAR_BIT: i32 = 8 as i32;
 pub const BD_VALUE_SIZE: i32 = ::core::mem::size_of::<BD_VALUE>() as i32 * CHAR_BIT;
@@ -63,13 +61,13 @@ unsafe fn vpx_read_bit(mut r: *mut vpx_reader) -> i32 {
     unsafe { vpx_read(r, 128 as i32) }
 }
 #[inline]
-unsafe fn bswap64(mut x: uint64_t) -> uint64_t {
+unsafe fn bswap64(mut x: u64) -> u64 {
     x.swap_bytes()
 }
 #[unsafe(no_mangle)]
 pub unsafe fn vpx_reader_init(
     mut r: *mut vpx_reader,
-    mut buffer: *const uint8_t,
+    mut buffer: *const u8,
     mut size: size_t,
     mut decrypt_cb: vpx_decrypt_cb,
     mut decrypt_state: *mut c_void,
@@ -93,17 +91,17 @@ pub unsafe fn vpx_reader_init(
 #[unsafe(no_mangle)]
 pub unsafe fn vpx_reader_fill(mut r: *mut vpx_reader) {
     unsafe {
-        let buffer_end: *const uint8_t = (*r).buffer_end;
-        let mut buffer: *const uint8_t = (*r).buffer;
-        let mut buffer_start: *const uint8_t = buffer;
+        let buffer_end: *const u8 = (*r).buffer_end;
+        let mut buffer: *const u8 = (*r).buffer;
+        let mut buffer_start: *const u8 = buffer;
         let mut value: BD_VALUE = (*r).value;
         let mut count: i32 = (*r).count;
         let bytes_left: size_t = buffer_end.offset_from(buffer) as size_t;
         let bits_left: size_t = bytes_left.wrapping_mul(CHAR_BIT as size_t);
         let mut shift: i32 = BD_VALUE_SIZE - CHAR_BIT - (count + CHAR_BIT);
         if (*r).decrypt_cb.is_some() {
-            let mut n: size_t = if (::core::mem::size_of::<[uint8_t; 9]>() as usize) < bytes_left {
-                ::core::mem::size_of::<[uint8_t; 9]>() as size_t
+            let mut n: size_t = if (::core::mem::size_of::<[u8; 9]>() as usize) < bytes_left {
+                ::core::mem::size_of::<[u8; 9]>() as size_t
             } else {
                 bytes_left
             };
@@ -113,8 +111,8 @@ pub unsafe fn vpx_reader_fill(mut r: *mut vpx_reader) {
                 &raw mut (*r).clear_buffer as *mut u8,
                 n as i32,
             );
-            buffer = &raw mut (*r).clear_buffer as *mut uint8_t;
-            buffer_start = &raw mut (*r).clear_buffer as *mut uint8_t;
+            buffer = &raw mut (*r).clear_buffer as *mut u8;
+            buffer_start = &raw mut (*r).clear_buffer as *mut u8;
         }
         if bits_left > BD_VALUE_SIZE as size_t {
             let bits: i32 = (shift as u32 & 0xfffffff8 as u32).wrapping_add(CHAR_BIT as u32) as i32;
@@ -125,7 +123,7 @@ pub unsafe fn vpx_reader_fill(mut r: *mut vpx_reader) {
                 &raw mut big_endian_values as *mut c_void as *mut u8,
                 ::core::mem::size_of::<BD_VALUE>() as size_t,
             );
-            big_endian_values = bswap64(big_endian_values as uint64_t) as BD_VALUE;
+            big_endian_values = bswap64(big_endian_values as u64) as BD_VALUE;
             nv = big_endian_values >> (BD_VALUE_SIZE - bits);
             count += bits;
             buffer = buffer.offset((bits >> 3 as i32) as isize);
@@ -155,7 +153,7 @@ pub unsafe fn vpx_reader_fill(mut r: *mut vpx_reader) {
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe fn vpx_reader_find_end(mut r: *mut vpx_reader) -> *const uint8_t {
+pub unsafe fn vpx_reader_find_end(mut r: *mut vpx_reader) -> *const u8 {
     unsafe {
         while (*r).count > CHAR_BIT && (*r).count < BD_VALUE_SIZE {
             (*r).count -= CHAR_BIT;

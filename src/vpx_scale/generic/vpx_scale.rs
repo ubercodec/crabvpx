@@ -63,11 +63,11 @@ pub struct yv12_buffer_config {
     pub alpha_width: i32,
     pub alpha_height: i32,
     pub alpha_stride: i32,
-    pub y_buffer: *mut uint8_t,
-    pub u_buffer: *mut uint8_t,
-    pub v_buffer: *mut uint8_t,
-    pub alpha_buffer: *mut uint8_t,
-    pub buffer_alloc: *mut uint8_t,
+    pub y_buffer: *mut u8,
+    pub u_buffer: *mut u8,
+    pub v_buffer: *mut u8,
+    pub alpha_buffer: *mut u8,
+    pub buffer_alloc: *mut u8,
     pub buffer_alloc_sz: size_t,
     pub border: i32,
     pub frame_size: size_t,
@@ -97,7 +97,6 @@ pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
-pub type uint8_t = u8;
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 pub type Scale1D = Option<unsafe fn(*const u8, i32, u32, u32, *mut u8, i32, u32, u32) -> ()>;
 pub const __DARWIN_NULL: *mut c_void = ::core::ptr::null_mut::<c_void>();

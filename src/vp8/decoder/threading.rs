@@ -146,7 +146,7 @@ pub union b_mode_info {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union int_mv {
-    pub as_int: uint32_t,
+    pub as_int: u32,
     pub as_mv: MV,
 }
 #[derive(Copy, Clone)]
@@ -155,7 +155,6 @@ pub struct MV {
     pub row: i16,
     pub col: i16,
 }
-pub type uint32_t = u32;
 pub type B_PREDICTION_MODE = u32;
 pub const B_MODE_COUNT: B_PREDICTION_MODE = 14;
 pub const NEW4X4: B_PREDICTION_MODE = 13;
@@ -266,17 +265,16 @@ pub struct modeinfo {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MB_MODE_INFO {
-    pub mode: uint8_t,
-    pub uv_mode: uint8_t,
-    pub ref_frame: uint8_t,
-    pub is_4x4: uint8_t,
+    pub mode: u8,
+    pub uv_mode: u8,
+    pub ref_frame: u8,
+    pub is_4x4: u8,
     pub mv: int_mv,
-    pub partitioning: uint8_t,
-    pub mb_skip_coeff: uint8_t,
-    pub need_to_clamp_mvs: uint8_t,
-    pub segment_id: uint8_t,
+    pub partitioning: u8,
+    pub mb_skip_coeff: u8,
+    pub need_to_clamp_mvs: u8,
+    pub segment_id: u8,
 }
-pub type uint8_t = u8;
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -294,11 +292,11 @@ pub struct yv12_buffer_config {
     pub alpha_width: i32,
     pub alpha_height: i32,
     pub alpha_stride: i32,
-    pub y_buffer: *mut uint8_t,
-    pub u_buffer: *mut uint8_t,
-    pub v_buffer: *mut uint8_t,
-    pub alpha_buffer: *mut uint8_t,
-    pub buffer_alloc: *mut uint8_t,
+    pub y_buffer: *mut u8,
+    pub u_buffer: *mut u8,
+    pub v_buffer: *mut u8,
+    pub alpha_buffer: *mut u8,
+    pub buffer_alloc: *mut u8,
     pub buffer_alloc_sz: size_t,
     pub border: i32,
     pub frame_size: size_t,
@@ -761,7 +759,7 @@ unsafe fn mt_decode_macroblock(mut pbi: *mut VP8D_COMP, mut xd: *mut MACROBLOCKD
         } else if vp8dx_bool_error((*xd).current_bc as *mut BOOL_DECODER) == 0 {
             let mut eobtotal: i32 = 0;
             eobtotal = vp8_decode_mb_tokens(pbi, xd);
-            (*(*xd).mode_info_context).mbmi.mb_skip_coeff = (eobtotal == 0 as i32) as uint8_t;
+            (*(*xd).mode_info_context).mbmi.mb_skip_coeff = (eobtotal == 0 as i32) as u8;
         }
         mode = (*(*xd).mode_info_context).mbmi.mode as MB_PREDICTION_MODE;
         if (*xd).segmentation_enabled != 0 {
@@ -1050,11 +1048,11 @@ unsafe fn mt_decode_mb_rows(
                 (*xd).mb_to_right_edge =
                     (((*pc).mb_cols - 1 as i32 - mb_col) * 16 as i32) << 3 as i32;
                 (*xd).dst.y_buffer =
-                    dst_buffer[0 as usize].offset(recon_yoffset as isize) as *mut uint8_t;
+                    dst_buffer[0 as usize].offset(recon_yoffset as isize) as *mut u8;
                 (*xd).dst.u_buffer =
-                    dst_buffer[1 as usize].offset(recon_uvoffset as isize) as *mut uint8_t;
+                    dst_buffer[1 as usize].offset(recon_uvoffset as isize) as *mut u8;
                 (*xd).dst.v_buffer =
-                    dst_buffer[2 as usize].offset(recon_uvoffset as isize) as *mut uint8_t;
+                    dst_buffer[2 as usize].offset(recon_uvoffset as isize) as *mut u8;
                 (*xd).corrupted |=
                     ref_fb_corrupted[(*(*xd).mode_info_context).mbmi.ref_frame as usize];
                 if (*xd).corrupted != 0 {
@@ -1077,17 +1075,17 @@ unsafe fn mt_decode_mb_rows(
                         (*(*xd).mode_info_context).mbmi.ref_frame as MV_REFERENCE_FRAME;
                     (*xd).pre.y_buffer = ref_buffer[ref_0 as usize][0 as usize]
                         .offset(recon_yoffset as isize)
-                        as *mut uint8_t;
+                        as *mut u8;
                     (*xd).pre.u_buffer = ref_buffer[ref_0 as usize][1 as usize]
                         .offset(recon_uvoffset as isize)
-                        as *mut uint8_t;
+                        as *mut u8;
                     (*xd).pre.v_buffer = ref_buffer[ref_0 as usize][2 as usize]
                         .offset(recon_uvoffset as isize)
-                        as *mut uint8_t;
+                        as *mut u8;
                 } else {
-                    (*xd).pre.y_buffer = ::core::ptr::null_mut::<uint8_t>();
-                    (*xd).pre.u_buffer = ::core::ptr::null_mut::<uint8_t>();
-                    (*xd).pre.v_buffer = ::core::ptr::null_mut::<uint8_t>();
+                    (*xd).pre.y_buffer = ::core::ptr::null_mut::<u8>();
+                    (*xd).pre.u_buffer = ::core::ptr::null_mut::<u8>();
+                    (*xd).pre.v_buffer = ::core::ptr::null_mut::<u8>();
                 }
                 mt_decode_macroblock(pbi, xd, 0 as u32);
                 (*xd).left_available = 1 as i32;

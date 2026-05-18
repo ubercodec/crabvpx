@@ -4,8 +4,6 @@ unsafe extern "Rust" {
 }
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
-pub type uint8_t = u8;
-pub type uint32_t = u32;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MV {
@@ -15,7 +13,7 @@ pub struct MV {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub union int_mv {
-    pub as_int: uint32_t,
+    pub as_int: u32,
     pub as_mv: MV,
 }
 pub type vpx_color_space = u32;
@@ -69,11 +67,11 @@ pub struct yv12_buffer_config {
     pub alpha_width: i32,
     pub alpha_height: i32,
     pub alpha_stride: i32,
-    pub y_buffer: *mut uint8_t,
-    pub u_buffer: *mut uint8_t,
-    pub v_buffer: *mut uint8_t,
-    pub alpha_buffer: *mut uint8_t,
-    pub buffer_alloc: *mut uint8_t,
+    pub y_buffer: *mut u8,
+    pub u_buffer: *mut u8,
+    pub v_buffer: *mut u8,
+    pub alpha_buffer: *mut u8,
+    pub buffer_alloc: *mut u8,
     pub buffer_alloc_sz: size_t,
     pub border: i32,
     pub frame_size: size_t,
@@ -144,15 +142,15 @@ pub const INTRA_FRAME: C2RustUnnamed_0 = 0;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MB_MODE_INFO {
-    pub mode: uint8_t,
-    pub uv_mode: uint8_t,
-    pub ref_frame: uint8_t,
-    pub is_4x4: uint8_t,
+    pub mode: u8,
+    pub uv_mode: u8,
+    pub ref_frame: u8,
+    pub is_4x4: u8,
     pub mv: int_mv,
-    pub partitioning: uint8_t,
-    pub mb_skip_coeff: uint8_t,
-    pub need_to_clamp_mvs: uint8_t,
-    pub segment_id: uint8_t,
+    pub partitioning: u8,
+    pub mb_skip_coeff: u8,
+    pub need_to_clamp_mvs: u8,
+    pub segment_id: u8,
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -298,7 +296,7 @@ pub unsafe fn vp8_find_near_mvs(
         let mut mv: *mut int_mv = &raw mut near_mvs as *mut int_mv;
         let mut cntx: *mut i32 = near_mv_ref_cnts as *mut i32;
         let fresh0 = &mut (*mv.offset(2 as isize)).as_int;
-        *fresh0 = 0 as uint32_t;
+        *fresh0 = 0 as u32;
         let fresh1 = &mut (*mv.offset(1 as isize)).as_int;
         *fresh1 = *fresh0;
         (*mv.offset(0 as isize)).as_int = *fresh1;
@@ -383,7 +381,7 @@ pub unsafe fn vp8_find_near_mvs(
             *near_mv_ref_cnts.offset(CNT_NEAR as isize) = tmp;
             tmp = near_mvs[CNT_NEAREST as usize].as_int as i32;
             near_mvs[CNT_NEAREST as usize].as_int = near_mvs[CNT_NEAR as usize].as_int;
-            near_mvs[CNT_NEAR as usize].as_int = tmp as uint32_t;
+            near_mvs[CNT_NEAR as usize].as_int = tmp as u32;
         }
         if *near_mv_ref_cnts.offset(CNT_NEAREST as isize)
             >= *near_mv_ref_cnts.offset(CNT_INTRA as isize)

@@ -3,7 +3,6 @@ unsafe extern "Rust" {
     fn vpx_memalign(align: size_t, size: size_t) -> *mut c_void;
     fn vpx_free(memblk: *mut c_void);
 }
-pub type uint8_t = u8;
 pub type __darwin_size_t = usize;
 pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
@@ -36,11 +35,11 @@ pub struct yv12_buffer_config {
     pub alpha_width: i32,
     pub alpha_height: i32,
     pub alpha_stride: i32,
-    pub y_buffer: *mut uint8_t,
-    pub u_buffer: *mut uint8_t,
-    pub v_buffer: *mut uint8_t,
-    pub alpha_buffer: *mut uint8_t,
-    pub buffer_alloc: *mut uint8_t,
+    pub y_buffer: *mut u8,
+    pub u_buffer: *mut u8,
+    pub v_buffer: *mut u8,
+    pub alpha_buffer: *mut u8,
+    pub buffer_alloc: *mut u8,
     pub buffer_alloc_sz: size_t,
     pub border: i32,
     pub frame_size: size_t,
@@ -94,7 +93,7 @@ pub unsafe fn vp8_yv12_realloc_frame_buffer(
             let mut uvplane_size: i32 = (uv_height + border) * uv_stride;
             let frame_size: size_t = (yplane_size + 2 as i32 * uvplane_size) as size_t;
             if (*ybf).buffer_alloc.is_null() {
-                (*ybf).buffer_alloc = vpx_memalign(32 as size_t, frame_size) as *mut uint8_t;
+                (*ybf).buffer_alloc = vpx_memalign(32 as size_t, frame_size) as *mut u8;
                 if (*ybf).buffer_alloc.is_null() {
                     (*ybf).buffer_alloc_sz = 0 as size_t;
                     return -(1 as i32);
@@ -137,7 +136,7 @@ pub unsafe fn vp8_yv12_realloc_frame_buffer(
                 .offset(uvplane_size as isize)
                 .offset((border / 2 as i32 * uv_stride) as isize)
                 .offset((border / 2 as i32) as isize);
-            (*ybf).alpha_buffer = ::core::ptr::null_mut::<uint8_t>();
+            (*ybf).alpha_buffer = ::core::ptr::null_mut::<u8>();
             (*ybf).corrupted = 0 as i32;
             return 0 as i32;
         }
