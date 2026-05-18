@@ -784,21 +784,21 @@ unsafe extern "C" fn read_mb_modes_mv(
             read_uv_mode(safe_decoder, &(*pbi).common.fc.uv_mode_prob) as uint8_t;
     };
 }}
-unsafe extern "C" fn read_mb_features(
+fn read_mb_features(
     safe_decoder: &mut SafeBoolDecoder,
-    mut mi: *mut MB_MODE_INFO,
-    mut x: *mut MACROBLOCKD,
-) { unsafe {
-    if (*x).segmentation_enabled as ::core::ffi::c_int != 0
-        && (*x).update_mb_segmentation_map as ::core::ffi::c_int != 0
+    mi: &mut MB_MODE_INFO,
+    x: &MACROBLOCKD,
+) {
+    if x.segmentation_enabled as ::core::ffi::c_int != 0
+        && x.update_mb_segmentation_map as ::core::ffi::c_int != 0
     {
-        if safe_decoder.read_bool((*x).mb_segment_tree_probs[0] as i32) != 0 {
-            (*mi).segment_id = (2 + safe_decoder.read_bool((*x).mb_segment_tree_probs[2] as i32)) as uint8_t;
+        if safe_decoder.read_bool(x.mb_segment_tree_probs[0] as i32) != 0 {
+            mi.segment_id = (2 + safe_decoder.read_bool(x.mb_segment_tree_probs[2] as i32)) as uint8_t;
         } else {
-            (*mi).segment_id = safe_decoder.read_bool((*x).mb_segment_tree_probs[1] as i32) as uint8_t;
+            mi.segment_id = safe_decoder.read_bool(x.mb_segment_tree_probs[1] as i32) as uint8_t;
         }
     }
-}}
+}
 fn decode_mb_mode_mvs(
     mut pbi: *mut VP8D_COMP,
     mip_slice: &mut [MODE_INFO],
@@ -808,8 +808,8 @@ fn decode_mb_mode_mvs(
     if (*pbi).mb.update_mb_segmentation_map != 0 {
         read_mb_features(
             safe_decoder,
-            &raw mut mip_slice[cur_idx].mbmi,
-            &raw mut (*pbi).mb,
+            &mut mip_slice[cur_idx].mbmi,
+            &(*pbi).mb,
         );
     } else if (*pbi).common.frame_type as ::core::ffi::c_uint
         == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
