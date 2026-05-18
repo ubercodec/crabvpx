@@ -111,7 +111,7 @@ unsafe extern "C" {
         __c: ::core::ffi::c_int,
         __len: size_t,
     ) -> *mut ::core::ffi::c_void;
-    fn vp8_mb_init_dequantizer(pbi: *mut VP8D_COMP, xd: *mut MACROBLOCKD);
+    fn vp8_mb_init_dequantizer(pbi: &mut VP8D_COMP, xd: &mut MACROBLOCKD);
     fn vpx_memalign(align: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_malloc(size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_calloc(num: size_t, size: size_t) -> *mut ::core::ffi::c_void;
@@ -210,189 +210,7 @@ pub struct _opaque_pthread_t {
 pub type __darwin_pthread_attr_t = _opaque_pthread_attr_t;
 pub type __darwin_pthread_t = *mut _opaque_pthread_t;
 pub type pthread_attr_t = __darwin_pthread_attr_t;
-pub type pthread_t = *mut ::core::ffi::c_void;
 pub type mach_port_t = __darwin_mach_port_t;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct VP8D_COMP {
-    pub mb: MACROBLOCKD,
-    pub dec_fb_ref: [*mut YV12_BUFFER_CONFIG; 4],
-    pub common: VP8_COMMON,
-    pub mbc: [vp8_reader; 9],
-    pub oxcf: VP8D_CONFIG,
-    pub fragments: FRAGMENT_DATA,
-    pub b_multithreaded_rd: vpx_atomic_int,
-    pub max_threads: ::core::ffi::c_int,
-    pub current_mb_col_main: ::core::ffi::c_int,
-    pub decoding_thread_count: ::core::ffi::c_uint,
-    pub allocated_decoding_thread_count: ::core::ffi::c_int,
-    pub mt_baseline_filter_level: [::core::ffi::c_int; 4],
-    pub sync_range: ::core::ffi::c_int,
-    pub mt_current_mb_col: *mut vpx_atomic_int,
-    pub mt_yabove_row: *mut *mut ::core::ffi::c_uchar,
-    pub mt_uabove_row: *mut *mut ::core::ffi::c_uchar,
-    pub mt_vabove_row: *mut *mut ::core::ffi::c_uchar,
-    pub mt_yleft_col: *mut *mut ::core::ffi::c_uchar,
-    pub mt_uleft_col: *mut *mut ::core::ffi::c_uchar,
-    pub mt_vleft_col: *mut *mut ::core::ffi::c_uchar,
-    pub mb_row_di: *mut MB_ROW_DEC,
-    pub de_thread_data: *mut DECODETHREAD_DATA,
-    pub h_decoding_thread: *mut pthread_t,
-    pub h_event_start_decoding: *mut semaphore_t,
-    pub h_event_end_decoding: semaphore_t,
-    pub ready_for_new_data: ::core::ffi::c_int,
-    pub prob_intra: vp8_prob,
-    pub prob_last: vp8_prob,
-    pub prob_gf: vp8_prob,
-    pub prob_skip_false: vp8_prob,
-    pub ec_enabled: ::core::ffi::c_int,
-    pub ec_active: ::core::ffi::c_int,
-    pub decoded_key_frame: ::core::ffi::c_int,
-    pub independent_partitions: ::core::ffi::c_int,
-    pub frame_corrupt_residual: ::core::ffi::c_int,
-    pub decrypt_cb: vpx_decrypt_cb,
-    pub decrypt_state: *mut ::core::ffi::c_void,
-    pub restart_threads: ::core::ffi::c_int,
-}
-pub type semaphore_t = *mut ::core::ffi::c_void;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct DECODETHREAD_DATA {
-    pub ithread: ::core::ffi::c_int,
-    pub ptr1: *mut ::core::ffi::c_void,
-    pub ptr2: *mut ::core::ffi::c_void,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MB_ROW_DEC {
-    pub mbd: MACROBLOCKD,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct vpx_atomic_int {
-    pub value: ::core::ffi::c_int,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct FRAGMENT_DATA {
-    pub enabled: ::core::ffi::c_int,
-    pub count: ::core::ffi::c_uint,
-    pub ptrs: [*const ::core::ffi::c_uchar; 9],
-    pub sizes: [::core::ffi::c_uint; 9],
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct VP8D_CONFIG {
-    pub Width: ::core::ffi::c_int,
-    pub Height: ::core::ffi::c_int,
-    pub Version: ::core::ffi::c_int,
-    pub postprocess: ::core::ffi::c_int,
-    pub max_threads: ::core::ffi::c_int,
-    pub error_concealment: ::core::ffi::c_int,
-}
-pub type VP8_COMMON = VP8Common;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct VP8Common {
-    pub error: vpx_internal_error_info,
-    pub Y1dequant: [[::core::ffi::c_short; 2]; 128],
-    pub Y2dequant: [[::core::ffi::c_short; 2]; 128],
-    pub UVdequant: [[::core::ffi::c_short; 2]; 128],
-    pub Width: ::core::ffi::c_int,
-    pub Height: ::core::ffi::c_int,
-    pub horiz_scale: ::core::ffi::c_int,
-    pub vert_scale: ::core::ffi::c_int,
-    pub clamp_type: CLAMP_TYPE,
-    pub frame_to_show: *mut YV12_BUFFER_CONFIG,
-    pub yv12_fb: [YV12_BUFFER_CONFIG; 4],
-    pub fb_idx_ref_cnt: [::core::ffi::c_int; 4],
-    pub new_fb_idx: ::core::ffi::c_int,
-    pub lst_fb_idx: ::core::ffi::c_int,
-    pub gld_fb_idx: ::core::ffi::c_int,
-    pub alt_fb_idx: ::core::ffi::c_int,
-    pub temp_scale_frame: YV12_BUFFER_CONFIG,
-    pub last_frame_type: FRAME_TYPE,
-    pub frame_type: FRAME_TYPE,
-    pub show_frame: ::core::ffi::c_int,
-    pub frame_flags: ::core::ffi::c_int,
-    pub MBs: ::core::ffi::c_int,
-    pub mb_rows: ::core::ffi::c_int,
-    pub mb_cols: ::core::ffi::c_int,
-    pub mode_info_stride: ::core::ffi::c_int,
-    pub mb_no_coeff_skip: ::core::ffi::c_int,
-    pub no_lpf: ::core::ffi::c_int,
-    pub use_bilinear_mc_filter: ::core::ffi::c_int,
-    pub full_pixel: ::core::ffi::c_int,
-    pub base_qindex: ::core::ffi::c_int,
-    pub y1dc_delta_q: ::core::ffi::c_int,
-    pub y2dc_delta_q: ::core::ffi::c_int,
-    pub y2ac_delta_q: ::core::ffi::c_int,
-    pub uvdc_delta_q: ::core::ffi::c_int,
-    pub uvac_delta_q: ::core::ffi::c_int,
-    pub mip: *mut MODE_INFO,
-    pub mi: *mut MODE_INFO,
-    pub show_frame_mi: *mut MODE_INFO,
-    pub filter_type: LOOPFILTERTYPE,
-    pub lf_info: loop_filter_info_n,
-    pub filter_level: ::core::ffi::c_int,
-    pub last_sharpness_level: ::core::ffi::c_int,
-    pub sharpness_level: ::core::ffi::c_int,
-    pub refresh_last_frame: ::core::ffi::c_int,
-    pub refresh_golden_frame: ::core::ffi::c_int,
-    pub refresh_alt_ref_frame: ::core::ffi::c_int,
-    pub copy_buffer_to_gf: ::core::ffi::c_int,
-    pub copy_buffer_to_arf: ::core::ffi::c_int,
-    pub refresh_entropy_probs: ::core::ffi::c_int,
-    pub ref_frame_sign_bias: [::core::ffi::c_int; 4],
-    pub above_context: *mut ENTROPY_CONTEXT_PLANES,
-    pub left_context: ENTROPY_CONTEXT_PLANES,
-    pub lfc: FRAME_CONTEXT,
-    pub fc: FRAME_CONTEXT,
-    pub current_video_frame: ::core::ffi::c_uint,
-    pub version: ::core::ffi::c_int,
-    pub multi_token_partition: TOKEN_PARTITION,
-    pub processor_core_count: ::core::ffi::c_int,
-}
-pub type TOKEN_PARTITION = ::core::ffi::c_uint;
-pub const EIGHT_PARTITION: TOKEN_PARTITION = 3;
-pub const FOUR_PARTITION: TOKEN_PARTITION = 2;
-pub const TWO_PARTITION: TOKEN_PARTITION = 1;
-pub const ONE_PARTITION: TOKEN_PARTITION = 0;
-pub type FRAME_CONTEXT = frame_contexts;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct frame_contexts {
-    pub bmode_prob: [vp8_prob; 9],
-    pub ymode_prob: [vp8_prob; 4],
-    pub uv_mode_prob: [vp8_prob; 3],
-    pub sub_mv_ref_prob: [vp8_prob; 3],
-    pub coef_probs: [[[[vp8_prob; 11]; 3]; 8]; 4],
-    pub mvc: [MV_CONTEXT; 2],
-}
-pub type MV_CONTEXT = mv_context;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct mv_context {
-    pub prob: [vp8_prob; 19],
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct loop_filter_info_n {
-    pub mblim: [[::core::ffi::c_uchar; 1]; 64],
-    pub blim: [[::core::ffi::c_uchar; 1]; 64],
-    pub lim: [[::core::ffi::c_uchar; 1]; 64],
-    pub hev_thr: [[::core::ffi::c_uchar; 1]; 4],
-    pub lvl: [[[::core::ffi::c_uchar; 4]; 4]; 4],
-    pub hev_thr_lut: [[::core::ffi::c_uchar; 64]; 2],
-    pub mode_lf_lut: [::core::ffi::c_uchar; 10],
-}
-pub type LOOPFILTERTYPE = ::core::ffi::c_uint;
-pub const SIMPLE_LOOPFILTER: LOOPFILTERTYPE = 1;
-pub const NORMAL_LOOPFILTER: LOOPFILTERTYPE = 0;
-pub type CLAMP_TYPE = ::core::ffi::c_uint;
-pub const RECON_CLAMP_NOTREQUIRED: CLAMP_TYPE = 1;
-pub const RECON_CLAMP_REQUIRED: CLAMP_TYPE = 0;
-
 pub type MV_REFERENCE_FRAME = ::core::ffi::c_uint;
 pub const MAX_REF_FRAMES: MV_REFERENCE_FRAME = 4;
 pub const ALTREF_FRAME: MV_REFERENCE_FRAME = 3;
@@ -590,7 +408,7 @@ unsafe extern "C" fn mt_decode_macroblock(
     }
     mode = (*(*xd).mode_info_context).mbmi.mode as MB_PREDICTION_MODE;
     if (*xd).segmentation_enabled != 0 {
-        vp8_mb_init_dequantizer(pbi, xd);
+        vp8_mb_init_dequantizer(&mut *pbi, &mut *xd);
     }
     if (*(*xd).mode_info_context).mbmi.ref_frame as ::core::ffi::c_int
         == INTRA_FRAME as ::core::ffi::c_int
