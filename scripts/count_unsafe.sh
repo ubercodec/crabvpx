@@ -19,11 +19,11 @@ BAR_WIDTH=${#TEXT}
 # Draw progress bar
 FILLED=$(( (REMOVED * BAR_WIDTH) / BASELINE ))
 EMPTY=$((BAR_WIDTH - FILLED))
-BAR_FILLED=$(printf "%${FILLED}s" "" | tr ' ' '█')
-BAR_EMPTY=$(printf "%${EMPTY}s" "" | tr ' ' '░')
+BAR_FILLED=$(printf "%${FILLED}s" "" | tr ' ' '#')
+BAR_EMPTY=$(printf "%${EMPTY}s" "" | tr ' ' '-')
 
 echo ""
-echo "🦀 CrabVPX Unsafe Tracker"
-echo "╰─ $TEXT"
+echo "CrabVPX Unsafe Tracker"
+echo "  $TEXT"
 echo "  [${BAR_FILLED}${BAR_EMPTY}]"
 echo ""

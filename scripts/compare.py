@@ -65,7 +65,13 @@ def run_harness_capture(harness_dir: Path, args: List[str], features: str = None
     cmd.append("--")
     cmd.extend(args)
 
-    proc = subprocess.run(cmd, cwd=harness_dir, capture_output=True, text=True, check=True)
+    try:
+        proc = subprocess.run(cmd, cwd=harness_dir, capture_output=True, text=True, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"\\n[FAIL] Command failed: {' '.join(cmd)}")
+        print(f"--- STDOUT ---\\n{e.stdout}")
+        print(f"--- STDERR ---\\n{e.stderr}")
+        raise e
     
     frames = []
     for line in proc.stdout.splitlines():
@@ -85,21 +91,21 @@ def perform_differential_test(harness_dir: Path, harness_args: List[str]):
     rust_frames = run_harness_capture(harness_dir, harness_args, features="rust")
     
     if len(oracle_frames) != len(rust_frames):
-        print(f"❌ Error: Frame count mismatch! Oracle: {len(oracle_frames)}, Rust: {len(rust_frames)}")
+        print(f"[FAIL] Error: Frame count mismatch! Oracle: {len(oracle_frames)}, Rust: {len(rust_frames)}")
         sys.exit(1)
         
     mismatches = 0
     for i, (o, r) in enumerate(zip(oracle_frames, rust_frames)):
         if o != r:
-            print(f"❌ Mismatch in {o['file']} frame {o['idx']}:")
+            print(f"[FAIL] Mismatch in {o['file']} frame {o['idx']}:")
             print(f"   Oracle: {o}")
             print(f"   Rust:   {r}")
             mismatches += 1
             
     if mismatches == 0:
-        print(f"✅ Success! Direct comparison passed for all {len(oracle_frames)} frames.")
+        print(f"[PASS] Success! Direct comparison passed for all {len(oracle_frames)} frames.")
     else:
-        print(f"❌ Failed! Found {mismatches} implementation mismatches.")
+        print(f"[FAIL] Failed! Found {mismatches} implementation mismatches.")
         sys.exit(1)
 
 
@@ -123,7 +129,7 @@ def main():
 
     root_dir = Path(__file__).resolve().parent.parent
     harness_dir = root_dir / "harness"
-    test_data_dir = root_dir / "libvpx-test-data"
+    test_data_dir = root_dir / "test_data"
 
     download_vectors(test_data_dir)
 

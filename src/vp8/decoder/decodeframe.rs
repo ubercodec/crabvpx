@@ -692,7 +692,7 @@ unsafe extern "C" fn vp8dx_decode_bool(
         }
         value = (*br).value;
         count = (*br).count;
-        bigsplit = (split as VP8_BD_VALUE) << VP8_BD_VALUE_SIZE - 8 as ::core::ffi::c_int;
+        bigsplit = (split as VP8_BD_VALUE) << (VP8_BD_VALUE_SIZE - 8 as ::core::ffi::c_int);
         range = split;
         if value >= bigsplit {
             range = (*br).range.wrapping_sub(split);
@@ -706,7 +706,7 @@ unsafe extern "C" fn vp8dx_decode_bool(
         (*br).value = value;
         (*br).count = count;
         (*br).range = range;
-        return bit as ::core::ffi::c_int;
+        bit as ::core::ffi::c_int
     }
 }
 #[inline]
@@ -722,7 +722,7 @@ unsafe extern "C" fn vp8_decode_value(
             z |= vp8dx_decode_bool(br, 0x80 as ::core::ffi::c_int) << bit;
             bit -= 1;
         }
-        return z;
+        z
     }
 }
 #[inline]
@@ -731,7 +731,7 @@ unsafe extern "C" fn vp8dx_bool_error(mut br: *mut BOOL_DECODER) -> ::core::ffi:
         if (*br).count > VP8_BD_VALUE_SIZE && (*br).count < VP8_LOTS_OF_BITS {
             return 1 as ::core::ffi::c_int;
         }
-        return 0 as ::core::ffi::c_int;
+        0 as ::core::ffi::c_int
     }
 }
 pub const MB_FEATURE_TREE_PROBS: ::core::ffi::c_int = 3 as ::core::ffi::c_int;
@@ -751,8 +751,8 @@ unsafe extern "C" fn vpx_atomic_load_acquire(
     mut atomic: *const vpx_atomic_int,
 ) -> ::core::ffi::c_int {
     unsafe {
-        return (*((&raw const (*atomic).value) as *const core::sync::atomic::AtomicI32))
-            .load(core::sync::atomic::Ordering::Acquire);
+        (*((&raw const (*atomic).value) as *const core::sync::atomic::AtomicI32))
+            .load(core::sync::atomic::Ordering::Acquire)
     }
 }
 #[inline]
@@ -790,26 +790,23 @@ unsafe extern "C" fn setup_intra_recon_left(
     mut y_stride: ::core::ffi::c_int,
     mut uv_stride: ::core::ffi::c_int,
 ) {
-    unsafe {
-        let mut i: ::core::ffi::c_int = 0;
-        i = 0 as ::core::ffi::c_int;
-        while i < 16 as ::core::ffi::c_int {
-            *y_buffer.offset((y_stride * i) as isize) =
-                129 as ::core::ffi::c_int as ::core::ffi::c_uchar;
-            i += 1;
-        }
-        i = 0 as ::core::ffi::c_int;
-        while i < 8 as ::core::ffi::c_int {
-            *u_buffer.offset((uv_stride * i) as isize) =
-                129 as ::core::ffi::c_int as ::core::ffi::c_uchar;
-            i += 1;
-        }
-        i = 0 as ::core::ffi::c_int;
-        while i < 8 as ::core::ffi::c_int {
-            *v_buffer.offset((uv_stride * i) as isize) =
-                129 as ::core::ffi::c_int as ::core::ffi::c_uchar;
-            i += 1;
-        }
+    let y_stride = y_stride as usize;
+    let uv_stride = uv_stride as usize;
+
+    // Convert raw pointers into safe mutable slices
+    let y_slice = unsafe { core::slice::from_raw_parts_mut(y_buffer, y_stride * 16) };
+    let u_slice = unsafe { core::slice::from_raw_parts_mut(u_buffer, uv_stride * 8) };
+    let v_slice = unsafe { core::slice::from_raw_parts_mut(v_buffer, uv_stride * 8) };
+
+    // Use safe iterators to set the values
+    for chunk in y_slice.chunks_mut(y_stride).take(16) {
+        chunk[0] = 129;
+    }
+    for chunk in u_slice.chunks_mut(uv_stride).take(8) {
+        chunk[0] = 129;
+    }
+    for chunk in v_slice.chunks_mut(uv_stride).take(8) {
+        chunk[0] = 129;
     }
 }
 #[unsafe(no_mangle)]
@@ -1084,7 +1081,7 @@ unsafe extern "C" fn get_delta_q(
         if ret_val != prev {
             *q_update = 1 as ::core::ffi::c_int;
         }
-        return ret_val;
+        ret_val
     }
 }
 unsafe extern "C" fn yv12_extend_frame_top_c(mut ybf: *mut YV12_BUFFER_CONFIG) {
@@ -1632,11 +1629,11 @@ unsafe extern "C" fn read_partition_size(
             );
             cx_size = &raw mut temp as *mut ::core::ffi::c_uchar;
         }
-        return (*cx_size.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
+        (*cx_size.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
             + ((*cx_size.offset(1 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
                 << 8 as ::core::ffi::c_int)
             + ((*cx_size.offset(2 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                << 16 as ::core::ffi::c_int)) as ::core::ffi::c_uint;
+                << 16 as ::core::ffi::c_int)) as ::core::ffi::c_uint
     }
 }
 unsafe extern "C" fn read_is_valid(
@@ -1645,10 +1642,10 @@ unsafe extern "C" fn read_is_valid(
     mut end: *const ::core::ffi::c_uchar,
 ) -> ::core::ffi::c_int {
     unsafe {
-        return (len != 0 as size_t
+        (len != 0 as size_t
             && end > start
             && len <= end.offset_from(start) as ::core::ffi::c_long as size_t)
-            as ::core::ffi::c_int;
+            as ::core::ffi::c_int
     }
 }
 unsafe extern "C" fn read_available_partition_size(
@@ -1703,7 +1700,7 @@ unsafe extern "C" fn read_available_partition_size(
                 );
             }
         }
-        return partition_size;
+        partition_size
     }
 }
 unsafe extern "C" fn setup_token_decoder(
@@ -2446,7 +2443,7 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
             (*pc).fc = (*pc).lfc;
             (*pbi).independent_partitions = prev_independent_partitions;
         }
-        return 0 as ::core::ffi::c_int;
+        0 as ::core::ffi::c_int
     }
 }
 pub const __ATOMIC_ACQUIRE: ::core::ffi::c_int = 2 as ::core::ffi::c_int;
