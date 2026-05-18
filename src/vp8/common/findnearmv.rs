@@ -66,7 +66,7 @@ unsafe extern "C" fn vp8_clamp_mv2(mut mv: *mut int_mv, mut xd: *const MACROBLOC
     }
 }}
 #[unsafe(no_mangle)]
-pub static mut vp8_mbsplit_offset: [[::core::ffi::c_uchar; 16]; 4] = [
+pub static vp8_mbsplit_offset: [[::core::ffi::c_uchar; 16]; 4] = [
     [
         0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
         8 as ::core::ffi::c_int as ::core::ffi::c_uchar,

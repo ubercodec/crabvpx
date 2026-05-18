@@ -1,5 +1,5 @@
 #[unsafe(no_mangle)]
-pub static mut vp8_mode_contexts: [[::core::ffi::c_int; 4]; 6] = [
+pub static vp8_mode_contexts: [[::core::ffi::c_int; 4]; 6] = [
     [
         7 as ::core::ffi::c_int,
         1 as ::core::ffi::c_int,

@@ -14,6 +14,20 @@ pub union int_mv {
     pub as_int: uint32_t,
     pub as_mv: MV,
 }
+impl int_mv {
+    #[inline]
+    pub fn as_int(&self) -> uint32_t {
+        unsafe { self.as_int }
+    }
+    #[inline]
+    pub fn as_mv(&self) -> MV {
+        unsafe { self.as_mv }
+    }
+    #[inline]
+    pub fn as_mv_mut(&mut self) -> &mut MV {
+        unsafe { &mut self.as_mv }
+    }
+}
 
 pub type vp8_prob = ::core::ffi::c_uchar;
 
@@ -55,6 +69,10 @@ impl b_mode_info {
     #[inline]
     pub fn mode(&self) -> B_PREDICTION_MODE {
         unsafe { self.as_mode }
+    }
+    #[inline]
+    pub fn mv(&self) -> int_mv {
+        unsafe { self.mv }
     }
 }
 
