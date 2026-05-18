@@ -348,26 +348,32 @@ unsafe extern "C" fn swap_frame_buffers(mut cm: *mut VP8_COMMON) -> ::core::ffi:
     (*cm).fb_idx_ref_cnt[(*cm).new_fb_idx as usize] -= 1;
     return err;
 }}
-unsafe extern "C" fn check_fragments_for_errors(mut pbi: *mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
-    if (*pbi).ec_active == 0
-        && (*pbi).fragments.count <= 1 as ::core::ffi::c_uint
-        && (*pbi).fragments.sizes[0 as ::core::ffi::c_int as usize] == 0 as ::core::ffi::c_uint
+fn check_fragments_for_errors(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int {
+    if pbi.ec_active == 0
+        && pbi.fragments.count <= 1
+        && pbi.fragments.sizes[0] == 0
     {
-        let mut cm: *mut VP8_COMMON = &raw mut (*pbi).common;
-        if (*cm).fb_idx_ref_cnt[(*cm).lst_fb_idx as usize] > 1 as ::core::ffi::c_int {
-            let prev_idx: ::core::ffi::c_int = (*cm).lst_fb_idx;
-            (*cm).fb_idx_ref_cnt[prev_idx as usize] -= 1;
-            (*cm).lst_fb_idx = get_free_fb(&mut *cm);
-            let src_ptr = &raw const (*cm).yv12_fb[prev_idx as usize];
-            let dst_ptr = &raw mut (*cm).yv12_fb[(*cm).lst_fb_idx as usize];
-            vp8_yv12_copy_frame_c(&*src_ptr, &mut *dst_ptr);
+        let cm = &mut pbi.common;
+        if cm.fb_idx_ref_cnt[cm.lst_fb_idx as usize] > 1 {
+            let prev_idx = cm.lst_fb_idx as usize;
+            cm.fb_idx_ref_cnt[prev_idx] -= 1;
+            cm.lst_fb_idx = get_free_fb(cm);
+            let new_idx = cm.lst_fb_idx as usize;
+            if prev_idx < new_idx {
+                let (first, second) = cm.yv12_fb.split_at_mut(new_idx);
+                vp8_yv12_copy_frame_c(&first[prev_idx], &mut second[0]);
+            } else {
+                let (first, second) = cm.yv12_fb.split_at_mut(prev_idx);
+                vp8_yv12_copy_frame_c(&second[0], &mut first[new_idx]);
+            }
         }
-        (*cm).yv12_fb[(*cm).lst_fb_idx as usize].corrupted = 1 as ::core::ffi::c_int;
-        (*cm).show_frame = 0 as ::core::ffi::c_int;
-        return 0 as ::core::ffi::c_int;
+        let lst_fb_idx = cm.lst_fb_idx as usize;
+        cm.yv12_fb[lst_fb_idx].corrupted = 1;
+        cm.show_frame = 0;
+        return 0;
     }
-    return 1 as ::core::ffi::c_int;
-}}
+    return 1;
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8dx_receive_compressed_data(
     mut pbi: *mut VP8D_COMP,
@@ -375,7 +381,7 @@ pub unsafe extern "C" fn vp8dx_receive_compressed_data(
     let mut cm: *mut VP8_COMMON = &raw mut (*pbi).common;
     let mut retcode: ::core::ffi::c_int = -(1 as ::core::ffi::c_int);
     (*pbi).common.error.error_code = VPX_CODEC_OK;
-    retcode = check_fragments_for_errors(pbi);
+    retcode = check_fragments_for_errors(&mut *pbi);
     if retcode <= 0 as ::core::ffi::c_int {
         return retcode;
     }
