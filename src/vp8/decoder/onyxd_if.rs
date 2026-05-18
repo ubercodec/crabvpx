@@ -525,8 +525,7 @@ pub unsafe extern "C" fn vp8_remove_decoder_instances(
     (*fb).pbi[0 as ::core::ffi::c_int as usize] = ::core::ptr::null_mut::<VP8D_COMP>();
     return VPX_CODEC_OK as ::core::ffi::c_int;
 }}
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8dx_get_quantizer(mut pbi: *const VP8D_COMP) -> ::core::ffi::c_int { unsafe {
-    return (*pbi).common.base_qindex;
-}}
+pub fn vp8dx_get_quantizer(pbi: &VP8D_COMP) -> ::core::ffi::c_int {
+    return pbi.common.base_qindex;
+}
 pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;

@@ -47,7 +47,6 @@ unsafe extern "C" {
         ref_frame_flag: vpx_ref_frame_type,
         sd: *mut YV12_BUFFER_CONFIG,
     ) -> vpx_codec_err_t;
-    fn vp8dx_get_quantizer(pbi: *const VP8D_COMP) -> ::core::ffi::c_int;
     fn vp8_create_decoder_instances(
         fb: *mut frame_buffers,
         oxcf: *mut VP8D_CONFIG,
@@ -1319,7 +1318,7 @@ unsafe extern "C" fn vp8_get_quantizer(
     if pbi.is_null() {
         return VPX_CODEC_CORRUPT_FRAME;
     }
-    *arg = vp8dx_get_quantizer(pbi);
+    *arg = crate::vp8::decoder::onyxd_if::vp8dx_get_quantizer(&*pbi);
     return VPX_CODEC_OK;
 }}
 unsafe extern "C" fn vp8_set_postproc(
