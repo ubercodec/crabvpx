@@ -386,7 +386,11 @@ fn decode_macroblock(
     let mut mode: MB_PREDICTION_MODE = DC_PRED;
     let mut i: ::core::ffi::c_int = 0;
     if (*xd.mode_info_context).mbmi.mb_skip_coeff != 0 {
-        vp8_reset_mb_tokens_context(xd);
+        vp8_reset_mb_tokens_context(
+            &mut *xd.above_context,
+            &mut *xd.left_context,
+            (*xd.mode_info_context).mbmi.is_4x4 != 0,
+        );
     } else if vp8dx_bool_error(&pbi.mbc[xd.current_bc_idx]) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
         eobtotal = vp8_decode_mb_tokens(pbi, xd);
