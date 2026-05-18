@@ -83,6 +83,6 @@ pub unsafe fn vp8_dequant_idct_add_c(
             i += 1;
         }
         vp8_short_idct4x4llm_c(input, dest, stride, dest, stride);
-        core::ptr::write_bytes(input as *mut c_void as *mut u8, 0 as i32 as u8, 32 as usize);
+        core::ptr::write_bytes(input as *mut c_void as *mut u8, 0 as u8, 32 as usize);
     }
 }

@@ -482,7 +482,7 @@ unsafe fn create_decompressor(_oxcf: *mut Vp8dConfig) -> *mut Vp8dComp {
         }
         core::ptr::write_bytes(
             pbi as *mut c_void as *mut u8,
-            0 as i32 as u8,
+            0 as u8,
             ::core::mem::size_of::<Vp8dComp>() as usize,
         );
         if setjmp(&raw mut (*pbi).common.error.jmp as *mut i32) != 0 {
@@ -835,7 +835,7 @@ pub unsafe fn vp8_create_decoder_instances(
             vp8_remove_decoder_instances(fb);
             core::ptr::write_bytes(
                 &raw mut (*fb).pbi as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<[*mut Vp8dComp; 32]>() as usize,
             );
             return VPX_CODEC_ERROR as i32;

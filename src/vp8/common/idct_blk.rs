@@ -38,7 +38,7 @@ pub unsafe fn vp8_dequant_idct_add_y_block_c(
                     );
                     core::ptr::write_bytes(
                         q as *mut c_void as *mut u8,
-                        0 as i32 as u8,
+                        0 as u8,
                         (2 as usize).wrapping_mul(::core::mem::size_of::<i16>() as usize),
                     );
                 }
@@ -81,7 +81,7 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                     );
                     core::ptr::write_bytes(
                         q as *mut c_void as *mut u8,
-                        0 as i32 as u8,
+                        0 as u8,
                         (2 as usize).wrapping_mul(::core::mem::size_of::<i16>() as usize),
                     );
                 }
@@ -110,7 +110,7 @@ pub unsafe fn vp8_dequant_idct_add_uv_block_c(
                     );
                     core::ptr::write_bytes(
                         q as *mut c_void as *mut u8,
-                        0 as i32 as u8,
+                        0 as u8,
                         (2 as usize).wrapping_mul(::core::mem::size_of::<i16>() as usize),
                     );
                 }

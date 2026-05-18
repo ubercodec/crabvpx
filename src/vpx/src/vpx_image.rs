@@ -93,7 +93,7 @@ unsafe fn img_alloc_helper(
         if !img.is_null() {
             core::ptr::write_bytes(
                 img as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<VpxImageT>() as usize,
             );
         }

@@ -447,7 +447,7 @@ pub unsafe fn vpx_codec_dec_init_ver(
         } else {
             core::ptr::write_bytes(
                 ctx as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<VpxCodecCtxT>() as usize,
             );
             (*ctx).iface = iface;

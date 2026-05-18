@@ -532,7 +532,7 @@ pub unsafe fn vpx_scale_frame(
                     *(*dst)
                         .y_buffer
                         .offset((i * (*dst).y_stride + dw - 2 as i32) as isize)
-                        as i32 as u8,
+                        as u8,
                     ((*dst).y_width - dw + 1 as i32) as usize,
                 );
                 i += 1;
@@ -582,7 +582,7 @@ pub unsafe fn vpx_scale_frame(
                     *(*dst)
                         .u_buffer
                         .offset((i * (*dst).uv_stride + dw / 2 as i32 - 2 as i32) as isize)
-                        as i32 as u8,
+                        as u8,
                     ((*dst).uv_width - dw / 2 as i32 + 1 as i32) as usize,
                 );
                 i += 1;
@@ -632,7 +632,7 @@ pub unsafe fn vpx_scale_frame(
                     *(*dst)
                         .v_buffer
                         .offset((i * (*dst).uv_stride + dw / 2 as i32 - 2 as i32) as isize)
-                        as i32 as u8,
+                        as u8,
                     ((*dst).uv_width - dw / 2 as i32 + 1 as i32) as usize,
                 );
                 i += 1;

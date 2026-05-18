@@ -64,12 +64,12 @@ unsafe fn extend_plane(
         while i < height {
             core::ptr::write_bytes(
                 dst_ptr1 as *mut c_void as *mut u8,
-                *src_ptr1.offset(0 as isize) as i32 as u8,
+                *src_ptr1.offset(0 as isize) as u8,
                 extend_left as usize,
             );
             core::ptr::write_bytes(
                 dst_ptr2 as *mut c_void as *mut u8,
-                *src_ptr2.offset(0 as isize) as i32 as u8,
+                *src_ptr2.offset(0 as isize) as u8,
                 extend_right as usize,
             );
             src_ptr1 = src_ptr1.offset(src_stride as isize);

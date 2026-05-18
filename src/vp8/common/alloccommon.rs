@@ -396,7 +396,7 @@ pub unsafe fn vp8_create_common(mut oci: *mut Vp8Common) {
         (*oci).clamp_type = RECON_CLAMP_REQUIRED;
         core::ptr::write_bytes(
             &raw mut (*oci).ref_frame_sign_bias as *mut i32 as *mut c_void as *mut u8,
-            0 as i32 as u8,
+            0 as u8,
             ::core::mem::size_of::<[i32; 4]>() as usize,
         );
         (*oci).copy_buffer_to_gf = 0 as i32;

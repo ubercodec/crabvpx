@@ -1111,12 +1111,12 @@ unsafe fn update_fragments(
         if (*ctx).fragments.count == 0 as u32 {
             core::ptr::write_bytes(
                 &raw mut (*ctx).fragments.ptrs as *mut *const u8 as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<[*const u8; 9]>() as usize,
             );
             core::ptr::write_bytes(
                 &raw mut (*ctx).fragments.sizes as *mut u32 as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<[u32; 9]>() as usize,
             );
         }
@@ -1400,7 +1400,7 @@ unsafe fn vp8_get_frame(
             };
             core::ptr::write_bytes(
                 &raw mut flags as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<Vp8PpflagsT>() as usize,
             );
             if (*ctx).base.init_flags & VPX_CODEC_USE_POSTPROC as i64 != 0 {

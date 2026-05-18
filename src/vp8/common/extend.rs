@@ -75,7 +75,7 @@ unsafe fn copy_and_extend_plane(
         while i < h {
             core::ptr::write_bytes(
                 dest_ptr1 as *mut c_void as *mut u8,
-                *src_ptr1.offset(0 as isize) as i32 as u8,
+                *src_ptr1.offset(0 as isize) as u8,
                 el as usize,
             );
             if interleave_step == 1 as i32 {
@@ -94,7 +94,7 @@ unsafe fn copy_and_extend_plane(
             }
             core::ptr::write_bytes(
                 dest_ptr2 as *mut c_void as *mut u8,
-                *src_ptr2.offset(0 as isize) as i32 as u8,
+                *src_ptr2.offset(0 as isize) as u8,
                 er as usize,
             );
             src_ptr1 = src_ptr1.offset(sp as isize);

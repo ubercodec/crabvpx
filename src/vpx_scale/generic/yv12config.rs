@@ -58,7 +58,7 @@ pub unsafe fn vp8_yv12_de_alloc_frame_buffer(mut ybf: *mut Yv12BufferConfig) -> 
             }
             core::ptr::write_bytes(
                 ybf as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<Yv12BufferConfig>() as usize,
             );
         } else {

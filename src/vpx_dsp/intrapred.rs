@@ -103,7 +103,7 @@ unsafe fn d63_predictor(
             core::ptr::write_bytes(
                 dst.offset(((r + 0 as i32) as isize * stride) as isize)
                     .offset(size as isize) as *mut c_void as *mut u8,
-                *above.offset((bs - 1 as i32) as isize) as i32 as u8,
+                *above.offset((bs - 1 as i32) as isize) as u8,
                 (bs - size) as usize,
             );
             core::ptr::copy_nonoverlapping(
@@ -115,7 +115,7 @@ unsafe fn d63_predictor(
             core::ptr::write_bytes(
                 dst.offset(((r + 1 as i32) as isize * stride) as isize)
                     .offset(size as isize) as *mut c_void as *mut u8,
-                *above.offset((bs - 1 as i32) as isize) as i32 as u8,
+                *above.offset((bs - 1 as i32) as isize) as u8,
                 (bs - size) as usize,
             );
             r += 2 as i32;
@@ -157,7 +157,7 @@ unsafe fn d45_predictor(
             );
             core::ptr::write_bytes(
                 dst.offset(size as isize) as *mut c_void as *mut u8,
-                above_right as i32 as u8,
+                above_right as u8,
                 (x + 1 as i32) as usize,
             );
             dst = dst.offset(stride);
@@ -393,7 +393,7 @@ unsafe fn h_predictor(
         while r < bs {
             core::ptr::write_bytes(
                 dst as *mut c_void as *mut u8,
-                *left.offset(r as isize) as i32 as u8,
+                *left.offset(r as isize) as u8,
                 bs as usize,
             );
             dst = dst.offset(stride);
@@ -439,7 +439,7 @@ unsafe fn dc_128_predictor(
         let mut r: i32 = 0;
         r = 0 as i32;
         while r < bs {
-            core::ptr::write_bytes(dst as *mut c_void as *mut u8, 128 as i32 as u8, bs as usize);
+            core::ptr::write_bytes(dst as *mut c_void as *mut u8, 128 as u8, bs as usize);
             dst = dst.offset(stride);
             r += 1;
         }

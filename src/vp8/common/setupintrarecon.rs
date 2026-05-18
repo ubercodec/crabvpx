@@ -52,7 +52,7 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut Yv12BufferConfig) {
                 .y_buffer
                 .offset(-(1 as isize))
                 .offset(-((*ybf).y_stride as isize)) as *mut c_void as *mut u8,
-            127 as i32 as u8,
+            127 as u8,
             ((*ybf).y_width + 5 as i32) as usize,
         );
         i = 0 as i32;
@@ -67,7 +67,7 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut Yv12BufferConfig) {
                 .u_buffer
                 .offset(-(1 as isize))
                 .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8,
-            127 as i32 as u8,
+            127 as u8,
             ((*ybf).uv_width + 5 as i32) as usize,
         );
         i = 0 as i32;
@@ -82,7 +82,7 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut Yv12BufferConfig) {
                 .v_buffer
                 .offset(-(1 as isize))
                 .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8,
-            127 as i32 as u8,
+            127 as u8,
             ((*ybf).uv_width + 5 as i32) as usize,
         );
         i = 0 as i32;
@@ -102,7 +102,7 @@ pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut Yv12BufferConfig) {
                 .y_buffer
                 .offset(-(1 as isize))
                 .offset(-((*ybf).y_stride as isize)) as *mut c_void as *mut u8,
-            127 as i32 as u8,
+            127 as u8,
             ((*ybf).y_width + 5 as i32) as usize,
         );
         core::ptr::write_bytes(
@@ -110,7 +110,7 @@ pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut Yv12BufferConfig) {
                 .u_buffer
                 .offset(-(1 as isize))
                 .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8,
-            127 as i32 as u8,
+            127 as u8,
             ((*ybf).uv_width + 5 as i32) as usize,
         );
         core::ptr::write_bytes(
@@ -118,7 +118,7 @@ pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut Yv12BufferConfig) {
                 .v_buffer
                 .offset(-(1 as isize))
                 .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8,
-            127 as i32 as u8,
+            127 as u8,
             ((*ybf).uv_width + 5 as i32) as usize,
         );
     }

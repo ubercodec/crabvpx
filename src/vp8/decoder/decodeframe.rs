@@ -813,7 +813,7 @@ unsafe fn decode_macroblock(mut pbi: *mut Vp8dComp, mut xd: *mut MACROBLOCKD, _m
                 if (*(*xd).mode_info_context).mbmi.mb_skip_coeff != 0 {
                     core::ptr::write_bytes(
                         &raw mut (*xd).eobs as *mut i8 as *mut c_void as *mut u8,
-                        0 as i32 as u8,
+                        0 as u8,
                         25 as usize,
                     );
                 }
@@ -853,7 +853,7 @@ unsafe fn decode_macroblock(mut pbi: *mut Vp8dComp, mut xd: *mut MACROBLOCKD, _m
                             );
                             core::ptr::write_bytes(
                                 (*b).qcoeff as *mut c_void as *mut u8,
-                                0 as i32 as u8,
+                                0 as u8,
                                 (2 as usize).wrapping_mul(::core::mem::size_of::<i16>() as usize),
                             );
                         }
@@ -881,7 +881,7 @@ unsafe fn decode_macroblock(mut pbi: *mut Vp8dComp, mut xd: *mut MACROBLOCKD, _m
                         );
                         core::ptr::write_bytes(
                             (*b_0).qcoeff as *mut c_void as *mut u8,
-                            0 as i32 as u8,
+                            0 as u8,
                             (16 as usize).wrapping_mul(::core::mem::size_of::<i16>() as usize),
                         );
                     } else {
@@ -895,7 +895,7 @@ unsafe fn decode_macroblock(mut pbi: *mut Vp8dComp, mut xd: *mut MACROBLOCKD, _m
                         );
                         core::ptr::write_bytes(
                             (*b_0).qcoeff as *mut c_void as *mut u8,
-                            0 as i32 as u8,
+                            0 as u8,
                             (2 as usize).wrapping_mul(::core::mem::size_of::<i16>() as usize),
                         );
                     }
@@ -1074,12 +1074,12 @@ unsafe fn yv12_extend_frame_left_right_c(
         while i < plane_height {
             core::ptr::write_bytes(
                 dest_ptr1 as *mut c_void as *mut u8,
-                *src_ptr1.offset(0 as isize) as i32 as u8,
+                *src_ptr1.offset(0 as isize) as u8,
                 border as usize,
             );
             core::ptr::write_bytes(
                 dest_ptr2 as *mut c_void as *mut u8,
-                *src_ptr2.offset(0 as isize) as i32 as u8,
+                *src_ptr2.offset(0 as isize) as u8,
                 border as usize,
             );
             src_ptr1 = src_ptr1.offset(plane_stride as isize);
@@ -1100,12 +1100,12 @@ unsafe fn yv12_extend_frame_left_right_c(
         while i < plane_height {
             core::ptr::write_bytes(
                 dest_ptr1 as *mut c_void as *mut u8,
-                *src_ptr1.offset(0 as isize) as i32 as u8,
+                *src_ptr1.offset(0 as isize) as u8,
                 border as usize,
             );
             core::ptr::write_bytes(
                 dest_ptr2 as *mut c_void as *mut u8,
-                *src_ptr2.offset(0 as isize) as i32 as u8,
+                *src_ptr2.offset(0 as isize) as u8,
                 border as usize,
             );
             src_ptr1 = src_ptr1.offset(plane_stride as isize);
@@ -1122,12 +1122,12 @@ unsafe fn yv12_extend_frame_left_right_c(
         while i < plane_height {
             core::ptr::write_bytes(
                 dest_ptr1 as *mut c_void as *mut u8,
-                *src_ptr1.offset(0 as isize) as i32 as u8,
+                *src_ptr1.offset(0 as isize) as u8,
                 border as usize,
             );
             core::ptr::write_bytes(
                 dest_ptr2 as *mut c_void as *mut u8,
-                *src_ptr2.offset(0 as isize) as i32 as u8,
+                *src_ptr2.offset(0 as isize) as u8,
                 border as usize,
             );
             src_ptr1 = src_ptr1.offset(plane_stride as isize);
@@ -1202,7 +1202,7 @@ unsafe fn decode_mb_rows(mut pbi: *mut Vp8dComp) {
             (*xd).above_context = (*pc).above_context;
             core::ptr::write_bytes(
                 (*xd).left_context as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<EntropyContextPlanes>() as usize,
             );
             (*xd).left_available = false;
@@ -1572,18 +1572,18 @@ unsafe fn init_frame(mut pbi: *mut Vp8dComp) {
             vp8_default_coef_probs(pc as *mut VP8Common);
             core::ptr::write_bytes(
                 &raw mut (*xd).segment_feature_data as *mut [i8; 4] as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<[[i8; 4]; 2]>() as usize,
             );
             (*xd).mb_segment_abs_delta = SEGMENT_DELTADATA as u8;
             core::ptr::write_bytes(
                 &raw mut (*xd).ref_lf_deltas as *mut i8 as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<[i8; 4]>() as usize,
             );
             core::ptr::write_bytes(
                 &raw mut (*xd).mode_lf_deltas as *mut i8 as *mut c_void as *mut u8,
-                0 as i32 as u8,
+                0 as u8,
                 ::core::mem::size_of::<[i8; 4]>() as usize,
             );
             (*pc).refresh_golden_frame = 1 as i32;
@@ -1791,7 +1791,7 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
                     vp8dx_decode_bool(bc as *mut BoolDecoder, vp8_prob_half as i32) as u8;
                 core::ptr::write_bytes(
                     &raw mut (*xd).segment_feature_data as *mut [i8; 4] as *mut c_void as *mut u8,
-                    0 as i32 as u8,
+                    0 as u8,
                     ::core::mem::size_of::<[[i8; 4]; 2]>() as usize,
                 );
                 i = 0 as i32;
@@ -1821,7 +1821,7 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
             if (*xd).update_mb_segmentation_map != 0 {
                 core::ptr::write_bytes(
                     &raw mut (*xd).mb_segment_tree_probs as *mut u8 as *mut c_void as *mut u8,
-                    255 as i32 as u8,
+                    255 as u8,
                     ::core::mem::size_of::<[u8; 3]>() as usize,
                 );
                 i = 0 as i32;
@@ -1961,13 +1961,13 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
         }
         core::ptr::write_bytes(
             &raw mut (*xd).qcoeff as *mut i16 as *mut c_void as *mut u8,
-            0 as i32 as u8,
+            0 as u8,
             ::core::mem::size_of::<[i16; 400]>() as usize,
         );
         vp8_decode_mode_mvs(pbi);
         core::ptr::write_bytes(
             (*pc).above_context as *mut c_void as *mut u8,
-            0 as i32 as u8,
+            0 as u8,
             (::core::mem::size_of::<EntropyContextPlanes>() as usize)
                 .wrapping_mul((*pc).mb_cols as usize),
         );
