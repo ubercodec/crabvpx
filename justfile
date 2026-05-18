@@ -35,6 +35,11 @@ clean:
 build:
     cargo build --workspace
 
+# Run linting and formatting checks
+lint:
+    cargo fmt --all -- --check
+    cargo clippy --workspace
+
 # Run tests in the Rust workspace
 test:
     cargo test --workspace
