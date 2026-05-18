@@ -1,20 +1,14 @@
 use std::ffi::c_void;
-pub type VpxColorSpace = u32;
-pub const VPX_CS_SRGB: VpxColorSpace = 7;
-pub const VPX_CS_RESERVED: VpxColorSpace = 6;
-pub const VPX_CS_BT_2020: VpxColorSpace = 5;
-pub const VPX_CS_SMPTE_240: VpxColorSpace = 4;
-pub const VPX_CS_SMPTE_170: VpxColorSpace = 3;
-pub const VPX_CS_BT_709: VpxColorSpace = 2;
-pub const VPX_CS_BT_601: VpxColorSpace = 1;
-pub const VPX_CS_UNKNOWN: VpxColorSpace = 0;
-pub type VpxColorSpaceT = VpxColorSpace;
-pub type VpxColorRange = u32;
-pub const VPX_CR_FULL_RANGE: VpxColorRange = 1;
-pub const VPX_CR_STUDIO_RANGE: VpxColorRange = 0;
-pub type VpxColorRangeT = VpxColorRange;
-pub type DarwinSizeT = usize;
-pub type SizeT = DarwinSizeT;
+pub const VPX_CS_SRGB: u32 = 7;
+pub const VPX_CS_RESERVED: u32 = 6;
+pub const VPX_CS_BT_2020: u32 = 5;
+pub const VPX_CS_SMPTE_240: u32 = 4;
+pub const VPX_CS_SMPTE_170: u32 = 3;
+pub const VPX_CS_BT_709: u32 = 2;
+pub const VPX_CS_BT_601: u32 = 1;
+pub const VPX_CS_UNKNOWN: u32 = 0;
+pub const VPX_CR_FULL_RANGE: u32 = 1;
+pub const VPX_CR_STUDIO_RANGE: u32 = 0;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct Yv12BufferConfig {
@@ -36,14 +30,14 @@ pub struct Yv12BufferConfig {
     pub v_buffer: *mut u8,
     pub alpha_buffer: *mut u8,
     pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: SizeT,
+    pub buffer_alloc_sz: usize,
     pub border: i32,
-    pub frame_size: SizeT,
+    pub frame_size: usize,
     pub subsampling_x: i32,
     pub subsampling_y: i32,
     pub bit_depth: u32,
-    pub color_space: VpxColorSpaceT,
-    pub color_range: VpxColorRangeT,
+    pub color_space: u32,
+    pub color_range: u32,
     pub render_width: i32,
     pub render_height: i32,
     pub corrupted: i32,
@@ -59,7 +53,7 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut Yv12BufferConfig) {
                 .offset(-(1 as isize))
                 .offset(-((*ybf).y_stride as isize)) as *mut c_void as *mut u8,
             127 as i32 as u8,
-            ((*ybf).y_width + 5 as i32) as SizeT,
+            ((*ybf).y_width + 5 as i32) as usize,
         );
         i = 0 as i32;
         while i < (*ybf).y_height {
@@ -74,7 +68,7 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut Yv12BufferConfig) {
                 .offset(-(1 as isize))
                 .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8,
             127 as i32 as u8,
-            ((*ybf).uv_width + 5 as i32) as SizeT,
+            ((*ybf).uv_width + 5 as i32) as usize,
         );
         i = 0 as i32;
         while i < (*ybf).uv_height {
@@ -89,7 +83,7 @@ pub unsafe fn vp8_setup_intra_recon(mut ybf: *mut Yv12BufferConfig) {
                 .offset(-(1 as isize))
                 .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8,
             127 as i32 as u8,
-            ((*ybf).uv_width + 5 as i32) as SizeT,
+            ((*ybf).uv_width + 5 as i32) as usize,
         );
         i = 0 as i32;
         while i < (*ybf).uv_height {
@@ -109,7 +103,7 @@ pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut Yv12BufferConfig) {
                 .offset(-(1 as isize))
                 .offset(-((*ybf).y_stride as isize)) as *mut c_void as *mut u8,
             127 as i32 as u8,
-            ((*ybf).y_width + 5 as i32) as SizeT,
+            ((*ybf).y_width + 5 as i32) as usize,
         );
         core::ptr::write_bytes(
             (*ybf)
@@ -117,7 +111,7 @@ pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut Yv12BufferConfig) {
                 .offset(-(1 as isize))
                 .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8,
             127 as i32 as u8,
-            ((*ybf).uv_width + 5 as i32) as SizeT,
+            ((*ybf).uv_width + 5 as i32) as usize,
         );
         core::ptr::write_bytes(
             (*ybf)
@@ -125,7 +119,7 @@ pub unsafe fn vp8_setup_intra_recon_top_line(mut ybf: *mut Yv12BufferConfig) {
                 .offset(-(1 as isize))
                 .offset(-((*ybf).uv_stride as isize)) as *mut c_void as *mut u8,
             127 as i32 as u8,
-            ((*ybf).uv_width + 5 as i32) as SizeT,
+            ((*ybf).uv_width + 5 as i32) as usize,
         );
     }
 }
