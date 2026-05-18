@@ -59,13 +59,16 @@ pub fn vp8_short_idct4x4llm_safe(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_short_idct4x4llm_c(
-    mut input: *mut ::core::ffi::c_short,
-    mut pred_ptr: *mut ::core::ffi::c_uchar,
-    mut pred_stride: ::core::ffi::c_int,
-    mut dst_ptr: *mut ::core::ffi::c_uchar,
-    mut dst_stride: ::core::ffi::c_int,
+pub extern "C" fn vp8_short_idct4x4llm_c(
+    input: *mut ::core::ffi::c_short,
+    pred_ptr: *mut ::core::ffi::c_uchar,
+    pred_stride: ::core::ffi::c_int,
+    dst_ptr: *mut ::core::ffi::c_uchar,
+    dst_stride: ::core::ffi::c_int,
 ) {
+    if input.is_null() || pred_ptr.is_null() || dst_ptr.is_null() {
+        return;
+    }
     unsafe {
         let input_ref = &*(input as *const [i16; 16]);
         
@@ -101,13 +104,16 @@ pub fn vp8_dc_only_idct_add_safe(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_dc_only_idct_add_c(
-    mut input_dc: ::core::ffi::c_short,
-    mut pred_ptr: *mut ::core::ffi::c_uchar,
-    mut pred_stride: ::core::ffi::c_int,
-    mut dst_ptr: *mut ::core::ffi::c_uchar,
-    mut dst_stride: ::core::ffi::c_int,
+pub extern "C" fn vp8_dc_only_idct_add_c(
+    input_dc: ::core::ffi::c_short,
+    pred_ptr: *mut ::core::ffi::c_uchar,
+    pred_stride: ::core::ffi::c_int,
+    dst_ptr: *mut ::core::ffi::c_uchar,
+    dst_stride: ::core::ffi::c_int,
 ) {
+    if pred_ptr.is_null() || dst_ptr.is_null() {
+        return;
+    }
     unsafe {
         let pred_len = (3 * pred_stride + 4) as usize;
         let pred_slice = std::slice::from_raw_parts(pred_ptr, pred_len);
@@ -119,15 +125,15 @@ pub unsafe extern "C" fn vp8_dc_only_idct_add_c(
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_short_inv_walsh4x4_c(
-    mut input: *mut ::core::ffi::c_short,
-    mut mb_dqcoeff: *mut ::core::ffi::c_short,
+pub extern "C" fn vp8_short_inv_walsh4x4_c(
+    input: *mut ::core::ffi::c_short,
+    mb_dqcoeff: *mut ::core::ffi::c_short,
 ) {
+    if input.is_null() || mb_dqcoeff.is_null() {
+        return;
+    }
     unsafe {
         let input_ref = &*(input as *const [i16; 16]);
-        // mb_dqcoeff is accessed up to index 15 * 16 = 240.
-        // So we need a slice of at least 241 elements.
-        // We use 256 as it is the size of contiguously allocated block coefficients.
         let mb_dqcoeff_slice = std::slice::from_raw_parts_mut(mb_dqcoeff, 256);
         vp8_short_inv_walsh4x4_safe(input_ref, mb_dqcoeff_slice);
     }

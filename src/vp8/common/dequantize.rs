@@ -43,12 +43,15 @@ pub fn vp8_dequant_idct_add_safe(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_dequant_idct_add_c(
-    mut input: *mut ::core::ffi::c_short,
-    mut dq: *mut ::core::ffi::c_short,
-    mut dest: *mut ::core::ffi::c_uchar,
-    mut stride: ::core::ffi::c_int,
+pub extern "C" fn vp8_dequant_idct_add_c(
+    input: *mut ::core::ffi::c_short,
+    dq: *mut ::core::ffi::c_short,
+    dest: *mut ::core::ffi::c_uchar,
+    stride: ::core::ffi::c_int,
 ) {
+    if input.is_null() || dq.is_null() || dest.is_null() {
+        return;
+    }
     unsafe {
         let input_ref = &mut *(input as *mut [i16; 16]);
         let dq_ref = &*(dq as *const [i16; 16]);
