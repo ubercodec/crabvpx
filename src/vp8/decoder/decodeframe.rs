@@ -790,26 +790,23 @@ unsafe extern "C" fn setup_intra_recon_left(
     mut y_stride: ::core::ffi::c_int,
     mut uv_stride: ::core::ffi::c_int,
 ) {
-    unsafe {
-        let mut i: ::core::ffi::c_int = 0;
-        i = 0 as ::core::ffi::c_int;
-        while i < 16 as ::core::ffi::c_int {
-            *y_buffer.offset((y_stride * i) as isize) =
-                129 as ::core::ffi::c_int as ::core::ffi::c_uchar;
-            i += 1;
-        }
-        i = 0 as ::core::ffi::c_int;
-        while i < 8 as ::core::ffi::c_int {
-            *u_buffer.offset((uv_stride * i) as isize) =
-                129 as ::core::ffi::c_int as ::core::ffi::c_uchar;
-            i += 1;
-        }
-        i = 0 as ::core::ffi::c_int;
-        while i < 8 as ::core::ffi::c_int {
-            *v_buffer.offset((uv_stride * i) as isize) =
-                129 as ::core::ffi::c_int as ::core::ffi::c_uchar;
-            i += 1;
-        }
+    let y_stride = y_stride as usize;
+    let uv_stride = uv_stride as usize;
+    
+    // Convert raw pointers into safe mutable slices
+    let y_slice = core::slice::from_raw_parts_mut(y_buffer, y_stride * 16);
+    let u_slice = core::slice::from_raw_parts_mut(u_buffer, uv_stride * 8);
+    let v_slice = core::slice::from_raw_parts_mut(v_buffer, uv_stride * 8);
+
+    // Use safe iterators to set the values
+    for chunk in y_slice.chunks_mut(y_stride).take(16) {
+        chunk[0] = 129;
+    }
+    for chunk in u_slice.chunks_mut(uv_stride).take(8) {
+        chunk[0] = 129;
+    }
+    for chunk in v_slice.chunks_mut(uv_stride).take(8) {
+        chunk[0] = 129;
     }
 }
 #[unsafe(no_mangle)]
