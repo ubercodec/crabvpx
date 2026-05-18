@@ -231,8 +231,8 @@ pub struct Macroblockd {
     pub mode_info_context: *mut ModeInfo,
     pub mode_info_stride: i32,
     pub frame_type: FrameType,
-    pub up_available: i32,
-    pub left_available: i32,
+    pub up_available: bool,
+    pub left_available: bool,
     pub recon_above: [*mut u8; 3],
     pub recon_left: [*mut u8; 3],
     pub recon_left_stride: [i32; 2],
@@ -266,9 +266,9 @@ pub struct Macroblockd {
 #[repr(C)]
 pub struct VpxInternalErrorInfo {
     pub error_code: VpxCodecErrT,
-    pub has_detail: i32,
+    pub has_detail: bool,
     pub detail: [i8; 80],
-    pub setjmp: i32,
+    pub setjmp: bool,
     pub jmp: JmpBuf,
 }
 pub type JmpBuf = [i32; 48];
@@ -418,19 +418,19 @@ pub struct Vp8dComp {
     pub h_decoding_thread: *mut PthreadT,
     pub h_event_start_decoding: *mut SemaphoreT,
     pub h_event_end_decoding: SemaphoreT,
-    pub ready_for_new_data: i32,
+    pub ready_for_new_data: bool,
     pub prob_intra: Vp8Prob,
     pub prob_last: Vp8Prob,
     pub prob_gf: Vp8Prob,
     pub prob_skip_false: Vp8Prob,
-    pub ec_enabled: i32,
-    pub ec_active: i32,
-    pub decoded_key_frame: i32,
-    pub independent_partitions: i32,
+    pub ec_enabled: bool,
+    pub ec_active: bool,
+    pub decoded_key_frame: bool,
+    pub independent_partitions: bool,
     pub frame_corrupt_residual: i32,
     pub decrypt_cb: VpxDecryptCb,
     pub decrypt_state: *mut c_void,
-    pub restart_threads: i32,
+    pub restart_threads: bool,
 }
 pub type VpxDecryptCb = Option<unsafe fn(*mut c_void, *const u8, *mut u8, i32) -> ()>;
 pub type SemaphoreT = *mut c_void;
@@ -455,7 +455,7 @@ pub struct VpxAtomicInt {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct FragmentData {
-    pub enabled: i32,
+    pub enabled: bool,
     pub count: u32,
     pub ptrs: [*const u8; 9],
     pub sizes: [u32; 9],
@@ -512,10 +512,10 @@ pub struct VP8Common {
     pub mb_rows: i32,
     pub mb_cols: i32,
     pub mode_info_stride: i32,
-    pub mb_no_coeff_skip: i32,
-    pub no_lpf: i32,
-    pub use_bilinear_mc_filter: i32,
-    pub full_pixel: i32,
+    pub mb_no_coeff_skip: bool,
+    pub no_lpf: bool,
+    pub use_bilinear_mc_filter: bool,
+    pub full_pixel: bool,
     pub base_qindex: i32,
     pub y1dc_delta_q: i32,
     pub y2dc_delta_q: i32,
@@ -535,7 +535,7 @@ pub struct VP8Common {
     pub refresh_alt_ref_frame: i32,
     pub copy_buffer_to_gf: i32,
     pub copy_buffer_to_arf: i32,
-    pub refresh_entropy_probs: i32,
+    pub refresh_entropy_probs: bool,
     pub ref_frame_sign_bias: [i32; 4],
     pub above_context: *mut EntropyContextPlanes,
     pub left_context: EntropyContextPlanes,
@@ -1201,7 +1201,7 @@ unsafe fn decode_mb_rows(mut pbi: *mut Vp8dComp) {
         dst_buffer[2 as usize] = (*yv12_fb_new).v_buffer as *mut u8;
         lf_dst[2 as usize] = dst_buffer[2 as usize];
         eb_dst[2 as usize] = lf_dst[2 as usize];
-        (*xd).up_available = 0 as i32;
+        (*xd).up_available = false;
         if (*pc).filter_level != 0 {
             vp8_loop_filter_frame_init(
                 pc as *mut VP8Common,
@@ -1228,7 +1228,7 @@ unsafe fn decode_mb_rows(mut pbi: *mut Vp8dComp) {
                 0 as i32 as u8,
                 ::core::mem::size_of::<EntropyContextPlanes>() as SizeT,
             );
-            (*xd).left_available = 0 as i32;
+            (*xd).left_available = false;
             (*xd).mb_to_top_edge = -((mb_row * 16 as i32) << 3 as i32);
             (*xd).mb_to_bottom_edge = (((*pc).mb_rows - 1 as i32 - mb_row) * 16 as i32) << 3 as i32;
             (*xd).recon_above[0 as usize] = dst_buffer[0 as usize].offset(recon_yoffset as isize);
@@ -1284,7 +1284,7 @@ unsafe fn decode_mb_rows(mut pbi: *mut Vp8dComp) {
                     ref_fb_corrupted[(*(*xd).mode_info_context).mbmi.ref_frame as usize];
                 decode_macroblock(pbi, xd, mb_idx as u32);
                 mb_idx += 1;
-                (*xd).left_available = 1 as i32;
+                (*xd).left_available = true;
                 (*xd).corrupted |= vp8dx_bool_error((*xd).current_bc as *mut BoolDecoder);
                 (*xd).recon_above[0 as usize] = (*xd).recon_above[0 as usize].offset(16 as isize);
                 (*xd).recon_above[1 as usize] = (*xd).recon_above[1 as usize].offset(8 as isize);
@@ -1305,7 +1305,7 @@ unsafe fn decode_mb_rows(mut pbi: *mut Vp8dComp) {
                 (*xd).dst.v_buffer.offset(8 as isize),
             );
             (*xd).mode_info_context = (*xd).mode_info_context.offset(1);
-            (*xd).up_available = 1 as i32;
+            (*xd).up_available = true;
             if (*pc).filter_level != 0 {
                 if mb_row > 0 as i32 {
                     if (*pc).filter_type as u32 == NORMAL_LOOPFILTER as u32 {
@@ -1453,7 +1453,7 @@ unsafe fn read_available_partition_size(
         if i < num_part - 1 as i32 {
             if read_is_valid(partition_size_ptr, 3 as SizeT, first_fragment_end) != 0 {
                 partition_size = read_partition_size(pbi, partition_size_ptr);
-            } else if (*pbi).ec_active != 0 {
+            } else if (*pbi).ec_active {
                 partition_size = bytes_left as u32;
             } else {
                 vpx_internal_error(
@@ -1466,7 +1466,7 @@ unsafe fn read_available_partition_size(
             partition_size = bytes_left as u32;
         }
         if read_is_valid(fragment_start, partition_size as SizeT, fragment_end) == 0 {
-            if (*pbi).ec_active != 0 {
+            if (*pbi).ec_active {
                 partition_size = bytes_left as u32;
             } else {
                 vpx_internal_error(
@@ -1616,7 +1616,7 @@ unsafe fn init_frame(mut pbi: *mut Vp8dComp) {
             (*pc).ref_frame_sign_bias[GOLDEN_FRAME as usize] = 0 as i32;
             (*pc).ref_frame_sign_bias[ALTREF_FRAME as usize] = 0 as i32;
         } else {
-            if (*pc).use_bilinear_mc_filter == 0 {
+            if !(*pc).use_bilinear_mc_filter {
                 (*xd).subpixel_predict = Some(
                     vp8_sixtap_predict4x4_c
                         as unsafe fn(*mut u8, i32, i32, i32, *mut u8, i32) -> (),
@@ -1651,8 +1651,8 @@ unsafe fn init_frame(mut pbi: *mut Vp8dComp) {
                         as unsafe fn(*mut u8, i32, i32, i32, *mut u8, i32) -> (),
                 ) as Vp8SubpixFnT;
             }
-            if (*pbi).decoded_key_frame != 0 && (*pbi).ec_enabled != 0 && (*pbi).ec_active == 0 {
-                (*pbi).ec_active = 1 as i32;
+            if (*pbi).decoded_key_frame && (*pbi).ec_enabled && !(*pbi).ec_active {
+                (*pbi).ec_active = true;
             }
         }
         (*xd).left_context = &raw mut (*pc).left_context;
@@ -1662,7 +1662,7 @@ unsafe fn init_frame(mut pbi: *mut Vp8dComp) {
         (*xd).mode_info_stride = (*pc).mode_info_stride;
         (*xd).corrupted = 0 as i32;
         (*xd).fullpixel_mask = !(0 as i32);
-        if (*pc).full_pixel != 0 {
+        if (*pc).full_pixel {
             (*xd).fullpixel_mask = !(7 as i32);
         }
     }
@@ -1684,12 +1684,12 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
         let mut l: i32 = 0;
         let mb_feature_data_bits: *const i32 = &raw const vp8_mb_feature_data_bits as *const i32;
         let mut corrupt_tokens: i32 = 0 as i32;
-        let mut prev_independent_partitions: i32 = (*pbi).independent_partitions;
+        let mut prev_independent_partitions: bool = (*pbi).independent_partitions;
         let mut yv12_fb_new: *mut Yv12BufferConfig = (*pbi).dec_fb_ref[INTRA_FRAME as usize];
         (*xd).corrupted = 0 as i32;
         (*yv12_fb_new).corrupted = 0 as i32;
         if (data_end.offset_from(data) as i64) < 3 as i64 {
-            if (*pbi).ec_active == 0 {
+            if !(*pbi).ec_active {
                 vpx_internal_error(
                     &raw mut (*pc).error,
                     VPX_CODEC_CORRUPT_FRAME,
@@ -1725,7 +1725,7 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
                 | (*clear.offset(1 as isize) as i32) << 8 as i32
                 | (*clear.offset(2 as isize) as i32) << 16 as i32)
                 >> 5 as i32;
-            if (*pbi).ec_active == 0 && first_partition_length_in_bytes == 0 as i32 {
+            if !(*pbi).ec_active && first_partition_length_in_bytes == 0 as i32 {
                 vpx_internal_error(
                     &raw mut (*pc).error,
                     VPX_CODEC_CORRUPT_FRAME,
@@ -1756,7 +1756,7 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
                         & 0x3fff as i32;
                     (*pc).vert_scale = *clear.offset(6 as isize) as i32 >> 6 as i32;
                     data = data.offset(7 as isize);
-                } else if (*pbi).ec_active == 0 {
+                } else if !(*pbi).ec_active {
                     vpx_internal_error(
                         &raw mut (*pc).error,
                         VPX_CODEC_CORRUPT_FRAME,
@@ -1770,10 +1770,10 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
                 (*xd).dst = *yv12_fb_new;
             }
         }
-        if (*pbi).decoded_key_frame == 0 && (*pc).frame_type as u32 != KEY_FRAME as u32 {
+        if !(*pbi).decoded_key_frame && (*pc).frame_type as u32 != KEY_FRAME as u32 {
             return -(1 as i32);
         }
-        if (*pbi).ec_active == 0
+        if !(*pbi).ec_active
             && (data_end.offset_from(data) as i64) < first_partition_length_in_bytes as i64
         {
             vpx_internal_error(
@@ -1933,14 +1933,14 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
                 vp8dx_decode_bool(bc as *mut BoolDecoder, vp8_prob_half as i32);
         }
         (*pc).refresh_entropy_probs =
-            vp8dx_decode_bool(bc as *mut BoolDecoder, vp8_prob_half as i32);
-        if (*pc).refresh_entropy_probs == 0 as i32 {
+            vp8dx_decode_bool(bc as *mut BoolDecoder, vp8_prob_half as i32) != 0;
+        if !(*pc).refresh_entropy_probs {
             (*pc).lfc = (*pc).fc;
         }
         (*pc).refresh_last_frame = ((*pc).frame_type as u32 == KEY_FRAME as u32
             || vp8dx_decode_bool(bc as *mut BoolDecoder, vp8_prob_half as i32) != 0)
             as i32;
-        (*pbi).independent_partitions = 1 as i32;
+        (*pbi).independent_partitions = true;
         i = 0 as i32;
         while i < BLOCK_TYPES {
             j = 0 as i32;
@@ -1972,7 +1972,7 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
                                     [(k - 1 as i32) as usize][l as usize]
                                     as i32
                         {
-                            (*pbi).independent_partitions = 0 as i32;
+                            (*pbi).independent_partitions = false;
                         }
                         l += 1;
                     }
@@ -2001,7 +2001,7 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
             let mut thread: u32 = 0;
             if vp8mt_decode_mb_rows(pbi, xd) != 0 {
                 vp8_decoder_remove_threads(pbi);
-                (*pbi).restart_threads = 1 as i32;
+                (*pbi).restart_threads = true;
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
                     VPX_CODEC_CORRUPT_FRAME,
@@ -2020,9 +2020,9 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
         }
         (*yv12_fb_new).corrupted = vp8dx_bool_error(bc as *mut BoolDecoder);
         (*yv12_fb_new).corrupted |= corrupt_tokens;
-        if (*pbi).decoded_key_frame == 0 {
+        if !(*pbi).decoded_key_frame {
             if (*pc).frame_type as u32 == KEY_FRAME as u32 && (*yv12_fb_new).corrupted == 0 {
-                (*pbi).decoded_key_frame = 1 as i32;
+                (*pbi).decoded_key_frame = true;
             } else {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -2031,7 +2031,7 @@ pub unsafe fn vp8_decode_frame(mut pbi: *mut Vp8dComp) -> i32 {
                 );
             }
         }
-        if (*pc).refresh_entropy_probs == 0 as i32 {
+        if !(*pc).refresh_entropy_probs {
             (*pc).fc = (*pc).lfc;
             (*pbi).independent_partitions = prev_independent_partitions;
         }

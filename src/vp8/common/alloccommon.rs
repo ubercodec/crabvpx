@@ -51,9 +51,9 @@ pub const B_DC_PRED: BPredictionMode = 0;
 #[repr(C)]
 pub struct VpxInternalErrorInfo {
     pub error_code: VpxCodecErrT,
-    pub has_detail: i32,
+    pub has_detail: bool,
     pub detail: [i8; 80],
-    pub setjmp: i32,
+    pub setjmp: bool,
     pub jmp: JmpBuf,
 }
 pub type JmpBuf = [i32; 48];
@@ -193,10 +193,10 @@ pub struct VP8Common {
     pub mb_rows: i32,
     pub mb_cols: i32,
     pub mode_info_stride: i32,
-    pub mb_no_coeff_skip: i32,
-    pub no_lpf: i32,
-    pub use_bilinear_mc_filter: i32,
-    pub full_pixel: i32,
+    pub mb_no_coeff_skip: bool,
+    pub no_lpf: bool,
+    pub use_bilinear_mc_filter: bool,
+    pub full_pixel: bool,
     pub base_qindex: i32,
     pub y1dc_delta_q: i32,
     pub y2dc_delta_q: i32,
@@ -216,7 +216,7 @@ pub struct VP8Common {
     pub refresh_alt_ref_frame: i32,
     pub copy_buffer_to_gf: i32,
     pub copy_buffer_to_arf: i32,
-    pub refresh_entropy_probs: i32,
+    pub refresh_entropy_probs: bool,
     pub ref_frame_sign_bias: [i32; 4],
     pub above_context: *mut EntropyContextPlanes,
     pub left_context: EntropyContextPlanes,
@@ -363,34 +363,34 @@ pub unsafe fn vp8_setup_version(mut cm: *mut Vp8Common) {
     unsafe {
         match (*cm).version {
             0 => {
-                (*cm).no_lpf = 0 as i32;
+                (*cm).no_lpf = false;
                 (*cm).filter_type = NORMAL_LOOPFILTER;
-                (*cm).use_bilinear_mc_filter = 0 as i32;
-                (*cm).full_pixel = 0 as i32;
+                (*cm).use_bilinear_mc_filter = false;
+                (*cm).full_pixel = false;
             }
             1 => {
-                (*cm).no_lpf = 0 as i32;
+                (*cm).no_lpf = false;
                 (*cm).filter_type = SIMPLE_LOOPFILTER;
-                (*cm).use_bilinear_mc_filter = 1 as i32;
-                (*cm).full_pixel = 0 as i32;
+                (*cm).use_bilinear_mc_filter = true;
+                (*cm).full_pixel = false;
             }
             2 => {
-                (*cm).no_lpf = 1 as i32;
+                (*cm).no_lpf = true;
                 (*cm).filter_type = NORMAL_LOOPFILTER;
-                (*cm).use_bilinear_mc_filter = 1 as i32;
-                (*cm).full_pixel = 0 as i32;
+                (*cm).use_bilinear_mc_filter = true;
+                (*cm).full_pixel = false;
             }
             3 => {
-                (*cm).no_lpf = 1 as i32;
+                (*cm).no_lpf = true;
                 (*cm).filter_type = SIMPLE_LOOPFILTER;
-                (*cm).use_bilinear_mc_filter = 1 as i32;
-                (*cm).full_pixel = 1 as i32;
+                (*cm).use_bilinear_mc_filter = true;
+                (*cm).full_pixel = true;
             }
             _ => {
-                (*cm).no_lpf = 0 as i32;
+                (*cm).no_lpf = false;
                 (*cm).filter_type = NORMAL_LOOPFILTER;
-                (*cm).use_bilinear_mc_filter = 0 as i32;
-                (*cm).full_pixel = 0 as i32;
+                (*cm).use_bilinear_mc_filter = false;
+                (*cm).full_pixel = false;
             }
         };
     }
@@ -401,11 +401,11 @@ pub unsafe fn vp8_create_common(mut oci: *mut Vp8Common) {
         vp8_machine_specific_config(oci as *mut VP8Common);
         vp8_init_mbmode_probs(oci);
         vp8_default_bmode_probs(&raw mut (*oci).fc.bmode_prob as *mut Vp8Prob);
-        (*oci).mb_no_coeff_skip = 1 as i32;
-        (*oci).no_lpf = 0 as i32;
+        (*oci).mb_no_coeff_skip = true;
+        (*oci).no_lpf = false;
         (*oci).filter_type = NORMAL_LOOPFILTER;
-        (*oci).use_bilinear_mc_filter = 0 as i32;
-        (*oci).full_pixel = 0 as i32;
+        (*oci).use_bilinear_mc_filter = false;
+        (*oci).full_pixel = false;
         (*oci).multi_token_partition = ONE_PARTITION;
         (*oci).clamp_type = RECON_CLAMP_REQUIRED;
         core::ptr::write_bytes(

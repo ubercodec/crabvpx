@@ -80,8 +80,8 @@ pub struct Macroblockd {
     pub mode_info_context: *mut ModeInfo,
     pub mode_info_stride: i32,
     pub frame_type: FrameType,
-    pub up_available: i32,
-    pub left_available: i32,
+    pub up_available: bool,
+    pub left_available: bool,
     pub recon_above: [*mut u8; 3],
     pub recon_left: [*mut u8; 3],
     pub recon_left_stride: [i32; 2],
@@ -115,9 +115,9 @@ pub struct Macroblockd {
 #[repr(C)]
 pub struct VpxInternalErrorInfo {
     pub error_code: VpxCodecErrT,
-    pub has_detail: i32,
+    pub has_detail: bool,
     pub detail: [i8; 80],
-    pub setjmp: i32,
+    pub setjmp: bool,
     pub jmp: JmpBuf,
 }
 pub type JmpBuf = [i32; 48];
@@ -284,10 +284,10 @@ pub struct VP8Common {
     pub mb_rows: i32,
     pub mb_cols: i32,
     pub mode_info_stride: i32,
-    pub mb_no_coeff_skip: i32,
-    pub no_lpf: i32,
-    pub use_bilinear_mc_filter: i32,
-    pub full_pixel: i32,
+    pub mb_no_coeff_skip: bool,
+    pub no_lpf: bool,
+    pub use_bilinear_mc_filter: bool,
+    pub full_pixel: bool,
     pub base_qindex: i32,
     pub y1dc_delta_q: i32,
     pub y2dc_delta_q: i32,
@@ -307,7 +307,7 @@ pub struct VP8Common {
     pub refresh_alt_ref_frame: i32,
     pub copy_buffer_to_gf: i32,
     pub copy_buffer_to_arf: i32,
-    pub refresh_entropy_probs: i32,
+    pub refresh_entropy_probs: bool,
     pub ref_frame_sign_bias: [i32; 4],
     pub above_context: *mut EntropyContextPlanes,
     pub left_context: EntropyContextPlanes,
@@ -394,19 +394,19 @@ pub struct Vp8dComp {
     pub h_decoding_thread: *mut PthreadT,
     pub h_event_start_decoding: *mut SemaphoreT,
     pub h_event_end_decoding: SemaphoreT,
-    pub ready_for_new_data: i32,
+    pub ready_for_new_data: bool,
     pub prob_intra: Vp8Prob,
     pub prob_last: Vp8Prob,
     pub prob_gf: Vp8Prob,
     pub prob_skip_false: Vp8Prob,
-    pub ec_enabled: i32,
-    pub ec_active: i32,
-    pub decoded_key_frame: i32,
-    pub independent_partitions: i32,
+    pub ec_enabled: bool,
+    pub ec_active: bool,
+    pub decoded_key_frame: bool,
+    pub independent_partitions: bool,
     pub frame_corrupt_residual: i32,
     pub decrypt_cb: VpxDecryptCb,
     pub decrypt_state: *mut c_void,
-    pub restart_threads: i32,
+    pub restart_threads: bool,
 }
 pub type VpxDecryptCb = Option<unsafe fn(*mut c_void, *const u8, *mut u8, i32) -> ()>;
 pub type SemaphoreT = *mut c_void;
@@ -432,7 +432,7 @@ pub struct VpxAtomicInt {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct FragmentData {
-    pub enabled: i32,
+    pub enabled: bool,
     pub count: u32,
     pub ptrs: [*const u8; 9],
     pub sizes: [u32; 9],
@@ -506,21 +506,21 @@ unsafe fn create_decompressor(_oxcf: *mut Vp8dConfig) -> *mut Vp8dComp {
             ::core::mem::size_of::<Vp8dComp>() as SizeT,
         );
         if setjmp(&raw mut (*pbi).common.error.jmp as *mut i32) != 0 {
-            (*pbi).common.error.setjmp = 0 as i32;
+            (*pbi).common.error.setjmp = false;
             remove_decompressor(pbi);
             return ::core::ptr::null_mut::<Vp8dComp>();
         }
-        (*pbi).common.error.setjmp = 1 as i32;
+        (*pbi).common.error.setjmp = true;
         vp8_create_common(&raw mut (*pbi).common);
         (*pbi).common.current_video_frame = 0 as u32;
-        (*pbi).ready_for_new_data = 1 as i32;
+        (*pbi).ready_for_new_data = true;
         vp8cx_init_de_quantizer(pbi);
         vp8_loop_filter_init(&raw mut (*pbi).common);
-        (*pbi).common.error.setjmp = 0 as i32;
-        (*pbi).ec_enabled = 0 as i32;
-        (*pbi).ec_active = 0 as i32;
-        (*pbi).decoded_key_frame = 0 as i32;
-        (*pbi).independent_partitions = 0 as i32;
+        (*pbi).common.error.setjmp = false;
+        (*pbi).ec_enabled = false;
+        (*pbi).ec_active = false;
+        (*pbi).decoded_key_frame = false;
+        (*pbi).independent_partitions = false;
         vp8_setup_block_dptrs(&raw mut (*pbi).mb);
         once(Some(initialize_dec as unsafe fn() -> ()));
         pbi as *mut Vp8dComp
@@ -712,7 +712,7 @@ unsafe fn swap_frame_buffers(mut cm: *mut Vp8Common) -> i32 {
 }
 unsafe fn check_fragments_for_errors(mut pbi: *mut Vp8dComp) -> i32 {
     unsafe {
-        if (*pbi).ec_active == 0
+        if !(*pbi).ec_active
             && (*pbi).fragments.count <= 1 as u32
             && (*pbi).fragments.sizes[0 as usize] == 0 as u32
         {
@@ -780,7 +780,7 @@ pub unsafe fn vp8dx_receive_compressed_data(mut pbi: *mut Vp8dComp) -> i32 {
                 (*cm).current_video_frame = (*cm).current_video_frame.wrapping_add(1);
                 (*cm).show_frame_mi = (*cm).mi;
             }
-            (*pbi).ready_for_new_data = 0 as i32;
+            (*pbi).ready_for_new_data = false;
         }
         retcode
     }
@@ -793,13 +793,13 @@ pub unsafe fn vp8dx_get_raw_frame(
 ) -> i32 {
     unsafe {
         let mut ret: i32 = -(1 as i32);
-        if (*pbi).ready_for_new_data == 1 as i32 {
+        if (*pbi).ready_for_new_data {
             return ret;
         }
         if (*pbi).common.show_frame == 0 as i32 {
             return ret;
         }
-        (*pbi).ready_for_new_data = 1 as i32;
+        (*pbi).ready_for_new_data = true;
         if !(*pbi).common.frame_to_show.is_null() {
             *sd = *(*pbi).common.frame_to_show;
             (*sd).y_width = (*pbi).common.width;
@@ -851,7 +851,7 @@ pub unsafe fn vp8_create_decoder_instances(
                 .jmp as *mut i32,
         ) != 0
         {
-            (*(*fb).pbi[0 as usize]).common.error.setjmp = 0 as i32;
+            (*(*fb).pbi[0 as usize]).common.error.setjmp = false;
             vp8_remove_decoder_instances(fb);
             core::ptr::write_bytes(
                 &raw mut (*fb).pbi as *mut c_void as *mut u8,
@@ -860,10 +860,10 @@ pub unsafe fn vp8_create_decoder_instances(
             );
             return VPX_CODEC_ERROR as i32;
         }
-        (*(*fb).pbi[0 as usize]).common.error.setjmp = 1 as i32;
+        (*(*fb).pbi[0 as usize]).common.error.setjmp = true;
         (*(*fb).pbi[0 as usize]).max_threads = (*oxcf).max_threads;
         vp8_decoder_create_threads((*fb).pbi[0 as usize]);
-        (*(*fb).pbi[0 as usize]).common.error.setjmp = 0 as i32;
+        (*(*fb).pbi[0 as usize]).common.error.setjmp = false;
         VPX_CODEC_OK as i32
     }
 }
