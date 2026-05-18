@@ -36,7 +36,6 @@ unsafe extern "Rust" {
     fn vp8_loop_filter_bvs_c(y_ptr: *mut u8, y_stride: i32, blimit: *const u8);
     fn vp8_loop_filter_simple_horizontal_edge_c(y_ptr: *mut u8, y_stride: i32, blimit: *const u8);
     fn vp8_loop_filter_simple_vertical_edge_c(y_ptr: *mut u8, y_stride: i32, blimit: *const u8);
-    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -430,22 +429,22 @@ pub unsafe fn vp8_loop_filter_update_sharpness(
             if block_inside_limit < 1 as i32 {
                 block_inside_limit = 1 as i32;
             }
-            memset(
+            core::ptr::write_bytes(
                 &raw mut *(&raw mut (*lfi).lim as *mut [u8; 16]).offset(i as isize) as *mut u8
-                    as *mut c_void,
-                block_inside_limit,
+                    as *mut c_void as *mut u8,
+                block_inside_limit as u8,
                 SIMD_WIDTH as size_t,
             );
-            memset(
+            core::ptr::write_bytes(
                 &raw mut *(&raw mut (*lfi).blim as *mut [u8; 16]).offset(i as isize) as *mut u8
-                    as *mut c_void,
-                2 as i32 * filt_lvl + block_inside_limit,
+                    as *mut c_void as *mut u8,
+                (2 as i32 * filt_lvl + block_inside_limit) as u8,
                 SIMD_WIDTH as size_t,
             );
-            memset(
+            core::ptr::write_bytes(
                 &raw mut *(&raw mut (*lfi).mblim as *mut [u8; 16]).offset(i as isize) as *mut u8
-                    as *mut c_void,
-                2 as i32 * (filt_lvl + 2 as i32) + block_inside_limit,
+                    as *mut c_void as *mut u8,
+                (2 as i32 * (filt_lvl + 2 as i32) + block_inside_limit) as u8,
                 SIMD_WIDTH as size_t,
             );
             i += 1;
@@ -462,10 +461,10 @@ pub unsafe fn vp8_loop_filter_init(mut cm: *mut VP8_COMMON) {
         lf_init_lut(lfi);
         i = 0 as i32;
         while i < 4 as i32 {
-            memset(
+            core::ptr::write_bytes(
                 &raw mut *(&raw mut (*lfi).hev_thr as *mut [u8; 16]).offset(i as isize) as *mut u8
-                    as *mut c_void,
-                i,
+                    as *mut c_void as *mut u8,
+                i as u8,
                 SIMD_WIDTH as size_t,
             );
             i += 1;
@@ -511,11 +510,12 @@ pub unsafe fn vp8_loop_filter_frame_init(
                 };
             }
             if (*mbd).mode_ref_lf_delta_enabled == 0 {
-                memset(
+                core::ptr::write_bytes(
                     &raw mut *(&raw mut *(&raw mut (*lfi).lvl as *mut [[u8; 4]; 4])
                         .offset(seg as isize) as *mut [u8; 4])
-                        .offset(0 as isize) as *mut u8 as *mut c_void,
-                    lvl_seg,
+                        .offset(0 as isize) as *mut u8 as *mut c_void
+                        as *mut u8,
+                    lvl_seg as u8,
                     (4 as i32 * 4 as i32) as size_t,
                 );
             } else {

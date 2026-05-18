@@ -2,7 +2,6 @@ use std::ffi::c_void;
 unsafe extern "Rust" {
     fn vpx_memalign(align: size_t, size: size_t) -> *mut c_void;
     fn vpx_free(memblk: *mut c_void);
-    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
 }
 pub type uint8_t = u8;
 pub type __darwin_size_t = usize;
@@ -65,9 +64,9 @@ pub unsafe fn vp8_yv12_de_alloc_frame_buffer(mut ybf: *mut YV12_BUFFER_CONFIG) -
             if (*ybf).buffer_alloc_sz > 0 as size_t {
                 vpx_free((*ybf).buffer_alloc as *mut c_void);
             }
-            memset(
-                ybf as *mut c_void,
-                0 as i32,
+            core::ptr::write_bytes(
+                ybf as *mut c_void as *mut u8,
+                0 as i32 as u8,
                 ::core::mem::size_of::<YV12_BUFFER_CONFIG>() as size_t,
             );
         } else {

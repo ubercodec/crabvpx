@@ -7,7 +7,6 @@ unsafe extern "Rust" {
         dst_ptr: *mut u8,
         dst_stride: i32,
     );
-    fn memset(__b: *mut c_void, __c: i32, __len: size_t) -> *mut c_void;
 }
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -88,6 +87,10 @@ pub unsafe fn vp8_dequant_idct_add_c(
             i += 1;
         }
         vp8_short_idct4x4llm_c(input, dest, stride, dest, stride);
-        memset(input as *mut c_void, 0 as i32, 32 as size_t);
+        core::ptr::write_bytes(
+            input as *mut c_void as *mut u8,
+            0 as i32 as u8,
+            32 as size_t,
+        );
     }
 }
