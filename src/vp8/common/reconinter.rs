@@ -56,66 +56,98 @@ pub const H_PRED: C2RustUnnamed = 2;
 pub const V_PRED: C2RustUnnamed = 1;
 pub const DC_PRED: C2RustUnnamed = 0;
 pub const CHAR_BIT: ::core::ffi::c_int = 8 as ::core::ffi::c_int;
+pub fn vp8_copy_mem16x16_safe(
+    src: &[u8],
+    src_stride: i32,
+    dst: &mut [u8],
+    dst_stride: i32,
+) {
+    let src_stride = src_stride as usize;
+    let dst_stride = dst_stride as usize;
+    for r in 0..16 {
+        let src_idx = r * src_stride;
+        let dst_idx = r * dst_stride;
+        dst[dst_idx..dst_idx + 16].copy_from_slice(&src[src_idx..src_idx + 16]);
+    }
+}
+
+pub fn vp8_copy_mem8x8_safe(
+    src: &[u8],
+    src_stride: i32,
+    dst: &mut [u8],
+    dst_stride: i32,
+) {
+    let src_stride = src_stride as usize;
+    let dst_stride = dst_stride as usize;
+    for r in 0..8 {
+        let src_idx = r * src_stride;
+        let dst_idx = r * dst_stride;
+        dst[dst_idx..dst_idx + 8].copy_from_slice(&src[src_idx..src_idx + 8]);
+    }
+}
+
+pub fn vp8_copy_mem8x4_safe(
+    src: &[u8],
+    src_stride: i32,
+    dst: &mut [u8],
+    dst_stride: i32,
+) {
+    let src_stride = src_stride as usize;
+    let dst_stride = dst_stride as usize;
+    for r in 0..4 {
+        let src_idx = r * src_stride;
+        let dst_idx = r * dst_stride;
+        dst[dst_idx..dst_idx + 8].copy_from_slice(&src[src_idx..src_idx + 8]);
+    }
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_copy_mem16x16_c(
-    mut src: *mut ::core::ffi::c_uchar,
-    mut src_stride: ::core::ffi::c_int,
-    mut dst: *mut ::core::ffi::c_uchar,
-    mut dst_stride: ::core::ffi::c_int,
-) { unsafe {
-    let mut r: ::core::ffi::c_int = 0;
-    r = 0 as ::core::ffi::c_int;
-    while r < 16 as ::core::ffi::c_int {
-        memcpy(
-            dst as *mut ::core::ffi::c_void,
-            src as *const ::core::ffi::c_void,
-            16 as size_t,
-        );
-        src = src.offset(src_stride as isize);
-        dst = dst.offset(dst_stride as isize);
-        r += 1;
+    src: *const ::core::ffi::c_uchar,
+    src_stride: ::core::ffi::c_int,
+    dst: *mut ::core::ffi::c_uchar,
+    dst_stride: ::core::ffi::c_int,
+) {
+    let src_len = 15 * src_stride as usize + 16;
+    let dst_len = 15 * dst_stride as usize + 16;
+    unsafe {
+        let src_slice = core::slice::from_raw_parts(src, src_len);
+        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
+        vp8_copy_mem16x16_safe(src_slice, src_stride, dst_slice, dst_stride);
     }
-}}
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_copy_mem8x8_c(
-    mut src: *mut ::core::ffi::c_uchar,
-    mut src_stride: ::core::ffi::c_int,
-    mut dst: *mut ::core::ffi::c_uchar,
-    mut dst_stride: ::core::ffi::c_int,
-) { unsafe {
-    let mut r: ::core::ffi::c_int = 0;
-    r = 0 as ::core::ffi::c_int;
-    while r < 8 as ::core::ffi::c_int {
-        memcpy(
-            dst as *mut ::core::ffi::c_void,
-            src as *const ::core::ffi::c_void,
-            8 as size_t,
-        );
-        src = src.offset(src_stride as isize);
-        dst = dst.offset(dst_stride as isize);
-        r += 1;
+    src: *const ::core::ffi::c_uchar,
+    src_stride: ::core::ffi::c_int,
+    dst: *mut ::core::ffi::c_uchar,
+    dst_stride: ::core::ffi::c_int,
+) {
+    let src_len = 7 * src_stride as usize + 8;
+    let dst_len = 7 * dst_stride as usize + 8;
+    unsafe {
+        let src_slice = core::slice::from_raw_parts(src, src_len);
+        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
+        vp8_copy_mem8x8_safe(src_slice, src_stride, dst_slice, dst_stride);
     }
-}}
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_copy_mem8x4_c(
-    mut src: *mut ::core::ffi::c_uchar,
-    mut src_stride: ::core::ffi::c_int,
-    mut dst: *mut ::core::ffi::c_uchar,
-    mut dst_stride: ::core::ffi::c_int,
-) { unsafe {
-    let mut r: ::core::ffi::c_int = 0;
-    r = 0 as ::core::ffi::c_int;
-    while r < 4 as ::core::ffi::c_int {
-        memcpy(
-            dst as *mut ::core::ffi::c_void,
-            src as *const ::core::ffi::c_void,
-            8 as size_t,
-        );
-        src = src.offset(src_stride as isize);
-        dst = dst.offset(dst_stride as isize);
-        r += 1;
+    src: *const ::core::ffi::c_uchar,
+    src_stride: ::core::ffi::c_int,
+    dst: *mut ::core::ffi::c_uchar,
+    dst_stride: ::core::ffi::c_int,
+) {
+    let src_len = 3 * src_stride as usize + 8;
+    let dst_len = 3 * dst_stride as usize + 8;
+    unsafe {
+        let src_slice = core::slice::from_raw_parts(src, src_len);
+        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
+        vp8_copy_mem8x4_safe(src_slice, src_stride, dst_slice, dst_stride);
     }
-}}
+}
 
 unsafe fn build_inter_predictors4b(
     x: &MACROBLOCKD,
