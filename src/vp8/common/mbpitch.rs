@@ -68,25 +68,24 @@ pub fn vp8_setup_block_dptrs(x: &mut MACROBLOCKD) { unsafe {
         r += 1;
     }
 }}
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_build_block_doffsets(mut x: *mut MACROBLOCKD) { unsafe {
+pub fn vp8_build_block_doffsets(x: &mut MACROBLOCKD) {
     let mut block: ::core::ffi::c_int = 0;
     block = 0 as ::core::ffi::c_int;
     while block < 16 as ::core::ffi::c_int {
-        (*x).block[block as usize].offset =
-            (block >> 2 as ::core::ffi::c_int) * 4 as ::core::ffi::c_int * (*x).dst.y_stride
+        x.block[block as usize].offset =
+            (block >> 2 as ::core::ffi::c_int) * 4 as ::core::ffi::c_int * x.dst.y_stride
                 + (block & 3 as ::core::ffi::c_int) * 4 as ::core::ffi::c_int;
         block += 1;
     }
     block = 16 as ::core::ffi::c_int;
     while block < 20 as ::core::ffi::c_int {
-        (*x).block[block as usize].offset = (block - 16 as ::core::ffi::c_int
+        x.block[block as usize].offset = (block - 16 as ::core::ffi::c_int
             >> 1 as ::core::ffi::c_int)
             * 4 as ::core::ffi::c_int
-            * (*x).dst.uv_stride
+            * x.dst.uv_stride
             + (block & 1 as ::core::ffi::c_int) * 4 as ::core::ffi::c_int;
-        (*x).block[(block + 4 as ::core::ffi::c_int) as usize].offset =
-            (*x).block[block as usize].offset;
+        x.block[(block + 4 as ::core::ffi::c_int) as usize].offset =
+            x.block[block as usize].offset;
         block += 1;
     }
-}}
+}

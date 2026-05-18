@@ -19,7 +19,6 @@ unsafe extern "C" {
         fmt: *const ::core::ffi::c_char,
         ...
     );
-    fn vp8_build_block_doffsets(x: *mut MACROBLOCKD);
     fn vp8_alloc_frame_buffers(
         oci: *mut VP8_COMMON,
         width: ::core::ffi::c_int,
@@ -68,6 +67,7 @@ pub type uint8_t = u8;
 pub type uint32_t = u32;
 pub type uint64_t = u64;
 pub use crate::vp8::common::types::*;
+use crate::vp8::common::mbpitch::vp8_build_block_doffsets;
 
 pub type vpx_color_range_t = vpx_color_range;
 pub type vpx_color_range = ::core::ffi::c_uint;
@@ -1032,10 +1032,10 @@ unsafe extern "C" fn vp8_decode(
             while i < (*pbi_1).allocated_decoding_thread_count {
                 (*(*pbi_1).mb_row_di.offset(i as isize)).mbd.dst =
                     (*pc_0).yv12_fb[(*pc_0).new_fb_idx as usize];
-                vp8_build_block_doffsets(&raw mut (*(*pbi_1).mb_row_di.offset(i as isize)).mbd);
+                vp8_build_block_doffsets(&mut (*(*pbi_1).mb_row_di.offset(i as isize)).mbd);
                 i += 1;
             }
-            vp8_build_block_doffsets(&raw mut (*pbi_1).mb);
+            vp8_build_block_doffsets(&mut (*pbi_1).mb);
             if vpx_atomic_load_acquire(&raw mut (*pbi_1).b_multithreaded_rd) != 0 {
                 vp8mt_alloc_temp_buffers(pbi_1, (*pc_0).Width, 0 as ::core::ffi::c_int);
             }
