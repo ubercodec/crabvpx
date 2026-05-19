@@ -614,20 +614,44 @@ pub extern "C" fn vp8_loop_filter_simple_vertical_edge_c(
     );
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_loop_filter_mbh_c(
-    mut y_ptr: *mut ::core::ffi::c_uchar,
-    mut u_ptr: *mut ::core::ffi::c_uchar,
-    mut v_ptr: *mut ::core::ffi::c_uchar,
-    mut y_stride: ::core::ffi::c_int,
-    mut uv_stride: ::core::ffi::c_int,
-    mut lfi: *mut loop_filter_info,
-) { unsafe {
-    let blimit_slice = core::slice::from_raw_parts((*lfi).mblim, 1);
-    let limit_slice = core::slice::from_raw_parts((*lfi).lim, 1);
-    let thresh_slice = core::slice::from_raw_parts((*lfi).hev_thr, 1);
-
+pub extern "C" fn vp8_loop_filter_mbh_c(
+    y_ptr: *mut ::core::ffi::c_uchar,
+    u_ptr: *mut ::core::ffi::c_uchar,
+    v_ptr: *mut ::core::ffi::c_uchar,
+    y_stride: ::core::ffi::c_int,
+    uv_stride: ::core::ffi::c_int,
+    lfi: *mut loop_filter_info,
+) {
+    if y_ptr.is_null() || lfi.is_null() {
+        return;
+    }
     let y_stride_usize = y_stride as usize;
-    let y_slice = core::slice::from_raw_parts_mut(y_ptr.offset(-4 * y_stride as isize), 8 * y_stride_usize);
+    let uv_stride_usize = uv_stride as usize;
+
+    let (blimit_slice, limit_slice, thresh_slice, y_slice, u_slice, v_slice) = unsafe {
+        (
+            core::slice::from_raw_parts((*lfi).mblim, 1),
+            core::slice::from_raw_parts((*lfi).lim, 1),
+            core::slice::from_raw_parts((*lfi).hev_thr, 1),
+            core::slice::from_raw_parts_mut(y_ptr.offset(-4 * y_stride as isize), 8 * y_stride_usize),
+            if u_ptr.is_null() {
+                None
+            } else {
+                Some(core::slice::from_raw_parts_mut(
+                    u_ptr.offset(-4 * uv_stride as isize),
+                    8 * uv_stride_usize,
+                ))
+            },
+            if v_ptr.is_null() {
+                None
+            } else {
+                Some(core::slice::from_raw_parts_mut(
+                    v_ptr.offset(-4 * uv_stride as isize),
+                    8 * uv_stride_usize,
+                ))
+            },
+        )
+    };
 
     mbloop_filter_horizontal_edge_safe(
         y_slice,
@@ -639,10 +663,7 @@ pub unsafe extern "C" fn vp8_loop_filter_mbh_c(
         2,
     );
 
-    let uv_stride_usize = uv_stride as usize;
-    let uv_len = 8 * uv_stride_usize;
-    if !u_ptr.is_null() {
-        let u_slice = core::slice::from_raw_parts_mut(u_ptr.offset(-4 * uv_stride as isize), uv_len);
+    if let Some(u_slice) = u_slice {
         mbloop_filter_horizontal_edge_safe(
             u_slice,
             4 * uv_stride_usize,
@@ -653,8 +674,7 @@ pub unsafe extern "C" fn vp8_loop_filter_mbh_c(
             1,
         );
     }
-    if !v_ptr.is_null() {
-        let v_slice = core::slice::from_raw_parts_mut(v_ptr.offset(-4 * uv_stride as isize), uv_len);
+    if let Some(v_slice) = v_slice {
         mbloop_filter_horizontal_edge_safe(
             v_slice,
             4 * uv_stride_usize,
@@ -665,7 +685,7 @@ pub unsafe extern "C" fn vp8_loop_filter_mbh_c(
             1,
         );
     }
-}}
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_loop_filter_mbv_c(
     mut y_ptr: *mut ::core::ffi::c_uchar,
