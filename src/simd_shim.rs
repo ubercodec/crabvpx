@@ -8,9 +8,6 @@ unsafe extern "C" {
     fn vp8_bilinear_predict4x4_c(src_ptr: *mut c_uchar, src_pixels_per_line: c_int, xoffset: c_int, yoffset: c_int, dst_ptr: *mut c_uchar, dst_pitch: c_int);
     fn vp8_bilinear_predict8x4_c(src_ptr: *mut c_uchar, src_pixels_per_line: c_int, xoffset: c_int, yoffset: c_int, dst_ptr: *mut c_uchar, dst_pitch: c_int);
     fn vp8_bilinear_predict8x8_c(src_ptr: *mut c_uchar, src_pixels_per_line: c_int, xoffset: c_int, yoffset: c_int, dst_ptr: *mut c_uchar, dst_pitch: c_int);
-    fn vp8_copy_mem16x16_c(src: *mut c_uchar, src_stride: c_int, dst: *mut c_uchar, dst_stride: c_int);
-    fn vp8_copy_mem8x4_c(src: *mut c_uchar, src_stride: c_int, dst: *mut c_uchar, dst_stride: c_int);
-    fn vp8_copy_mem8x8_c(src: *mut c_uchar, src_stride: c_int, dst: *mut c_uchar, dst_stride: c_int);
     fn vp8_dc_only_idct_add_c(input_dc: c_short, pred_ptr: *mut c_uchar, pred_stride: c_int, dst_ptr: *mut c_uchar, dst_stride: c_int);
     fn vp8_loop_filter_bh_c(y_ptr: *mut c_uchar, u_ptr: *mut c_uchar, v_ptr: *mut c_uchar, y_stride: c_int, uv_stride: c_int, lfi: *mut c_void);
     fn vp8_loop_filter_bv_c(y_ptr: *mut c_uchar, u_ptr: *mut c_uchar, v_ptr: *mut c_uchar, y_stride: c_int, uv_stride: c_int, lfi: *mut c_void);
@@ -50,20 +47,6 @@ pub unsafe extern "C" fn vp8_bilinear_predict8x8_neon(src_ptr: *mut c_uchar, src
     vp8_bilinear_predict8x8_c(src_ptr, src_pixels_per_line, xoffset, yoffset, dst_ptr, dst_pitch);
 }
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_copy_mem16x16_neon(src: *mut c_uchar, src_stride: c_int, dst: *mut c_uchar, dst_stride: c_int) {
-    vp8_copy_mem16x16_c(src, src_stride, dst, dst_stride);
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_copy_mem8x4_neon(src: *mut c_uchar, src_stride: c_int, dst: *mut c_uchar, dst_stride: c_int) {
-    vp8_copy_mem8x4_c(src, src_stride, dst, dst_stride);
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_copy_mem8x8_neon(src: *mut c_uchar, src_stride: c_int, dst: *mut c_uchar, dst_stride: c_int) {
-    vp8_copy_mem8x8_c(src, src_stride, dst, dst_stride);
-}
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_dc_only_idct_add_neon(input_dc: c_short, pred_ptr: *mut c_uchar, pred_stride: c_int, dst_ptr: *mut c_uchar, dst_stride: c_int) {

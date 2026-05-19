@@ -1,23 +1,3 @@
-unsafe extern "C" {
-    fn vp8_copy_mem16x16_neon(
-        src: *mut ::core::ffi::c_uchar,
-        src_stride: ::core::ffi::c_int,
-        dst: *mut ::core::ffi::c_uchar,
-        dst_stride: ::core::ffi::c_int,
-    );
-    fn vp8_copy_mem8x4_neon(
-        src: *mut ::core::ffi::c_uchar,
-        src_stride: ::core::ffi::c_int,
-        dst: *mut ::core::ffi::c_uchar,
-        dst_stride: ::core::ffi::c_int,
-    );
-    fn vp8_copy_mem8x8_neon(
-        src: *mut ::core::ffi::c_uchar,
-        src_stride: ::core::ffi::c_int,
-        dst: *mut ::core::ffi::c_uchar,
-        dst_stride: ::core::ffi::c_int,
-    );
-}
 
 pub use crate::vp8::common::types::*;
 pub type uint32_t = u32;
@@ -95,62 +75,6 @@ pub fn vp8_copy_mem8x4_safe(
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn vp8_copy_mem16x16_c(
-    src: *const ::core::ffi::c_uchar,
-    src_stride: ::core::ffi::c_int,
-    dst: *mut ::core::ffi::c_uchar,
-    dst_stride: ::core::ffi::c_int,
-) {
-    if src.is_null() || dst.is_null() {
-        return;
-    }
-    let src_len = 15 * src_stride as usize + 16;
-    let dst_len = 15 * dst_stride as usize + 16;
-    unsafe {
-        let src_slice = core::slice::from_raw_parts(src, src_len);
-        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
-        vp8_copy_mem16x16_safe(src_slice, src_stride, dst_slice, dst_stride);
-    }
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn vp8_copy_mem8x8_c(
-    src: *const ::core::ffi::c_uchar,
-    src_stride: ::core::ffi::c_int,
-    dst: *mut ::core::ffi::c_uchar,
-    dst_stride: ::core::ffi::c_int,
-) {
-    if src.is_null() || dst.is_null() {
-        return;
-    }
-    let src_len = 7 * src_stride as usize + 8;
-    let dst_len = 7 * dst_stride as usize + 8;
-    unsafe {
-        let src_slice = core::slice::from_raw_parts(src, src_len);
-        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
-        vp8_copy_mem8x8_safe(src_slice, src_stride, dst_slice, dst_stride);
-    }
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn vp8_copy_mem8x4_c(
-    src: *const ::core::ffi::c_uchar,
-    src_stride: ::core::ffi::c_int,
-    dst: *mut ::core::ffi::c_uchar,
-    dst_stride: ::core::ffi::c_int,
-) {
-    if src.is_null() || dst.is_null() {
-        return;
-    }
-    let src_len = 3 * src_stride as usize + 8;
-    let dst_len = 3 * dst_stride as usize + 8;
-    unsafe {
-        let src_slice = core::slice::from_raw_parts(src, src_len);
-        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
-        vp8_copy_mem8x4_safe(src_slice, src_stride, dst_slice, dst_stride);
-    }
-}
 
 fn call_subpixel_predict(
     sppf: vp8_subpix_fn_t,
