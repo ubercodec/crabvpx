@@ -1577,7 +1577,7 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
                 ::core::ptr::null::<::core::ffi::c_char>(),
             );
         }
-        vp8_yv12_extend_frame_borders_c(&*yv12_fb_new);
+        vp8_yv12_extend_frame_borders_c(&mut *yv12_fb_new);
         thread = 0 as ::core::ffi::c_uint;
         while thread < (*pbi).decoding_thread_count {
             corrupt_tokens |= (*(*pbi).mb_row_di.offset(thread as isize)).mbd.corrupted;
