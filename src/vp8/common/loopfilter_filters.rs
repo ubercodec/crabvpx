@@ -560,17 +560,24 @@ fn vp8_loop_filter_bvs_safe(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_loop_filter_simple_horizontal_edge_c(
-    mut y_ptr: *mut ::core::ffi::c_uchar,
-    mut y_stride: ::core::ffi::c_int,
-    mut blimit: *const ::core::ffi::c_uchar,
-) { unsafe {
+pub extern "C" fn vp8_loop_filter_simple_horizontal_edge_c(
+    y_ptr: *mut ::core::ffi::c_uchar,
+    y_stride: ::core::ffi::c_int,
+    blimit: *const ::core::ffi::c_uchar,
+) {
+    if y_ptr.is_null() || blimit.is_null() {
+        return;
+    }
     let y_stride_usize = y_stride as usize;
-    let y_slice = core::slice::from_raw_parts_mut(
-        y_ptr.offset(-2 * y_stride as isize),
-        3 * y_stride_usize + 16,
-    );
-    let blimit_val = *blimit;
+    let (y_slice, blimit_val) = unsafe {
+        (
+            core::slice::from_raw_parts_mut(
+                y_ptr.offset(-2 * y_stride as isize),
+                3 * y_stride_usize + 16,
+            ),
+            *blimit,
+        )
+    };
 
     vp8_loop_filter_simple_horizontal_edge_safe(
         y_slice,
@@ -578,7 +585,7 @@ pub unsafe extern "C" fn vp8_loop_filter_simple_horizontal_edge_c(
         y_stride_usize,
         blimit_val,
     );
-}}
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_loop_filter_simple_vertical_edge_c(
     mut y_ptr: *mut ::core::ffi::c_uchar,
