@@ -92,15 +92,7 @@ unsafe extern "C" {
 
 
 
-    fn vp8_intra4x4_predict(
-        above: *mut ::core::ffi::c_uchar,
-        yleft: *mut ::core::ffi::c_uchar,
-        left_stride: ::core::ffi::c_int,
-        b_mode: B_PREDICTION_MODE,
-        dst: *mut ::core::ffi::c_uchar,
-        dst_stride: ::core::ffi::c_int,
-        top_left: ::core::ffi::c_uchar,
-    );
+
 }
 use crate::vp8::decoder::threading::vp8_decoder_remove_threads;
 use crate::vp8::common::alloccommon::vp8_setup_version;

@@ -95,15 +95,7 @@ unsafe extern "C" {
     fn vpx_free(memblk: *mut ::core::ffi::c_void);
 
     
-    fn vp8_intra4x4_predict(
-        above: *mut ::core::ffi::c_uchar,
-        yleft: *mut ::core::ffi::c_uchar,
-        left_stride: ::core::ffi::c_int,
-        b_mode: B_PREDICTION_MODE,
-        dst: *mut ::core::ffi::c_uchar,
-        dst_stride: ::core::ffi::c_int,
-        top_left: ::core::ffi::c_uchar,
-    );
+
 }
 static mut mach_task_self_: mach_port_t = 0;
 use crate::vp8::common::setupintrarecon::vp8_setup_intra_recon_top_line;
