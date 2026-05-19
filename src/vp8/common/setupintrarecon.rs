@@ -96,12 +96,7 @@ pub fn vp8_setup_intra_recon_safe(ybf: &mut YV12_BUFFER_CONFIG) {
     }
 }
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
-    if !ybf.is_null() {
-        vp8_setup_intra_recon_safe(&mut *ybf);
-    }
-}
+
 pub fn vp8_setup_intra_recon_top_line(ybf: &mut YV12_BUFFER_CONFIG) {
     let y_border = ybf.border as usize;
     let y_stride = ybf.y_stride as usize;
