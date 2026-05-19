@@ -459,23 +459,7 @@ pub fn vpx_d45e_predictor_4x4_safe(
     dst[3 * stride + 3] = ((G + 2 * H + H + 2) >> 2) as u8;
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn vpx_d45e_predictor_4x4_c(
-    dst: *mut uint8_t,
-    stride: ptrdiff_t,
-    above: *const uint8_t,
-    _left: *const uint8_t,
-) {
-    if dst.is_null() || above.is_null() {
-        return;
-    }
-    unsafe {
-        let dst_len = 3 * stride as usize + 4;
-        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
-        let above_slice = core::slice::from_raw_parts(above, 8);
-        vpx_d45e_predictor_4x4_safe(dst_slice, stride as usize, above_slice);
-    }
-}
+
 pub fn vpx_d117_predictor_4x4_safe(
     dst: &mut [u8],
     stride: usize,
