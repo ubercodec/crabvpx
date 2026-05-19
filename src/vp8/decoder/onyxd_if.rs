@@ -20,9 +20,9 @@ unsafe extern "C" {
     ) -> *mut ::core::ffi::c_void;
     fn vpx_memalign(align: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_free(memblk: *mut ::core::ffi::c_void);
-    fn vp8_decoder_remove_threads(pbi: *mut VP8D_COMP);
     fn vp8_decoder_create_threads(pbi: *mut VP8D_COMP);
 }
+use crate::vp8::decoder::threading::vp8_decoder_remove_threads;
 pub use crate::vp8::common::alloccommon::{vp8_create_common, vp8_remove_common};
 pub use crate::vp8::common::types::*;
 pub use crate::vpx_scale::generic::yv12extend::vp8_yv12_copy_frame_c;
@@ -469,7 +469,7 @@ pub unsafe extern "C" fn vp8_remove_decoder_instances(
     if pbi.is_null() {
         return VPX_CODEC_ERROR as ::core::ffi::c_int;
     }
-    vp8_decoder_remove_threads(pbi);
+    vp8_decoder_remove_threads(&mut *pbi);
     remove_decompressor(Box::from_raw(pbi));
     (*fb).pbi[0 as ::core::ffi::c_int as usize] = ::core::ptr::null_mut::<VP8D_COMP>();
     return VPX_CODEC_OK as ::core::ffi::c_int;

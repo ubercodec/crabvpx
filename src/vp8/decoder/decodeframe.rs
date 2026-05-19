@@ -101,8 +101,8 @@ unsafe extern "C" {
         dst_stride: ::core::ffi::c_int,
         top_left: ::core::ffi::c_uchar,
     );
-    fn vp8_decoder_remove_threads(pbi: *mut VP8D_COMP);
 }
+use crate::vp8::decoder::threading::vp8_decoder_remove_threads;
 use crate::vp8::common::alloccommon::vp8_setup_version;
 use crate::vp8::common::reconintra4x4::vp8_intra4x4_predict_safe;
 use crate::vp8::decoder::threading::vp8mt_decode_mb_rows;
@@ -1522,7 +1522,7 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int {
     {
         let mut thread: ::core::ffi::c_uint = 0;
         if vp8mt_decode_mb_rows(pbi) != 0 {
-            unsafe { vp8_decoder_remove_threads(pbi) };
+            vp8_decoder_remove_threads(pbi);
             pbi.restart_threads = 1 as ::core::ffi::c_int;
             pbi.common.error.trigger(
                 VPX_CODEC_CORRUPT_FRAME,

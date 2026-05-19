@@ -27,7 +27,6 @@ unsafe extern "C" {
         oxcf: *mut VP8D_CONFIG,
     ) -> ::core::ffi::c_int;
     fn vp8_remove_decoder_instances(fb: *mut frame_buffers) -> ::core::ffi::c_int;
-    fn vp8_decoder_remove_threads(pbi: *mut VP8D_COMP);
     fn vp8_decoder_create_threads(pbi: *mut VP8D_COMP);
     fn vp8mt_alloc_temp_buffers(
         pbi: *mut VP8D_COMP,
@@ -36,6 +35,7 @@ unsafe extern "C" {
     );
     fn vp8mt_de_alloc_temp_buffers(pbi: *mut VP8D_COMP, mb_rows: ::core::ffi::c_int);
 }
+use crate::vp8::decoder::threading::vp8_decoder_remove_threads;
 pub type __builtin_va_list = *mut ::core::ffi::c_char;
 pub type __darwin_natural_t = ::core::ffi::c_uint;
 pub type __darwin_size_t = usize;
@@ -923,7 +923,7 @@ unsafe extern "C" fn vp8_decode(
         let pc: *mut VP8_COMMON = &raw mut (*pbi_0).common;
         if setjmp(&raw mut (*pbi_0).common.error.jmp as *mut ::core::ffi::c_int) != 0 {
             (*pbi_0).common.error.setjmp = 0 as ::core::ffi::c_int;
-            vp8_decoder_remove_threads(pbi_0);
+            vp8_decoder_remove_threads(&mut *pbi_0);
             return VPX_CODEC_ERROR;
         }
         (*pbi_0).common.error.setjmp = 1 as ::core::ffi::c_int;
