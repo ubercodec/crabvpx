@@ -690,7 +690,6 @@ fn yv12_extend_frame_left_right(
 fn decode_mb_rows(pbi: &mut VP8D_COMP) {
     let pc = &mut pbi.common;
     let xd = &mut pbi.mb;
-    let mut lf_mic: *mut MODE_INFO = unsafe { xd.mode_info_context };
     let mut ibc: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     let mut num_part: ::core::ffi::c_int =
         (1 as ::core::ffi::c_int) << pc.multi_token_partition as ::core::ffi::c_uint;
@@ -878,10 +877,8 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
                 };
 
                 let stride = pc.mode_info_stride as usize;
-                let mip_len = (pc.mb_rows + 1) as usize * stride;
-                let (mip_slice, mode_info_idx) = unsafe {
-                    (core::slice::from_raw_parts(pc.mip_ptr(), mip_len), lf_mic.offset_from(pc.mip_ptr()) as usize)
-                };
+                let mip_slice = pc.mip.as_ref().unwrap();
+                let mode_info_idx = mb_row as usize * stride + 1;
 
                 if pc.filter_type as ::core::ffi::c_uint
                     == NORMAL_LOOPFILTER as ::core::ffi::c_int as ::core::ffi::c_uint
@@ -918,10 +915,6 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
                 y_offset = (y_offset as isize + (recon_y_stride * 16 as ::core::ffi::c_int) as isize) as usize;
                 u_offset = (u_offset as isize + (recon_uv_stride * 8 as ::core::ffi::c_int) as isize) as usize;
                 v_offset = (v_offset as isize + (recon_uv_stride * 8 as ::core::ffi::c_int) as isize) as usize;
-                unsafe {
-                    lf_mic = lf_mic.offset(pc.mb_cols as isize);
-                    lf_mic = lf_mic.offset(1);
-                }
             }
         } else if mb_row > 0 as ::core::ffi::c_int {
             yv12_extend_frame_left_right(yv12_fb_new, extended_row);
@@ -935,10 +928,8 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
         };
 
         let stride = pc.mode_info_stride as usize;
-        let mip_len = (pc.mb_rows + 1) as usize * stride;
-        let (mip_slice, mode_info_idx) = unsafe {
-            (core::slice::from_raw_parts(pc.mip_ptr(), mip_len), lf_mic.offset_from(pc.mip_ptr()) as usize)
-        };
+        let mip_slice = pc.mip.as_ref().unwrap();
+        let mode_info_idx = mb_row as usize * stride + 1;
 
         if pc.filter_type as ::core::ffi::c_uint
             == NORMAL_LOOPFILTER as ::core::ffi::c_int as ::core::ffi::c_uint
