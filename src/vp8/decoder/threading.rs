@@ -1199,152 +1199,143 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi_raw: *mut VP8D_COMP)
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8mt_de_alloc_temp_buffers(
-    mut pbi: *mut VP8D_COMP,
-    mut mb_rows: ::core::ffi::c_int,
+pub fn vp8mt_de_alloc_temp_buffers(
+    pbi: &mut VP8D_COMP,
+    _mb_rows: ::core::ffi::c_int,
 ) {
-    if pbi.is_null() {
-        return;
-    }
-    let pbi_ref = &mut *pbi;
-    pbi_ref.mt_current_mb_col = None;
-    pbi_ref.mt_yabove_row = None;
-    pbi_ref.mt_uabove_row = None;
-    pbi_ref.mt_vabove_row = None;
-    pbi_ref.mt_yleft_col = None;
-    pbi_ref.mt_uleft_col = None;
-    pbi_ref.mt_vleft_col = None;
+    pbi.mt_current_mb_col = None;
+    pbi.mt_yabove_row = None;
+    pbi.mt_uabove_row = None;
+    pbi.mt_vabove_row = None;
+    pbi.mt_yleft_col = None;
+    pbi.mt_uleft_col = None;
+    pbi.mt_vleft_col = None;
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
-    mut pbi: *mut VP8D_COMP,
+pub fn vp8mt_alloc_temp_buffers(
+    pbi: &mut VP8D_COMP,
     mut width: ::core::ffi::c_int,
-    mut prev_mb_rows: ::core::ffi::c_int,
+    prev_mb_rows: ::core::ffi::c_int,
 ) {
-    if pbi.is_null() {
-        return;
-    }
-    let pbi_ref = &mut *pbi;
-    let pc = &mut pbi_ref.common;
     let mut uv_width: ::core::ffi::c_int = 0;
-    if vpx_atomic_load_acquire(&pbi_ref.b_multithreaded_rd) != 0 {
+    if vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0 {
         vp8mt_de_alloc_temp_buffers(pbi, prev_mb_rows);
         if width & 0xf as ::core::ffi::c_int != 0 as ::core::ffi::c_int {
             width += 16 as ::core::ffi::c_int - (width & 0xf as ::core::ffi::c_int);
         }
         if width < 640 as ::core::ffi::c_int {
-            pbi_ref.sync_range = 1 as ::core::ffi::c_int;
+            pbi.sync_range = 1 as ::core::ffi::c_int;
         } else if width <= 1280 as ::core::ffi::c_int {
-            pbi_ref.sync_range = 8 as ::core::ffi::c_int;
+            pbi.sync_range = 8 as ::core::ffi::c_int;
         } else if width <= 2560 as ::core::ffi::c_int {
-            pbi_ref.sync_range = 16 as ::core::ffi::c_int;
+            pbi.sync_range = 16 as ::core::ffi::c_int;
         } else {
-            pbi_ref.sync_range = 32 as ::core::ffi::c_int;
+            pbi.sync_range = 32 as ::core::ffi::c_int;
         }
         uv_width = width >> 1 as ::core::ffi::c_int;
-        let mb_rows_usize = pc.mb_rows as usize;
+        let mb_rows_usize = pbi.common.mb_rows as usize;
         
         let mut current_mb_col_vec = vec![vpx_atomic_int { value: core::sync::atomic::AtomicI32::new(0) }; mb_rows_usize];
         for i in 0..mb_rows_usize {
             vpx_atomic_init(&current_mb_col_vec[i], 0);
         }
-        pbi_ref.mt_current_mb_col = Some(current_mb_col_vec.into_boxed_slice());
+        pbi.mt_current_mb_col = Some(current_mb_col_vec.into_boxed_slice());
         
         // mt_yabove_row
         let mut yabove = Vec::with_capacity(mb_rows_usize);
         for _ in 0..mb_rows_usize {
             let size = (width + ((32 as ::core::ffi::c_int) << 1 as ::core::ffi::c_int)) as usize;
-            let ab = crate::vpx_mem::vpx_mem::AlignedBox::new(16, size);
+            let mut ab = crate::vpx_mem::vpx_mem::AlignedBox::new(16, size);
             if ab.is_none() {
-                pbi_ref.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_yabove_row[i]");
+                pbi.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_yabove_row[i]");
                 return;
             }
-            if let Some(ref b) = ab {
-                core::ptr::write_bytes(b.as_ptr(), 0, size);
+            if let Some(ref mut b) = ab {
+                b.as_slice_mut().fill(0);
             }
             yabove.push(ab);
         }
-        pbi_ref.mt_yabove_row = Some(yabove.into_boxed_slice());
+        pbi.mt_yabove_row = Some(yabove.into_boxed_slice());
         
         // mt_uabove_row
         let mut uabove = Vec::with_capacity(mb_rows_usize);
         for _ in 0..mb_rows_usize {
             let size = (uv_width + 32 as ::core::ffi::c_int) as usize;
-            let ab = crate::vpx_mem::vpx_mem::AlignedBox::new(16, size);
+            let mut ab = crate::vpx_mem::vpx_mem::AlignedBox::new(16, size);
             if ab.is_none() {
-                pbi_ref.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_uabove_row[i]");
+                pbi.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_uabove_row[i]");
                 return;
             }
-            if let Some(ref b) = ab {
-                core::ptr::write_bytes(b.as_ptr(), 0, size);
+            if let Some(ref mut b) = ab {
+                b.as_slice_mut().fill(0);
             }
             uabove.push(ab);
         }
-        pbi_ref.mt_uabove_row = Some(uabove.into_boxed_slice());
+        pbi.mt_uabove_row = Some(uabove.into_boxed_slice());
         
         // mt_vabove_row
         let mut vabove = Vec::with_capacity(mb_rows_usize);
         for _ in 0..mb_rows_usize {
             let size = (uv_width + 32 as ::core::ffi::c_int) as usize;
-            let ab = crate::vpx_mem::vpx_mem::AlignedBox::new(16, size);
+            let mut ab = crate::vpx_mem::vpx_mem::AlignedBox::new(16, size);
             if ab.is_none() {
-                pbi_ref.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_vabove_row[i]");
+                pbi.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_vabove_row[i]");
                 return;
             }
-            if let Some(ref b) = ab {
-                core::ptr::write_bytes(b.as_ptr(), 0, size);
+            if let Some(ref mut b) = ab {
+                b.as_slice_mut().fill(0);
             }
             vabove.push(ab);
         }
-        pbi_ref.mt_vabove_row = Some(vabove.into_boxed_slice());
+        pbi.mt_vabove_row = Some(vabove.into_boxed_slice());
         
         // mt_yleft_col
         let mut yleft = Vec::with_capacity(mb_rows_usize);
         for _ in 0..mb_rows_usize {
             let size = 16usize;
-            let ab = crate::vpx_mem::vpx_mem::AlignedBox::new(32, size);
+            let mut ab = crate::vpx_mem::vpx_mem::AlignedBox::new(32, size);
             if ab.is_none() {
-                pbi_ref.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_yleft_col[i]");
+                pbi.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_yleft_col[i]");
                 return;
             }
-            if let Some(ref b) = ab {
-                core::ptr::write_bytes(b.as_ptr(), 0, size);
+            if let Some(ref mut b) = ab {
+                b.as_slice_mut().fill(0);
             }
             yleft.push(ab);
         }
-        pbi_ref.mt_yleft_col = Some(yleft.into_boxed_slice());
+        pbi.mt_yleft_col = Some(yleft.into_boxed_slice());
         
         // mt_uleft_col
         let mut uleft = Vec::with_capacity(mb_rows_usize);
         for _ in 0..mb_rows_usize {
             let size = 8usize;
-            let ab = crate::vpx_mem::vpx_mem::AlignedBox::new(32, size);
+            let mut ab = crate::vpx_mem::vpx_mem::AlignedBox::new(32, size);
             if ab.is_none() {
-                pbi_ref.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_uleft_col[i]");
+                pbi.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_uleft_col[i]");
                 return;
             }
-            if let Some(ref b) = ab {
-                core::ptr::write_bytes(b.as_ptr(), 0, size);
+            if let Some(ref mut b) = ab {
+                b.as_slice_mut().fill(0);
             }
             uleft.push(ab);
         }
-        pbi_ref.mt_uleft_col = Some(uleft.into_boxed_slice());
+        pbi.mt_uleft_col = Some(uleft.into_boxed_slice());
         
         // mt_vleft_col
         let mut vleft = Vec::with_capacity(mb_rows_usize);
         for _ in 0..mb_rows_usize {
             let size = 8usize;
-            let ab = crate::vpx_mem::vpx_mem::AlignedBox::new(32, size);
+            let mut ab = crate::vpx_mem::vpx_mem::AlignedBox::new(32, size);
             if ab.is_none() {
-                pbi_ref.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_vleft_col[i]");
+                pbi.common.error.trigger(VPX_CODEC_MEM_ERROR, "Failed to allocate pbi->mt_vleft_col[i]");
                 return;
             }
-            if let Some(ref b) = ab {
-                core::ptr::write_bytes(b.as_ptr(), 0, size);
+            if let Some(ref mut b) = ab {
+                b.as_slice_mut().fill(0);
             }
             vleft.push(ab);
         }
-        pbi_ref.mt_vleft_col = Some(vleft.into_boxed_slice());
+        pbi.mt_vleft_col = Some(vleft.into_boxed_slice());
     }
 }
 #[unsafe(no_mangle)]
@@ -1380,8 +1371,9 @@ pub fn vp8_decoder_remove_threads(pbi: &mut VP8D_COMP) {
             pbi.h_event_start_decoding = None;
             pbi.mb_row_di = None;
             pbi.de_thread_data = None;
-            vp8mt_de_alloc_temp_buffers(pbi as *mut VP8D_COMP, pbi.common.mb_rows);
         }
+        let mb_rows = pbi.common.mb_rows;
+        vp8mt_de_alloc_temp_buffers(pbi, mb_rows);
     }
 }
 #[unsafe(no_mangle)]
