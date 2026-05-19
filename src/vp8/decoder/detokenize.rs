@@ -143,7 +143,7 @@ fn GetCoeffs(
     }
 }
 pub fn vp8_decode_mb_tokens(
-    bc: &mut BOOL_DECODER,
+    mut safe_decoder: &mut crate::vp8::decoder::dboolhuff::SafeBoolDecoder,
     fc_ref: &FRAME_CONTEXT,
     qcoeff: &mut [i16; 400],
     eobs: &mut [::core::ffi::c_char; 25],
@@ -151,7 +151,6 @@ pub fn vp8_decode_mb_tokens(
     l_ctx: &mut ENTROPY_CONTEXT_PLANES,
     is_4x4: bool,
 ) -> ::core::ffi::c_int {
-    let mut safe_decoder = crate::vp8::decoder::dboolhuff::SafeBoolDecoder::from_bool_decoder(bc);
     let mut eobtotal: ::core::ffi::c_int = 0;
 
     let mut skip_dc: ::core::ffi::c_int = 0;
@@ -238,6 +237,5 @@ pub fn vp8_decode_mb_tokens(
         eobtotal += nonzeros;
     }
 
-    safe_decoder.update_bool_decoder(bc);
     return eobtotal;
 }

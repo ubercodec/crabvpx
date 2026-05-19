@@ -270,8 +270,9 @@ fn mt_decode_macroblock(
         let is_4x4 = xd.mode_info(mip).mbmi.is_4x4 != 0;
         let bc_idx = xd.current_bc_idx;
         let (above, left, qcoeff, eobs) = xd.decode_tokens_inputs_mut(common.above_context_ptr(), left_context);
+        let mut safe_decoder = crate::vp8::decoder::dboolhuff::SafeBoolDecoder::from_bool_decoder(&mbc[bc_idx]);
         eobtotal = vp8_decode_mb_tokens(
-            &mut mbc[bc_idx],
+            &mut safe_decoder,
             &common.fc,
             qcoeff,
             eobs,
@@ -279,6 +280,7 @@ fn mt_decode_macroblock(
             left,
             is_4x4,
         );
+        safe_decoder.update_bool_decoder(&mut mbc[bc_idx]);
         xd.mode_info_mut(common.mip_ptr()).mbmi.mb_skip_coeff =
             (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
     }

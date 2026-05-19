@@ -308,8 +308,9 @@ fn decode_macroblock(
         let bc_idx = xd.current_bc_idx;
         let qcoeff = &mut xd.qcoeff;
         let eobs = &mut xd.eobs;
+        let mut safe_decoder = SafeBoolDecoder::from_bool_decoder(&mbc[bc_idx]);
         eobtotal = vp8_decode_mb_tokens(
-            &mut mbc[bc_idx],
+            &mut safe_decoder,
             &common.fc,
             qcoeff,
             eobs,
@@ -317,6 +318,7 @@ fn decode_macroblock(
             left,
             is_4x4,
         );
+        safe_decoder.update_bool_decoder(&mut mbc[bc_idx]);
         xd.mode_info_mut(common.mip_ptr()).mbmi.mb_skip_coeff =
             (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
     }
