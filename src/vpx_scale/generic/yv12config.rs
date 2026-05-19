@@ -67,17 +67,11 @@ pub fn vp8_yv12_de_alloc_frame_buffer_safe(ybf: &mut YV12_BUFFER_CONFIG) {
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_yv12_de_alloc_frame_buffer(
-    mut ybf: *mut YV12_BUFFER_CONFIG,
+pub fn vp8_yv12_de_alloc_frame_buffer(
+    ybf: &mut YV12_BUFFER_CONFIG,
 ) -> ::core::ffi::c_int {
-    if !ybf.is_null() {
-        unsafe {
-            vp8_yv12_de_alloc_frame_buffer_safe(&mut *ybf);
-        }
-    } else {
-        return -(1 as ::core::ffi::c_int);
-    }
-    return 0 as ::core::ffi::c_int;
+    vp8_yv12_de_alloc_frame_buffer_safe(ybf);
+    0 as ::core::ffi::c_int
 }
 
 pub fn vp8_yv12_realloc_frame_buffer_safe(
@@ -155,21 +149,15 @@ pub fn vp8_yv12_realloc_frame_buffer_safe(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_yv12_realloc_frame_buffer(
-    mut ybf: *mut YV12_BUFFER_CONFIG,
-    mut width: ::core::ffi::c_int,
-    mut height: ::core::ffi::c_int,
-    mut border: ::core::ffi::c_int,
+pub fn vp8_yv12_realloc_frame_buffer(
+    ybf: &mut YV12_BUFFER_CONFIG,
+    width: ::core::ffi::c_int,
+    height: ::core::ffi::c_int,
+    border: ::core::ffi::c_int,
 ) -> ::core::ffi::c_int {
-    if !ybf.is_null() {
-        unsafe {
-            match vp8_yv12_realloc_frame_buffer_safe(&mut *ybf, width, height, border) {
-                Ok(_) => 0,
-                Err(e) => e,
-            }
-        }
-    } else {
-        -(2 as ::core::ffi::c_int)
+    match vp8_yv12_realloc_frame_buffer_safe(ybf, width, height, border) {
+        Ok(_) => 0,
+        Err(e) => e,
     }
 }
 
@@ -184,21 +172,15 @@ pub fn vp8_yv12_alloc_frame_buffer_safe(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_yv12_alloc_frame_buffer(
-    mut ybf: *mut YV12_BUFFER_CONFIG,
-    mut width: ::core::ffi::c_int,
-    mut height: ::core::ffi::c_int,
-    mut border: ::core::ffi::c_int,
+pub fn vp8_yv12_alloc_frame_buffer(
+    ybf: &mut YV12_BUFFER_CONFIG,
+    width: ::core::ffi::c_int,
+    height: ::core::ffi::c_int,
+    border: ::core::ffi::c_int,
 ) -> ::core::ffi::c_int {
-    if !ybf.is_null() {
-        unsafe {
-            match vp8_yv12_alloc_frame_buffer_safe(&mut *ybf, width, height, border) {
-                Ok(_) => 0,
-                Err(e) => e,
-            }
-        }
-    } else {
-        -(2 as ::core::ffi::c_int)
+    match vp8_yv12_alloc_frame_buffer_safe(ybf, width, height, border) {
+        Ok(_) => 0,
+        Err(e) => e,
     }
 }
 
