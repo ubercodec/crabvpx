@@ -319,7 +319,7 @@ pub fn vp8_extend_mb_row(
 
     // Y plane border extension
     {
-        let y_slice = unsafe { ybf.y_slice_mut() };
+        let y_slice = ybf.y_slice_mut_safe();
         
         // Y plane row 14
         {
@@ -347,7 +347,7 @@ pub fn vp8_extend_mb_row(
 
     // U plane border extension
     {
-        let u_slice = unsafe { ybf.u_slice_mut() };
+        let u_slice = ybf.u_slice_mut_safe();
         
         // U plane row 6
         {
@@ -373,7 +373,7 @@ pub fn vp8_extend_mb_row(
 
     // V plane border extension
     {
-        let v_slice = unsafe { ybf.v_slice_mut() };
+        let v_slice = ybf.v_slice_mut_safe();
         
         // V plane row 6
         {

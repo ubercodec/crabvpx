@@ -212,38 +212,36 @@ pub(crate) fn setup_intra_recon_left(
     let uv_stride = ybf.uv_stride as usize;
     let mb_row = mb_row as usize;
 
-    unsafe {
-        let y_slice = ybf.y_slice_mut();
-        let y_base = (y_border + mb_row * 16) * y_stride + y_border - 1;
-        for i in 0..16 {
-            let idx = y_base + i * y_stride;
-            if idx < y_slice.len() {
-                y_slice[idx] = 129;
-            } else {
-                debug_assert!(false, "Y slice overflow in setup_intra_recon_left");
-            }
+    let y_slice = ybf.y_slice_mut_safe();
+    let y_base = (y_border + mb_row * 16) * y_stride + y_border - 1;
+    for i in 0..16 {
+        let idx = y_base + i * y_stride;
+        if idx < y_slice.len() {
+            y_slice[idx] = 129;
+        } else {
+            debug_assert!(false, "Y slice overflow in setup_intra_recon_left");
         }
+    }
 
-        let u_slice = ybf.u_slice_mut();
-        let u_base = (uv_border + mb_row * 8) * uv_stride + uv_border - 1;
-        for i in 0..8 {
-            let idx = u_base + i * uv_stride;
-            if idx < u_slice.len() {
-                u_slice[idx] = 129;
-            } else {
-                debug_assert!(false, "U slice overflow in setup_intra_recon_left");
-            }
+    let u_slice = ybf.u_slice_mut_safe();
+    let u_base = (uv_border + mb_row * 8) * uv_stride + uv_border - 1;
+    for i in 0..8 {
+        let idx = u_base + i * uv_stride;
+        if idx < u_slice.len() {
+            u_slice[idx] = 129;
+        } else {
+            debug_assert!(false, "U slice overflow in setup_intra_recon_left");
         }
+    }
 
-        let v_slice = ybf.v_slice_mut();
-        let v_base = (uv_border + mb_row * 8) * uv_stride + uv_border - 1;
-        for i in 0..8 {
-            let idx = v_base + i * uv_stride;
-            if idx < v_slice.len() {
-                v_slice[idx] = 129;
-            } else {
-                debug_assert!(false, "V slice overflow in setup_intra_recon_left");
-            }
+    let v_slice = ybf.v_slice_mut_safe();
+    let v_base = (uv_border + mb_row * 8) * uv_stride + uv_border - 1;
+    for i in 0..8 {
+        let idx = v_base + i * uv_stride;
+        if idx < v_slice.len() {
+            v_slice[idx] = 129;
+        } else {
+            debug_assert!(false, "V slice overflow in setup_intra_recon_left");
         }
     }
 }
@@ -536,12 +534,12 @@ fn get_delta_q(
     ret_val
 }
 
-fn yv12_extend_frame_top_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
+fn yv12_extend_frame_top_c(ybf: &mut YV12_BUFFER_CONFIG) {
     let border = ybf.border as usize;
 
     // Y plane
     let y_stride = ybf.y_stride as usize;
-    let y_slice = ybf.y_slice_mut();
+    let y_slice = ybf.y_slice_mut_safe();
     let y_src_start = border * y_stride;
     let y_src_end = y_src_start + y_stride;
 
@@ -553,7 +551,7 @@ fn yv12_extend_frame_top_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
     // U plane
     let uv_border = border / 2;
     let uv_stride = ybf.uv_stride as usize;
-    let u_slice = ybf.u_slice_mut();
+    let u_slice = ybf.u_slice_mut_safe();
     let u_src_start = uv_border * uv_stride;
     let u_src_end = u_src_start + uv_stride;
 
@@ -563,7 +561,7 @@ fn yv12_extend_frame_top_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
     }
 
     // V plane
-    let v_slice = ybf.v_slice_mut();
+    let v_slice = ybf.v_slice_mut_safe();
     let v_src_start = uv_border * uv_stride;
     let v_src_end = v_src_start + uv_stride;
 
@@ -571,14 +569,14 @@ fn yv12_extend_frame_top_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
         let dest_start = r * uv_stride;
         v_slice.copy_within(v_src_start..v_src_end, dest_start);
     }
-}}
-fn yv12_extend_frame_bottom_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
+}
+fn yv12_extend_frame_bottom_c(ybf: &mut YV12_BUFFER_CONFIG) {
     let border = ybf.border as usize;
 
     // Y plane
     let y_stride = ybf.y_stride as usize;
     let y_height = ybf.y_height as usize;
-    let y_slice = ybf.y_slice_mut();
+    let y_slice = ybf.y_slice_mut_safe();
     let y_src_start = (border + y_height - 1) * y_stride;
     let y_src_end = y_src_start + y_stride;
 
@@ -591,7 +589,7 @@ fn yv12_extend_frame_bottom_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
     let uv_border = border / 2;
     let uv_stride = ybf.uv_stride as usize;
     let uv_height = ybf.uv_height as usize;
-    let u_slice = ybf.u_slice_mut();
+    let u_slice = ybf.u_slice_mut_safe();
     let u_src_start = (uv_border + uv_height - 1) * uv_stride;
     let u_src_end = u_src_start + uv_stride;
 
@@ -601,7 +599,7 @@ fn yv12_extend_frame_bottom_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
     }
 
     // V plane
-    let v_slice = ybf.v_slice_mut();
+    let v_slice = ybf.v_slice_mut_safe();
     let v_src_start = (uv_border + uv_height - 1) * uv_stride;
     let v_src_end = v_src_start + uv_stride;
 
@@ -609,7 +607,7 @@ fn yv12_extend_frame_bottom_c(ybf: &mut YV12_BUFFER_CONFIG) { unsafe {
         let dest_start = (uv_border + uv_height + r) * uv_stride;
         v_slice.copy_within(v_src_start..v_src_end, dest_start);
     }
-}}
+}
 fn yv12_extend_frame_left_right(
     ybf: &mut YV12_BUFFER_CONFIG,
     mb_row: i32,
@@ -619,7 +617,7 @@ fn yv12_extend_frame_left_right(
     // Y Plane
     let y_stride = ybf.y_stride as usize;
     let y_width = ybf.y_width as usize;
-    let y_slice = unsafe { ybf.y_slice_mut() };
+    let y_slice = ybf.y_slice_mut_safe();
     
     let y_plane_height = 16;
     for i in 0..y_plane_height {
@@ -641,7 +639,7 @@ fn yv12_extend_frame_left_right(
     let uv_border = border / 2;
     let uv_stride = ybf.uv_stride as usize;
     let uv_width = ybf.uv_width as usize;
-    let u_slice = unsafe { ybf.u_slice_mut() };
+    let u_slice = ybf.u_slice_mut_safe();
     
     let uv_plane_height = 8;
     for i in 0..uv_plane_height {
@@ -660,7 +658,7 @@ fn yv12_extend_frame_left_right(
     }
 
     // V Plane
-    let v_slice = unsafe { ybf.v_slice_mut() };
+    let v_slice = ybf.v_slice_mut_safe();
     for i in 0..uv_plane_height {
         let uv_line = mb_row as usize * 8 + i;
         let active_line_start_idx = (uv_border * uv_stride + uv_border) + uv_line * uv_stride;

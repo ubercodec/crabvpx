@@ -220,8 +220,7 @@ pub fn intra_prediction_down_copy(
     let dst_stride = xd.dst.y_stride as usize;
     let border = xd.dst.border as usize;
 
-    // Safety: xd.dst must be valid.
-    let y_slice = unsafe { xd.dst.y_slice_mut() };
+    let y_slice = xd.dst.y_slice_mut_safe();
 
     let base_idx = (border - 1) * dst_stride + border + 16;
 
