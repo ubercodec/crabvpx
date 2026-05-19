@@ -624,7 +624,6 @@ fn mt_decode_mb_rows(
         let current_mb_col: &vpx_atomic_int = &mt_current_mb_col[mb_row as usize];
         recon_yoffset = mb_row * recon_y_stride * 16 as ::core::ffi::c_int;
         recon_uvoffset = mb_row * recon_uv_stride * 8 as ::core::ffi::c_int;
-        (*xd).above_context = (*pc).above_context_ptr();
         (*xd).above_context_idx = 0;
         *xd.left_context_mut() = ENTROPY_CONTEXT_PLANES::default();
         (*xd).left_available = 0 as ::core::ffi::c_int;
@@ -999,7 +998,6 @@ fn mt_decode_mb_rows(
             recon_uvoffset += 8 as ::core::ffi::c_int;
             (*xd).mode_info_context = (*xd).mode_info_context.offset(1);
             (*xd).mode_info_idx += 1;
-            (*xd).above_context = (*xd).above_context.offset(1);
             (*xd).above_context_idx += 1;
             mb_col += 1;
         }

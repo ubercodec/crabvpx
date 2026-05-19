@@ -670,7 +670,6 @@ pub struct macroblockd {
     pub recon_above: [*mut ::core::ffi::c_uchar; 3],
     pub recon_left: [*mut ::core::ffi::c_uchar; 3],
     pub recon_left_stride: [::core::ffi::c_int; 2],
-    pub above_context: *mut ENTROPY_CONTEXT_PLANES,
     pub above_context_idx: usize,
     pub left_context: *mut ENTROPY_CONTEXT_PLANES,
     pub segmentation_enabled: ::core::ffi::c_uchar,
@@ -722,7 +721,6 @@ impl Default for macroblockd {
             recon_above: [core::ptr::null_mut(); 3],
             recon_left: [core::ptr::null_mut(); 3],
             recon_left_stride: [0; 2],
-            above_context: core::ptr::null_mut(),
             above_context_idx: 0,
             left_context: core::ptr::null_mut(),
             segmentation_enabled: 0,
@@ -760,9 +758,6 @@ impl macroblockd {
     }
     pub fn mode_info_mut(&mut self, mi_base: *mut MODE_INFO) -> &mut MODE_INFO {
         unsafe { &mut *mi_base.add(self.mode_info_idx) }
-    }
-    pub fn above_context_mut(&mut self) -> &mut ENTROPY_CONTEXT_PLANES {
-        unsafe { &mut *self.above_context }
     }
     pub fn left_context_mut(&mut self) -> &mut ENTROPY_CONTEXT_PLANES {
         unsafe { &mut *self.left_context }
