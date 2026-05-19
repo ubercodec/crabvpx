@@ -281,23 +281,7 @@ pub fn vpx_d207_predictor_4x4_safe(
 }
 
 
-#[unsafe(no_mangle)]
-pub extern "C" fn vpx_d63_predictor_4x4_c(
-    dst: *mut uint8_t,
-    stride: ptrdiff_t,
-    above: *const uint8_t,
-    _left: *const uint8_t,
-) {
-    if dst.is_null() || above.is_null() {
-        return;
-    }
-    unsafe {
-        let dst_len = 3 * stride as usize + 4;
-        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
-        let above_slice = core::slice::from_raw_parts(above, 8);
-        vpx_d63e_predictor_4x4_safe(dst_slice, stride as usize, above_slice);
-    }
-}
+
 pub fn vpx_d63e_predictor_4x4_safe(
     dst: &mut [u8],
     stride: usize,
@@ -343,64 +327,7 @@ pub fn vpx_d63e_predictor_4x4_safe(
     dst[3 * stride + 3] = ((F + 2 * G + H + 2) >> 2) as u8;
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn vpx_d45_predictor_4x4_c(
-    dst: *mut uint8_t,
-    stride: ptrdiff_t,
-    above: *const uint8_t,
-    _left: *const uint8_t,
-) {
-    if dst.is_null() || above.is_null() {
-        return;
-    }
-    unsafe {
-        let dst_len = 3 * stride as usize + 4;
-        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
-        let above_slice = core::slice::from_raw_parts(above, 8);
-        vpx_d45_predictor_4x4_safe(dst_slice, stride as usize, above_slice);
-    }
-}
-pub fn vpx_d45_predictor_4x4_safe(
-    dst: &mut [u8],
-    stride: usize,
-    above: &[u8],
-) {
-    let A = above[0] as i32;
-    let B = above[1] as i32;
-    let C = above[2] as i32;
-    let D = above[3] as i32;
-    let E = above[4] as i32;
-    let F = above[5] as i32;
-    let G = above[6] as i32;
-    let H = above[7] as i32;
 
-    dst[0] = ((A + 2 * B + C + 2) >> 2) as u8;
-    let val_0_1 = ((B + 2 * C + D + 2) >> 2) as u8;
-    dst[stride] = val_0_1;
-    dst[1] = val_0_1;
-
-    let val_0_2 = ((C + 2 * D + E + 2) >> 2) as u8;
-    dst[2 * stride] = val_0_2;
-    dst[stride + 1] = val_0_2;
-    dst[2] = val_0_2;
-
-    let val_0_3 = ((D + 2 * E + F + 2) >> 2) as u8;
-    dst[3 * stride] = val_0_3;
-    dst[2 * stride + 1] = val_0_3;
-    dst[stride + 2] = val_0_3;
-    dst[3] = val_0_3;
-
-    let val_1_3 = ((E + 2 * F + G + 2) >> 2) as u8;
-    dst[3 * stride + 1] = val_1_3;
-    dst[2 * stride + 2] = val_1_3;
-    dst[stride + 3] = val_1_3;
-
-    let val_2_3 = ((F + 2 * G + H + 2) >> 2) as u8;
-    dst[3 * stride + 2] = val_2_3;
-    dst[2 * stride + 3] = val_2_3;
-
-    dst[3 * stride + 3] = H as u8;
-}
 pub fn vpx_d45e_predictor_4x4_safe(
     dst: &mut [u8],
     stride: usize,
