@@ -972,7 +972,6 @@ pub struct VP8D_CONFIG {
 #[repr(C)]
 pub struct VP8D_COMP {
     pub mb: MACROBLOCKD,
-    pub dec_fb_ref: [*mut YV12_BUFFER_CONFIG; 4],
     pub common: VP8_COMMON,
     pub mbc: [vp8_reader; 9],
     pub oxcf: VP8D_CONFIG,

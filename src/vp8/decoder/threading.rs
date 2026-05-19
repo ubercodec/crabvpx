@@ -569,9 +569,9 @@ fn mt_decode_mb_rows(
         (1 as ::core::ffi::c_int) << (*pbi).common.multi_token_partition as ::core::ffi::c_uint;
     let mut last_mb_row: ::core::ffi::c_int = start_mb_row;
     let mut yv12_fb_new: *mut YV12_BUFFER_CONFIG =
-        (*pbi).dec_fb_ref[INTRA_FRAME as ::core::ffi::c_int as usize];
+        &raw mut (*pbi).common.yv12_fb[(*pbi).common.new_fb_idx as usize];
     let mut yv12_fb_lst: *mut YV12_BUFFER_CONFIG =
-        (*pbi).dec_fb_ref[LAST_FRAME as ::core::ffi::c_int as usize];
+        &raw mut (*pbi).common.yv12_fb[(*pbi).common.lst_fb_idx as usize];
     let mut recon_y_stride: ::core::ffi::c_int = (*yv12_fb_new).y_stride;
     let mut recon_uv_stride: ::core::ffi::c_int = (*yv12_fb_new).uv_stride;
     let mut ref_buffer: [[*mut ::core::ffi::c_uchar; 3]; 4] =
@@ -583,7 +583,13 @@ fn mt_decode_mb_rows(
     ref_fb_corrupted[INTRA_FRAME as ::core::ffi::c_int as usize] = 0 as ::core::ffi::c_int;
     i = 1 as ::core::ffi::c_int;
     while i < MAX_REF_FRAMES as ::core::ffi::c_int {
-        let mut this_fb: *mut YV12_BUFFER_CONFIG = (*pbi).dec_fb_ref[i as usize];
+        let fb_idx = match i {
+            1 => (*pbi).common.lst_fb_idx as usize,
+            2 => (*pbi).common.gld_fb_idx as usize,
+            3 => (*pbi).common.alt_fb_idx as usize,
+            _ => panic!("Invalid ref frame index"),
+        };
+        let mut this_fb: *mut YV12_BUFFER_CONFIG = &raw mut (*pbi).common.yv12_fb[fb_idx];
         ref_buffer[i as usize][0 as ::core::ffi::c_int as usize] =
             (*this_fb).y_buffer as *mut ::core::ffi::c_uchar;
         ref_buffer[i as usize][1 as ::core::ffi::c_int as usize] =

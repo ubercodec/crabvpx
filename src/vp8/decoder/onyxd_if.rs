@@ -334,15 +334,6 @@ pub fn vp8dx_receive_compressed_data_safe(
     let new_fb_idx = get_free_fb(&mut pbi.common);
     pbi.common.new_fb_idx = new_fb_idx;
     
-    let lst_fb_idx = pbi.common.lst_fb_idx;
-    let gld_fb_idx = pbi.common.gld_fb_idx;
-    let alt_fb_idx = pbi.common.alt_fb_idx;
-    
-    pbi.dec_fb_ref[INTRA_FRAME as usize] = &raw mut pbi.common.yv12_fb[new_fb_idx as usize];
-    pbi.dec_fb_ref[LAST_FRAME as usize] = &raw mut pbi.common.yv12_fb[lst_fb_idx as usize];
-    pbi.dec_fb_ref[GOLDEN_FRAME as usize] = &raw mut pbi.common.yv12_fb[gld_fb_idx as usize];
-    pbi.dec_fb_ref[ALTREF_FRAME as usize] = &raw mut pbi.common.yv12_fb[alt_fb_idx as usize];
-    
     retcode = vp8_decode_frame(pbi);
     
     if retcode < 0 {
