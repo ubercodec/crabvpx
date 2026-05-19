@@ -99,7 +99,7 @@ fn vp8_filter(
     u = vp8_signed_char_clamp(ps1 as i32 + filter_value as i32);
     *op1 = (u as u8 ^ 0x80);
 }
-fn loop_filter_horizontal_edge_safe(
+pub(crate) fn loop_filter_horizontal_edge_safe(
     s: &mut [u8],
     s_offset: usize,
     p: usize,
@@ -153,7 +153,7 @@ fn loop_filter_horizontal_edge_safe(
         s[idx + p] = oq1_val;
     }
 }
-fn loop_filter_vertical_edge_safe(
+pub(crate) fn loop_filter_vertical_edge_safe(
     s: &mut [u8],
     s_offset: usize,
     p: usize,
@@ -276,7 +276,7 @@ fn vp8_mbfilter(
     s = vp8_signed_char_clamp(ps2 as i32 + u as i32);
     *op2 = (s as u8 ^ 0x80);
 }
-fn mbloop_filter_horizontal_edge_safe(
+pub(crate) fn mbloop_filter_horizontal_edge_safe(
     s: &mut [u8],
     s_offset: usize,
     p: usize,
@@ -336,7 +336,7 @@ fn mbloop_filter_horizontal_edge_safe(
         s[idx + 2 * p] = oq2_val;
     }
 }
-fn mbloop_filter_vertical_edge_safe(
+pub(crate) fn mbloop_filter_vertical_edge_safe(
     s: &mut [u8],
     s_offset: usize,
     p: usize,
@@ -437,7 +437,7 @@ fn vp8_simple_filter_safe(
     *op0 = (u as i32 ^ 0x80) as u8;
 }
 
-fn vp8_loop_filter_simple_horizontal_edge_safe(
+pub(crate) fn vp8_loop_filter_simple_horizontal_edge_safe(
     y: &mut [u8],
     y_offset: usize,
     y_stride: usize,
@@ -472,7 +472,7 @@ fn vp8_loop_filter_simple_horizontal_edge_safe(
     }
 }
 
-fn vp8_loop_filter_simple_vertical_edge_safe(
+pub(crate) fn vp8_loop_filter_simple_vertical_edge_safe(
     y: &mut [u8],
     y_offset: usize,
     y_stride: usize,
@@ -507,7 +507,7 @@ fn vp8_loop_filter_simple_vertical_edge_safe(
     }
 }
 
-fn vp8_loop_filter_bhs_safe(
+pub(crate) fn vp8_loop_filter_bhs_safe(
     y: &mut [u8],
     y_offset: usize,
     y_stride: usize,
@@ -533,7 +533,7 @@ fn vp8_loop_filter_bhs_safe(
     );
 }
 
-fn vp8_loop_filter_bvs_safe(
+pub(crate) fn vp8_loop_filter_bvs_safe(
     y: &mut [u8],
     y_offset: usize,
     y_stride: usize,
