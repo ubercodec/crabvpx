@@ -384,13 +384,7 @@ fn decode_macroblock(
             if xd.mode_info().mbmi.mb_skip_coeff != 0 {
                 xd.eobs.fill(0);
             }
-            unsafe {
-                intra_prediction_down_copy(
-                    xd,
-                    xd.recon_above[0 as ::core::ffi::c_int as usize]
-                        .offset(16 as ::core::ffi::c_int as isize),
-                );
-            }
+            intra_prediction_down_copy(xd);
             i = 0 as ::core::ffi::c_int;
             while i < 16 as ::core::ffi::c_int {
                 let b_offset = xd.block[i as usize].offset;

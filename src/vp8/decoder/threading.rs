@@ -321,11 +321,7 @@ fn mt_decode_macroblock(
                     25 as size_t,
                 );
             }
-            intra_prediction_down_copy(
-                xd,
-                xd.recon_above[0 as ::core::ffi::c_int as usize]
-                    .offset(16 as ::core::ffi::c_int as isize),
-            );
+            intra_prediction_down_copy(xd);
             i = 0 as ::core::ffi::c_int;
             while i < 16 as ::core::ffi::c_int {
                 let mut b: *mut BLOCKD =
