@@ -1,73 +1,80 @@
-unsafe extern "C" {
-    fn getenv(_: *const ::core::ffi::c_char) -> *mut ::core::ffi::c_char;
-    fn strtol(
-        __str: *const ::core::ffi::c_char,
-        __endptr: *mut *mut ::core::ffi::c_char,
-        __base: ::core::ffi::c_int,
-    ) -> ::core::ffi::c_long;
-}
-pub type __darwin_size_t = usize;
-pub type int64_t = i64;
-pub type size_t = __darwin_size_t;
-pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
-pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
 pub const HAS_NEON: ::core::ffi::c_int = (1 as ::core::ffi::c_int) << 0 as ::core::ffi::c_int;
 pub const HAS_NEON_DOTPROD: ::core::ffi::c_int =
     (1 as ::core::ffi::c_int) << 1 as ::core::ffi::c_int;
 pub const HAS_NEON_I8MM: ::core::ffi::c_int = (1 as ::core::ffi::c_int) << 2 as ::core::ffi::c_int;
 pub const HAS_SVE: ::core::ffi::c_int = (1 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int;
 pub const HAS_SVE2: ::core::ffi::c_int = (1 as ::core::ffi::c_int) << 4 as ::core::ffi::c_int;
-#[inline]
-unsafe extern "C" fn arm_cpu_env_flags(mut flags: *mut ::core::ffi::c_int) -> ::core::ffi::c_int { unsafe {
-    let mut env: *const ::core::ffi::c_char =
-        getenv(b"VPX_SIMD_CAPS\0" as *const u8 as *const ::core::ffi::c_char);
-    if !env.is_null() && *env as ::core::ffi::c_int != 0 {
-        *flags = strtol(
-            env,
-            ::core::ptr::null_mut::<*mut ::core::ffi::c_char>(),
-            0 as ::core::ffi::c_int,
-        ) as ::core::ffi::c_int;
-        return 1 as ::core::ffi::c_int;
+
+fn parse_int_base_0(s: &str) -> Option<i32> {
+    let s = s.trim();
+    if s.is_empty() {
+        return None;
     }
-    return 0 as ::core::ffi::c_int;
-}}
-#[inline]
-unsafe extern "C" fn arm_cpu_env_mask() -> ::core::ffi::c_int { unsafe {
-    let mut env: *const ::core::ffi::c_char =
-        getenv(b"VPX_SIMD_CAPS_MASK\0" as *const u8 as *const ::core::ffi::c_char);
-    return if !env.is_null() && *env as ::core::ffi::c_int != 0 {
-        strtol(
-            env,
-            ::core::ptr::null_mut::<*mut ::core::ffi::c_char>(),
-            0 as ::core::ffi::c_int,
-        ) as ::core::ffi::c_int
+
+    let (s, negative) = if s.starts_with('-') {
+        (&s[1..], true)
+    } else if s.starts_with('+') {
+        (&s[1..], false)
     } else {
-        !(0 as ::core::ffi::c_int)
+        (s, false)
     };
-}}
-#[inline]
-unsafe extern "C" fn have_feature(mut _feature: *const ::core::ffi::c_char) -> int64_t {
+
+    let parsed = if s.starts_with("0x") || s.starts_with("0X") {
+        let hex_str = s.trim_start_matches("0x").trim_start_matches("0X");
+        i32::from_str_radix(hex_str, 16).ok()
+    } else if s.starts_with('0') && s.len() > 1 {
+        let oct_str = s.trim_start_matches('0');
+        if oct_str.is_empty() {
+            Some(0)
+        } else {
+            i32::from_str_radix(oct_str, 8).ok()
+        }
+    } else {
+        s.parse::<i32>().ok()
+    };
+
+    parsed.map(|val| if negative { -val } else { val })
+}
+
+fn arm_cpu_env_flags() -> Option<i32> {
+    if let Ok(val) = std::env::var("VPX_SIMD_CAPS") {
+        parse_int_base_0(&val)
+    } else {
+        None
+    }
+}
+
+fn arm_cpu_env_mask() -> i32 {
+    if let Ok(val) = std::env::var("VPX_SIMD_CAPS_MASK") {
+        parse_int_base_0(&val).unwrap_or(!0)
+    } else {
+        !0
+    }
+}
+
+fn have_feature(_feature: &str) -> i64 {
     // TODO: Use getauxval on Linux
     0
 }
-unsafe extern "C" fn arm_get_cpu_caps() -> ::core::ffi::c_int { unsafe {
+
+fn arm_get_cpu_caps() -> ::core::ffi::c_int {
     let mut flags: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     flags |= HAS_NEON;
-    if have_feature(b"hw.optional.arm.FEAT_DotProd\0" as *const u8 as *const ::core::ffi::c_char)
-        != 0
-    {
+    if have_feature("hw.optional.arm.FEAT_DotProd") != 0 {
         flags |= HAS_NEON_DOTPROD;
     }
-    if have_feature(b"hw.optional.arm.FEAT_I8MM\0" as *const u8 as *const ::core::ffi::c_char) != 0
-    {
+    if have_feature("hw.optional.arm.FEAT_I8MM") != 0 {
         flags |= HAS_NEON_I8MM;
     }
-    return flags;
-}}
+    flags
+}
+
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn arm_cpu_caps() -> ::core::ffi::c_int { unsafe {
+pub extern "C" fn arm_cpu_caps() -> ::core::ffi::c_int {
     let mut flags: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    if arm_cpu_env_flags(&raw mut flags) == 0 {
+    if let Some(env_flags) = arm_cpu_env_flags() {
+        flags = env_flags;
+    } else {
         flags = arm_get_cpu_caps() & arm_cpu_env_mask();
     }
     if flags & HAS_NEON_DOTPROD == 0 {
@@ -82,5 +89,5 @@ pub unsafe extern "C" fn arm_cpu_caps() -> ::core::ffi::c_int { unsafe {
     if flags & HAS_SVE == 0 {
         flags &= !HAS_SVE2;
     }
-    return flags;
-}}
+    flags
+}
