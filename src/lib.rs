@@ -82,8 +82,8 @@ pub mod vpx_ports {
 } // mod vpx_ports
 pub mod vpx_scale {
     pub mod generic {
-        pub mod gen_scalers;
-        pub mod vpx_scale;
+        // pub mod gen_scalers;
+        // pub mod vpx_scale;
         pub mod yv12config;
         pub mod yv12extend;
     } // mod generic
