@@ -21,7 +21,6 @@ unsafe extern "C" {
     );
     fn vpx_calloc(num: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_free(memblk: *mut ::core::ffi::c_void);
-    fn vp8dx_receive_compressed_data(pbi: *mut VP8D_COMP) -> ::core::ffi::c_int;
     fn vp8_create_decoder_instances(
         fb: *mut frame_buffers,
         oxcf: *mut VP8D_CONFIG,
@@ -35,6 +34,7 @@ unsafe extern "C" {
     );
     fn vp8mt_de_alloc_temp_buffers(pbi: *mut VP8D_COMP, mb_rows: ::core::ffi::c_int);
 }
+use crate::vp8::decoder::onyxd_if::vp8dx_receive_compressed_data_safe;
 use crate::vp8::decoder::threading::vp8_decoder_remove_threads;
 pub type __builtin_va_list = *mut ::core::ffi::c_char;
 pub type __darwin_natural_t = ::core::ffi::c_uint;
@@ -1060,7 +1060,7 @@ unsafe extern "C" fn vp8_decode(
         (*pbi_1).fragments = (*ctx).fragments;
         (*pbi_1).restart_threads = 0 as ::core::ffi::c_int;
         (*ctx).user_priv = user_priv;
-        if vp8dx_receive_compressed_data(pbi_1 as *mut VP8D_COMP) != 0 {
+        if vp8dx_receive_compressed_data_safe(&mut *pbi_1) != 0 {
             ::core::ptr::write_volatile(
                 &mut res as *mut vpx_codec_err_t,
                 update_error_state(ctx, &raw mut (*pbi_1).common.error),

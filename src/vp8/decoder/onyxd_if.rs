@@ -357,15 +357,6 @@ pub fn vp8dx_receive_compressed_data_safe(
     return retcode;
 }
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8dx_receive_compressed_data(
-    pbi: *mut VP8D_COMP,
-) -> ::core::ffi::c_int {
-    if pbi.is_null() {
-        return -1;
-    }
-    unsafe { vp8dx_receive_compressed_data_safe(&mut *pbi) }
-}
 pub fn vp8dx_get_raw_frame(
     pbi: &mut VP8D_COMP,
     sd: &mut YV12_BUFFER_CONFIG,
