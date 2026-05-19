@@ -654,52 +654,74 @@ pub extern "C" fn vpx_ve_predictor_4x4_c(
         vpx_ve_predictor_4x4_safe(dst_slice, stride as usize, above_slice);
     }
 }
+pub fn vpx_d207_predictor_4x4_safe(
+    dst: &mut [u8],
+    stride: usize,
+    left: &[u8],
+) {
+    let i_val = left[0] as i32;
+    let j_val = left[1] as i32;
+    let k_val = left[2] as i32;
+    let l_val = left[3] as i32;
+
+    let val_0_0 = ((i_val + j_val + 1) >> 1) as u8;
+    let val_0_1 = ((i_val + 2 * j_val + k_val + 2) >> 2) as u8;
+    let val_0_2 = ((j_val + k_val + 1) >> 1) as u8;
+    let val_0_3 = ((j_val + 2 * k_val + l_val + 2) >> 2) as u8;
+
+    let val_1_0 = val_0_2;
+    let val_1_1 = val_0_3;
+    let val_1_2 = ((k_val + l_val + 1) >> 1) as u8;
+    let val_1_3 = ((k_val + 3 * l_val + 2) >> 2) as u8;
+
+    let val_2_0 = val_1_2;
+    let val_2_1 = val_1_3;
+    let val_2_2 = l_val as u8;
+    let val_2_3 = l_val as u8;
+
+    let val_3_0 = l_val as u8;
+    let val_3_1 = l_val as u8;
+    let val_3_2 = l_val as u8;
+    let val_3_3 = l_val as u8;
+
+    dst[0] = val_0_0;
+    dst[1] = val_0_1;
+    dst[2] = val_0_2;
+    dst[3] = val_0_3;
+
+    dst[stride] = val_1_0;
+    dst[stride + 1] = val_1_1;
+    dst[stride + 2] = val_1_2;
+    dst[stride + 3] = val_1_3;
+
+    dst[2 * stride] = val_2_0;
+    dst[2 * stride + 1] = val_2_1;
+    dst[2 * stride + 2] = val_2_2;
+    dst[2 * stride + 3] = val_2_3;
+
+    dst[3 * stride] = val_3_0;
+    dst[3 * stride + 1] = val_3_1;
+    dst[3 * stride + 2] = val_3_2;
+    dst[3 * stride + 3] = val_3_3;
+}
+
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vpx_d207_predictor_4x4_c(
-    mut dst: *mut uint8_t,
-    mut stride: ptrdiff_t,
-    mut above: *const uint8_t,
-    mut left: *const uint8_t,
-) { unsafe {
-    let I: ::core::ffi::c_int =
-        *left.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-    let J: ::core::ffi::c_int =
-        *left.offset(1 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-    let K: ::core::ffi::c_int =
-        *left.offset(2 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-    let L: ::core::ffi::c_int =
-        *left.offset(3 as ::core::ffi::c_int as isize) as ::core::ffi::c_int;
-    *dst.offset((0 as ptrdiff_t + 0 as ptrdiff_t * stride) as isize) =
-        (I + J + 1 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int) as uint8_t;
-    let ref mut fresh21 = *dst.offset((0 as ptrdiff_t + 1 as ptrdiff_t * stride) as isize);
-    *fresh21 = (J + K + 1 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int) as uint8_t;
-    *dst.offset((2 as ptrdiff_t + 0 as ptrdiff_t * stride) as isize) = *fresh21;
-    let ref mut fresh22 = *dst.offset((0 as ptrdiff_t + 2 as ptrdiff_t * stride) as isize);
-    *fresh22 = (K + L + 1 as ::core::ffi::c_int >> 1 as ::core::ffi::c_int) as uint8_t;
-    *dst.offset((2 as ptrdiff_t + 1 as ptrdiff_t * stride) as isize) = *fresh22;
-    *dst.offset((1 as ptrdiff_t + 0 as ptrdiff_t * stride) as isize) =
-        (I + 2 as ::core::ffi::c_int * J + K + 2 as ::core::ffi::c_int >> 2 as ::core::ffi::c_int)
-            as uint8_t;
-    let ref mut fresh23 = *dst.offset((1 as ptrdiff_t + 1 as ptrdiff_t * stride) as isize);
-    *fresh23 = (J + 2 as ::core::ffi::c_int * K + L + 2 as ::core::ffi::c_int
-        >> 2 as ::core::ffi::c_int) as uint8_t;
-    *dst.offset((3 as ptrdiff_t + 0 as ptrdiff_t * stride) as isize) = *fresh23;
-    let ref mut fresh24 = *dst.offset((1 as ptrdiff_t + 2 as ptrdiff_t * stride) as isize);
-    *fresh24 = (K + 2 as ::core::ffi::c_int * L + L + 2 as ::core::ffi::c_int
-        >> 2 as ::core::ffi::c_int) as uint8_t;
-    *dst.offset((3 as ptrdiff_t + 1 as ptrdiff_t * stride) as isize) = *fresh24;
-    let ref mut fresh25 = *dst.offset((3 as ptrdiff_t + 3 as ptrdiff_t * stride) as isize);
-    *fresh25 = L as uint8_t;
-    let ref mut fresh26 = *dst.offset((2 as ptrdiff_t + 3 as ptrdiff_t * stride) as isize);
-    *fresh26 = *fresh25;
-    let ref mut fresh27 = *dst.offset((1 as ptrdiff_t + 3 as ptrdiff_t * stride) as isize);
-    *fresh27 = *fresh26;
-    let ref mut fresh28 = *dst.offset((0 as ptrdiff_t + 3 as ptrdiff_t * stride) as isize);
-    *fresh28 = *fresh27;
-    let ref mut fresh29 = *dst.offset((2 as ptrdiff_t + 2 as ptrdiff_t * stride) as isize);
-    *fresh29 = *fresh28;
-    *dst.offset((3 as ptrdiff_t + 2 as ptrdiff_t * stride) as isize) = *fresh29;
-}}
+pub extern "C" fn vpx_d207_predictor_4x4_c(
+    dst: *mut uint8_t,
+    stride: ptrdiff_t,
+    _above: *const uint8_t,
+    left: *const uint8_t,
+) {
+    if dst.is_null() || left.is_null() {
+        return;
+    }
+    unsafe {
+        let dst_len = 3 * stride as usize + 4;
+        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
+        let left_slice = core::slice::from_raw_parts(left, 4);
+        vpx_d207_predictor_4x4_safe(dst_slice, stride as usize, left_slice);
+    }
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vpx_d63_predictor_4x4_c(
     mut dst: *mut uint8_t,
