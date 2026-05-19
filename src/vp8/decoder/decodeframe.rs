@@ -882,9 +882,9 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
                         recon_uv_stride,
                         y_slice,
                         y_offset,
-                        u_slice,
+                        Some(&mut *u_slice),
                         u_offset,
-                        v_slice,
+                        Some(&mut *v_slice),
                         v_offset,
                     );
                 } else {
@@ -934,9 +934,9 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
                 recon_uv_stride,
                 y_slice,
                 y_offset,
-                u_slice,
+                Some(&mut *u_slice),
                 u_offset,
-                v_slice,
+                Some(&mut *v_slice),
                 v_offset,
             );
         } else {
