@@ -25,7 +25,7 @@ pub fn vp8dx_start_decode_safe(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8dx_start_decode(
+pub extern "C" fn vp8dx_start_decode(
     mut br: *mut BOOL_DECODER,
     mut source: *const ::core::ffi::c_uchar,
     mut source_sz: ::core::ffi::c_uint,
@@ -50,7 +50,7 @@ pub unsafe extern "C" fn vp8dx_start_decode(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8dx_bool_decoder_fill(mut br: *mut BOOL_DECODER) {
+pub extern "C" fn vp8dx_bool_decoder_fill(mut br: *mut BOOL_DECODER) {
     if br.is_null() {
         return;
     }
@@ -195,7 +195,7 @@ pub fn vp8dx_decode_bool_safe(
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8dx_decode_bool(
+pub extern "C" fn vp8dx_decode_bool(
     br: *mut BOOL_DECODER,
     probability: ::core::ffi::c_int,
 ) -> ::core::ffi::c_int {
