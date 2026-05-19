@@ -27,13 +27,3 @@ pub fn vp8_swap_yv12_buffer_safe(
     core::mem::swap(&mut new_frame.v_buffer, &mut last_frame.v_buffer);
 }
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_swap_yv12_buffer(
-    mut new_frame: *mut YV12_BUFFER_CONFIG,
-    mut last_frame: *mut YV12_BUFFER_CONFIG,
-) {
-    if new_frame.is_null() || last_frame.is_null() {
-        return;
-    }
-    vp8_swap_yv12_buffer_safe(&mut *new_frame, &mut *last_frame);
-}
