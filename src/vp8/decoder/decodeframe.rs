@@ -701,8 +701,7 @@ fn yv12_extend_frame_left_right(
     }
 }
 fn decode_mb_rows(pbi: &mut VP8D_COMP) {
-    let pc = &mut pbi.common;
-    let xd = &mut pbi.mb;
+    let (xd, pc, mbc) = pbi.split_mut();
     let mut ibc: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     let mut num_part: ::core::ffi::c_int =
         (1 as ::core::ffi::c_int) << pc.multi_token_partition as ::core::ffi::c_uint;
@@ -833,11 +832,11 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
             xd.corrupted |= ref_fb_corrupted[ref_frame as usize];
             
             let above = &mut above_context_box[mb_col as usize];
-            decode_macroblock(pc, &mut pbi.mbc, xd, mb_idx as ::core::ffi::c_uint, above, &mut left_context);
+            decode_macroblock(pc, mbc, xd, mb_idx as ::core::ffi::c_uint, above, &mut left_context);
             
             mb_idx += 1;
             xd.left_available = 1 as ::core::ffi::c_int;
-            xd.corrupted |= vp8dx_bool_error(&pbi.mbc[xd.current_bc_idx]);
+            xd.corrupted |= vp8dx_bool_error(&mbc[xd.current_bc_idx]);
             
             recon_yoffset += 16 as ::core::ffi::c_int;
             recon_uvoffset += 8 as ::core::ffi::c_int;

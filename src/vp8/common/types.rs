@@ -1010,6 +1010,13 @@ pub struct VP8D_COMP {
     pub restart_threads: ::core::ffi::c_int,
 }
 
+impl VP8D_COMP {
+    /// Safely splits the root structure into disjoint mutable components
+    pub fn split_mut(&mut self) -> (&mut MACROBLOCKD, &mut VP8_COMMON, &mut [vp8_reader; 9]) {
+        (&mut self.mb, &mut self.common, &mut self.mbc)
+    }
+}
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct frame_buffers {
