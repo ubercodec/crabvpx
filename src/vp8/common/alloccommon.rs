@@ -66,25 +66,8 @@ pub fn vp8_de_alloc_frame_buffers(oci: &mut VP8_COMMON) {
     }
     vp8_yv12_de_alloc_frame_buffer_safe(&mut oci.temp_scale_frame);
     
-    if !oci.above_context.is_null() {
-        unsafe {
-            let _ = Box::from_raw(core::ptr::slice_from_raw_parts_mut(
-                oci.above_context,
-                oci.mb_cols as usize,
-            ));
-        }
-        oci.above_context = ::core::ptr::null_mut::<ENTROPY_CONTEXT_PLANES>();
-    }
-    if !oci.mip.is_null() {
-        unsafe {
-            let mip_count = ((oci.mb_cols + 1) * (oci.mb_rows + 1)) as usize;
-            let _ = Box::from_raw(core::ptr::slice_from_raw_parts_mut(
-                oci.mip,
-                mip_count,
-            ));
-        }
-        oci.mip = ::core::ptr::null_mut::<MODE_INFO>();
-    }
+    oci.above_context = None;
+    oci.mip = None;
     oci.mi = ::core::ptr::null_mut::<MODE_INFO>();
     oci.show_frame_mi = ::core::ptr::null_mut::<MODE_INFO>();
     oci.frame_to_show = ::core::ptr::null_mut::<YV12_BUFFER_CONFIG>();
@@ -144,17 +127,17 @@ pub fn vp8_alloc_frame_buffers(
                 oci.mode_info_stride = oci.mb_cols + 1 as ::core::ffi::c_int;
                 let mip_count = ((oci.mb_cols + 1) * (oci.mb_rows + 1)) as usize;
                 let mip_box = vec![MODE_INFO::default(); mip_count].into_boxed_slice();
-                oci.mip = Box::into_raw(mip_box) as *mut MODE_INFO;
-                if !oci.mip.is_null() {
+                oci.mip = Some(mip_box);
+                if oci.mip.is_some() {
                     oci.mi = unsafe {
-                        oci.mip
+                        oci.mip.as_ref().unwrap().as_ptr()
                             .offset(oci.mode_info_stride as isize)
-                            .offset(1 as ::core::ffi::c_int as isize)
+                            .offset(1 as ::core::ffi::c_int as isize) as *mut _
                     };
                     let above_context_count = oci.mb_cols as usize;
                     let above_context_box = vec![ENTROPY_CONTEXT_PLANES::default(); above_context_count].into_boxed_slice();
-                    oci.above_context = Box::into_raw(above_context_box) as *mut ENTROPY_CONTEXT_PLANES;
-                    if !oci.above_context.is_null() {
+                    oci.above_context = Some(above_context_box);
+                    if oci.above_context.is_some() {
                         return 0 as ::core::ffi::c_int;
                     }
                 }

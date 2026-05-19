@@ -499,7 +499,7 @@ pub type CLAMP_TYPE = ::core::ffi::c_uint;
 pub const RECON_CLAMP_NOTREQUIRED: CLAMP_TYPE = 1;
 pub const RECON_CLAMP_REQUIRED: CLAMP_TYPE = 0;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct VP8Common {
     pub error: vpx_internal_error_info,
@@ -537,7 +537,7 @@ pub struct VP8Common {
     pub y2ac_delta_q: ::core::ffi::c_int,
     pub uvdc_delta_q: ::core::ffi::c_int,
     pub uvac_delta_q: ::core::ffi::c_int,
-    pub mip: *mut MODE_INFO,
+    pub mip: Option<Box<[MODE_INFO]>>,
     pub mi: *mut MODE_INFO,
     pub show_frame_mi: *mut MODE_INFO,
     pub filter_type: LOOPFILTERTYPE,
@@ -552,7 +552,7 @@ pub struct VP8Common {
     pub copy_buffer_to_arf: ::core::ffi::c_int,
     pub refresh_entropy_probs: ::core::ffi::c_int,
     pub ref_frame_sign_bias: [::core::ffi::c_int; 4],
-    pub above_context: *mut ENTROPY_CONTEXT_PLANES,
+    pub above_context: Option<Box<[ENTROPY_CONTEXT_PLANES]>>,
     pub left_context: ENTROPY_CONTEXT_PLANES,
     pub lfc: FRAME_CONTEXT,
     pub fc: FRAME_CONTEXT,
@@ -606,7 +606,7 @@ pub struct VP8D_CONFIG {
     pub error_concealment: ::core::ffi::c_int,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct VP8D_COMP {
     pub mb: MACROBLOCKD,
@@ -653,5 +653,20 @@ pub struct VP8D_COMP {
 #[repr(C)]
 pub struct frame_buffers {
     pub pbi: [*mut VP8D_COMP; 32],
+}
+
+impl VP8Common {
+    pub fn mip_ptr(&self) -> *mut MODE_INFO {
+        self.mip.as_ref().map_or(core::ptr::null_mut(), |b| b.as_ptr() as *mut _)
+    }
+    pub fn mip_mut_ptr(&mut self) -> *mut MODE_INFO {
+        self.mip.as_mut().map_or(core::ptr::null_mut(), |b| b.as_mut_ptr())
+    }
+    pub fn above_context_ptr(&self) -> *mut ENTROPY_CONTEXT_PLANES {
+        self.above_context.as_ref().map_or(core::ptr::null_mut(), |b| b.as_ptr() as *mut _)
+    }
+    pub fn above_context_mut_ptr(&mut self) -> *mut ENTROPY_CONTEXT_PLANES {
+        self.above_context.as_mut().map_or(core::ptr::null_mut(), |b| b.as_mut_ptr())
+    }
 }
 

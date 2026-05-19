@@ -1336,7 +1336,7 @@ unsafe extern "C" fn vp8_get_last_ref_frame(
             let oci: &VP8_COMMON = &(*pbi).common;
             let stride = oci.mode_info_stride as usize;
             let mip_len = (oci.mb_rows + 1) as usize * stride;
-            let mip_slice = core::slice::from_raw_parts(oci.mip, mip_len);
+            let mip_slice = oci.mip.as_ref().unwrap().as_ref();
             *ref_info = (if crate::vp8::decoder::onyxd_if::vp8dx_references_buffer(
                 oci,
                 mip_slice,

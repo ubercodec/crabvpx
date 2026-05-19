@@ -279,7 +279,7 @@ pub fn vp8_loop_filter_frame_init(
     }
 }
 pub fn vp8_loop_filter_row_normal_safe(
-    cm: &mut VP8_COMMON,
+    cm: &VP8_COMMON,
     mode_info_slice: &[MODE_INFO],
     mode_info_idx: usize,
     mb_row: ::core::ffi::c_int,
@@ -294,7 +294,7 @@ pub fn vp8_loop_filter_row_normal_safe(
 ) {
     let mut mb_col: ::core::ffi::c_int = 0;
     let mut filter_level: ::core::ffi::c_int = 0;
-    let lfi_n = &mut cm.lf_info;
+    let lfi_n = &cm.lf_info;
     let mut lfi: loop_filter_info = loop_filter_info {
         mblim: ::core::ptr::null::<::core::ffi::c_uchar>(),
         blim: ::core::ptr::null::<::core::ffi::c_uchar>(),
@@ -392,7 +392,7 @@ pub fn vp8_loop_filter_row_normal_safe(
     }
 }
 pub fn vp8_loop_filter_row_simple_safe(
-    cm: &mut VP8_COMMON,
+    cm: &VP8_COMMON,
     mode_info_slice: &[MODE_INFO],
     mode_info_idx: usize,
     mb_row: ::core::ffi::c_int,
@@ -402,7 +402,7 @@ pub fn vp8_loop_filter_row_simple_safe(
 ) {
     let mut mb_col: ::core::ffi::c_int = 0;
     let mut filter_level: ::core::ffi::c_int = 0;
-    let lfi_n = &mut cm.lf_info;
+    let lfi_n = &cm.lf_info;
     mb_col = 0 as ::core::ffi::c_int;
     let mut cur_mi_idx = mode_info_idx;
     let mut cur_y_offset = y_offset;

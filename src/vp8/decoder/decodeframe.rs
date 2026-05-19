@@ -713,7 +713,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
         }
         recon_yoffset = mb_row * recon_y_stride * 16 as ::core::ffi::c_int;
         recon_uvoffset = mb_row * recon_uv_stride * 8 as ::core::ffi::c_int;
-        xd.above_context = pc.above_context;
+        xd.above_context = pc.above_context_ptr();
         *xd.left_context_mut() = ENTROPY_CONTEXT_PLANES {
             y1: [0; 4],
             u: [0; 2],
@@ -843,7 +843,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
                 let stride = pc.mode_info_stride as usize;
                 let mip_len = (pc.mb_rows + 1) as usize * stride;
                 let (mip_slice, mode_info_idx) = unsafe {
-                    (core::slice::from_raw_parts(pc.mip, mip_len), lf_mic.offset_from(pc.mip) as usize)
+                    (core::slice::from_raw_parts(pc.mip_ptr(), mip_len), lf_mic.offset_from(pc.mip_ptr()) as usize)
                 };
 
                 if pc.filter_type as ::core::ffi::c_uint
@@ -900,7 +900,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
         let stride = pc.mode_info_stride as usize;
         let mip_len = (pc.mb_rows + 1) as usize * stride;
         let (mip_slice, mode_info_idx) = unsafe {
-            (core::slice::from_raw_parts(pc.mip, mip_len), lf_mic.offset_from(pc.mip) as usize)
+            (core::slice::from_raw_parts(pc.mip_ptr(), mip_len), lf_mic.offset_from(pc.mip_ptr()) as usize)
         };
 
         if pc.filter_type as ::core::ffi::c_uint
@@ -1549,7 +1549,7 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
     );
     let stride = (*pbi).common.mode_info_stride as usize;
     let mip_len = ((*pbi).common.mb_rows + 1) as usize * stride;
-    let mip_slice = core::slice::from_raw_parts_mut((*pbi).common.mip, mip_len);
+    let mip_slice = core::slice::from_raw_parts_mut((*pbi).common.mip_mut_ptr(), mip_len);
     vp8_decode_mode_mvs(&mut *pbi, mip_slice, &mut safe_decoder);
     {
         let bc_mut = &mut pbi.mbc[8];
@@ -1558,12 +1558,9 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
         bc_mut.count = safe_decoder.count;
         bc_mut.range = safe_decoder.range;
     }
-    memset(
-        (*pc).above_context as *mut ::core::ffi::c_void,
-        0 as ::core::ffi::c_int,
-        (::core::mem::size_of::<ENTROPY_CONTEXT_PLANES>() as size_t)
-            .wrapping_mul((*pc).mb_cols as size_t),
-    );
+    if let Some(ref mut above_context) = (*pc).above_context {
+        above_context.fill(ENTROPY_CONTEXT_PLANES::default());
+    }
     (*pbi).frame_corrupt_residual = 0 as ::core::ffi::c_int;
     if vpx_atomic_load_acquire(&raw mut (*pbi).b_multithreaded_rd) != 0
         && (*pc).multi_token_partition as ::core::ffi::c_uint

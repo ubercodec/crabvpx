@@ -529,7 +529,7 @@ fn mt_decode_mb_rows(
         current_mb_col = (*pbi).mt_current_mb_col.offset(mb_row as isize) as *mut vpx_atomic_int;
         recon_yoffset = mb_row * recon_y_stride * 16 as ::core::ffi::c_int;
         recon_uvoffset = mb_row * recon_uv_stride * 8 as ::core::ffi::c_int;
-        (*xd).above_context = (*pc).above_context;
+        (*xd).above_context = (*pc).above_context_ptr();
         memset(
             (*xd).left_context as *mut ::core::ffi::c_void,
             0 as ::core::ffi::c_int,
