@@ -252,33 +252,31 @@ pub unsafe extern "C" fn vp8_find_near_mvs(
     mut refframe: ::core::ffi::c_int,
     mut ref_frame_sign_bias: *mut ::core::ffi::c_int,
 ) {
-    unsafe {
-        let xd_ref = &*xd;
-        let stride = xd_ref.mode_info_stride as isize;
-        let above_ref = &*here.offset(-stride);
-        let left_ref = &*here.offset(-1);
-        let aboveleft_ref = &*here.offset(-stride - 1);
+    let xd_ref = &*xd;
+    let stride = xd_ref.mode_info_stride as isize;
+    let above_ref = &*here.offset(-stride);
+    let left_ref = &*here.offset(-1);
+    let aboveleft_ref = &*here.offset(-stride - 1);
 
-        let nearest_ref = &mut *nearest;
-        let nearby_ref = &mut *nearby;
-        let best_mv_ref = &mut *best_mv;
+    let nearest_ref = &mut *nearest;
+    let nearby_ref = &mut *nearby;
+    let best_mv_ref = &mut *best_mv;
 
-        let near_mv_ref_cnts_slice = &mut *(near_mv_ref_cnts as *mut [::core::ffi::c_int; 4]);
-        let ref_frame_sign_bias_slice = &*(ref_frame_sign_bias as *const [::core::ffi::c_int; 4]);
+    let near_mv_ref_cnts_slice = &mut *(near_mv_ref_cnts as *mut [::core::ffi::c_int; 4]);
+    let ref_frame_sign_bias_slice = &*(ref_frame_sign_bias as *const [::core::ffi::c_int; 4]);
 
-        vp8_find_near_mvs_safe(
-            xd_ref,
-            above_ref,
-            left_ref,
-            aboveleft_ref,
-            nearest_ref,
-            nearby_ref,
-            best_mv_ref,
-            near_mv_ref_cnts_slice,
-            refframe,
-            ref_frame_sign_bias_slice,
-        );
-    }
+    vp8_find_near_mvs_safe(
+        xd_ref,
+        above_ref,
+        left_ref,
+        aboveleft_ref,
+        nearest_ref,
+        nearby_ref,
+        best_mv_ref,
+        near_mv_ref_cnts_slice,
+        refframe,
+        ref_frame_sign_bias_slice,
+    );
 }
 
 fn invert_and_clamp_mvs(
@@ -370,30 +368,28 @@ pub unsafe extern "C" fn vp8_find_near_mvs_bias(
     mut refframe: ::core::ffi::c_int,
     mut ref_frame_sign_bias: *mut ::core::ffi::c_int,
 ) -> ::core::ffi::c_int {
-    unsafe {
-        let xd_ref = &*xd;
-        let stride = xd_ref.mode_info_stride as isize;
-        let above_ref = &*here.offset(-stride);
-        let left_ref = &*here.offset(-1);
-        let aboveleft_ref = &*here.offset(-stride - 1);
+    let xd_ref = &*xd;
+    let stride = xd_ref.mode_info_stride as isize;
+    let above_ref = &*here.offset(-stride);
+    let left_ref = &*here.offset(-1);
+    let aboveleft_ref = &*here.offset(-stride - 1);
 
-        let mode_mv_sb_ref = &mut *(mode_mv_sb as *mut [[int_mv; 10]; 2]);
-        let best_mv_sb_ref = &mut *(best_mv_sb as *mut [int_mv; 2]);
-        let cnt_ref = &mut *(cnt as *mut [::core::ffi::c_int; 4]);
-        let ref_frame_sign_bias_ref = &*(ref_frame_sign_bias as *const [::core::ffi::c_int; 4]);
+    let mode_mv_sb_ref = &mut *(mode_mv_sb as *mut [[int_mv; 10]; 2]);
+    let best_mv_sb_ref = &mut *(best_mv_sb as *mut [int_mv; 2]);
+    let cnt_ref = &mut *(cnt as *mut [::core::ffi::c_int; 4]);
+    let ref_frame_sign_bias_ref = &*(ref_frame_sign_bias as *const [::core::ffi::c_int; 4]);
 
-        vp8_find_near_mvs_bias_safe(
-            xd_ref,
-            above_ref,
-            left_ref,
-            aboveleft_ref,
-            mode_mv_sb_ref,
-            best_mv_sb_ref,
-            cnt_ref,
-            refframe,
-            ref_frame_sign_bias_ref,
-        )
-    }
+    vp8_find_near_mvs_bias_safe(
+        xd_ref,
+        above_ref,
+        left_ref,
+        aboveleft_ref,
+        mode_mv_sb_ref,
+        best_mv_sb_ref,
+        cnt_ref,
+        refframe,
+        ref_frame_sign_bias_ref,
+    )
 }
 pub fn vp8_mv_ref_probs_safe(
     p: &mut [vp8_prob; 4],
@@ -410,10 +406,8 @@ pub unsafe extern "C" fn vp8_mv_ref_probs(
     p: *mut vp8_prob,
     near_mv_ref_ct: *const ::core::ffi::c_int,
 ) -> *mut vp8_prob {
-    unsafe {
-        let p_slice = &mut *(p as *mut [vp8_prob; 4]);
-        let ct_slice = &*(near_mv_ref_ct as *const [::core::ffi::c_int; 4]);
-        vp8_mv_ref_probs_safe(p_slice, ct_slice);
-        p
-    }
+    let p_slice = &mut *(p as *mut [vp8_prob; 4]);
+    let ct_slice = &*(near_mv_ref_ct as *const [::core::ffi::c_int; 4]);
+    vp8_mv_ref_probs_safe(p_slice, ct_slice);
+    p
 }

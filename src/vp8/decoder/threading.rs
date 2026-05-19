@@ -10,6 +10,7 @@ use crate::vp8::common::idctllm::vp8_short_inv_walsh4x4_safe;
 use crate::vp8::common::idct_blk::{vp8_dequant_idct_add_y_block_safe, vp8_dequant_idct_add_uv_block_safe};
 use crate::vp8::common::dequantize::vp8_dequant_idct_add_safe;
 use crate::vp8::common::idctllm::vp8_dc_only_idct_add_safe;
+use crate::vp8::common::reconintra4x4::vp8_intra4x4_predict_safe;
 
 unsafe extern "C" {
 
@@ -260,34 +261,35 @@ fn mt_decode_macroblock(
     pbi: &mut VP8D_COMP,
     xd: &mut MACROBLOCKD,
     mb_idx: ::core::ffi::c_uint,
-) { unsafe {
+) {
     let mut mode: MB_PREDICTION_MODE = DC_PRED;
     let mut i: ::core::ffi::c_int = 0;
-    if (*xd.mode_info_context).mbmi.mb_skip_coeff != 0 {
-        vp8_reset_mb_tokens_context(
-            &mut *xd.above_context,
-            &mut *xd.left_context,
-            (*xd.mode_info_context).mbmi.is_4x4 != 0,
-        );
+    if xd.mode_info().mbmi.mb_skip_coeff != 0 {
+        let is_4x4 = xd.mode_info().mbmi.is_4x4 != 0;
+        let (above, left) = xd.contexts_mut();
+        vp8_reset_mb_tokens_context(above, left, is_4x4);
     } else if vp8dx_bool_error(&pbi.mbc[xd.current_bc_idx]) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
+        let is_4x4 = xd.mode_info().mbmi.is_4x4 != 0;
+        let bc_idx = xd.current_bc_idx;
+        let (above, left, qcoeff, eobs) = xd.decode_tokens_inputs_mut();
         eobtotal = vp8_decode_mb_tokens(
-            &mut pbi.mbc[xd.current_bc_idx],
+            &mut pbi.mbc[bc_idx],
             &pbi.common.fc,
-            &mut xd.qcoeff,
-            &mut xd.eobs,
-            &mut *xd.above_context,
-            &mut *xd.left_context,
-            (*xd.mode_info_context).mbmi.is_4x4 != 0,
+            qcoeff,
+            eobs,
+            above,
+            left,
+            is_4x4,
         );
-        (*xd.mode_info_context).mbmi.mb_skip_coeff =
+        xd.mode_info_mut().mbmi.mb_skip_coeff =
             (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
     }
-    mode = (*xd.mode_info_context).mbmi.mode as MB_PREDICTION_MODE;
+    mode = xd.mode_info().mbmi.mode as MB_PREDICTION_MODE;
     if xd.segmentation_enabled != 0 {
         vp8_mb_init_dequantizer(&pbi.common, xd);
     }
-    if (*xd.mode_info_context).mbmi.ref_frame as ::core::ffi::c_int
+    if xd.mode_info().mbmi.ref_frame as ::core::ffi::c_int
         == INTRA_FRAME as ::core::ffi::c_int
     {
         crate::vp8::common::reconintra::vp8_build_intra_predictors_mbuv_s(
@@ -311,67 +313,31 @@ fn mt_decode_macroblock(
                 xd.dst.y_stride,
             );
         } else {
-            let mut DQC: *mut ::core::ffi::c_short =
-                &raw mut xd.dequant_y1 as *mut ::core::ffi::c_short;
-            let mut dst_stride: ::core::ffi::c_int = xd.dst.y_stride;
-            if (*xd.mode_info_context).mbmi.mb_skip_coeff != 0 {
-                memset(
-                    &raw mut xd.eobs as *mut ::core::ffi::c_char as *mut ::core::ffi::c_void,
-                    0 as ::core::ffi::c_int,
-                    25 as size_t,
-                );
+            let dst_stride: ::core::ffi::c_int = xd.dst.y_stride;
+            let dst_y_slice = unsafe { xd.dst.y_slice_mut() };
+            let border = xd.dst.border as usize;
+            let y_buffer_offset = border * dst_stride as usize + border;
+
+            if xd.mode_info().mbmi.mb_skip_coeff != 0 {
+                xd.eobs.fill(0);
             }
             intra_prediction_down_copy(xd);
             i = 0 as ::core::ffi::c_int;
             while i < 16 as ::core::ffi::c_int {
-                let mut b: *mut BLOCKD =
-                    (&raw mut xd.block as *mut BLOCKD).offset(i as isize) as *mut BLOCKD;
-                let mut dst: *mut ::core::ffi::c_uchar =
-                    xd.dst.y_buffer.offset((*b).offset as isize);
-                let mut b_mode: B_PREDICTION_MODE =
-                    (*xd.mode_info_context).bmi[i as usize].as_mode;
-                let mut Above: *mut ::core::ffi::c_uchar =
-                    ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-                let mut yleft: *mut ::core::ffi::c_uchar =
-                    ::core::ptr::null_mut::<::core::ffi::c_uchar>();
-                let mut left_stride: ::core::ffi::c_int = 0;
-                let mut top_left: ::core::ffi::c_uchar = 0;
-                if i < 4 as ::core::ffi::c_int && pbi.common.filter_level != 0 {
-                    Above = xd.recon_above[0 as ::core::ffi::c_int as usize]
-                        .offset((*b).offset as isize);
-                } else {
-                    Above = dst.offset(-(dst_stride as isize));
-                }
-                if i % 4 as ::core::ffi::c_int == 0 as ::core::ffi::c_int
-                    && pbi.common.filter_level != 0
-                {
-                    yleft = xd.recon_left[0 as ::core::ffi::c_int as usize].offset(i as isize);
-                    left_stride = 1 as ::core::ffi::c_int;
-                } else {
-                    yleft = dst.offset(-(1 as ::core::ffi::c_int as isize));
-                    left_stride = dst_stride;
-                }
-                if (i == 4 as ::core::ffi::c_int
-                    || i == 8 as ::core::ffi::c_int
-                    || i == 12 as ::core::ffi::c_int)
-                    && pbi.common.filter_level != 0
-                {
-                    top_left = *xd.recon_left[0 as ::core::ffi::c_int as usize]
-                        .offset(i as isize)
-                        .offset(-(1 as ::core::ffi::c_int as isize));
-                } else {
-                    top_left = *Above.offset(-(1 as ::core::ffi::c_int) as isize);
-                }
-                vp8_intra4x4_predict(Above, yleft, left_stride, b_mode, dst, dst_stride, top_left);
+                let b_offset = xd.block[i as usize].offset;
+                let b_mode: B_PREDICTION_MODE =
+                    xd.mode_info().bmi[i as usize].mode();
+                let dst_offset = y_buffer_offset + b_offset as usize;
+                vp8_intra4x4_predict_safe(dst_y_slice, dst_offset, dst_stride as usize, b_mode);
                 if xd.eobs[i as usize] != 0 {
                     let block_idx = i as usize;
                     let q_offset = block_idx * 16;
                     let q_sub: &mut [i16; 16] = (&mut xd.qcoeff[q_offset..q_offset + 16]).try_into().unwrap();
-                    let dq_ref = &*(DQC as *const [i16; 16]);
+                    let dq_ref = &xd.dequant_y1;
                     
-                    let dst_offset = (*b).offset as usize;
+                    let dst_slice_offset = y_buffer_offset + b_offset as usize;
                     let dst_sub_len = 3 * dst_stride as usize + 4;
-                    let dst_sub_slice = core::slice::from_raw_parts_mut(xd.dst.y_buffer.offset(dst_offset as isize), dst_sub_len);
+                    let dst_sub_slice = &mut dst_y_slice[dst_slice_offset..dst_slice_offset + dst_sub_len];
 
                     if xd.eobs[i as usize] as ::core::ffi::c_int > 1 as ::core::ffi::c_int {
                         vp8_dequant_idct_add_safe(q_sub, dq_ref, dst_sub_slice, dst_stride);
@@ -403,7 +369,7 @@ fn mt_decode_macroblock(
     } else {
         crate::vp8::common::reconinter::vp8_build_inter_predictors_mb(xd);
     }
-    if (*xd.mode_info_context).mbmi.mb_skip_coeff == 0 {
+    if xd.mode_info().mbmi.mb_skip_coeff == 0 {
         if mode as ::core::ffi::c_uint != B_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
             let dq_y: &[i16; 16] = if mode as ::core::ffi::c_uint != SPLITMV as ::core::ffi::c_int as ::core::ffi::c_uint {
                 if xd.eobs[24 as ::core::ffi::c_int as usize] as ::core::ffi::c_int
@@ -435,7 +401,9 @@ fn mt_decode_macroblock(
 
             let q_y: &mut [i16; 256] = (&mut xd.qcoeff[0..256]).try_into().unwrap();
             let dst_len = 15 * xd.dst.y_stride as usize + 16;
-            let dst_slice = core::slice::from_raw_parts_mut(xd.dst.y_buffer, dst_len);
+            let dst_slice = unsafe {
+                core::slice::from_raw_parts_mut(xd.dst.y_buffer, dst_len)
+            };
             let eobs_y: &[::core::ffi::c_char; 16] = (&xd.eobs[0..16]).try_into().unwrap();
 
             vp8_dequant_idct_add_y_block_safe(q_y, dq_y, dst_slice, xd.dst.y_stride, eobs_y);
@@ -443,8 +411,12 @@ fn mt_decode_macroblock(
 
         let q_uv: &mut [i16; 128] = (&mut xd.qcoeff[256..384]).try_into().unwrap();
         let dst_u_len = 7 * xd.dst.uv_stride as usize + 8;
-        let dst_u_slice = core::slice::from_raw_parts_mut(xd.dst.u_buffer, dst_u_len);
-        let dst_v_slice = core::slice::from_raw_parts_mut(xd.dst.v_buffer, dst_u_len);
+        let (dst_u_slice, dst_v_slice) = unsafe {
+            (
+                core::slice::from_raw_parts_mut(xd.dst.u_buffer, dst_u_len),
+                core::slice::from_raw_parts_mut(xd.dst.v_buffer, dst_u_len)
+            )
+        };
         let eobs_uv: &[::core::ffi::c_char; 8] = (&xd.eobs[16..24]).try_into().unwrap();
 
         vp8_dequant_idct_add_uv_block_safe(
@@ -456,7 +428,7 @@ fn mt_decode_macroblock(
             eobs_uv,
         );
     }
-}}
+}
 fn mt_decode_mb_rows(
     pbi: &mut VP8D_COMP,
     xd: &mut MACROBLOCKD,
