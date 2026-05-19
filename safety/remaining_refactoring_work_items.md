@@ -36,7 +36,7 @@ In Rust 2024, accessing `static mut` variables requires `unsafe` blocks. Because
 Sub-pixel prediction algorithms currently compute tap offsets by executing unsafe pointer arithmetic across unaligned image planes.
 
 #### Work Units:
-* **[ ] Unit 5 (`filter.rs`):** Replace raw pointer addition (`predictor.add(offset)`) with standard bounds-checked sub-slicing (`&slice[offset..]`).
+* **[x] Unit 5 (`filter.rs`):** Replace raw pointer addition (`predictor.add(offset)`) with standard bounds-checked sub-slicing (`&slice[offset..]`).
 * **[ ] Unit 6 (`filter.rs`):** Convert unaligned multi-tap reads into safe windowing methods or explicit fixed-size chunk iterators.
 * **[ ] Unit 7 (`loopfilter_filters.rs`):** Purge residual raw pointers in edge filtering subroutines, fully relying on disjoint safe reborrowing.
 
