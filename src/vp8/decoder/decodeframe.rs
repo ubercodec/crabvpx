@@ -1033,6 +1033,7 @@ fn setup_token_decoder(
     if safe_decoder.count <= VP8_BD_VALUE_SIZE || safe_decoder.count >= VP8_LOTS_OF_BITS {
         pbi.common.multi_token_partition = multi_token_partition;
     }
+
     num_token_partitions = ((1 as ::core::ffi::c_int)
         << pbi.common.multi_token_partition as ::core::ffi::c_uint)
         as ::core::ffi::c_uint;
@@ -1180,13 +1181,19 @@ fn init_frame(pbi: &mut VP8D_COMP) {
         pbi.mb.fullpixel_mask = !(7 as ::core::ffi::c_int);
     }
 }
-pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
-    let pc: *mut VP8_COMMON = &raw mut (*pbi).common;
-    let xd: *mut MACROBLOCKD = &raw mut (*pbi).mb;
-    let mut data: *const ::core::ffi::c_uchar =
-        (*pbi).fragments.ptrs[0 as ::core::ffi::c_int as usize];
-    let data_sz: ::core::ffi::c_uint = (*pbi).fragments.sizes[0 as ::core::ffi::c_int as usize];
-    let mut data_end: *const ::core::ffi::c_uchar = data.offset(data_sz as isize);
+pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int {
+    let data: *const ::core::ffi::c_uchar = pbi.fragments.ptrs[0];
+    let data_sz: ::core::ffi::c_uint = pbi.fragments.sizes[0];
+    
+    let data_slice = unsafe {
+        if data.is_null() || data_sz == 0 {
+            &[]
+        } else {
+            core::slice::from_raw_parts(data, data_sz as usize)
+        }
+    };
+    
+    let mut data_idx = 0;
     let mut first_partition_length_in_bytes: ::core::ffi::c_int = 0;
     let mut i: ::core::ffi::c_int = 0;
     let mut j: ::core::ffi::c_int = 0;
@@ -1194,201 +1201,170 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
     let mut l: ::core::ffi::c_int = 0;
 
     let mut corrupt_tokens: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    let mut prev_independent_partitions: ::core::ffi::c_int = (*pbi).independent_partitions;
-    let mut yv12_fb_new: *mut YV12_BUFFER_CONFIG =
-        (*pbi).dec_fb_ref[INTRA_FRAME as ::core::ffi::c_int as usize];
-    (*xd).corrupted = 0 as ::core::ffi::c_int;
-    (*yv12_fb_new).corrupted = 0 as ::core::ffi::c_int;
-    if (data_end.offset_from(data) as ::core::ffi::c_long) < 3 as ::core::ffi::c_long {
-        if (*pbi).ec_active == 0 {
-            vpx_internal_error(
-                &raw mut (*pc).error,
-                VPX_CODEC_CORRUPT_FRAME,
-                b"Truncated packet\0" as *const u8 as *const ::core::ffi::c_char,
-            );
+    let mut prev_independent_partitions: ::core::ffi::c_int = pbi.independent_partitions;
+    
+    let new_fb_idx = pbi.common.new_fb_idx as usize;
+    pbi.common.yv12_fb[new_fb_idx].corrupted = 0 as ::core::ffi::c_int;
+    pbi.mb.corrupted = 0 as ::core::ffi::c_int;
+    
+    let mut clear_buffer: [::core::ffi::c_uchar; 10] = [0; 10];
+    let mut clear_slice = data_slice;
+    let mut is_decrypted = false;
+
+    if data_slice.len() < 3 {
+        if pbi.ec_active == 0 {
+            unsafe {
+                vpx_internal_error(
+                    &raw mut pbi.common.error,
+                    VPX_CODEC_CORRUPT_FRAME,
+                    b"Truncated packet\0" as *const u8 as *const ::core::ffi::c_char,
+                );
+            }
         }
-        (*pc).frame_type = INTER_FRAME;
-        (*pc).version = 0 as ::core::ffi::c_int;
-        (*pc).show_frame = 1 as ::core::ffi::c_int;
+        pbi.common.frame_type = INTER_FRAME;
+        pbi.common.version = 0 as ::core::ffi::c_int;
+        pbi.common.show_frame = 1 as ::core::ffi::c_int;
         first_partition_length_in_bytes = 0 as ::core::ffi::c_int;
     } else {
-        let mut clear_buffer: [::core::ffi::c_uchar; 10] = [0; 10];
-        let mut clear: *const ::core::ffi::c_uchar = data;
-        if (*pbi).decrypt_cb.is_some() {
-            let mut n: ::core::ffi::c_int =
-                (if (::core::mem::size_of::<[::core::ffi::c_uchar; 10]>() as usize)
-                    < data_sz as usize
-                {
-                    ::core::mem::size_of::<[::core::ffi::c_uchar; 10]>() as usize
-                } else {
-                    data_sz as usize
-                }) as ::core::ffi::c_int;
-            (*pbi).decrypt_cb.expect("non-null function pointer")(
-                (*pbi).decrypt_state,
-                data,
-                &raw mut clear_buffer as *mut ::core::ffi::c_uchar,
-                n,
-            );
-            clear = &raw mut clear_buffer as *mut ::core::ffi::c_uchar;
+        if pbi.decrypt_cb.is_some() {
+            let n = std::cmp::min(10, data_slice.len());
+            unsafe {
+                pbi.decrypt_cb.expect("non-null function pointer")(
+                    pbi.decrypt_state,
+                    data_slice.as_ptr(),
+                    clear_buffer.as_mut_ptr(),
+                    n as i32,
+                );
+            }
+            clear_slice = &clear_buffer[..n];
+            is_decrypted = true;
         }
-        (*pc).frame_type = (*clear.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            & 1 as ::core::ffi::c_int) as FRAME_TYPE;
-        (*pc).version = *clear.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            >> 1 as ::core::ffi::c_int
-            & 7 as ::core::ffi::c_int;
-        (*pc).show_frame = *clear.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-            >> 4 as ::core::ffi::c_int
-            & 1 as ::core::ffi::c_int;
-        first_partition_length_in_bytes = (*clear.offset(0 as ::core::ffi::c_int as isize)
-            as ::core::ffi::c_int
-            | (*clear.offset(1 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                << 8 as ::core::ffi::c_int
-            | (*clear.offset(2 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                << 16 as ::core::ffi::c_int)
-            >> 5 as ::core::ffi::c_int;
-        if (*pbi).ec_active == 0 && first_partition_length_in_bytes == 0 as ::core::ffi::c_int {
-            vpx_internal_error(
-                &raw mut (*pc).error,
-                VPX_CODEC_CORRUPT_FRAME,
-                b"Corrupt partition 0 length\0" as *const u8 as *const ::core::ffi::c_char,
-            );
+        
+        pbi.common.frame_type = (clear_slice[0] as ::core::ffi::c_int & 1 as ::core::ffi::c_int) as FRAME_TYPE;
+        pbi.common.version = (clear_slice[0] as ::core::ffi::c_int >> 1 as ::core::ffi::c_int & 7 as ::core::ffi::c_int);
+        pbi.common.show_frame = (clear_slice[0] as ::core::ffi::c_int >> 4 as ::core::ffi::c_int & 1 as ::core::ffi::c_int);
+        
+        first_partition_length_in_bytes = (
+            (clear_slice[0] as ::core::ffi::c_int)
+            | (clear_slice[1] as ::core::ffi::c_int) << 8
+            | (clear_slice[2] as ::core::ffi::c_int) << 16
+        ) >> 5;
+        
+        data_idx += 3;
+        if is_decrypted {
+            clear_slice = &clear_slice[3..];
+        } else {
+            clear_slice = &data_slice[data_idx..];
         }
-        data = data.offset(3 as ::core::ffi::c_int as isize);
-        clear = clear.offset(3 as ::core::ffi::c_int as isize);
-        vp8_setup_version(&mut *pc);
-        if (*pc).frame_type as ::core::ffi::c_uint
+        
+        vp8_setup_version(&mut pbi.common);
+        if pbi.common.frame_type as ::core::ffi::c_uint
             == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
         {
-            if data_end.offset_from(data) as ::core::ffi::c_long >= 7 as ::core::ffi::c_long {
-                if *clear.offset(0 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                    != 0x9d as ::core::ffi::c_int
-                    || *clear.offset(1 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                        != 0x1 as ::core::ffi::c_int
-                    || *clear.offset(2 as ::core::ffi::c_int as isize) as ::core::ffi::c_int
-                        != 0x2a as ::core::ffi::c_int
+            if (data_slice.len() - data_idx) >= 7 {
+                if clear_slice[0] as ::core::ffi::c_int != 0x9d as ::core::ffi::c_int
+                    || clear_slice[1] as ::core::ffi::c_int != 0x1 as ::core::ffi::c_int
+                    || clear_slice[2] as ::core::ffi::c_int != 0x2a as ::core::ffi::c_int
                 {
+                    unsafe {
+                        vpx_internal_error(
+                            &raw mut pbi.common.error,
+                            VPX_CODEC_UNSUP_BITSTREAM,
+                            b"Invalid frame sync code\0" as *const u8 as *const ::core::ffi::c_char,
+                        );
+                    }
+                }
+                pbi.common.Width = ((clear_slice[3] as ::core::ffi::c_int
+                    | (clear_slice[4] as ::core::ffi::c_int) << 8)
+                    & 0x3fff as ::core::ffi::c_int);
+                pbi.common.horiz_scale = (clear_slice[4] as ::core::ffi::c_int >> 6);
+                pbi.common.Height = ((clear_slice[5] as ::core::ffi::c_int
+                    | (clear_slice[6] as ::core::ffi::c_int) << 8)
+                    & 0x3fff as ::core::ffi::c_int);
+                pbi.common.vert_scale = (clear_slice[6] as ::core::ffi::c_int >> 6);
+                data_idx += 7;
+            } else if pbi.ec_active == 0 {
+                unsafe {
                     vpx_internal_error(
-                        &raw mut (*pc).error,
-                        VPX_CODEC_UNSUP_BITSTREAM,
-                        b"Invalid frame sync code\0" as *const u8 as *const ::core::ffi::c_char,
+                        &raw mut pbi.common.error,
+                        VPX_CODEC_CORRUPT_FRAME,
+                        b"Truncated key frame header\0" as *const u8 as *const ::core::ffi::c_char,
                     );
                 }
-                (*pc).Width = (*clear.offset(3 as ::core::ffi::c_int as isize)
-                    as ::core::ffi::c_int
-                    | (*clear.offset(4 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                        << 8 as ::core::ffi::c_int)
-                    & 0x3fff as ::core::ffi::c_int;
-                (*pc).horiz_scale = *clear.offset(4 as ::core::ffi::c_int as isize)
-                    as ::core::ffi::c_int
-                    >> 6 as ::core::ffi::c_int;
-                (*pc).Height = (*clear.offset(5 as ::core::ffi::c_int as isize)
-                    as ::core::ffi::c_int
-                    | (*clear.offset(6 as ::core::ffi::c_int as isize) as ::core::ffi::c_int)
-                        << 8 as ::core::ffi::c_int)
-                    & 0x3fff as ::core::ffi::c_int;
-                (*pc).vert_scale = *clear.offset(6 as ::core::ffi::c_int as isize)
-                    as ::core::ffi::c_int
-                    >> 6 as ::core::ffi::c_int;
-                data = data.offset(7 as ::core::ffi::c_int as isize);
-            } else if (*pbi).ec_active == 0 {
-                vpx_internal_error(
-                    &raw mut (*pc).error,
-                    VPX_CODEC_CORRUPT_FRAME,
-                    b"Truncated key frame header\0" as *const u8 as *const ::core::ffi::c_char,
-                );
             } else {
-                data = data_end;
+                data_idx = data_slice.len();
             }
         } else {
-            (*xd).pre = *yv12_fb_new;
-            (*xd).dst = *yv12_fb_new;
+            pbi.mb.pre = pbi.common.yv12_fb[new_fb_idx];
+            pbi.mb.dst = pbi.common.yv12_fb[new_fb_idx];
         }
     }
-    if (*pbi).decoded_key_frame == 0
-        && (*pc).frame_type as ::core::ffi::c_uint
+    if pbi.decoded_key_frame == 0
+        && pbi.common.frame_type as ::core::ffi::c_uint
             != KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
         return -(1 as ::core::ffi::c_int);
     }
-    if (*pbi).ec_active == 0
-        && (data_end.offset_from(data) as ::core::ffi::c_long)
-            < first_partition_length_in_bytes as ::core::ffi::c_long
+    if pbi.ec_active == 0
+        && (data_slice.len() - data_idx) < first_partition_length_in_bytes as usize
     {
-        vpx_internal_error(
-            &raw mut (*pc).error,
-            VPX_CODEC_CORRUPT_FRAME,
-            b"Truncated packet or corrupt partition 0 length\0" as *const u8
-                as *const ::core::ffi::c_char,
-        );
+        unsafe {
+            vpx_internal_error(
+                &raw mut pbi.common.error,
+                VPX_CODEC_CORRUPT_FRAME,
+                b"Truncated packet or corrupt partition 0 length\0" as *const u8
+                    as *const ::core::ffi::c_char,
+            );
+        }
     }
-    init_frame(&mut *pbi);
-    let size = data_end.offset_from(data);
-    if size != 0 && data.is_null() {
-        vpx_internal_error(
-            &raw mut (*pc).error,
-            VPX_CODEC_MEM_ERROR,
-            b"Failed to allocate bool decoder 0\0" as *const u8 as *const ::core::ffi::c_char,
-        );
-    } else {
-        let slice = core::slice::from_raw_parts(data, size as usize);
+    
+    init_frame(pbi);
+    let size = data_slice.len() - data_idx;
+    if size != 0 {
+        let active_data = &data_slice[data_idx .. data_idx + size];
         crate::vp8::decoder::dboolhuff::vp8dx_start_decode_safe(
             &mut pbi.mbc[8],
-            slice,
-            (*pbi).decrypt_cb,
-            (*pbi).decrypt_state,
+            active_data,
+            pbi.decrypt_cb,
+            pbi.decrypt_state,
         );
     }
-    let mut safe_decoder = {
-        let bc_ref = &pbi.mbc[8];
-        let len = bc_ref.user_buffer_end.offset_from(bc_ref.user_buffer) as usize;
-        let slice = if len == 0 {
-            &[]
-        } else {
-            core::slice::from_raw_parts(bc_ref.user_buffer, len)
-        };
-        SafeBoolDecoder {
-            buffer: slice,
-            offset: 0,
-            value: bc_ref.value,
-            count: bc_ref.count,
-            range: bc_ref.range,
-            decrypt_cb: bc_ref.decrypt_cb,
-            decrypt_state: bc_ref.decrypt_state,
-        }
-    };
+    
+    let mut safe_decoder = SafeBoolDecoder::from_bool_decoder(&pbi.mbc[8]);
 
-    if (*pc).frame_type as ::core::ffi::c_uint
+    
+    if pbi.common.frame_type as ::core::ffi::c_uint
         == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
         safe_decoder.read_bool(vp8_prob_half as i32);
-        (*pc).clamp_type =
+        pbi.common.clamp_type =
             safe_decoder.read_bool(vp8_prob_half as i32) as CLAMP_TYPE;
     }
-    (*xd).segmentation_enabled =
+    pbi.mb.segmentation_enabled =
         safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
-    if (*xd).segmentation_enabled != 0 {
-        (*xd).update_mb_segmentation_map =
+    if pbi.mb.segmentation_enabled != 0 {
+        pbi.mb.update_mb_segmentation_map =
             safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
-        (*xd).update_mb_segmentation_data =
+        pbi.mb.update_mb_segmentation_data =
             safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
-        if (*xd).update_mb_segmentation_data != 0 {
-            (*xd).mb_segment_abs_delta =
+        if pbi.mb.update_mb_segmentation_data != 0 {
+            pbi.mb.mb_segment_abs_delta =
                 safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
-            (*xd).segment_feature_data = [[0; 4]; 2];
+            pbi.mb.segment_feature_data = [[0; 4]; 2];
             i = 0 as ::core::ffi::c_int;
             while i < MB_LVL_MAX as ::core::ffi::c_int {
                 j = 0 as ::core::ffi::c_int;
                 while j < MAX_MB_SEGMENTS {
                     if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
-                        (*xd).segment_feature_data[i as usize][j as usize] = safe_decoder.read_literal(vp8_mb_feature_data_bits[i as usize]) as ::core::ffi::c_schar;
+                        pbi.mb.segment_feature_data[i as usize][j as usize] = safe_decoder.read_literal(vp8_mb_feature_data_bits[i as usize]) as ::core::ffi::c_schar;
                         if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
-                            (*xd).segment_feature_data[i as usize][j as usize] = -((*xd)
+                            pbi.mb.segment_feature_data[i as usize][j as usize] = -(pbi.mb
                                 .segment_feature_data[i as usize][j as usize]
                                 as ::core::ffi::c_int)
                                 as ::core::ffi::c_schar;
                         }
                     } else {
-                        (*xd).segment_feature_data[i as usize][j as usize] =
+                        pbi.mb.segment_feature_data[i as usize][j as usize] =
                             0 as ::core::ffi::c_schar;
                     }
                     j += 1;
@@ -1396,39 +1372,39 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
                 i += 1;
             }
         }
-        if (*xd).update_mb_segmentation_map != 0 {
-            (*xd).mb_segment_tree_probs = [255; 3];
+        if pbi.mb.update_mb_segmentation_map != 0 {
+            pbi.mb.mb_segment_tree_probs = [255; 3];
             i = 0 as ::core::ffi::c_int;
             while i < MB_FEATURE_TREE_PROBS {
                 if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
-                    (*xd).mb_segment_tree_probs[i as usize] =
+                    pbi.mb.mb_segment_tree_probs[i as usize] =
                         safe_decoder.read_literal(8) as vp8_prob;
                 }
                 i += 1;
             }
         }
     } else {
-        (*xd).update_mb_segmentation_map = 0 as ::core::ffi::c_uchar;
-        (*xd).update_mb_segmentation_data = 0 as ::core::ffi::c_uchar;
+        pbi.mb.update_mb_segmentation_map = 0 as ::core::ffi::c_uchar;
+        pbi.mb.update_mb_segmentation_data = 0 as ::core::ffi::c_uchar;
     }
-    (*pc).filter_type =
+    pbi.common.filter_type =
         safe_decoder.read_bool(vp8_prob_half as i32) as LOOPFILTERTYPE;
-    (*pc).filter_level = safe_decoder.read_literal(6);
-    (*pc).sharpness_level = safe_decoder.read_literal(3);
-    (*xd).mode_ref_lf_delta_update = 0 as ::core::ffi::c_uchar;
-    (*xd).mode_ref_lf_delta_enabled =
+    pbi.common.filter_level = safe_decoder.read_literal(6);
+    pbi.common.sharpness_level = safe_decoder.read_literal(3);
+    pbi.mb.mode_ref_lf_delta_update = 0 as ::core::ffi::c_uchar;
+    pbi.mb.mode_ref_lf_delta_enabled =
         safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
-    if (*xd).mode_ref_lf_delta_enabled != 0 {
-        (*xd).mode_ref_lf_delta_update =
+    if pbi.mb.mode_ref_lf_delta_enabled != 0 {
+        pbi.mb.mode_ref_lf_delta_update =
             safe_decoder.read_bool(vp8_prob_half as i32) as ::core::ffi::c_uchar;
-        if (*xd).mode_ref_lf_delta_update != 0 {
+        if pbi.mb.mode_ref_lf_delta_update != 0 {
             i = 0 as ::core::ffi::c_int;
             while i < MAX_REF_LF_DELTAS {
                 if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
-                    (*xd).ref_lf_deltas[i as usize] =
+                    pbi.mb.ref_lf_deltas[i as usize] =
                         safe_decoder.read_literal(6) as ::core::ffi::c_schar;
                     if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
-                        (*xd).ref_lf_deltas[i as usize] = ((*xd).ref_lf_deltas[i as usize]
+                        pbi.mb.ref_lf_deltas[i as usize] = (pbi.mb.ref_lf_deltas[i as usize]
                             as ::core::ffi::c_int
                             * -(1 as ::core::ffi::c_int))
                             as ::core::ffi::c_schar;
@@ -1439,10 +1415,10 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
             i = 0 as ::core::ffi::c_int;
             while i < MAX_MODE_LF_DELTAS {
                 if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
-                    (*xd).mode_lf_deltas[i as usize] =
+                    pbi.mb.mode_lf_deltas[i as usize] =
                         safe_decoder.read_literal(6) as ::core::ffi::c_schar;
                     if safe_decoder.read_bool(vp8_prob_half as i32) != 0 {
-                        (*xd).mode_lf_deltas[i as usize] = ((*xd).mode_lf_deltas[i as usize]
+                        pbi.mb.mode_lf_deltas[i as usize] = (pbi.mb.mode_lf_deltas[i as usize]
                             as ::core::ffi::c_int
                             * -(1 as ::core::ffi::c_int))
                             as ::core::ffi::c_schar;
@@ -1452,64 +1428,62 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
             }
         }
     }
-    let token_part_sizes_len = data_end.offset_from(data.offset(first_partition_length_in_bytes as isize)) as usize;
-    let token_part_sizes_slice = core::slice::from_raw_parts(data.offset(first_partition_length_in_bytes as isize), token_part_sizes_len);
-    let token_part_sizes_offset = token_part_sizes_slice.as_ptr().offset_from((*pbi).fragments.ptrs[0]) as usize;
+    
+    let token_part_sizes_len = data_slice.len() - (data_idx + first_partition_length_in_bytes as usize);
+    let token_part_sizes_slice = &data_slice[data_idx + first_partition_length_in_bytes as usize .. ];
+    let token_part_sizes_offset = data_idx + first_partition_length_in_bytes as usize;
+    
     setup_token_decoder(
-        &mut *pbi,
+        pbi,
         token_part_sizes_slice,
         token_part_sizes_offset,
         &mut safe_decoder,
     );
-    (*xd).current_bc_idx = 0;
+    pbi.mb.current_bc_idx = 0;
 
     let mut Q: ::core::ffi::c_int = 0;
-
     let mut q_update: ::core::ffi::c_int = 0;
     Q = safe_decoder.read_literal(7);
-    (*pc).base_qindex = Q;
+    pbi.common.base_qindex = Q;
     q_update = 0 as ::core::ffi::c_int;
-    (*pc).y1dc_delta_q = get_delta_q(&mut safe_decoder, (*pc).y1dc_delta_q, &mut q_update);
-    (*pc).y2dc_delta_q = get_delta_q(&mut safe_decoder, (*pc).y2dc_delta_q, &mut q_update);
-    (*pc).y2ac_delta_q = get_delta_q(&mut safe_decoder, (*pc).y2ac_delta_q, &mut q_update);
-    (*pc).uvdc_delta_q = get_delta_q(&mut safe_decoder, (*pc).uvdc_delta_q, &mut q_update);
-    (*pc).uvac_delta_q = get_delta_q(&mut safe_decoder, (*pc).uvac_delta_q, &mut q_update);
+    pbi.common.y1dc_delta_q = get_delta_q(&mut safe_decoder, pbi.common.y1dc_delta_q, &mut q_update);
+    pbi.common.y2dc_delta_q = get_delta_q(&mut safe_decoder, pbi.common.y2dc_delta_q, &mut q_update);
+    pbi.common.y2ac_delta_q = get_delta_q(&mut safe_decoder, pbi.common.y2ac_delta_q, &mut q_update);
+    pbi.common.uvdc_delta_q = get_delta_q(&mut safe_decoder, pbi.common.uvdc_delta_q, &mut q_update);
+    pbi.common.uvac_delta_q = get_delta_q(&mut safe_decoder, pbi.common.uvac_delta_q, &mut q_update);
     if q_update != 0 {
-        vp8cx_init_de_quantizer(&mut *pbi);
+        vp8cx_init_de_quantizer(pbi);
     }
-    vp8_mb_init_dequantizer(&(*pbi).common, &mut (*pbi).mb);
-    if (*pc).frame_type as ::core::ffi::c_uint
+    vp8_mb_init_dequantizer(&pbi.common, &mut pbi.mb);
+    
+    if pbi.common.frame_type as ::core::ffi::c_uint
         != KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
     {
-        (*pc).refresh_golden_frame =
-            safe_decoder.read_bool(vp8_prob_half as i32);
-        (*pc).refresh_alt_ref_frame =
-            safe_decoder.read_bool(vp8_prob_half as i32);
-        (*pc).copy_buffer_to_gf = 0 as ::core::ffi::c_int;
-        if (*pc).refresh_golden_frame == 0 {
-            (*pc).copy_buffer_to_gf =
-                safe_decoder.read_literal(2);
+        pbi.common.refresh_golden_frame = safe_decoder.read_bool(vp8_prob_half as i32);
+        pbi.common.refresh_alt_ref_frame = safe_decoder.read_bool(vp8_prob_half as i32);
+        pbi.common.copy_buffer_to_gf = 0 as ::core::ffi::c_int;
+        if pbi.common.refresh_golden_frame == 0 {
+            pbi.common.copy_buffer_to_gf = safe_decoder.read_literal(2);
         }
-        (*pc).copy_buffer_to_arf = 0 as ::core::ffi::c_int;
-        if (*pc).refresh_alt_ref_frame == 0 {
-            (*pc).copy_buffer_to_arf =
-                safe_decoder.read_literal(2);
+        pbi.common.copy_buffer_to_arf = 0 as ::core::ffi::c_int;
+        if pbi.common.refresh_alt_ref_frame == 0 {
+            pbi.common.copy_buffer_to_arf = safe_decoder.read_literal(2);
         }
-        (*pc).ref_frame_sign_bias[GOLDEN_FRAME as ::core::ffi::c_int as usize] =
-            safe_decoder.read_bool(vp8_prob_half as i32);
-        (*pc).ref_frame_sign_bias[ALTREF_FRAME as ::core::ffi::c_int as usize] =
-            safe_decoder.read_bool(vp8_prob_half as i32);
+        pbi.common.ref_frame_sign_bias[GOLDEN_FRAME as ::core::ffi::c_int as usize] = safe_decoder.read_bool(vp8_prob_half as i32);
+        pbi.common.ref_frame_sign_bias[ALTREF_FRAME as ::core::ffi::c_int as usize] = safe_decoder.read_bool(vp8_prob_half as i32);
     }
-    (*pc).refresh_entropy_probs =
+    
+    pbi.common.refresh_entropy_probs =
         safe_decoder.read_bool(vp8_prob_half as i32);
-    if (*pc).refresh_entropy_probs == 0 as ::core::ffi::c_int {
-        (*pc).lfc = (*pc).fc;
+    if pbi.common.refresh_entropy_probs == 0 as ::core::ffi::c_int {
+        pbi.common.lfc = pbi.common.fc;
     }
-    (*pc).refresh_last_frame = ((*pc).frame_type as ::core::ffi::c_uint
+    pbi.common.refresh_last_frame = (pbi.common.frame_type as ::core::ffi::c_uint
         == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
         || safe_decoder.read_bool(vp8_prob_half as i32) != 0)
         as ::core::ffi::c_int;
-    (*pbi).independent_partitions = 1 as ::core::ffi::c_int;
+        
+    pbi.independent_partitions = 1 as ::core::ffi::c_int;
     i = 0 as ::core::ffi::c_int;
     while i < BLOCK_TYPES {
         j = 0 as ::core::ffi::c_int;
@@ -1519,15 +1493,15 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
                 l = 0 as ::core::ffi::c_int;
                 while l < ENTROPY_NODES {
                     if safe_decoder.read_bool(vp8_coef_update_probs[i as usize][j as usize][k as usize][l as usize] as i32) != 0 {
-                        (*pc).fc.coef_probs[i as usize][j as usize][k as usize][l as usize] = safe_decoder.read_literal(8) as vp8_prob;
+                        pbi.common.fc.coef_probs[i as usize][j as usize][k as usize][l as usize] = safe_decoder.read_literal(8) as vp8_prob;
                     }
                     if k > 0 as ::core::ffi::c_int
-                        && (*pc).fc.coef_probs[i as usize][j as usize][k as usize][l as usize] as ::core::ffi::c_int
-                            != (*pc).fc.coef_probs[i as usize][j as usize]
+                        && pbi.common.fc.coef_probs[i as usize][j as usize][k as usize][l as usize] as ::core::ffi::c_int
+                            != pbi.common.fc.coef_probs[i as usize][j as usize]
                                 [(k - 1 as ::core::ffi::c_int) as usize]
                                 [l as usize] as ::core::ffi::c_int
                     {
-                        (*pbi).independent_partitions = 0 as ::core::ffi::c_int;
+                        pbi.independent_partitions = 0 as ::core::ffi::c_int;
                     }
                     l += 1;
                 }
@@ -1537,68 +1511,77 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
         }
         i += 1;
     }
-
-    (*xd).qcoeff = [0; 400];
-    let stride = (*pbi).common.mode_info_stride as usize;
-    let mip_len = ((*pbi).common.mb_rows + 1) as usize * stride;
-    let mip_slice = core::slice::from_raw_parts_mut((*pbi).common.mip_mut_ptr(), mip_len);
-    vp8_decode_mode_mvs(&mut *pbi, mip_slice, &mut safe_decoder);
-    {
-        let bc_mut = &mut pbi.mbc[8];
-        bc_mut.user_buffer = bc_mut.user_buffer.add(safe_decoder.offset);
-        bc_mut.value = safe_decoder.value;
-        bc_mut.count = safe_decoder.count;
-        bc_mut.range = safe_decoder.range;
-    }
-    if let Some(ref mut above_context) = (*pc).above_context {
+    
+    pbi.mb.qcoeff = [0; 400];
+    let stride = pbi.common.mode_info_stride as usize;
+    let mip_len = (pbi.common.mb_rows + 1) as usize * stride;
+    
+    let mip_slice = unsafe {
+        core::slice::from_raw_parts_mut(pbi.common.mip_mut_ptr(), mip_len)
+    };
+    vp8_decode_mode_mvs(pbi, mip_slice, &mut safe_decoder);
+    
+    safe_decoder.update_bool_decoder(&mut pbi.mbc[8]);
+    
+    if let Some(ref mut above_context) = pbi.common.above_context {
         above_context.fill(ENTROPY_CONTEXT_PLANES::default());
     }
-    (*pbi).frame_corrupt_residual = 0 as ::core::ffi::c_int;
+    pbi.frame_corrupt_residual = 0 as ::core::ffi::c_int;
+    
     if vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0
-        && (*pc).multi_token_partition as ::core::ffi::c_uint
+        && pbi.common.multi_token_partition as ::core::ffi::c_uint
             != ONE_PARTITION as ::core::ffi::c_int as ::core::ffi::c_uint
     {
         let mut thread: ::core::ffi::c_uint = 0;
-        if vp8mt_decode_mb_rows(&mut *pbi, &mut *xd) != 0 {
-            vp8_decoder_remove_threads(pbi);
-            (*pbi).restart_threads = 1 as ::core::ffi::c_int;
-            vpx_internal_error(
-                &raw mut (*pbi).common.error,
-                VPX_CODEC_CORRUPT_FRAME,
-                ::core::ptr::null::<::core::ffi::c_char>(),
-            );
+        let xd_ptr = &raw mut pbi.mb;
+        if unsafe { vp8mt_decode_mb_rows(pbi, &mut *xd_ptr) } != 0 {
+            unsafe { vp8_decoder_remove_threads(pbi) };
+            pbi.restart_threads = 1 as ::core::ffi::c_int;
+            unsafe {
+                vpx_internal_error(
+                    &raw mut pbi.common.error,
+                    VPX_CODEC_CORRUPT_FRAME,
+                    ::core::ptr::null::<::core::ffi::c_char>(),
+                );
+            }
         }
-        vp8_yv12_extend_frame_borders_c(&mut *yv12_fb_new);
+        
+        vp8_yv12_extend_frame_borders_c(&mut pbi.common.yv12_fb[new_fb_idx]);
         thread = 0 as ::core::ffi::c_uint;
-        while thread < (*pbi).decoding_thread_count {
-            corrupt_tokens |= (*(*pbi).mb_row_di.offset(thread as isize)).mbd.corrupted;
+        while thread < pbi.decoding_thread_count {
+            corrupt_tokens |= unsafe { (*pbi.mb_row_di.offset(thread as isize)).mbd.corrupted };
             thread = thread.wrapping_add(1);
         }
     } else {
-        decode_mb_rows(&mut *pbi);
-        corrupt_tokens |= (*xd).corrupted;
+        decode_mb_rows(pbi);
+        corrupt_tokens |= pbi.mb.corrupted;
     }
-    (*yv12_fb_new).corrupted = vp8dx_bool_error(&pbi.mbc[8]);
-    (*yv12_fb_new).corrupted |= corrupt_tokens;
-    if (*pbi).decoded_key_frame == 0 {
-        if (*pc).frame_type as ::core::ffi::c_uint
+    
+    pbi.common.yv12_fb[new_fb_idx].corrupted = vp8dx_bool_error(&pbi.mbc[8]);
+    pbi.common.yv12_fb[new_fb_idx].corrupted |= corrupt_tokens;
+    
+    if pbi.decoded_key_frame == 0 {
+        if pbi.common.frame_type as ::core::ffi::c_uint
             == KEY_FRAME as ::core::ffi::c_int as ::core::ffi::c_uint
-            && (*yv12_fb_new).corrupted == 0
+            && pbi.common.yv12_fb[new_fb_idx].corrupted == 0
         {
-            (*pbi).decoded_key_frame = 1 as ::core::ffi::c_int;
+            pbi.decoded_key_frame = 1 as ::core::ffi::c_int;
         } else {
-            vpx_internal_error(
-                &raw mut (*pbi).common.error,
-                VPX_CODEC_CORRUPT_FRAME,
-                b"A stream must start with a complete key frame\0" as *const u8
-                    as *const ::core::ffi::c_char,
-            );
+            unsafe {
+                vpx_internal_error(
+                    &raw mut pbi.common.error,
+                    VPX_CODEC_CORRUPT_FRAME,
+                    b"A stream must start with a complete key frame\0" as *const u8
+                        as *const ::core::ffi::c_char,
+                );
+            }
         }
     }
-    if (*pc).refresh_entropy_probs == 0 as ::core::ffi::c_int {
-        (*pc).fc = (*pc).lfc;
-        (*pbi).independent_partitions = prev_independent_partitions;
+    
+    if pbi.common.refresh_entropy_probs == 0 as ::core::ffi::c_int {
+        pbi.common.fc = pbi.common.lfc;
+        pbi.independent_partitions = prev_independent_partitions;
     }
     return 0 as ::core::ffi::c_int;
-}}
+}
 pub const __ATOMIC_ACQUIRE: ::core::ffi::c_int = 2 as ::core::ffi::c_int;
