@@ -1165,7 +1165,6 @@ fn init_frame(pbi: &mut VP8D_COMP) {
             pbi.ec_active = 1 as ::core::ffi::c_int;
         }
     }
-    pbi.mb.left_context = &raw mut pbi.common.left_context;
     pbi.mb.mode_info_context = pbi.common.mi;
     pbi.mb.mode_info_idx = (pbi.common.mode_info_stride + 1) as usize;
     pbi.mb.above_context_idx = 0;

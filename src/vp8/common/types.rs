@@ -671,7 +671,6 @@ pub struct macroblockd {
     pub recon_left: [*mut ::core::ffi::c_uchar; 3],
     pub recon_left_stride: [::core::ffi::c_int; 2],
     pub above_context_idx: usize,
-    pub left_context: *mut ENTROPY_CONTEXT_PLANES,
     pub segmentation_enabled: ::core::ffi::c_uchar,
     pub update_mb_segmentation_map: ::core::ffi::c_uchar,
     pub update_mb_segmentation_data: ::core::ffi::c_uchar,
@@ -722,7 +721,6 @@ impl Default for macroblockd {
             recon_left: [core::ptr::null_mut(); 3],
             recon_left_stride: [0; 2],
             above_context_idx: 0,
-            left_context: core::ptr::null_mut(),
             segmentation_enabled: 0,
             update_mb_segmentation_map: 0,
             update_mb_segmentation_data: 0,
@@ -759,30 +757,29 @@ impl macroblockd {
     pub fn mode_info_mut(&mut self, mi_base: *mut MODE_INFO) -> &mut MODE_INFO {
         unsafe { &mut *mi_base.add(self.mode_info_idx) }
     }
-    pub fn left_context_mut(&mut self) -> &mut ENTROPY_CONTEXT_PLANES {
-        unsafe { &mut *self.left_context }
-    }
-    pub fn contexts_mut(
-        &mut self,
+    pub fn contexts_mut<'a>(
+        &'a mut self,
         above_base: *mut ENTROPY_CONTEXT_PLANES,
-    ) -> (&mut ENTROPY_CONTEXT_PLANES, &mut ENTROPY_CONTEXT_PLANES) {
+        left: &'a mut ENTROPY_CONTEXT_PLANES,
+    ) -> (&'a mut ENTROPY_CONTEXT_PLANES, &'a mut ENTROPY_CONTEXT_PLANES) {
         unsafe {
-            (&mut *above_base.add(self.above_context_idx), &mut *self.left_context)
+            (&mut *above_base.add(self.above_context_idx), left)
         }
     }
-    pub fn decode_tokens_inputs_mut(
-        &mut self,
+    pub fn decode_tokens_inputs_mut<'a>(
+        &'a mut self,
         above_base: *mut ENTROPY_CONTEXT_PLANES,
+        left: &'a mut ENTROPY_CONTEXT_PLANES,
     ) -> (
-        &mut ENTROPY_CONTEXT_PLANES,
-        &mut ENTROPY_CONTEXT_PLANES,
-        &mut [::core::ffi::c_short; 400],
-        &mut [::core::ffi::c_char; 25],
+        &'a mut ENTROPY_CONTEXT_PLANES,
+        &'a mut ENTROPY_CONTEXT_PLANES,
+        &'a mut [::core::ffi::c_short; 400],
+        &'a mut [::core::ffi::c_char; 25],
     ) {
         unsafe {
             (
                 &mut *above_base.add(self.above_context_idx),
-                &mut *self.left_context,
+                left,
                 &mut self.qcoeff,
                 &mut self.eobs,
             )

@@ -256,18 +256,19 @@ fn mt_decode_macroblock(
     left_y: Option<&[u8]>,
     left_u: Option<&[u8]>,
     left_v: Option<&[u8]>,
+    left_context: &mut ENTROPY_CONTEXT_PLANES,
 ) {
     let mut mode: MB_PREDICTION_MODE = DC_PRED;
     let mut i: ::core::ffi::c_int = 0;
     if xd.mode_info().mbmi.mb_skip_coeff != 0 {
         let is_4x4 = xd.mode_info().mbmi.is_4x4 != 0;
-        let (above, left) = xd.contexts_mut(common.above_context_ptr());
+        let (above, left) = xd.contexts_mut(common.above_context_ptr(), left_context);
         vp8_reset_mb_tokens_context(above, left, is_4x4);
     } else if vp8dx_bool_error(&mbc[xd.current_bc_idx]) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
         let is_4x4 = xd.mode_info().mbmi.is_4x4 != 0;
         let bc_idx = xd.current_bc_idx;
-        let (above, left, qcoeff, eobs) = xd.decode_tokens_inputs_mut(common.above_context_ptr());
+        let (above, left, qcoeff, eobs) = xd.decode_tokens_inputs_mut(common.above_context_ptr(), left_context);
         eobtotal = vp8_decode_mb_tokens(
             &mut mbc[bc_idx],
             &common.fc,
@@ -625,7 +626,7 @@ fn mt_decode_mb_rows(
         recon_yoffset = mb_row * recon_y_stride * 16 as ::core::ffi::c_int;
         recon_uvoffset = mb_row * recon_uv_stride * 8 as ::core::ffi::c_int;
         (*xd).above_context_idx = 0;
-        *xd.left_context_mut() = ENTROPY_CONTEXT_PLANES::default();
+        let mut left_context = ENTROPY_CONTEXT_PLANES::default();
         (*xd).left_available = 0 as ::core::ffi::c_int;
         (*xd).mb_to_top_edge = -((mb_row * 16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int);
         (*xd).mb_to_bottom_edge = (((*pc).mb_rows - 1 as ::core::ffi::c_int - mb_row)
@@ -776,6 +777,7 @@ fn mt_decode_mb_rows(
                 left_y,
                 left_u,
                 left_v,
+                &mut left_context,
             );
             (*xd).left_available = 1 as ::core::ffi::c_int;
             (*xd).corrupted |= vp8dx_bool_error(&(*pbi).mbc[(*xd).current_bc_idx]);
@@ -1065,12 +1067,6 @@ unsafe extern "C" fn thread_decoding_proc(
             &mut *(td.ptr2 as *mut MB_ROW_DEC),
         )
     };
-    let mut mb_row_left_context = ENTROPY_CONTEXT_PLANES {
-        y1: [0; 4],
-        u: [0; 2],
-        v: [0; 2],
-        y2: 0,
-    };
     unsafe {
         while vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0 {
             let start_decoding_sem = pbi.h_event_start_decoding.as_ref().unwrap()[ithread as usize];
@@ -1081,7 +1077,6 @@ unsafe extern "C" fn thread_decoding_proc(
                 break;
             }
             let xd = &mut mbrd.mbd;
-            xd.left_context = &raw mut mb_row_left_context;
             if setjmp(&raw mut xd.error_info.jmp as *mut ::core::ffi::c_int) != 0 {
                 xd.error_info.setjmp = 0;
                 crate::thread_shim::vp8_semaphore_signal(pbi.h_event_end_decoding);
