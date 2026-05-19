@@ -28,74 +28,69 @@ pub fn vp8_setup_intra_recon_safe(ybf: &mut YV12_BUFFER_CONFIG) {
     let uv_width = ybf.uv_width as usize;
     let uv_height = ybf.uv_height as usize;
 
-    // Safety: We are accessing the underlying buffers of YV12_BUFFER_CONFIG.
-    // The slice helpers are raw pointer based and require raw construction to obtain slices.
-    // We assume the buffer config is valid and borders are correctly allocated.
-    unsafe {
-        if y_border >= 1 {
-            let y_slice = ybf.y_slice_mut();
-            
-            // Top line setup (same as vp8_setup_intra_recon_top_line)
-            let y_idx = (y_border - 1) * y_stride + (y_border - 1);
-            let len = y_width + 5;
-            if y_idx + len <= y_slice.len() {
-                y_slice[y_idx..y_idx + len].fill(127);
-            } else {
-                debug_assert!(false, "Y slice top-line overflow in vp8_setup_intra_recon_safe");
-            }
+    if y_border >= 1 {
+        let y_slice = ybf.y_slice_mut_safe();
+        
+        // Top line setup (same as vp8_setup_intra_recon_top_line)
+        let y_idx = (y_border - 1) * y_stride + (y_border - 1);
+        let len = y_width + 5;
+        if y_idx + len <= y_slice.len() {
+            y_slice[y_idx..y_idx + len].fill(127);
+        } else {
+            debug_assert!(false, "Y slice top-line overflow in vp8_setup_intra_recon_safe");
+        }
 
-            // Left column setup
-            for i in 0..y_height {
-                let idx = (y_border + i) * y_stride + (y_border - 1);
-                if idx < y_slice.len() {
-                    y_slice[idx] = 129;
-                } else {
-                    debug_assert!(false, "Y slice left-col overflow in vp8_setup_intra_recon_safe");
-                }
+        // Left column setup
+        for i in 0..y_height {
+            let idx = (y_border + i) * y_stride + (y_border - 1);
+            if idx < y_slice.len() {
+                y_slice[idx] = 129;
+            } else {
+                debug_assert!(false, "Y slice left-col overflow in vp8_setup_intra_recon_safe");
+            }
+        }
+    }
+
+    if uv_border >= 1 {
+        // U plane setup
+        let u_slice = ybf.u_slice_mut_safe();
+        
+        // Top line
+        let uv_idx = (uv_border - 1) * uv_stride + (uv_border - 1);
+        let len = uv_width + 5;
+        if uv_idx + len <= u_slice.len() {
+            u_slice[uv_idx..uv_idx + len].fill(127);
+        } else {
+            debug_assert!(false, "U slice top-line overflow in vp8_setup_intra_recon_safe");
+        }
+
+        // Left column
+        for i in 0..uv_height {
+            let idx = (uv_border + i) * uv_stride + (uv_border - 1);
+            if idx < u_slice.len() {
+                u_slice[idx] = 129;
+            } else {
+                debug_assert!(false, "U slice left-col overflow in vp8_setup_intra_recon_safe");
             }
         }
 
-        if uv_border >= 1 {
-            // U plane setup
-            let u_slice = ybf.u_slice_mut();
-            
-            // Top line
-            let uv_idx = (uv_border - 1) * uv_stride + (uv_border - 1);
-            let len = uv_width + 5;
-            if uv_idx + len <= u_slice.len() {
-                u_slice[uv_idx..uv_idx + len].fill(127);
+        // V plane setup
+        let v_slice = ybf.v_slice_mut_safe();
+        
+        // Top line
+        if uv_idx + len <= v_slice.len() {
+            v_slice[uv_idx..uv_idx + len].fill(127);
+        } else {
+            debug_assert!(false, "V slice top-line overflow in vp8_setup_intra_recon_safe");
+        }
+
+        // Left column
+        for i in 0..uv_height {
+            let idx = (uv_border + i) * uv_stride + (uv_border - 1);
+            if idx < v_slice.len() {
+                v_slice[idx] = 129;
             } else {
-                debug_assert!(false, "U slice top-line overflow in vp8_setup_intra_recon_safe");
-            }
-
-            // Left column
-            for i in 0..uv_height {
-                let idx = (uv_border + i) * uv_stride + (uv_border - 1);
-                if idx < u_slice.len() {
-                    u_slice[idx] = 129;
-                } else {
-                    debug_assert!(false, "U slice left-col overflow in vp8_setup_intra_recon_safe");
-                }
-            }
-
-            // V plane setup
-            let v_slice = ybf.v_slice_mut();
-            
-            // Top line
-            if uv_idx + len <= v_slice.len() {
-                v_slice[uv_idx..uv_idx + len].fill(127);
-            } else {
-                debug_assert!(false, "V slice top-line overflow in vp8_setup_intra_recon_safe");
-            }
-
-            // Left column
-            for i in 0..uv_height {
-                let idx = (uv_border + i) * uv_stride + (uv_border - 1);
-                if idx < v_slice.len() {
-                    v_slice[idx] = 129;
-                } else {
-                    debug_assert!(false, "V slice left-col overflow in vp8_setup_intra_recon_safe");
-                }
+                debug_assert!(false, "V slice left-col overflow in vp8_setup_intra_recon_safe");
             }
         }
     }
@@ -116,37 +111,32 @@ pub fn vp8_setup_intra_recon_top_line(ybf: &mut YV12_BUFFER_CONFIG) {
     let uv_stride = ybf.uv_stride as usize;
     let uv_width = ybf.uv_width as usize;
 
-    // Safety: We are accessing the underlying buffers of YV12_BUFFER_CONFIG.
-    // The slice helpers are raw pointer based and require raw construction to obtain slices.
-    // We assume the buffer config is valid and borders are correctly allocated.
-    unsafe {
-        if y_border >= 1 {
-            let y_slice = ybf.y_slice_mut();
-            let y_idx = (y_border - 1) * y_stride + (y_border - 1);
-            let len = y_width + 5;
-            if y_idx + len <= y_slice.len() {
-                y_slice[y_idx..y_idx + len].fill(127);
-            } else {
-                debug_assert!(false, "Y slice overflow in vp8_setup_intra_recon_top_line");
-            }
+    if y_border >= 1 {
+        let y_slice = ybf.y_slice_mut_safe();
+        let y_idx = (y_border - 1) * y_stride + (y_border - 1);
+        let len = y_width + 5;
+        if y_idx + len <= y_slice.len() {
+            y_slice[y_idx..y_idx + len].fill(127);
+        } else {
+            debug_assert!(false, "Y slice overflow in vp8_setup_intra_recon_top_line");
+        }
+    }
+
+    if uv_border >= 1 {
+        let u_slice = ybf.u_slice_mut_safe();
+        let uv_idx = (uv_border - 1) * uv_stride + (uv_border - 1);
+        let len = uv_width + 5;
+        if uv_idx + len <= u_slice.len() {
+            u_slice[uv_idx..uv_idx + len].fill(127);
+        } else {
+            debug_assert!(false, "U slice overflow in vp8_setup_intra_recon_top_line");
         }
 
-        if uv_border >= 1 {
-            let u_slice = ybf.u_slice_mut();
-            let uv_idx = (uv_border - 1) * uv_stride + (uv_border - 1);
-            let len = uv_width + 5;
-            if uv_idx + len <= u_slice.len() {
-                u_slice[uv_idx..uv_idx + len].fill(127);
-            } else {
-                debug_assert!(false, "U slice overflow in vp8_setup_intra_recon_top_line");
-            }
-
-            let v_slice = ybf.v_slice_mut();
-            if uv_idx + len <= v_slice.len() {
-                v_slice[uv_idx..uv_idx + len].fill(127);
-            } else {
-                debug_assert!(false, "V slice overflow in vp8_setup_intra_recon_top_line");
-            }
+        let v_slice = ybf.v_slice_mut_safe();
+        if uv_idx + len <= v_slice.len() {
+            v_slice[uv_idx..uv_idx + len].fill(127);
+        } else {
+            debug_assert!(false, "V slice overflow in vp8_setup_intra_recon_top_line");
         }
     }
 }
