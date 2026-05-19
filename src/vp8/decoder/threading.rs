@@ -277,7 +277,7 @@ fn mt_decode_macroblock(
             left,
             is_4x4,
         );
-        xd.mode_info_mut().mbmi.mb_skip_coeff =
+        xd.mode_info_mut(common.mip_ptr()).mbmi.mb_skip_coeff =
             (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
     }
     mode = xd.mode_info().mbmi.mode as MB_PREDICTION_MODE;

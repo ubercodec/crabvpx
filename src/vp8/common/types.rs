@@ -758,8 +758,8 @@ impl macroblockd {
     pub fn mode_info(&self) -> &MODE_INFO {
         unsafe { &*self.mode_info_context }
     }
-    pub fn mode_info_mut(&mut self) -> &mut MODE_INFO {
-        unsafe { &mut *self.mode_info_context }
+    pub fn mode_info_mut(&mut self, mi_base: *mut MODE_INFO) -> &mut MODE_INFO {
+        unsafe { &mut *mi_base.add(self.mode_info_idx) }
     }
     pub fn above_context_mut(&mut self) -> &mut ENTROPY_CONTEXT_PLANES {
         unsafe { &mut *self.above_context }

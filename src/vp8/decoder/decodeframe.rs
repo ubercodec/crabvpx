@@ -316,7 +316,7 @@ fn decode_macroblock(
             left,
             is_4x4,
         );
-        xd.mode_info_mut().mbmi.mb_skip_coeff =
+        xd.mode_info_mut(common.mip_ptr()).mbmi.mb_skip_coeff =
             (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
     }
     mode = xd.mode_info().mbmi.mode as MB_PREDICTION_MODE;
@@ -1170,7 +1170,8 @@ fn init_frame(pbi: &mut VP8D_COMP) {
     pbi.mb.mode_info_idx = (pbi.common.mode_info_stride + 1) as usize;
     pbi.mb.above_context_idx = 0;
     pbi.mb.frame_type = pbi.common.frame_type;
-    pbi.mb.mode_info_mut().mbmi.mode = DC_PRED as ::core::ffi::c_int as uint8_t;
+    let mip = pbi.common.mip_ptr();
+    pbi.mb.mode_info_mut(mip).mbmi.mode = DC_PRED as ::core::ffi::c_int as uint8_t;
     pbi.mb.mode_info_stride = pbi.common.mode_info_stride;
     pbi.mb.corrupted = 0 as ::core::ffi::c_int;
     pbi.mb.fullpixel_mask = !(0 as ::core::ffi::c_int);
