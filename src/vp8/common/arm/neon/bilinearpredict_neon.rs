@@ -1,11 +1,4 @@
 use std::arch::aarch64::*;
-extern "C" {
-    fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
-        __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
-}
 pub type int8_t = i8;
 pub type int32_t = i32;
 pub type uint8_t = u8;
@@ -21,14 +14,6 @@ pub struct uint32x2x2_t {
 }
 pub type size_t = __darwin_size_t;
 pub type ptrdiff_t = __darwin_ptrdiff_t;
-#[inline]
-unsafe extern "C" fn uint32_to_mem(mut buf: *mut uint8_t, mut a: uint32_t) {
-    memcpy(
-        buf as *mut ::core::ffi::c_void,
-        &raw mut a as *const ::core::ffi::c_void,
-        4 as size_t,
-    );
-}
 static mut bifilter4_coeff: [[uint8_t; 2]; 8] = [
     [
         128 as ::core::ffi::c_int as uint8_t,
