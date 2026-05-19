@@ -1536,15 +1536,42 @@ pub unsafe extern "C" fn vpx_dc_predictor_32x32_c(
 ) { unsafe {
     dc_predictor(dst, stride, 32 as ::core::ffi::c_int, above, left);
 }}
+pub fn vpx_dc_predictor_4x4_safe(
+    dst: &mut [u8],
+    stride: usize,
+    above: &[u8],
+    left: &[u8],
+) {
+    let mut sum = 0i32;
+    for i in 0..4 {
+        sum += above[i] as i32;
+        sum += left[i] as i32;
+    }
+    let expected_dc = ((sum + 4) / 8) as u8;
+    for r in 0..4 {
+        let dst_idx = r * stride;
+        dst[dst_idx..dst_idx + 4].fill(expected_dc);
+    }
+}
+
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vpx_dc_predictor_4x4_c(
-    mut dst: *mut uint8_t,
-    mut stride: ptrdiff_t,
-    mut above: *const uint8_t,
-    mut left: *const uint8_t,
-) { unsafe {
-    dc_predictor(dst, stride, 4 as ::core::ffi::c_int, above, left);
-}}
+pub extern "C" fn vpx_dc_predictor_4x4_c(
+    dst: *mut uint8_t,
+    stride: ptrdiff_t,
+    above: *const uint8_t,
+    left: *const uint8_t,
+) {
+    if dst.is_null() || above.is_null() || left.is_null() {
+        return;
+    }
+    unsafe {
+        let dst_len = 3 * stride as usize + 4;
+        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
+        let above_slice = core::slice::from_raw_parts(above, 4);
+        let left_slice = core::slice::from_raw_parts(left, 4);
+        vpx_dc_predictor_4x4_safe(dst_slice, stride as usize, above_slice, left_slice);
+    }
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vpx_dc_predictor_8x8_c(
     mut dst: *mut uint8_t,
