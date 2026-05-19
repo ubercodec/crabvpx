@@ -38,7 +38,7 @@ Sub-pixel prediction algorithms currently compute tap offsets by executing unsaf
 #### Work Units:
 * **[x] Unit 5 (`filter.rs`):** Replace raw pointer addition (`predictor.add(offset)`) with standard bounds-checked sub-slicing (`&slice[offset..]`).
 * **[x] Unit 6 (`filter.rs`):** Convert unaligned multi-tap reads into safe windowing methods or explicit fixed-size chunk iterators.
-* **[ ] Unit 7 (`loopfilter_filters.rs`):** Purge residual raw pointers in edge filtering subroutines, fully relying on disjoint safe reborrowing.
+* **[x] Unit 7 (`loopfilter_filters.rs`):** Purge residual raw pointers in edge filtering subroutines, fully relying on disjoint safe reborrowing.
 
 ---
 
