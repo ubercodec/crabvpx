@@ -152,34 +152,29 @@ static dc_pred: [[[intra_pred_fn; 2]; 2]; 2] = [
         ],
     ],
 ];
-pub fn vp8_build_intra_predictors_mby_s(
+pub fn vp8_build_intra_predictors_mby_safe(
     x: &MACROBLOCKD,
-    yabove_row: *mut ::core::ffi::c_uchar,
-    yleft: *mut ::core::ffi::c_uchar,
-    left_stride: ::core::ffi::c_int,
-    ypred_ptr: *mut ::core::ffi::c_uchar,
-    y_stride: ::core::ffi::c_int,
+    yabove: &[u8; 17],
+    yleft: &[u8; 16],
+    ypred_slice: &mut [u8],
+    y_stride: usize,
 ) {
     let mode = x.mode_info().mbmi.mode as MB_PREDICTION_MODE;
-    let mut yleft_col: [uint8_t; 16] = [0; 16];
-    let mut i: ::core::ffi::c_int = 0;
-    while i < 16 {
-        yleft_col[i as usize] = unsafe { *yleft.offset((i * left_stride) as isize) } as uint8_t;
-        i += 1;
-    }
     let fn_0 = if mode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_uint {
         dc_pred[x.left_available as usize][x.up_available as usize]
             [SIZE_16 as usize]
     } else {
         pred[mode as usize][SIZE_16 as usize]
     };
-    unsafe {
-        fn_0.expect("non-null function pointer")(
-            ypred_ptr as *mut uint8_t,
-            y_stride as ptrdiff_t,
-            yabove_row,
-            &raw mut yleft_col as *mut uint8_t,
-        );
+    if let Some(pred_fn) = fn_0 {
+        unsafe {
+            pred_fn(
+                ypred_slice.as_mut_ptr(),
+                y_stride as ptrdiff_t,
+                yabove[1..].as_ptr(),
+                yleft.as_ptr(),
+            );
+        }
     }
 }
 pub fn vp8_build_intra_predictors_mbuv_s(

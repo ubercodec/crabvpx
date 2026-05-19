@@ -369,20 +369,33 @@ fn decode_macroblock(
             xd.dst.v_buffer as *mut ::core::ffi::c_uchar,
             xd.dst.uv_stride,
         );
+        let dst_stride = xd.dst.y_stride;
+        let dst_stride_us = dst_stride as usize;
+        let dst_y_slice = unsafe { xd.dst.y_slice_mut() };
+        let border = xd.dst.border as usize;
+        let y_buffer_offset = border * dst_stride_us + border;
+
         if mode as ::core::ffi::c_uint != B_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
-            crate::vp8::common::reconintra::vp8_build_intra_predictors_mby_s(
+            let mut yabove = [0u8; 17];
+            yabove.copy_from_slice(&dst_y_slice[y_buffer_offset - dst_stride_us - 1 .. y_buffer_offset - dst_stride_us + 16]);
+            
+            let left_stride = xd.recon_left_stride[0] as usize;
+            let mut yleft = [0u8; 16];
+            for i in 0..16 {
+                yleft[i] = dst_y_slice[y_buffer_offset - 1 + i * left_stride];
+            }
+            
+            let ypred = &mut dst_y_slice[y_buffer_offset .. y_buffer_offset + 15 * dst_stride_us + 16];
+            
+
+            crate::vp8::common::reconintra::vp8_build_intra_predictors_mby_safe(
                 xd,
-                xd.recon_above[0 as ::core::ffi::c_int as usize],
-                xd.recon_left[0 as ::core::ffi::c_int as usize],
-                xd.recon_left_stride[0 as ::core::ffi::c_int as usize],
-                xd.dst.y_buffer as *mut ::core::ffi::c_uchar,
-                xd.dst.y_stride,
+                &yabove,
+                &yleft,
+                ypred,
+                dst_stride_us,
             );
         } else {
-            let dst_stride: ::core::ffi::c_int = xd.dst.y_stride;
-            let dst_y_slice = unsafe { xd.dst.y_slice_mut() };
-            let border = xd.dst.border as usize;
-            let y_buffer_offset = border * dst_stride as usize + border;
             if xd.mode_info().mbmi.mb_skip_coeff != 0 {
                 xd.eobs.fill(0);
             }

@@ -1,9 +1,4 @@
 unsafe extern "C" {
-    fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
-        __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
     fn vp8_copy_mem16x16_neon(
         src: *mut ::core::ffi::c_uchar,
         src_stride: ::core::ffi::c_int,
@@ -23,8 +18,7 @@ unsafe extern "C" {
         dst_stride: ::core::ffi::c_int,
     );
 }
-pub type __darwin_size_t = usize;
-pub type size_t = __darwin_size_t;
+
 pub use crate::vp8::common::types::*;
 pub type uint32_t = u32;
 
