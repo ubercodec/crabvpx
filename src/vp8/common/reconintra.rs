@@ -156,6 +156,7 @@ pub extern "C" fn vp8_init_intra_predictors() {}
 
 pub fn intra_prediction_down_copy(
     xd: &mut MACROBLOCKD,
+    above_y: Option<&[u8]>,
 ) {
     let dst_stride = xd.dst.y_stride as usize;
     let border = xd.dst.border as usize;
@@ -165,7 +166,12 @@ pub fn intra_prediction_down_copy(
     let base_idx = (border - 1) * dst_stride + border + 16;
 
     let mut src_bytes = [0u8; 4];
-    src_bytes.copy_from_slice(&y_slice[base_idx..base_idx + 4]);
+    if let Some(ay) = above_y {
+        // ay contains columns -1 to 22. Column 16 is at index 17.
+        src_bytes.copy_from_slice(&ay[17..21]);
+    } else {
+        src_bytes.copy_from_slice(&y_slice[base_idx..base_idx + 4]);
+    }
 
     let idx0 = base_idx + 4 * dst_stride;
     let idx1 = base_idx + 8 * dst_stride;

@@ -416,6 +416,12 @@ pub unsafe extern "C" fn vp8_sixtap_predict16x16_c(
     let dst_stride = dst_pitch as usize;
 
     unsafe {
+        if xoffset == 2 && yoffset == 6 {
+            let start_ptr = src_ptr.offset(-((2 * stride + 2) as isize));
+            let src_bytes = core::slice::from_raw_parts(start_ptr, 4);
+            println!("DEBUG_FILTER_SRC: dst {:p} bytes {:?}", dst_ptr, src_bytes);
+        }
+
         let src_slice = get_src_slice(src_ptr, stride, 21, 16);
 
         let dst_len = 15 * dst_stride + 16;
@@ -428,6 +434,10 @@ pub unsafe extern "C" fn vp8_sixtap_predict16x16_c(
 
         filter_block2d_first_pass_safe(src_slice, stride, 21, 16, h_filter, &mut f_data);
         filter_block2d_second_pass_safe(&f_data, 16, dst_slice, dst_stride, 16, 16, v_filter);
+
+        if xoffset == 2 && yoffset == 6 {
+            println!("DEBUG_FILTER_DST: dst {:p} bytes {:?}", dst_ptr, &dst_slice[0..4]);
+        }
     }
 }
 

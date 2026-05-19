@@ -125,20 +125,16 @@ pub fn vp8_intra4x4_predict_safe(
     dst_offset: usize,
     dst_stride: usize,
     b_mode: B_PREDICTION_MODE,
+    above: &[u8; 8],
+    left: &[u8; 4],
+    top_left: u8,
 ) {
     let mut Aboveb: [u8; 12] = [0; 12];
-    let above_idx = dst_offset - dst_stride;
-    let top_left = y_slice[above_idx - 1];
-
-    Aboveb[4..12].copy_from_slice(&y_slice[above_idx..above_idx + 8]);
+    Aboveb[4..12].copy_from_slice(above);
     Aboveb[3] = top_left;
 
     let mut Left: [u8; 8] = [0; 8];
-    let yleft_idx = dst_offset - 1;
-    Left[0] = y_slice[yleft_idx];
-    Left[1] = y_slice[yleft_idx + dst_stride];
-    Left[2] = y_slice[yleft_idx + 2 * dst_stride];
-    Left[3] = y_slice[yleft_idx + 3 * dst_stride];
+    Left[0..4].copy_from_slice(left);
 
     match b_mode {
         B_DC_PRED => {

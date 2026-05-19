@@ -318,6 +318,8 @@ pub fn vp8_loop_filter_row_normal_safe(
             mi.mbmi.ref_frame as ::core::ffi::c_int;
         filter_level = lfi_n.lvl[seg as usize][ref_frame as usize][mode_index as usize]
             as ::core::ffi::c_int;
+        let mb_idx = mb_row * mb_cols + mb_col;
+
         if filter_level != 0 {
             let hev_index: ::core::ffi::c_int = lfi_n.hev_thr_lut[frame_type as usize]
                 [filter_level as usize]
@@ -332,6 +334,8 @@ pub fn vp8_loop_filter_row_normal_safe(
             let uv_stride_usize = post_uvstride as usize;
 
             if mb_col > 0 as ::core::ffi::c_int {
+                let mb_idx = mb_row * mb_cols + mb_col;
+
                 crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(
                     y_slice,
                     cur_y_offset,
@@ -359,6 +363,7 @@ pub fn vp8_loop_filter_row_normal_safe(
                     thresh_slice,
                     1,
                 );
+
             }
             
             if skip_lf == 0 {
@@ -411,6 +416,7 @@ pub fn vp8_loop_filter_row_normal_safe(
             }
             
             if mb_row > 0 as ::core::ffi::c_int {
+
                 crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(
                     y_slice,
                     cur_y_offset,
@@ -438,9 +444,11 @@ pub fn vp8_loop_filter_row_normal_safe(
                     thresh_slice,
                     1,
                 );
+
             }
             
             if skip_lf == 0 {
+
                 crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
                     y_slice,
                     cur_y_offset + 4 * y_stride_usize,
@@ -450,6 +458,7 @@ pub fn vp8_loop_filter_row_normal_safe(
                     thresh_slice,
                     2,
                 );
+
                 crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
                     y_slice,
                     cur_y_offset + 8 * y_stride_usize,

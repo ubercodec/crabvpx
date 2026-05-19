@@ -78,11 +78,20 @@ impl Drop for LibVpxOracleDecoder {
 #[cfg(not(feature = "rust"))]
 impl VideoDecoder for LibVpxOracleDecoder {
     fn init(&mut self) -> Result<(), String> {
+        let threads = std::env::var("CRABVPX_THREADS")
+            .ok()
+            .and_then(|s| s.parse::<u32>().ok())
+            .unwrap_or(1);
+        let cfg = ffi::vpx_codec_dec_cfg_t {
+            threads,
+            w: 0,
+            h: 0,
+        };
         let res = unsafe {
             ffi::vpx_codec_dec_init_ver(
                 &mut self.ctx,
                 ffi::vpx_codec_vp8_dx(),
-                std::ptr::null(),
+                &cfg,
                 0,
                 ffi::VPX_DECODER_ABI_VERSION as i32,
             )
@@ -136,6 +145,7 @@ impl VideoDecoder for LibVpxOracleDecoder {
 #[cfg(feature = "rust")]
 pub struct CrabVpxDecoder {
     inner: crabvpx::api::Vp8Decoder,
+    frame_counter: usize,
 }
 
 #[cfg(feature = "rust")]
@@ -143,6 +153,7 @@ impl CrabVpxDecoder {
     pub fn new() -> Self {
         Self {
             inner: crabvpx::api::Vp8Decoder::new(),
+            frame_counter: 0,
         }
     }
 }
@@ -162,12 +173,33 @@ impl VideoDecoder for CrabVpxDecoder {
     fn get_frame(&mut self) -> Result<Option<DecodedFrame>, String> {
         use crabvpx::api::Decoder;
         match self.inner.get_frame()? {
-            Some(img) => Ok(Some(DecodedFrame {
-                md5: img.md5(),
-                width: img.width(),
-                height: img.height(),
-                bit_depth: img.bit_depth(),
-            })),
+            Some(img) => {
+                if std::env::var("CRABVPX_DUMP").is_ok() && self.frame_counter == 1 {
+                    let threads = std::env::var("CRABVPX_THREADS").unwrap_or_else(|_| "1".to_string());
+                    let path = format!("/usr/local/google/home/liberato/.gemini/jetski/brain/b80e2e3b-61ce-4410-9009-62a1230d94f6/scratch/dump_threads_{}.yuv", threads);
+                    let mut f = std::fs::File::create(&path).map_err(|e| e.to_string())?;
+                    use std::io::Write;
+                    
+                    if let Some(y) = img.plane(crabvpx::api::Plane::Y) {
+                        f.write_all(y).map_err(|e| e.to_string())?;
+                    }
+                    if let Some(u) = img.plane(crabvpx::api::Plane::U) {
+                        f.write_all(u).map_err(|e| e.to_string())?;
+                    }
+                    if let Some(v) = img.plane(crabvpx::api::Plane::V) {
+                        f.write_all(v).map_err(|e| e.to_string())?;
+                    }
+                    println!("DEBUG: Dumped Frame 1 to {}", path);
+                }
+                self.frame_counter += 1;
+                
+                Ok(Some(DecodedFrame {
+                    md5: img.md5(),
+                    width: img.width(),
+                    height: img.height(),
+                    bit_depth: img.bit_depth(),
+                }))
+            }
             None => Ok(None),
         }
     }

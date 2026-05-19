@@ -332,6 +332,7 @@ fn decode_macroblock(
             (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
     }
     mode = xd.mode_info().mbmi.mode as MB_PREDICTION_MODE;
+
     if xd.segmentation_enabled != 0 {
         vp8_mb_init_dequantizer(common, xd);
     }
@@ -396,6 +397,7 @@ fn decode_macroblock(
                 yleft[i] = dst_y_slice[y_buffer_offset - 1 + i * left_stride_y];
             }
             
+
             let ypred = &mut dst_y_slice[y_buffer_offset .. y_buffer_offset + 15 * dst_stride_us + 16];
 
             crate::vp8::common::reconintra::vp8_build_intra_predictors_mby_safe(
@@ -411,7 +413,7 @@ fn decode_macroblock(
             if xd.mode_info().mbmi.mb_skip_coeff != 0 {
                 xd.eobs.fill(0);
             }
-            intra_prediction_down_copy(xd);
+            intra_prediction_down_copy(xd, None);
             
             let b_modes = {
                 let mi = xd.mode_info();
@@ -429,7 +431,28 @@ fn decode_macroblock(
                 let b_offset = xd.block[i as usize].offset;
                 let b_mode = b_modes[i as usize];
                 let dst_offset = y_buffer_offset + b_offset as usize;
-                vp8_intra4x4_predict_safe(dst_y_slice, dst_offset, dst_stride as usize, b_mode);
+                
+                let above_idx = dst_offset - dst_stride as usize;
+                let yleft_idx = dst_offset - 1;
+                
+                let mut above_buf = [0u8; 8];
+                above_buf.copy_from_slice(&dst_y_slice[above_idx .. above_idx + 8]);
+                let top_left_val = dst_y_slice[above_idx - 1];
+                
+                let mut left_buf = [0u8; 4];
+                for r in 0..4 {
+                    left_buf[r] = dst_y_slice[yleft_idx + r * dst_stride as usize];
+                }
+                
+                vp8_intra4x4_predict_safe(
+                    dst_y_slice,
+                    dst_offset,
+                    dst_stride as usize,
+                    b_mode,
+                    &above_buf,
+                    &left_buf,
+                    top_left_val,
+                );
                 if xd.eobs[i as usize] != 0 {
                     let block_idx = i as usize;
                     let q_offset = block_idx * 16;
@@ -470,6 +493,7 @@ fn decode_macroblock(
     } else {
         crate::vp8::common::reconinter::vp8_build_inter_predictors_mb(xd);
     }
+
     if xd.mode_info().mbmi.mb_skip_coeff == 0 {
         if mode as ::core::ffi::c_uint != B_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
             let dq_y: &[i16; 16] = if mode as ::core::ffi::c_uint != SPLITMV as ::core::ffi::c_int as ::core::ffi::c_uint {
@@ -527,6 +551,7 @@ fn decode_macroblock(
             eobs_uv,
         );
     }
+
 }
 fn get_delta_q(
     bc: &mut SafeBoolDecoder,

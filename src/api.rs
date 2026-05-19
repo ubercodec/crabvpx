@@ -146,11 +146,20 @@ impl Decoder for Vp8Decoder {
     type Error = String;
 
     fn init(&mut self) -> Result<(), Self::Error> {
+        let threads = std::env::var("CRABVPX_THREADS")
+            .ok()
+            .and_then(|s| s.parse::<u32>().ok())
+            .unwrap_or(1);
+        let cfg = crate::vpx::src::vpx_decoder::vpx_codec_dec_cfg {
+            threads,
+            w: 0,
+            h: 0,
+        };
         let res = unsafe {
             vpx_codec_dec_init_ver(
                 &raw mut self.ctx,
                 vpx_codec_vp8_dx() as *const _,
-                core::ptr::null(),
+                &cfg as *const _ as *const _,
                 0,
                 VPX_DECODER_ABI_VERSION,
             )
