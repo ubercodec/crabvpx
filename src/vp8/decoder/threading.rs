@@ -171,6 +171,13 @@ fn vp8dx_bool_error(br: &BOOL_DECODER) -> ::core::ffi::c_int {
     }
     return 0 as ::core::ffi::c_int;
 }
+#[inline]
+fn vp8dx_safe_bool_error(br: &crate::vp8::decoder::dboolhuff::SafeBoolDecoder) -> ::core::ffi::c_int {
+    if br.count > VP8_BD_VALUE_SIZE && br.count < VP8_LOTS_OF_BITS {
+        return 1 as ::core::ffi::c_int;
+    }
+    return 0 as ::core::ffi::c_int;
+}
 pub const SYNC_POLICY_FIFO: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
 #[inline]
 fn vpx_atomic_init(
@@ -247,7 +254,7 @@ fn setup_decoding_thread_data(
 }
 fn mt_decode_macroblock(
     common: &VP8_COMMON,
-    mbc: &mut [vp8_reader; 9],
+    safe_decoder: &mut crate::vp8::decoder::dboolhuff::SafeBoolDecoder,
     xd: &mut MACROBLOCKD,
     mb_idx: ::core::ffi::c_uint,
     above_y: Option<&[u8]>,
@@ -265,14 +272,12 @@ fn mt_decode_macroblock(
         let is_4x4 = xd.mode_info(mip).mbmi.is_4x4 != 0;
         let (above, left) = xd.contexts_mut(common.above_context_ptr(), left_context);
         vp8_reset_mb_tokens_context(above, left, is_4x4);
-    } else if vp8dx_bool_error(&mbc[xd.current_bc_idx]) == 0 {
+    } else if vp8dx_safe_bool_error(safe_decoder) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
         let is_4x4 = xd.mode_info(mip).mbmi.is_4x4 != 0;
-        let bc_idx = xd.current_bc_idx;
         let (above, left, qcoeff, eobs) = xd.decode_tokens_inputs_mut(common.above_context_ptr(), left_context);
-        let mut safe_decoder = crate::vp8::decoder::dboolhuff::SafeBoolDecoder::from_bool_decoder(&mbc[bc_idx]);
         eobtotal = vp8_decode_mb_tokens(
-            &mut safe_decoder,
+            safe_decoder,
             &common.fc,
             qcoeff,
             eobs,
@@ -280,7 +285,6 @@ fn mt_decode_macroblock(
             left,
             is_4x4,
         );
-        safe_decoder.update_bool_decoder(&mut mbc[bc_idx]);
         xd.mode_info_mut(common.mip_ptr()).mbmi.mb_skip_coeff =
             (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
     }
@@ -616,6 +620,8 @@ fn mt_decode_mb_rows(
         let mut lfi_n: *mut loop_filter_info_n = &raw mut (*pc).lf_info;
         last_mb_row = mb_row;
         (*xd).current_bc_idx = (mb_row % num_part) as usize;
+        let bc_idx = (*xd).current_bc_idx;
+        let mut safe_decoder = crate::vp8::decoder::dboolhuff::SafeBoolDecoder::from_bool_decoder(&(*pbi).mbc[bc_idx]);
         let mt_current_mb_col = pbi.mt_current_mb_col.as_ref().unwrap();
         let last_row_current_mb_col: &vpx_atomic_int = if mb_row > 0 {
             &mt_current_mb_col[(mb_row - 1) as usize]
@@ -769,7 +775,7 @@ fn mt_decode_mb_rows(
             let mb_idx = (mb_row * (*pc).mb_cols + mb_col) as ::core::ffi::c_uint;
             mt_decode_macroblock(
                 &pbi.common,
-                &mut pbi.mbc,
+                &mut safe_decoder,
                 xd,
                 mb_idx,
                 above_y,
@@ -781,7 +787,7 @@ fn mt_decode_mb_rows(
                 &mut left_context,
             );
             (*xd).left_available = 1 as ::core::ffi::c_int;
-            (*xd).corrupted |= vp8dx_bool_error(&(*pbi).mbc[(*xd).current_bc_idx]);
+            (*xd).corrupted |= vp8dx_safe_bool_error(&safe_decoder);
             (*xd).recon_above[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
                 [0 as ::core::ffi::c_int as usize]
                 .offset(16 as ::core::ffi::c_int as isize);
@@ -1002,6 +1008,7 @@ fn mt_decode_mb_rows(
             (*xd).above_context_idx += 1;
             mb_col += 1;
         }
+        safe_decoder.update_bool_decoder(&mut (*pbi).mbc[bc_idx]);
         if (*pbi).common.filter_level != 0 {
             if mb_row != (*pc).mb_rows - 1 as ::core::ffi::c_int {
                 let mut lasty: ::core::ffi::c_int = (*yv12_fb_lst).y_width + VP8BORDERINPIXELS;
