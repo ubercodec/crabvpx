@@ -1,35 +1,37 @@
 pub type uint32_t = u32;
 pub type uint8_t = u8;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 #[repr(C)]
 pub struct MV {
     pub row: ::core::ffi::c_short,
     pub col: ::core::ffi::c_short,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 #[repr(C)]
-pub union int_mv {
-    pub as_int: uint32_t,
+pub struct int_mv {
     pub as_mv: MV,
 }
 impl int_mv {
     #[inline]
     pub fn as_int(&self) -> uint32_t {
-        unsafe { self.as_int }
+        let row_u16 = self.as_mv.row as u16;
+        let col_u16 = self.as_mv.col as u16;
+        ((col_u16 as u32) << 16) | (row_u16 as u32)
     }
     #[inline]
     pub fn set_as_int(&mut self, val: uint32_t) {
-        *self = int_mv { as_int: val };
+        self.as_mv.row = (val & 0xffff) as i16;
+        self.as_mv.col = ((val >> 16) & 0xffff) as i16;
     }
     #[inline]
     pub fn as_mv(&self) -> MV {
-        unsafe { self.as_mv }
+        self.as_mv
     }
     #[inline]
     pub fn as_mv_mut(&mut self) -> &mut MV {
-        unsafe { &mut self.as_mv }
+        &mut self.as_mv
     }
 }
 
@@ -75,31 +77,27 @@ pub const B_VE_PRED: B_PREDICTION_MODE = 2;
 pub const B_TM_PRED: B_PREDICTION_MODE = 1;
 pub const B_DC_PRED: B_PREDICTION_MODE = 0;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 #[repr(C)]
-pub union b_mode_info {
-    pub as_mode: B_PREDICTION_MODE,
+pub struct b_mode_info {
     pub mv: int_mv,
 }
 impl b_mode_info {
     #[inline]
     pub fn mode(&self) -> B_PREDICTION_MODE {
-        unsafe { self.as_mode }
+        self.mv.as_int()
+    }
+    #[inline]
+    pub fn set_mode(&mut self, mode: B_PREDICTION_MODE) {
+        self.mv.set_as_int(mode);
     }
     #[inline]
     pub fn mv(&self) -> int_mv {
-        unsafe { self.mv }
+        self.mv
     }
     #[inline]
     pub fn mv_mut(&mut self) -> &mut int_mv {
-        unsafe { &mut self.mv }
-    }
-}
-
-impl Default for b_mode_info {
-    #[inline]
-    fn default() -> Self {
-        b_mode_info { as_mode: 0 }
+        &mut self.mv
     }
 }
 
@@ -138,7 +136,7 @@ impl Default for MB_MODE_INFO {
             uv_mode: 0,
             ref_frame: 0,
             is_4x4: 0,
-            mv: int_mv { as_int: 0 },
+            mv: int_mv::default(),
             partitioning: 0,
             mb_skip_coeff: 0,
             need_to_clamp_mvs: 0,
@@ -173,7 +171,7 @@ impl Default for modeinfo {
     fn default() -> Self {
         modeinfo {
             mbmi: MB_MODE_INFO::default(),
-            bmi: [b_mode_info { as_mode: 0 }; 16],
+            bmi: [b_mode_info::default(); 16],
         }
     }
 }

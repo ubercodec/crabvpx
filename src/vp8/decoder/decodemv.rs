@@ -209,10 +209,10 @@ fn read_kf_modes(
         for i in 0..16usize {
             let A: B_PREDICTION_MODE = above_block_mode(mip_slice, cur_idx, mis, i) as B_PREDICTION_MODE;
             let L: B_PREDICTION_MODE = left_block_mode(mip_slice, cur_idx, i) as B_PREDICTION_MODE;
-            mip_slice[cur_idx].bmi[i].as_mode = read_bmode(
+            mip_slice[cur_idx].bmi[i].set_mode(read_bmode(
                 safe_decoder,
                 &vp8_kf_bmode_prob[A as usize][L as usize],
-            );
+            ));
         }
     }
     mip_slice[cur_idx].mbmi.uv_mode =
@@ -440,32 +440,32 @@ fn decode_split_mv(
         }
     }
     loop {
-        let mut leftmv: int_mv = int_mv { as_int: 0 };
-        let mut abovemv: int_mv = int_mv { as_int: 0 };
-        let mut blockmv: int_mv = int_mv { as_int: 0 };
+        let mut leftmv: int_mv = int_mv::default();
+        let mut abovemv: int_mv = int_mv::default();
+        let mut blockmv: int_mv = int_mv::default();
         let k = vp8_mbsplit_offset[s as usize][j as usize] as ::core::ffi::c_int;
         if k & 3 == 0 {
             if left_mb.mbmi.mode as ::core::ffi::c_int != SPLITMV as ::core::ffi::c_int {
-                leftmv.as_int = left_mb.mbmi.mv.as_int();
+                leftmv = left_mb.mbmi.mv;
             } else {
-                leftmv.as_int = left_mb.bmi[k as usize + 3].mv().as_int();
+                leftmv = left_mb.bmi[k as usize + 3].mv();
             }
         } else {
-            leftmv.as_int = mi.bmi[k as usize - 1].mv().as_int();
+            leftmv = mi.bmi[k as usize - 1].mv();
         }
         if k >> 2 == 0 {
             if above_mb.mbmi.mode as ::core::ffi::c_int != SPLITMV as ::core::ffi::c_int {
-                abovemv.as_int = above_mb.mbmi.mv.as_int();
+                abovemv = above_mb.mbmi.mv;
             } else {
-                abovemv.as_int = above_mb.bmi[k as usize + 12].mv().as_int();
+                abovemv = above_mb.bmi[k as usize + 12].mv();
             }
         } else {
-            abovemv.as_int = mi.bmi[k as usize - 4].mv().as_int();
+            abovemv = mi.bmi[k as usize - 4].mv();
         }
         let prob = get_sub_mv_ref_prob(leftmv.as_int(), abovemv.as_int());
         if safe_decoder.read_bool(prob[0] as i32) != 0 {
             if safe_decoder.read_bool(prob[1] as i32) != 0 {
-                blockmv.as_int = 0;
+                blockmv = int_mv::default();
                 if safe_decoder.read_bool(prob[2] as i32) != 0 {
                     blockmv.as_mv_mut().row = (read_mvcomponent(safe_decoder, &mvc[0]) * 2) as ::core::ffi::c_short;
                     blockmv.as_mv_mut().row = (blockmv.as_mv().row as ::core::ffi::c_int + best_mv.as_mv().row as ::core::ffi::c_int) as ::core::ffi::c_short;
@@ -473,10 +473,10 @@ fn decode_split_mv(
                     blockmv.as_mv_mut().col = (blockmv.as_mv().col as ::core::ffi::c_int + best_mv.as_mv().col as ::core::ffi::c_int) as ::core::ffi::c_short;
                 }
             } else {
-                blockmv.as_int = abovemv.as_int();
+                blockmv = abovemv;
             }
         } else {
-            blockmv.as_int = leftmv.as_int();
+            blockmv = leftmv;
         }
         mi.mbmi.need_to_clamp_mvs = (mi.mbmi.need_to_clamp_mvs as ::core::ffi::c_uint
             | vp8_check_mv_bounds(
@@ -490,7 +490,7 @@ fn decode_split_mv(
         let offset_start = (j as usize) * fill_count;
         let fill_offsets = &mbsplit_fill_offset[s as usize][offset_start..offset_start + fill_count];
         for &idx in fill_offsets {
-            mi.bmi[idx as usize].mv.as_int = blockmv.as_int();
+            mi.bmi[idx as usize].mv = blockmv;
         }
         j += 1;
         if !(j < num_p) {
@@ -517,7 +517,7 @@ fn read_mb_modes_mv(
     if cur_mi.mbmi.ref_frame != 0 {
         let mut cnt: [::core::ffi::c_int; 4] = [0; 4];
         let mut cntx_idx: usize = 0;
-        let mut near_mvs: [int_mv; 4] = [int_mv { as_int: 0 }; 4];
+        let mut near_mvs: [int_mv; 4] = [int_mv::default(); 4];
         let mut nmv_idx: usize = 0;
 
         cur_mi.mbmi.need_to_clamp_mvs = 0;
@@ -528,7 +528,7 @@ fn read_mb_modes_mv(
         if above_mi.mbmi.ref_frame as ::core::ffi::c_int != INTRA_FRAME as ::core::ffi::c_int {
             if above_mi.mbmi.mv.as_int() != 0 {
                 nmv_idx += 1;
-                near_mvs[nmv_idx].as_int = above_mi.mbmi.mv.as_int();
+                near_mvs[nmv_idx] = above_mi.mbmi.mv;
                 mv_bias(
                     ref_frame_sign_bias[above_mi.mbmi.ref_frame as usize],
                     cur_mi.mbmi.ref_frame as ::core::ffi::c_int,
@@ -541,8 +541,8 @@ fn read_mb_modes_mv(
         }
         if left_mi.mbmi.ref_frame as ::core::ffi::c_int != INTRA_FRAME as ::core::ffi::c_int {
             if left_mi.mbmi.mv.as_int() != 0 {
-                let mut this_mv: int_mv = int_mv { as_int: 0 };
-                this_mv.as_int = left_mi.mbmi.mv.as_int();
+                let mut this_mv: int_mv = int_mv::default();
+                this_mv = left_mi.mbmi.mv;
                 mv_bias(
                     ref_frame_sign_bias[left_mi.mbmi.ref_frame as usize],
                     cur_mi.mbmi.ref_frame as ::core::ffi::c_int,
@@ -551,7 +551,7 @@ fn read_mb_modes_mv(
                 );
                 if this_mv.as_int() != near_mvs[nmv_idx].as_int() {
                     nmv_idx += 1;
-                    near_mvs[nmv_idx].as_int = this_mv.as_int();
+                    near_mvs[nmv_idx] = this_mv;
                     cntx_idx += 1;
                 }
                 cnt[cntx_idx] += 2;
@@ -561,8 +561,8 @@ fn read_mb_modes_mv(
         }
         if aboveleft_mi.mbmi.ref_frame as ::core::ffi::c_int != INTRA_FRAME as ::core::ffi::c_int {
             if aboveleft_mi.mbmi.mv.as_int() != 0 {
-                let mut this_mv_0: int_mv = int_mv { as_int: 0 };
-                this_mv_0.as_int = aboveleft_mi.mbmi.mv.as_int();
+                let mut this_mv_0: int_mv = int_mv::default();
+                this_mv_0 = aboveleft_mi.mbmi.mv;
                 mv_bias(
                     ref_frame_sign_bias[aboveleft_mi.mbmi.ref_frame as usize],
                     cur_mi.mbmi.ref_frame as ::core::ffi::c_int,
@@ -571,7 +571,7 @@ fn read_mb_modes_mv(
                 );
                 if this_mv_0.as_int() != near_mvs[nmv_idx].as_int() {
                     nmv_idx += 1;
-                    near_mvs[nmv_idx].as_int = this_mv_0.as_int();
+                    near_mvs[nmv_idx] = this_mv_0;
                     cntx_idx += 1;
                 }
                 cnt[cntx_idx] += 1;
@@ -588,9 +588,7 @@ fn read_mb_modes_mv(
                 let tmp_cnt = cnt[CNT_NEAREST as usize];
                 cnt[CNT_NEAREST as usize] = cnt[CNT_NEAR as usize];
                 cnt[CNT_NEAR as usize] = tmp_cnt;
-                let tmp_mv = near_mvs[CNT_NEAREST as usize].as_int();
-                near_mvs[CNT_NEAREST as usize].as_int = near_mvs[CNT_NEAR as usize].as_int();
-                near_mvs[CNT_NEAR as usize].as_int = tmp_mv;
+                near_mvs.swap(CNT_NEAREST as usize, CNT_NEAR as usize);
             }
             if safe_decoder.read_bool(
                 vp8_mode_contexts[cnt[CNT_NEAREST as usize] as usize][1] as i32,
@@ -627,7 +625,7 @@ fn read_mb_modes_mv(
                             mb_to_top_edge,
                             mb_to_bottom_edge,
                         );
-                        cur_mi.mbmi.mv.as_int = cur_mi.bmi[15].mv().as_int();
+                        cur_mi.mbmi.mv = cur_mi.bmi[15].mv();
                         cur_mi.mbmi.mode = SPLITMV as uint8_t;
                         cur_mi.mbmi.is_4x4 = 1;
                     } else {
@@ -645,25 +643,25 @@ fn read_mb_modes_mv(
                     }
                 } else {
                     cur_mi.mbmi.mode = NEARMV as uint8_t;
-                    cur_mi.mbmi.mv.as_int = near_mvs[CNT_NEAR as usize].as_int();
+                    cur_mi.mbmi.mv = near_mvs[CNT_NEAR as usize];
                     vp8_clamp_mv2(cur_mi.mbmi.mv.as_mv_mut(), &pbi.mb);
                 }
             } else {
                 cur_mi.mbmi.mode = NEARESTMV as uint8_t;
-                cur_mi.mbmi.mv.as_int = near_mvs[CNT_NEAREST as usize].as_int();
+                cur_mi.mbmi.mv = near_mvs[CNT_NEAREST as usize];
                 vp8_clamp_mv2(cur_mi.mbmi.mv.as_mv_mut(), &pbi.mb);
             }
         } else {
             cur_mi.mbmi.mode = ZEROMV as uint8_t;
-            cur_mi.mbmi.mv.as_int = 0;
+            cur_mi.mbmi.mv = int_mv::default();
         }
     } else {
-        cur_mi.mbmi.mv.as_int = 0;
+        cur_mi.mbmi.mv = int_mv::default();
         cur_mi.mbmi.mode = read_ymode(safe_decoder, &pbi.common.fc.ymode_prob) as uint8_t;
         if cur_mi.mbmi.mode as ::core::ffi::c_int == B_PRED as ::core::ffi::c_int {
             cur_mi.mbmi.is_4x4 = 1;
             for j in 0..16 {
-                cur_mi.bmi[j].as_mode = read_bmode(safe_decoder, &pbi.common.fc.bmode_prob);
+                cur_mi.bmi[j].set_mode(read_bmode(safe_decoder, &pbi.common.fc.bmode_prob));
             }
         }
         cur_mi.mbmi.uv_mode = read_uv_mode(safe_decoder, &pbi.common.fc.uv_mode_prob) as uint8_t;

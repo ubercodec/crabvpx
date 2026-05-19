@@ -149,7 +149,7 @@ pub fn vp8_find_near_mvs_safe(
     refframe: ::core::ffi::c_int,
     ref_frame_sign_bias: &[::core::ffi::c_int; 4],
 ) {
-    let mut near_mvs: [int_mv; 4] = [int_mv { as_int: 0 }; 4];
+    let mut near_mvs: [int_mv; 4] = [int_mv::default(); 4];
     near_mv_ref_cnts.fill(0);
 
     let mut nmv_idx = 0;
@@ -158,7 +158,7 @@ pub fn vp8_find_near_mvs_safe(
     if above.mbmi.ref_frame as ::core::ffi::c_int != INTRA_FRAME as ::core::ffi::c_int {
         if above.mbmi.mv.as_int() != 0 {
             nmv_idx += 1;
-            near_mvs[nmv_idx].set_as_int(above.mbmi.mv.as_int());
+            near_mvs[nmv_idx] = above.mbmi.mv;
             mv_bias(
                 ref_frame_sign_bias[above.mbmi.ref_frame as usize],
                 refframe,
@@ -172,7 +172,7 @@ pub fn vp8_find_near_mvs_safe(
 
     if left.mbmi.ref_frame as ::core::ffi::c_int != INTRA_FRAME as ::core::ffi::c_int {
         if left.mbmi.mv.as_int() != 0 {
-            let mut this_mv = int_mv { as_int: left.mbmi.mv.as_int() };
+            let mut this_mv = left.mbmi.mv;
             mv_bias(
                 ref_frame_sign_bias[left.mbmi.ref_frame as usize],
                 refframe,
@@ -181,7 +181,7 @@ pub fn vp8_find_near_mvs_safe(
             );
             if this_mv.as_int() != near_mvs[nmv_idx].as_int() {
                 nmv_idx += 1;
-                near_mvs[nmv_idx].set_as_int(this_mv.as_int());
+                near_mvs[nmv_idx] = this_mv;
                 cntx_idx += 1;
             }
             near_mv_ref_cnts[cntx_idx] += 2 as ::core::ffi::c_int;
@@ -192,7 +192,7 @@ pub fn vp8_find_near_mvs_safe(
 
     if aboveleft.mbmi.ref_frame as ::core::ffi::c_int != INTRA_FRAME as ::core::ffi::c_int {
         if aboveleft.mbmi.mv.as_int() != 0 {
-            let mut this_mv_0 = int_mv { as_int: aboveleft.mbmi.mv.as_int() };
+            let mut this_mv_0 = aboveleft.mbmi.mv;
             mv_bias(
                 ref_frame_sign_bias[aboveleft.mbmi.ref_frame as usize],
                 refframe,
@@ -201,7 +201,7 @@ pub fn vp8_find_near_mvs_safe(
             );
             if this_mv_0.as_int() != near_mvs[nmv_idx].as_int() {
                 nmv_idx += 1;
-                near_mvs[nmv_idx].set_as_int(this_mv_0.as_int());
+                near_mvs[nmv_idx] = this_mv_0;
                 cntx_idx += 1;
             }
             near_mv_ref_cnts[cntx_idx] += 1 as ::core::ffi::c_int;
