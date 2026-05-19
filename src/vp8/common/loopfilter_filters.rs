@@ -99,52 +99,60 @@ fn vp8_filter(
     u = vp8_signed_char_clamp(ps1 as i32 + filter_value as i32);
     *op1 = (u as u8 ^ 0x80);
 }
-unsafe extern "C" fn loop_filter_horizontal_edge_c(
-    mut s: *mut ::core::ffi::c_uchar,
-    mut p: ::core::ffi::c_int,
-    mut blimit: *const ::core::ffi::c_uchar,
-    mut limit: *const ::core::ffi::c_uchar,
-    mut thresh: *const ::core::ffi::c_uchar,
-    mut count: ::core::ffi::c_int,
-) { unsafe {
-    let mut hev: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    let mut mask: ::core::ffi::c_schar = 0 as ::core::ffi::c_schar;
-    let mut i: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    loop {
+fn loop_filter_horizontal_edge_safe(
+    s: &mut [u8],
+    s_offset: usize,
+    p: usize,
+    blimit: &[u8],
+    limit: &[u8],
+    thresh: &[u8],
+    count: usize,
+) {
+    let mut hev: uc = 0;
+    let mut mask: i8 = 0;
+    let count_8 = count * 8;
+    for i in 0..count_8 {
+        let idx = s_offset + i;
         mask = vp8_filter_mask(
-            *limit.offset(0 as ::core::ffi::c_int as isize) as uc,
-            *blimit.offset(0 as ::core::ffi::c_int as isize) as uc,
-            *s.offset((-(4 as ::core::ffi::c_int) * p) as isize) as uc,
-            *s.offset((-(3 as ::core::ffi::c_int) * p) as isize) as uc,
-            *s.offset((-(2 as ::core::ffi::c_int) * p) as isize) as uc,
-            *s.offset((-(1 as ::core::ffi::c_int) * p) as isize) as uc,
-            *s.offset((0 as ::core::ffi::c_int * p) as isize) as uc,
-            *s.offset((1 as ::core::ffi::c_int * p) as isize) as uc,
-            *s.offset((2 as ::core::ffi::c_int * p) as isize) as uc,
-            *s.offset((3 as ::core::ffi::c_int * p) as isize) as uc,
+            limit[0],
+            blimit[0],
+            s[idx - 4 * p],
+            s[idx - 3 * p],
+            s[idx - 2 * p],
+            s[idx - p],
+            s[idx],
+            s[idx + p],
+            s[idx + 2 * p],
+            s[idx + 3 * p],
         );
         hev = vp8_hevmask(
-            *thresh.offset(0 as ::core::ffi::c_int as isize) as uc,
-            *s.offset((-(2 as ::core::ffi::c_int) * p) as isize) as uc,
-            *s.offset((-(1 as ::core::ffi::c_int) * p) as isize) as uc,
-            *s.offset((0 as ::core::ffi::c_int * p) as isize) as uc,
-            *s.offset((1 as ::core::ffi::c_int * p) as isize) as uc,
-        ) as ::core::ffi::c_int;
+            thresh[0],
+            s[idx - 2 * p],
+            s[idx - p],
+            s[idx],
+            s[idx + p],
+        ) as uc;
+        
+        let mut op1_val = s[idx - 2 * p];
+        let mut op0_val = s[idx - p];
+        let mut oq0_val = s[idx];
+        let mut oq1_val = s[idx + p];
+        
         vp8_filter(
             mask,
-            hev as uc,
-            &mut *s.offset(-((2 * p) as isize)),
-            &mut *s.offset(-((1 * p) as isize)),
-            &mut *s,
-            &mut *s.offset(((1 * p) as isize)),
+            hev,
+            &mut op1_val,
+            &mut op0_val,
+            &mut oq0_val,
+            &mut oq1_val,
         );
-        s = s.offset(1);
-        i += 1;
-        if !(i < count * 8 as ::core::ffi::c_int) {
-            break;
-        }
+        
+        s[idx - 2 * p] = op1_val;
+        s[idx - p] = op0_val;
+        s[idx] = oq0_val;
+        s[idx + p] = oq1_val;
     }
-}}
+}
 unsafe extern "C" fn loop_filter_vertical_edge_c(
     mut s: *mut ::core::ffi::c_uchar,
     mut p: ::core::ffi::c_int,
@@ -548,48 +556,64 @@ pub unsafe extern "C" fn vp8_loop_filter_bh_c(
     mut uv_stride: ::core::ffi::c_int,
     mut lfi: *mut loop_filter_info,
 ) { unsafe {
-    loop_filter_horizontal_edge_c(
-        y_ptr.offset((4 as ::core::ffi::c_int * y_stride) as isize),
-        y_stride,
-        (*lfi).blim,
-        (*lfi).lim,
-        (*lfi).hev_thr,
-        2 as ::core::ffi::c_int,
+    let blimit_slice = core::slice::from_raw_parts((*lfi).blim, 1);
+    let limit_slice = core::slice::from_raw_parts((*lfi).lim, 1);
+    let thresh_slice = core::slice::from_raw_parts((*lfi).hev_thr, 1);
+
+    let y_len = 16 * y_stride as usize;
+    let y_slice = core::slice::from_raw_parts_mut(y_ptr, y_len);
+
+    loop_filter_horizontal_edge_safe(
+        y_slice,
+        (4 * y_stride) as usize,
+        y_stride as usize,
+        blimit_slice,
+        limit_slice,
+        thresh_slice,
+        2,
     );
-    loop_filter_horizontal_edge_c(
-        y_ptr.offset((8 as ::core::ffi::c_int * y_stride) as isize),
-        y_stride,
-        (*lfi).blim,
-        (*lfi).lim,
-        (*lfi).hev_thr,
-        2 as ::core::ffi::c_int,
+    loop_filter_horizontal_edge_safe(
+        y_slice,
+        (8 * y_stride) as usize,
+        y_stride as usize,
+        blimit_slice,
+        limit_slice,
+        thresh_slice,
+        2,
     );
-    loop_filter_horizontal_edge_c(
-        y_ptr.offset((12 as ::core::ffi::c_int * y_stride) as isize),
-        y_stride,
-        (*lfi).blim,
-        (*lfi).lim,
-        (*lfi).hev_thr,
-        2 as ::core::ffi::c_int,
+    loop_filter_horizontal_edge_safe(
+        y_slice,
+        (12 * y_stride) as usize,
+        y_stride as usize,
+        blimit_slice,
+        limit_slice,
+        thresh_slice,
+        2,
     );
+
+    let uv_len = 8 * uv_stride as usize;
     if !u_ptr.is_null() {
-        loop_filter_horizontal_edge_c(
-            u_ptr.offset((4 as ::core::ffi::c_int * uv_stride) as isize),
-            uv_stride,
-            (*lfi).blim,
-            (*lfi).lim,
-            (*lfi).hev_thr,
-            1 as ::core::ffi::c_int,
+        let u_slice = core::slice::from_raw_parts_mut(u_ptr, uv_len);
+        loop_filter_horizontal_edge_safe(
+            u_slice,
+            (4 * uv_stride) as usize,
+            uv_stride as usize,
+            blimit_slice,
+            limit_slice,
+            thresh_slice,
+            1,
         );
     }
     if !v_ptr.is_null() {
-        loop_filter_horizontal_edge_c(
-            v_ptr.offset((4 as ::core::ffi::c_int * uv_stride) as isize),
-            uv_stride,
-            (*lfi).blim,
-            (*lfi).lim,
-            (*lfi).hev_thr,
-            1 as ::core::ffi::c_int,
+        let v_slice = core::slice::from_raw_parts_mut(v_ptr, uv_len);
+        loop_filter_horizontal_edge_safe(
+            v_slice,
+            (4 * uv_stride) as usize,
+            uv_stride as usize,
+            blimit_slice,
+            limit_slice,
+            thresh_slice,
+            1,
         );
     }
 }}
