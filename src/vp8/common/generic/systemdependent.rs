@@ -1,6 +1,4 @@
-unsafe extern "C" {
-    fn sysconf(_: ::core::ffi::c_int) -> ::core::ffi::c_long;
-}
+
 pub use crate::vp8::common::types::*;
 pub type uint32_t = u32;
 
@@ -48,17 +46,10 @@ pub const VPX_CS_BT_601: vpx_color_space = 1;
 pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
 pub type size_t = __darwin_size_t;
 pub type __darwin_size_t = usize;
-pub const _SC_NPROCESSORS_ONLN: ::core::ffi::c_int = 58 as ::core::ffi::c_int;
 fn get_cpu_count() -> ::core::ffi::c_int {
-    let mut core_count: ::core::ffi::c_int = 16 as ::core::ffi::c_int;
-    unsafe {
-        core_count = sysconf(_SC_NPROCESSORS_ONLN) as ::core::ffi::c_int;
-    }
-    if core_count > 0 as ::core::ffi::c_int {
-        core_count
-    } else {
-        1 as ::core::ffi::c_int
-    }
+    std::thread::available_parallelism()
+        .map(|n| n.get() as ::core::ffi::c_int)
+        .unwrap_or(1)
 }
 pub fn vp8_machine_specific_config(ctx: &mut VP8_COMMON) {
     ctx.processor_core_count = get_cpu_count();
