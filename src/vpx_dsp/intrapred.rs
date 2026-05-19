@@ -1,30 +1,10 @@
-unsafe extern "C" {
-    fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
-        __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
-    fn memset(
-        __b: *mut ::core::ffi::c_void,
-        __c: ::core::ffi::c_int,
-        __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
-}
+
 pub type __darwin_ptrdiff_t = isize;
 pub type __darwin_size_t = usize;
 pub type ptrdiff_t = __darwin_ptrdiff_t;
 pub type size_t = __darwin_size_t;
 pub type uint8_t = u8;
-#[inline]
-unsafe extern "C" fn clip_pixel(mut val: ::core::ffi::c_int) -> uint8_t {
-    return (if val > 255 as ::core::ffi::c_int {
-        255 as ::core::ffi::c_int
-    } else if val < 0 as ::core::ffi::c_int {
-        0 as ::core::ffi::c_int
-    } else {
-        val
-    }) as uint8_t;
-}
+
 pub fn vpx_d207_predictor_safe(
     dst: &mut [u8],
     stride: usize,
