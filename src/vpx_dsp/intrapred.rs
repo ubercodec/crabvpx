@@ -1278,25 +1278,7 @@ pub fn vpx_tm_predictor_4x4_safe(
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn vpx_tm_predictor_4x4_c(
-    dst: *mut uint8_t,
-    stride: ptrdiff_t,
-    above: *const uint8_t,
-    left: *const uint8_t,
-) {
-    if dst.is_null() || above.is_null() || left.is_null() {
-        return;
-    }
-    unsafe {
-        let dst_len = 3 * stride as usize + 4;
-        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
-        let above_slice = core::slice::from_raw_parts(above, 4);
-        let left_slice = core::slice::from_raw_parts(left, 4);
-        let top_left = *above.offset(-1);
-        vpx_tm_predictor_4x4_safe(dst_slice, stride as usize, above_slice, left_slice, top_left);
-    }
-}
+
 pub fn vpx_tm_predictor_8x8_safe(
     dst: &mut [u8],
     stride: usize,
@@ -1570,24 +1552,7 @@ pub fn vpx_dc_predictor_4x4_safe(
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn vpx_dc_predictor_4x4_c(
-    dst: *mut uint8_t,
-    stride: ptrdiff_t,
-    above: *const uint8_t,
-    left: *const uint8_t,
-) {
-    if dst.is_null() || above.is_null() || left.is_null() {
-        return;
-    }
-    unsafe {
-        let dst_len = 3 * stride as usize + 4;
-        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
-        let above_slice = core::slice::from_raw_parts(above, 4);
-        let left_slice = core::slice::from_raw_parts(left, 4);
-        vpx_dc_predictor_4x4_safe(dst_slice, stride as usize, above_slice, left_slice);
-    }
-}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn vpx_dc_predictor_8x8_c(
     dst: *mut uint8_t,
