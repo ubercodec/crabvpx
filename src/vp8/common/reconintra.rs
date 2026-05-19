@@ -161,20 +161,31 @@ pub fn vp8_build_intra_predictors_mby_safe(
     ypred_slice: &mut [u8],
     y_stride: usize,
 ) {
-    let fn_0 = if mode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_uint {
-        dc_pred[left_available as usize][up_available as usize]
-            [SIZE_16 as usize]
-    } else {
-        pred[mode as usize][SIZE_16 as usize]
-    };
-    if let Some(pred_fn) = fn_0 {
-        unsafe {
-            pred_fn(
-                ypred_slice.as_mut_ptr(),
-                y_stride as ptrdiff_t,
-                yabove[1..].as_ptr(),
-                yleft.as_ptr(),
+    match mode {
+        V_PRED => {
+            crate::vpx_dsp::intrapred::vpx_v_predictor_16x16_safe(
+                ypred_slice,
+                y_stride,
+                &yabove[1..],
             );
+        }
+        _ => {
+            let fn_0 = if mode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_uint {
+                dc_pred[left_available as usize][up_available as usize]
+                    [SIZE_16 as usize]
+            } else {
+                pred[mode as usize][SIZE_16 as usize]
+            };
+            if let Some(pred_fn) = fn_0 {
+                unsafe {
+                    pred_fn(
+                        ypred_slice.as_mut_ptr(),
+                        y_stride as ptrdiff_t,
+                        yabove[1..].as_ptr(),
+                        yleft.as_ptr(),
+                    );
+                }
+            }
         }
     }
 }
@@ -190,26 +201,42 @@ pub fn vp8_build_intra_predictors_mbuv_safe(
     vpred_slice: &mut [u8],
     uv_stride: usize,
 ) {
-    let fn_0 = if uvmode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_uint {
-        dc_pred[left_available as usize][up_available as usize]
-            [SIZE_8 as usize]
-    } else {
-        pred[uvmode as usize][SIZE_8 as usize]
-    };
-    if let Some(pred_fn) = fn_0 {
-        unsafe {
-            pred_fn(
-                upred_slice.as_mut_ptr(),
-                uv_stride as ptrdiff_t,
-                uabove[1..].as_ptr(),
-                uleft.as_ptr(),
+    match uvmode {
+        V_PRED => {
+            crate::vpx_dsp::intrapred::vpx_v_predictor_8x8_safe(
+                upred_slice,
+                uv_stride,
+                &uabove[1..],
             );
-            pred_fn(
-                vpred_slice.as_mut_ptr(),
-                uv_stride as ptrdiff_t,
-                vabove[1..].as_ptr(),
-                vleft.as_ptr(),
+            crate::vpx_dsp::intrapred::vpx_v_predictor_8x8_safe(
+                vpred_slice,
+                uv_stride,
+                &vabove[1..],
             );
+        }
+        _ => {
+            let fn_0 = if uvmode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_uint {
+                dc_pred[left_available as usize][up_available as usize]
+                    [SIZE_8 as usize]
+            } else {
+                pred[uvmode as usize][SIZE_8 as usize]
+            };
+            if let Some(pred_fn) = fn_0 {
+                unsafe {
+                    pred_fn(
+                        upred_slice.as_mut_ptr(),
+                        uv_stride as ptrdiff_t,
+                        uabove[1..].as_ptr(),
+                        uleft.as_ptr(),
+                    );
+                    pred_fn(
+                        vpred_slice.as_mut_ptr(),
+                        uv_stride as ptrdiff_t,
+                        vabove[1..].as_ptr(),
+                        vleft.as_ptr(),
+                    );
+                }
+            }
         }
     }
 }
