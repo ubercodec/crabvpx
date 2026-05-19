@@ -1,9 +1,4 @@
 unsafe extern "C" {
-    fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
-        __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
     fn vpx_d117_predictor_4x4_neon(
         dst: *mut uint8_t,
         stride: ptrdiff_t,
@@ -86,38 +81,44 @@ static pred: [intra_pred_fn; 10] = [
     Some(vpx_d207_predictor_4x4_neon),
 ];
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_intra4x4_predict(
-    mut above: *mut ::core::ffi::c_uchar,
-    mut yleft: *mut ::core::ffi::c_uchar,
-    mut left_stride: ::core::ffi::c_int,
-    mut b_mode: B_PREDICTION_MODE,
-    mut dst: *mut ::core::ffi::c_uchar,
-    mut dst_stride: ::core::ffi::c_int,
-    mut top_left: ::core::ffi::c_uchar,
-) { unsafe {
-    let mut Aboveb: [::core::ffi::c_uchar; 12] = [0; 12];
-    let mut Above: *mut ::core::ffi::c_uchar =
-        (&raw mut Aboveb as *mut ::core::ffi::c_uchar).offset(4 as ::core::ffi::c_int as isize);
-    let mut Left: [::core::ffi::c_uchar; 8] = [0; 8];
-    Left[0 as ::core::ffi::c_int as usize] = *yleft.offset(0 as ::core::ffi::c_int as isize);
-    Left[1 as ::core::ffi::c_int as usize] = *yleft.offset(left_stride as isize);
-    Left[2 as ::core::ffi::c_int as usize] =
-        *yleft.offset((2 as ::core::ffi::c_int * left_stride) as isize);
-    Left[3 as ::core::ffi::c_int as usize] =
-        *yleft.offset((3 as ::core::ffi::c_int * left_stride) as isize);
-    memcpy(
-        Above as *mut ::core::ffi::c_void,
-        above as *const ::core::ffi::c_void,
-        8 as size_t,
-    );
-    *Above.offset(-(1 as ::core::ffi::c_int) as isize) = top_left;
-    pred[b_mode as usize].expect("non-null function pointer")(
-        dst as *mut uint8_t,
-        dst_stride as ptrdiff_t,
-        Above,
-        &raw mut Left as *mut ::core::ffi::c_uchar,
-    );
-}}
+pub extern "C" fn vp8_intra4x4_predict(
+    above: *mut ::core::ffi::c_uchar,
+    yleft: *mut ::core::ffi::c_uchar,
+    left_stride: ::core::ffi::c_int,
+    b_mode: B_PREDICTION_MODE,
+    dst: *mut ::core::ffi::c_uchar,
+    dst_stride: ::core::ffi::c_int,
+    top_left: ::core::ffi::c_uchar,
+) {
+    if above.is_null() || yleft.is_null() || dst.is_null() {
+        return;
+    }
+
+    let mut left = [0u8; 8];
+    let mut above_buffer = [0u8; 12];
+    above_buffer[3] = top_left;
+
+    // SAFETY: The pointers are checked for null, and caller guarantees valid memory of appropriate sizes.
+    unsafe {
+        let above_slice = core::slice::from_raw_parts(above, 8);
+        above_buffer[4..12].copy_from_slice(above_slice);
+
+        let yleft_len = (3 * left_stride + 1) as usize;
+        let yleft_slice = core::slice::from_raw_parts(yleft, yleft_len);
+        left[0] = yleft_slice[0];
+        left[1] = yleft_slice[left_stride as usize];
+        left[2] = yleft_slice[2 * left_stride as usize];
+        left[3] = yleft_slice[3 * left_stride as usize];
+
+        let pred_fn = pred[b_mode as usize].expect("non-null function pointer");
+        pred_fn(
+            dst as *mut uint8_t,
+            dst_stride as ptrdiff_t,
+            above_buffer[4..].as_ptr(),
+            left.as_ptr(),
+        );
+    }
+}
 
 pub fn vp8_intra4x4_predict_safe(
     y_slice: &mut [u8],
