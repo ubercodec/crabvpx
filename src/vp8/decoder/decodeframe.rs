@@ -329,18 +329,19 @@ fn decode_macroblock(
     let mut mode: MB_PREDICTION_MODE = DC_PRED;
     let mut i: ::core::ffi::c_int = 0;
     if xd.mode_info().mbmi.mb_skip_coeff != 0 {
-        let (above, left) = unsafe { (&mut *xd.above_context, &mut *xd.left_context) };
         let is_4x4 = xd.mode_info().mbmi.is_4x4 != 0;
+        let (above, left) = xd.contexts_mut();
         vp8_reset_mb_tokens_context(above, left, is_4x4);
     } else if vp8dx_bool_error(&mbc[xd.current_bc_idx]) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
-        let (above, left) = unsafe { (&mut *xd.above_context, &mut *xd.left_context) };
         let is_4x4 = xd.mode_info().mbmi.is_4x4 != 0;
+        let bc_idx = xd.current_bc_idx;
+        let (above, left, qcoeff, eobs) = xd.decode_tokens_inputs_mut();
         eobtotal = vp8_decode_mb_tokens(
-            &mut mbc[xd.current_bc_idx],
+            &mut mbc[bc_idx],
             &common.fc,
-            &mut xd.qcoeff,
-            &mut xd.eobs,
+            qcoeff,
+            eobs,
             above,
             left,
             is_4x4,

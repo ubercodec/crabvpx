@@ -410,6 +410,23 @@ impl macroblockd {
     pub fn contexts_mut(&mut self) -> (&mut ENTROPY_CONTEXT_PLANES, &mut ENTROPY_CONTEXT_PLANES) {
         unsafe { (&mut *self.above_context, &mut *self.left_context) }
     }
+    pub fn decode_tokens_inputs_mut(
+        &mut self,
+    ) -> (
+        &mut ENTROPY_CONTEXT_PLANES,
+        &mut ENTROPY_CONTEXT_PLANES,
+        &mut [::core::ffi::c_short; 400],
+        &mut [::core::ffi::c_char; 25],
+    ) {
+        unsafe {
+            (
+                &mut *self.above_context,
+                &mut *self.left_context,
+                &mut self.qcoeff,
+                &mut self.eobs,
+            )
+        }
+    }
 }
 
 pub type vpx_decrypt_cb = Option<
