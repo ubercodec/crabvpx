@@ -25,7 +25,7 @@ To preserve exact drop-in ABI linkage for external unported C consumers, public 
 In Rust 2024, accessing `static mut` variables requires `unsafe` blocks. Because almost all global states transpiled by `c2rust` are precalculated constant lookup tables or probability distributions, they must be modernized.
 
 #### Work Units:
-* **[ ] Unit 1 (`entropymode.rs`):** Convert the 12 `static mut` probability tables to immutable `static` definitions. Remove `unsafe` blocks at read sites.
+* **[x] Unit 1 (`entropymode.rs`):** Convert the 12 `static mut` probability tables to immutable `static` definitions. Remove `unsafe` blocks at read sites.
 * **[ ] Unit 2 (`entropy.rs`):** Convert the 7 `static mut` entropy distribution arrays to immutable `static` definitions.
 * **[ ] Unit 3 (`blockd.rs`):** Remove the 2 legacy mutable statics in block structures by converting to `const` or thread-local storage.
 * **[ ] Unit 4 (`vpx_config.rs` & `threading.rs`):** Audit and eliminate residual mutable static flags used for global build/thread configuration.

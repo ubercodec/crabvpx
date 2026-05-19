@@ -73,7 +73,7 @@ pub const SUBMVREF_LEFT_ZED: C2RustUnnamed_0 = 1;
 pub const SUBMVREF_NORMAL: C2RustUnnamed_0 = 0;
 pub type vp8_mbsplit = [::core::ffi::c_int; 16];
 #[unsafe(no_mangle)]
-pub static mut vp8_bmode_encodings: [vp8_token_struct; 10] = [
+pub static vp8_bmode_encodings: [vp8_token_struct; 10] = [
     vp8_token_struct {
         value: 0 as ::core::ffi::c_int,
         Len: 1 as ::core::ffi::c_int,
@@ -116,7 +116,7 @@ pub static mut vp8_bmode_encodings: [vp8_token_struct; 10] = [
     },
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_ymode_encodings: [vp8_token_struct; 5] = [
+pub static vp8_ymode_encodings: [vp8_token_struct; 5] = [
     vp8_token_struct {
         value: 0 as ::core::ffi::c_int,
         Len: 1 as ::core::ffi::c_int,
@@ -139,7 +139,7 @@ pub static mut vp8_ymode_encodings: [vp8_token_struct; 5] = [
     },
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_kf_ymode_encodings: [vp8_token_struct; 5] = [
+pub static vp8_kf_ymode_encodings: [vp8_token_struct; 5] = [
     vp8_token_struct {
         value: 4 as ::core::ffi::c_int,
         Len: 3 as ::core::ffi::c_int,
@@ -162,7 +162,7 @@ pub static mut vp8_kf_ymode_encodings: [vp8_token_struct; 5] = [
     },
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_uv_mode_encodings: [vp8_token_struct; 4] = [
+pub static vp8_uv_mode_encodings: [vp8_token_struct; 4] = [
     vp8_token_struct {
         value: 0 as ::core::ffi::c_int,
         Len: 1 as ::core::ffi::c_int,
@@ -181,7 +181,7 @@ pub static mut vp8_uv_mode_encodings: [vp8_token_struct; 4] = [
     },
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_mbsplit_encodings: [vp8_token_struct; 4] = [
+pub static vp8_mbsplit_encodings: [vp8_token_struct; 4] = [
     vp8_token_struct {
         value: 6 as ::core::ffi::c_int,
         Len: 3 as ::core::ffi::c_int,
@@ -200,7 +200,7 @@ pub static mut vp8_mbsplit_encodings: [vp8_token_struct; 4] = [
     },
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_mv_ref_encoding_array: [vp8_token_struct; 5] = [
+pub static vp8_mv_ref_encoding_array: [vp8_token_struct; 5] = [
     vp8_token_struct {
         value: 2 as ::core::ffi::c_int,
         Len: 2 as ::core::ffi::c_int,
@@ -223,7 +223,7 @@ pub static mut vp8_mv_ref_encoding_array: [vp8_token_struct; 5] = [
     },
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_sub_mv_ref_encoding_array: [vp8_token_struct; 4] = [
+pub static vp8_sub_mv_ref_encoding_array: [vp8_token_struct; 4] = [
     vp8_token_struct {
         value: 0 as ::core::ffi::c_int,
         Len: 1 as ::core::ffi::c_int,
@@ -242,7 +242,7 @@ pub static mut vp8_sub_mv_ref_encoding_array: [vp8_token_struct; 4] = [
     },
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_small_mvencodings: [vp8_token_struct; 8] = [
+pub static vp8_small_mvencodings: [vp8_token_struct; 8] = [
     vp8_token_struct {
         value: 0 as ::core::ffi::c_int,
         Len: 3 as ::core::ffi::c_int,
@@ -1477,7 +1477,7 @@ static sub_mv_ref_prob: [vp8_prob; 3] = [
     25 as ::core::ffi::c_int as vp8_prob,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_sub_mv_ref_prob2: [[vp8_prob; 3]; 5] = [
+pub static vp8_sub_mv_ref_prob2: [[vp8_prob; 3]; 5] = [
     [
         147 as ::core::ffi::c_int as vp8_prob,
         136 as ::core::ffi::c_int as vp8_prob,
@@ -1505,7 +1505,7 @@ pub static mut vp8_sub_mv_ref_prob2: [[vp8_prob; 3]; 5] = [
     ],
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_mbsplits: [vp8_mbsplit; 4] = [
+pub static vp8_mbsplits: [vp8_mbsplit; 4] = [
     [
         0 as ::core::ffi::c_int,
         0 as ::core::ffi::c_int,
@@ -1580,14 +1580,14 @@ pub static mut vp8_mbsplits: [vp8_mbsplit; 4] = [
     ],
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_mbsplit_count: [::core::ffi::c_int; 4] = [
+pub static vp8_mbsplit_count: [::core::ffi::c_int; 4] = [
     2 as ::core::ffi::c_int,
     2 as ::core::ffi::c_int,
     4 as ::core::ffi::c_int,
     16 as ::core::ffi::c_int,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_mbsplit_probs: [vp8_prob; 3] = [
+pub static vp8_mbsplit_probs: [vp8_prob; 3] = [
     110 as ::core::ffi::c_int as vp8_prob,
     111 as ::core::ffi::c_int as vp8_prob,
     150 as ::core::ffi::c_int as vp8_prob,
