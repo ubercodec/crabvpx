@@ -110,7 +110,7 @@ def run_benchmark(harness_dir: Path, harness_args: List[str]):
     subprocess.run(cmd, cwd=harness_dir, check=True)
 
     print("\n--- Testing CrabVPX Rust Decoder ---", flush=True)
-    cmd = ["cargo", "run", "--release", "--no-default-features", "--features", "rust", "--"] + harness_args
+    cmd = ["cargo", "+nightly", "run", "--release", "--no-default-features", "--features", "rust", "--"] + harness_args
     subprocess.run(cmd, cwd=harness_dir, check=True)
 
 
