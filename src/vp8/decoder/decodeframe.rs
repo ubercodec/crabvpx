@@ -490,24 +490,22 @@ fn decode_macroblock(
                 &xd.dequant_y1
             };
  
+            let y_stride = xd.dst.y_stride;
+            let (dst_y_view, _, _) = xd.dst.views_mut();
             let q_y: &mut [i16; 256] = (&mut xd.qcoeff[0..256]).try_into().unwrap();
-            let dst_len = 15 * xd.dst.y_stride as usize + 16;
-            let dst_slice = unsafe {
-                core::slice::from_raw_parts_mut(xd.dst.y_buffer, dst_len)
-            };
+            let dst_len = 15 * y_stride as usize + 16;
+            let dst_slice = &mut dst_y_view[..dst_len];
             let eobs_y: &[::core::ffi::c_char; 16] = (&xd.eobs[0..16]).try_into().unwrap();
  
-            vp8_dequant_idct_add_y_block_safe(q_y, dq_y, dst_slice, xd.dst.y_stride, eobs_y);
+            vp8_dequant_idct_add_y_block_safe(q_y, dq_y, dst_slice, y_stride, eobs_y);
         }
  
+        let uv_stride = xd.dst.uv_stride;
+        let (_, dst_u_view, dst_v_view) = xd.dst.views_mut();
         let q_uv: &mut [i16; 128] = (&mut xd.qcoeff[256..384]).try_into().unwrap();
-        let dst_u_len = 7 * xd.dst.uv_stride as usize + 8;
-        let (dst_u_slice, dst_v_slice) = unsafe {
-            (
-                core::slice::from_raw_parts_mut(xd.dst.u_buffer, dst_u_len),
-                core::slice::from_raw_parts_mut(xd.dst.v_buffer, dst_u_len)
-            )
-        };
+        let dst_u_len = 7 * uv_stride as usize + 8;
+        let dst_u_slice = &mut dst_u_view[..dst_u_len];
+        let dst_v_slice = &mut dst_v_view[..dst_u_len];
         let eobs_uv: &[::core::ffi::c_char; 8] = (&xd.eobs[16..24]).try_into().unwrap();
  
         vp8_dequant_idct_add_uv_block_safe(
@@ -515,7 +513,7 @@ fn decode_macroblock(
             &xd.dequant_uv,
             dst_u_slice,
             dst_v_slice,
-            xd.dst.uv_stride,
+            uv_stride,
             eobs_uv,
         );
     }

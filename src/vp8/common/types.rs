@@ -367,6 +367,20 @@ impl yv12_buffer_config {
         let start_ptr = active_ptr.offset(-((border * stride + border) as isize));
         core::slice::from_raw_parts_mut(start_ptr, total_size)
     }
+
+    pub fn views_mut(&mut self) -> (&mut [u8], &mut [u8], &mut [u8]) {
+        let y_stride = self.y_stride as usize;
+        let y_height = self.y_height as usize;
+        let uv_stride = self.uv_stride as usize;
+        let uv_height = self.uv_height as usize;
+        unsafe {
+            (
+                core::slice::from_raw_parts_mut(self.y_buffer, y_height * y_stride),
+                core::slice::from_raw_parts_mut(self.u_buffer, uv_height * uv_stride),
+                core::slice::from_raw_parts_mut(self.v_buffer, uv_height * uv_stride),
+            )
+        }
+    }
 }
 
 pub type vpx_codec_err_t = ::core::ffi::c_uint;
