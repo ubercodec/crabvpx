@@ -140,14 +140,34 @@ pub fn vp8_intra4x4_predict_safe(
     Left[2] = y_slice[yleft_idx + 2 * dst_stride];
     Left[3] = y_slice[yleft_idx + 3 * dst_stride];
 
-    let dst_ptr = y_slice[dst_offset..].as_mut_ptr();
-
-    unsafe {
-        pred[b_mode as usize].expect("non-null function pointer")(
-            dst_ptr,
-            dst_stride as ptrdiff_t,
-            Aboveb[4..].as_ptr(),
-            Left.as_ptr(),
-        );
+    match b_mode {
+        B_VE_PRED => {
+            let (_, dst_after) = y_slice.split_at_mut(dst_offset);
+            crate::vpx_dsp::intrapred::vpx_ve_predictor_4x4_safe(
+                dst_after,
+                dst_stride,
+                &Aboveb[3..9],
+            );
+        }
+        B_HE_PRED => {
+            let (_, dst_after) = y_slice.split_at_mut(dst_offset);
+            crate::vpx_dsp::intrapred::vpx_he_predictor_4x4_safe(
+                dst_after,
+                dst_stride,
+                &Aboveb[3..4],
+                &Left[0..4],
+            );
+        }
+        _ => {
+            let dst_ptr = y_slice[dst_offset..].as_mut_ptr();
+            unsafe {
+                pred[b_mode as usize].expect("non-null function pointer")(
+                    dst_ptr,
+                    dst_stride as ptrdiff_t,
+                    Aboveb[4..].as_ptr(),
+                    Left.as_ptr(),
+                );
+            }
+        }
     }
 }
