@@ -7,12 +7,7 @@ use crate::vp8::common::reconintra::vp8_init_intra_predictors;
 
 unsafe extern "C" {
     fn setjmp(_: *mut ::core::ffi::c_int) -> ::core::ffi::c_int;
-    fn vpx_internal_error(
-        info: *mut vpx_internal_error_info,
-        error: vpx_codec_err_t,
-        fmt: *const ::core::ffi::c_char,
-        ...
-    );
+
     fn memcpy(
         __dst: *mut ::core::ffi::c_void,
         __src: *const ::core::ffi::c_void,
@@ -131,13 +126,7 @@ pub fn vp8dx_get_reference(
     {
         ref_fb_idx = cm.alt_fb_idx;
     } else {
-        unsafe {
-            vpx_internal_error(
-                &raw mut pbi.common.error,
-                VPX_CODEC_ERROR,
-                b"Invalid reference frame\0" as *const u8 as *const ::core::ffi::c_char,
-            );
-        }
+        cm.error.trigger(VPX_CODEC_ERROR, "Invalid reference frame");
         return pbi.common.error.error_code;
     }
     if cm.yv12_fb[ref_fb_idx as usize].y_height != sd.y_height
@@ -145,13 +134,7 @@ pub fn vp8dx_get_reference(
         || cm.yv12_fb[ref_fb_idx as usize].uv_height != sd.uv_height
         || cm.yv12_fb[ref_fb_idx as usize].uv_width != sd.uv_width
     {
-        unsafe {
-            vpx_internal_error(
-                &raw mut pbi.common.error,
-                VPX_CODEC_ERROR,
-                b"Incorrect buffer dimensions\0" as *const u8 as *const ::core::ffi::c_char,
-            );
-        }
+        cm.error.trigger(VPX_CODEC_ERROR, "Incorrect buffer dimensions");
     } else {
         vp8_yv12_copy_frame_c(
             &cm.yv12_fb[ref_fb_idx as usize],
@@ -187,13 +170,7 @@ pub fn vp8dx_set_reference(
     {
         target = TargetFrame::Alt;
     } else {
-        unsafe {
-            vpx_internal_error(
-                &raw mut cm.error,
-                VPX_CODEC_ERROR,
-                b"Invalid reference frame\0" as *const u8 as *const ::core::ffi::c_char,
-            );
-        }
+        cm.error.trigger(VPX_CODEC_ERROR, "Invalid reference frame");
         return cm.error.error_code;
     }
     
@@ -208,13 +185,7 @@ pub fn vp8dx_set_reference(
         || cm.yv12_fb[ref_fb_idx as usize].uv_height != sd.uv_height
         || cm.yv12_fb[ref_fb_idx as usize].uv_width != sd.uv_width
     {
-        unsafe {
-            vpx_internal_error(
-                &raw mut cm.error,
-                VPX_CODEC_ERROR,
-                b"Incorrect buffer dimensions\0" as *const u8 as *const ::core::ffi::c_char,
-            );
-        }
+        cm.error.trigger(VPX_CODEC_ERROR, "Incorrect buffer dimensions");
     } else {
         let free_fb = get_free_fb(cm);
         let mut temp_idx = ref_fb_idx;
