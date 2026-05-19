@@ -1658,7 +1658,7 @@ pub static vp8_norm: [::core::ffi::c_uchar; 256] = [
     0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_coef_bands: [::core::ffi::c_uchar; 16] = [
+pub static vp8_coef_bands: [::core::ffi::c_uchar; 16] = [
     0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     1 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     2 as ::core::ffi::c_int as ::core::ffi::c_uchar,
@@ -1677,7 +1677,7 @@ pub static mut vp8_coef_bands: [::core::ffi::c_uchar; 16] = [
     7 as ::core::ffi::c_int as ::core::ffi::c_uchar,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_prev_token_class: [::core::ffi::c_uchar; 12] = [
+pub static vp8_prev_token_class: [::core::ffi::c_uchar; 12] = [
     0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     1 as ::core::ffi::c_int as ::core::ffi::c_uchar,
     2 as ::core::ffi::c_int as ::core::ffi::c_uchar,
@@ -1692,7 +1692,7 @@ pub static mut vp8_prev_token_class: [::core::ffi::c_uchar; 12] = [
     0 as ::core::ffi::c_int as ::core::ffi::c_uchar,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_default_zig_zag1d: [::core::ffi::c_int; 16] = [
+pub static vp8_default_zig_zag1d: [::core::ffi::c_int; 16] = [
     0 as ::core::ffi::c_int,
     1 as ::core::ffi::c_int,
     4 as ::core::ffi::c_int,
@@ -1711,7 +1711,7 @@ pub static mut vp8_default_zig_zag1d: [::core::ffi::c_int; 16] = [
     15 as ::core::ffi::c_int,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_default_inv_zig_zag: [::core::ffi::c_short; 16] = [
+pub static vp8_default_inv_zig_zag: [::core::ffi::c_short; 16] = [
     1 as ::core::ffi::c_int as ::core::ffi::c_short,
     2 as ::core::ffi::c_int as ::core::ffi::c_short,
     6 as ::core::ffi::c_int as ::core::ffi::c_short,
@@ -1730,7 +1730,7 @@ pub static mut vp8_default_inv_zig_zag: [::core::ffi::c_short; 16] = [
     16 as ::core::ffi::c_int as ::core::ffi::c_short,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_default_zig_zag_mask: [::core::ffi::c_short; 16] = [
+pub static vp8_default_zig_zag_mask: [::core::ffi::c_short; 16] = [
     1 as ::core::ffi::c_int as ::core::ffi::c_short,
     2 as ::core::ffi::c_int as ::core::ffi::c_short,
     32 as ::core::ffi::c_int as ::core::ffi::c_short,
@@ -1752,7 +1752,7 @@ pub static mut vp8_default_zig_zag_mask: [::core::ffi::c_short; 16] = [
 pub static vp8_mb_feature_data_bits: [::core::ffi::c_int; 2] =
     [7 as ::core::ffi::c_int, 6 as ::core::ffi::c_int];
 #[unsafe(no_mangle)]
-pub static mut vp8_coef_tree: [vp8_tree_index; 22] = [
+pub static vp8_coef_tree: [vp8_tree_index; 22] = [
     -DCT_EOB_TOKEN as vp8_tree_index,
     2 as ::core::ffi::c_int as vp8_tree_index,
     -ZERO_TOKEN as vp8_tree_index,
@@ -1777,7 +1777,7 @@ pub static mut vp8_coef_tree: [vp8_tree_index; 22] = [
     -DCT_VAL_CATEGORY6 as vp8_tree_index,
 ];
 #[unsafe(no_mangle)]
-pub static mut vp8_coef_encodings: [vp8_token; 12] = [
+pub static vp8_coef_encodings: [vp8_token; 12] = [
     vp8_token_struct {
         value: 2 as ::core::ffi::c_int,
         Len: 2 as ::core::ffi::c_int,
