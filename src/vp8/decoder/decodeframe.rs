@@ -844,6 +844,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
             unsafe {
                 xd.mode_info_context = xd.mode_info_context.offset(1);
             }
+            xd.mode_info_idx += 1;
             mb_col += 1;
         }
         vp8_extend_mb_row(
@@ -853,6 +854,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
         unsafe {
             xd.mode_info_context = xd.mode_info_context.offset(1);
         }
+        xd.mode_info_idx += 1;
         xd.up_available = 1 as ::core::ffi::c_int;
         if pc.filter_level != 0 {
             if mb_row > 0 as ::core::ffi::c_int {
@@ -1165,6 +1167,7 @@ fn init_frame(pbi: &mut VP8D_COMP) {
     }
     pbi.mb.left_context = &raw mut pbi.common.left_context;
     pbi.mb.mode_info_context = pbi.common.mi;
+    pbi.mb.mode_info_idx = (pbi.common.mode_info_stride + 1) as usize;
     pbi.mb.frame_type = pbi.common.frame_type;
     pbi.mb.mode_info_mut().mbmi.mode = DC_PRED as ::core::ffi::c_int as uint8_t;
     pbi.mb.mode_info_stride = pbi.common.mode_info_stride;

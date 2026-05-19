@@ -604,6 +604,7 @@ fn mt_decode_mb_rows(
     (*xd).mode_info_context = (*pc)
         .mi
         .offset(((*pc).mode_info_stride * start_mb_row) as isize);
+    (*xd).mode_info_idx = ((*pc).mode_info_stride * (start_mb_row + 1) + 1) as usize;
     (*xd).mode_info_stride = (*pc).mode_info_stride;
     mb_row = start_mb_row;
     while mb_row < (*pc).mb_rows {
@@ -996,6 +997,7 @@ fn mt_decode_mb_rows(
             recon_yoffset += 16 as ::core::ffi::c_int;
             recon_uvoffset += 8 as ::core::ffi::c_int;
             (*xd).mode_info_context = (*xd).mode_info_context.offset(1);
+            (*xd).mode_info_idx += 1;
             (*xd).above_context = (*xd).above_context.offset(1);
             mb_col += 1;
         }
@@ -1033,11 +1035,13 @@ fn mt_decode_mb_rows(
         }
         vpx_atomic_store_release(current_mb_col, mb_col + nsync);
         (*xd).mode_info_context = (*xd).mode_info_context.offset(1);
+        (*xd).mode_info_idx += 1;
         (*xd).up_available = 1 as ::core::ffi::c_int;
         (*xd).mode_info_context = (*xd).mode_info_context.offset(
             ((*xd).mode_info_stride as ::core::ffi::c_uint)
                 .wrapping_mul((*pbi).decoding_thread_count) as isize,
         );
+        (*xd).mode_info_idx += ((*xd).mode_info_stride as usize) * ((*pbi).decoding_thread_count as usize);
         mb_row = (mb_row as ::core::ffi::c_uint).wrapping_add(
             (*pbi)
                 .decoding_thread_count
