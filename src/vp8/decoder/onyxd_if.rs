@@ -1,4 +1,4 @@
-use crate::vp8::decoder::decodeframe::vp8cx_init_de_quantizer;
+use crate::vp8::decoder::decodeframe::{vp8cx_init_de_quantizer, vp8_decode_frame};
 use crate::vp8::common::mbpitch::vp8_setup_block_dptrs;
 use crate::vp8::common::vp8_loopfilter::vp8_loop_filter_init;
 
@@ -24,7 +24,6 @@ unsafe extern "C" {
         __c: ::core::ffi::c_int,
         __len: size_t,
     ) -> *mut ::core::ffi::c_void;
-    fn vp8_decode_frame(pbi: *mut VP8D_COMP) -> ::core::ffi::c_int;
     fn vpx_memalign(align: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_free(memblk: *mut ::core::ffi::c_void);
     fn vp8_decoder_remove_threads(pbi: *mut VP8D_COMP);
@@ -420,8 +419,7 @@ pub fn vp8dx_receive_compressed_data_safe(
     pbi.dec_fb_ref[GOLDEN_FRAME as usize] = &raw mut pbi.common.yv12_fb[gld_fb_idx as usize];
     pbi.dec_fb_ref[ALTREF_FRAME as usize] = &raw mut pbi.common.yv12_fb[alt_fb_idx as usize];
     
-    // vp8_decode_frame still requires raw pointer
-    retcode = unsafe { vp8_decode_frame(pbi as *mut VP8D_COMP) };
+    retcode = vp8_decode_frame(pbi);
     
     if retcode < 0 {
         if pbi.common.fb_idx_ref_cnt[new_fb_idx as usize] > 0 {

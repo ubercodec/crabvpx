@@ -1172,9 +1172,7 @@ fn init_frame(pbi: &mut VP8D_COMP) {
         pbi.mb.fullpixel_mask = !(7 as ::core::ffi::c_int);
     }
 }
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
-    let bc = &mut (*pbi).mbc[8];
+pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
     let pc: *mut VP8_COMMON = &raw mut (*pbi).common;
     let xd: *mut MACROBLOCKD = &raw mut (*pbi).mb;
     let mut data: *const ::core::ffi::c_uchar =
@@ -1326,26 +1324,29 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
     } else {
         let slice = core::slice::from_raw_parts(data, size as usize);
         crate::vp8::decoder::dboolhuff::vp8dx_start_decode_safe(
-            bc,
+            &mut pbi.mbc[8],
             slice,
             (*pbi).decrypt_cb,
             (*pbi).decrypt_state,
         );
     }
-    let len = bc.user_buffer_end.offset_from(bc.user_buffer) as usize;
-    let slice = if len == 0 {
-        &[]
-    } else {
-        core::slice::from_raw_parts(bc.user_buffer, len)
-    };
-    let mut safe_decoder = SafeBoolDecoder {
-        buffer: slice,
-        offset: 0,
-        value: bc.value,
-        count: bc.count,
-        range: bc.range,
-        decrypt_cb: bc.decrypt_cb,
-        decrypt_state: bc.decrypt_state,
+    let mut safe_decoder = {
+        let bc_ref = &pbi.mbc[8];
+        let len = bc_ref.user_buffer_end.offset_from(bc_ref.user_buffer) as usize;
+        let slice = if len == 0 {
+            &[]
+        } else {
+            core::slice::from_raw_parts(bc_ref.user_buffer, len)
+        };
+        SafeBoolDecoder {
+            buffer: slice,
+            offset: 0,
+            value: bc_ref.value,
+            count: bc_ref.count,
+            range: bc_ref.range,
+            decrypt_cb: bc_ref.decrypt_cb,
+            decrypt_state: bc_ref.decrypt_state,
+        }
     };
 
     if (*pc).frame_type as ::core::ffi::c_uint
@@ -1556,10 +1557,13 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
     let mip_len = ((*pbi).common.mb_rows + 1) as usize * stride;
     let mip_slice = core::slice::from_raw_parts_mut((*pbi).common.mip, mip_len);
     vp8_decode_mode_mvs(&mut *pbi, mip_slice, &mut safe_decoder);
-    bc.user_buffer = bc.user_buffer.add(safe_decoder.offset);
-    bc.value = safe_decoder.value;
-    bc.count = safe_decoder.count;
-    bc.range = safe_decoder.range;
+    {
+        let bc_mut = &mut pbi.mbc[8];
+        bc_mut.user_buffer = bc_mut.user_buffer.add(safe_decoder.offset);
+        bc_mut.value = safe_decoder.value;
+        bc_mut.count = safe_decoder.count;
+        bc_mut.range = safe_decoder.range;
+    }
     memset(
         (*pc).above_context as *mut ::core::ffi::c_void,
         0 as ::core::ffi::c_int,
@@ -1591,7 +1595,7 @@ pub unsafe extern "C" fn vp8_decode_frame(mut pbi: *mut VP8D_COMP) -> ::core::ff
         decode_mb_rows(&mut *pbi);
         corrupt_tokens |= (*xd).corrupted;
     }
-    (*yv12_fb_new).corrupted = vp8dx_bool_error(bc);
+    (*yv12_fb_new).corrupted = vp8dx_bool_error(&pbi.mbc[8]);
     (*yv12_fb_new).corrupted |= corrupt_tokens;
     if (*pbi).decoded_key_frame == 0 {
         if (*pc).frame_type as ::core::ffi::c_uint
