@@ -1317,10 +1317,14 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut Vp8dComp) {
         if core_count > 1 as i32 {
             vpx_atomic_init(&raw mut (*pbi).b_multithreaded_rd, 1 as i32);
             (*pbi).decoding_thread_count = (core_count - 1 as i32) as u32;
-            (*pbi).h_decoding_thread = vpx_calloc(
-                ::core::mem::size_of::<PthreadT>() as usize,
-                (*pbi).decoding_thread_count as usize,
-            ) as *mut PthreadT;
+            
+            let thread_count = (*pbi).decoding_thread_count as usize;
+            
+            let mut h_decoding_thread_vec = Vec::<PthreadT>::with_capacity(thread_count);
+            h_decoding_thread_vec.resize(thread_count, core::mem::zeroed());
+            (*pbi).h_decoding_thread = h_decoding_thread_vec.as_mut_ptr();
+            core::mem::forget(h_decoding_thread_vec);
+            
             if (*pbi).h_decoding_thread.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1328,10 +1332,12 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut Vp8dComp) {
                     b"Failed to allocate (pbi->h_decoding_thread)\0" as *const u8 as *const i8,
                 );
             }
-            (*pbi).h_event_start_decoding = vpx_calloc(
-                ::core::mem::size_of::<SemaphoreT>() as usize,
-                (*pbi).decoding_thread_count as usize,
-            ) as *mut SemaphoreT;
+            
+            let mut h_event_start_decoding_vec = Vec::<SemaphoreT>::with_capacity(thread_count);
+            h_event_start_decoding_vec.resize(thread_count, core::mem::zeroed());
+            (*pbi).h_event_start_decoding = h_event_start_decoding_vec.as_mut_ptr();
+            core::mem::forget(h_event_start_decoding_vec);
+            
             if (*pbi).h_event_start_decoding.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1339,11 +1345,12 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut Vp8dComp) {
                     b"Failed to allocate (pbi->h_event_start_decoding)\0" as *const u8 as *const i8,
                 );
             }
-            (*pbi).mb_row_di = vpx_memalign(
-                32 as usize,
-                (::core::mem::size_of::<MbRowDec>() as usize)
-                    .wrapping_mul((*pbi).decoding_thread_count as usize),
-            ) as *mut MbRowDec;
+            
+            let mut mb_row_di_vec = Vec::<MbRowDec>::with_capacity(thread_count);
+            mb_row_di_vec.resize(thread_count, core::mem::zeroed());
+            (*pbi).mb_row_di = mb_row_di_vec.as_mut_ptr();
+            core::mem::forget(mb_row_di_vec);
+            
             if (*pbi).mb_row_di.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1351,16 +1358,12 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut Vp8dComp) {
                     b"Failed to allocate (pbi->mb_row_di)\0" as *const u8 as *const i8,
                 );
             }
-            core::ptr::write_bytes(
-                (*pbi).mb_row_di as *mut c_void as *mut u8,
-                0 as u8,
-                ((*pbi).decoding_thread_count as usize)
-                    .wrapping_mul(::core::mem::size_of::<MbRowDec>() as usize),
-            );
-            (*pbi).de_thread_data = vpx_calloc(
-                ::core::mem::size_of::<DecodethreadData>() as usize,
-                (*pbi).decoding_thread_count as usize,
-            ) as *mut DecodethreadData;
+            
+            let mut de_thread_data_vec = Vec::<DecodethreadData>::with_capacity(thread_count);
+            de_thread_data_vec.resize(thread_count, core::mem::zeroed());
+            (*pbi).de_thread_data = de_thread_data_vec.as_mut_ptr();
+            core::mem::forget(de_thread_data_vec);
+            
             if (*pbi).de_thread_data.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
