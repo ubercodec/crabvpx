@@ -218,6 +218,16 @@ pub fn vp8_intra4x4_predict_safe(
                 &Left[0..4],
             );
         }
+        B_TM_PRED => {
+            let (_, dst_after) = y_slice.split_at_mut(dst_offset);
+            crate::vpx_dsp::intrapred::vpx_tm_predictor_4x4_safe(
+                dst_after,
+                dst_stride,
+                &Aboveb[4..8],
+                &Left[0..4],
+                Aboveb[3],
+            );
+        }
         _ => {
             let dst_ptr = y_slice[dst_offset..].as_mut_ptr();
             unsafe {
