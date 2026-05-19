@@ -177,45 +177,38 @@ pub fn vp8_build_intra_predictors_mby_safe(
         }
     }
 }
-pub fn vp8_build_intra_predictors_mbuv_s(
+pub fn vp8_build_intra_predictors_mbuv_safe(
     x: &MACROBLOCKD,
-    uabove_row: *mut ::core::ffi::c_uchar,
-    vabove_row: *mut ::core::ffi::c_uchar,
-    uleft: *mut ::core::ffi::c_uchar,
-    vleft: *mut ::core::ffi::c_uchar,
-    left_stride: ::core::ffi::c_int,
-    upred_ptr: *mut ::core::ffi::c_uchar,
-    vpred_ptr: *mut ::core::ffi::c_uchar,
-    pred_stride: ::core::ffi::c_int,
+    uabove: &[u8; 9],
+    vabove: &[u8; 9],
+    uleft: &[u8; 8],
+    vleft: &[u8; 8],
+    upred_slice: &mut [u8],
+    vpred_slice: &mut [u8],
+    uv_stride: usize,
 ) {
     let uvmode = x.mode_info().mbmi.uv_mode as MB_PREDICTION_MODE;
-    let mut uleft_col: [::core::ffi::c_uchar; 8] = [0; 8];
-    let mut vleft_col: [::core::ffi::c_uchar; 8] = [0; 8];
-    let mut i: ::core::ffi::c_int = 0;
-    while i < 8 {
-        uleft_col[i as usize] = unsafe { *uleft.offset((i * left_stride) as isize) };
-        vleft_col[i as usize] = unsafe { *vleft.offset((i * left_stride) as isize) };
-        i += 1;
-    }
     let fn_0 = if uvmode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_uint {
         dc_pred[x.left_available as usize][x.up_available as usize]
             [SIZE_8 as usize]
     } else {
         pred[uvmode as usize][SIZE_8 as usize]
     };
-    unsafe {
-        fn_0.expect("non-null function pointer")(
-            upred_ptr as *mut uint8_t,
-            pred_stride as ptrdiff_t,
-            uabove_row,
-            &raw mut uleft_col as *mut ::core::ffi::c_uchar,
-        );
-        fn_0.expect("non-null function pointer")(
-            vpred_ptr as *mut uint8_t,
-            pred_stride as ptrdiff_t,
-            vabove_row,
-            &raw mut vleft_col as *mut ::core::ffi::c_uchar,
-        );
+    if let Some(pred_fn) = fn_0 {
+        unsafe {
+            pred_fn(
+                upred_slice.as_mut_ptr(),
+                uv_stride as ptrdiff_t,
+                uabove[1..].as_ptr(),
+                uleft.as_ptr(),
+            );
+            pred_fn(
+                vpred_slice.as_mut_ptr(),
+                uv_stride as ptrdiff_t,
+                vabove[1..].as_ptr(),
+                vleft.as_ptr(),
+            );
+        }
     }
 }
 #[unsafe(no_mangle)]

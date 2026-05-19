@@ -358,22 +358,44 @@ fn decode_macroblock(
     if xd.mode_info().mbmi.ref_frame as ::core::ffi::c_int
         == INTRA_FRAME as ::core::ffi::c_int
     {
-        crate::vp8::common::reconintra::vp8_build_intra_predictors_mbuv_s(
-            xd,
-            xd.recon_above[1 as ::core::ffi::c_int as usize],
-            xd.recon_above[2 as ::core::ffi::c_int as usize],
-            xd.recon_left[1 as ::core::ffi::c_int as usize],
-            xd.recon_left[2 as ::core::ffi::c_int as usize],
-            xd.recon_left_stride[1 as ::core::ffi::c_int as usize],
-            xd.dst.u_buffer as *mut ::core::ffi::c_uchar,
-            xd.dst.v_buffer as *mut ::core::ffi::c_uchar,
-            xd.dst.uv_stride,
-        );
+        let uv_stride = xd.dst.uv_stride as usize;
+        let uv_border = (xd.dst.border / 2) as usize;
+        let uv_buffer_offset = uv_border * uv_stride + uv_border;
         let dst_stride = xd.dst.y_stride;
         let dst_stride_us = dst_stride as usize;
-        let dst_y_slice = unsafe { xd.dst.y_slice_mut() };
         let border = xd.dst.border as usize;
         let y_buffer_offset = border * dst_stride_us + border;
+
+        let (u_slice, v_slice, dst_y_slice) = unsafe {
+            (xd.dst.u_slice_mut(), xd.dst.v_slice_mut(), xd.dst.y_slice_mut())
+        };
+
+        let mut uabove = [0u8; 9];
+        uabove.copy_from_slice(&u_slice[uv_buffer_offset - uv_stride - 1 .. uv_buffer_offset - uv_stride + 8]);
+        let mut vabove = [0u8; 9];
+        vabove.copy_from_slice(&v_slice[uv_buffer_offset - uv_stride - 1 .. uv_buffer_offset - uv_stride + 8]);
+
+        let mut uleft = [0u8; 8];
+        let mut vleft = [0u8; 8];
+        let left_stride = xd.recon_left_stride[1] as usize;
+        for i in 0..8 {
+            uleft[i] = u_slice[uv_buffer_offset - 1 + i * left_stride];
+            vleft[i] = v_slice[uv_buffer_offset - 1 + i * left_stride];
+        }
+
+        let upred = &mut u_slice[uv_buffer_offset .. uv_buffer_offset + 7 * uv_stride + 8];
+        let vpred = &mut v_slice[uv_buffer_offset .. uv_buffer_offset + 7 * uv_stride + 8];
+
+        crate::vp8::common::reconintra::vp8_build_intra_predictors_mbuv_safe(
+            xd,
+            &uabove,
+            &vabove,
+            &uleft,
+            &vleft,
+            upred,
+            vpred,
+            uv_stride,
+        );
 
         if mode as ::core::ffi::c_uint != B_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
             let mut yabove = [0u8; 17];
