@@ -186,33 +186,33 @@ fn vp8dx_bool_error(br: &BOOL_DECODER) -> ::core::ffi::c_int {
 }
 pub const SYNC_POLICY_FIFO: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
 #[inline]
-unsafe extern "C" fn vpx_atomic_init(
-    mut atomic: *mut vpx_atomic_int,
-    mut value: ::core::ffi::c_int,
-) { unsafe {
-    (*atomic).value.store(value, core::sync::atomic::Ordering::SeqCst);
-}}
+fn vpx_atomic_init(
+    atomic: &vpx_atomic_int,
+    value: ::core::ffi::c_int,
+) {
+    atomic.value.store(value, core::sync::atomic::Ordering::SeqCst);
+}
 #[inline]
-unsafe extern "C" fn vpx_atomic_store_release(
-    mut atomic: *mut vpx_atomic_int,
-    mut value: ::core::ffi::c_int,
-) { unsafe {
-    (*atomic).value.store(value, core::sync::atomic::Ordering::Release);
-}}
+fn vpx_atomic_store_release(
+    atomic: &vpx_atomic_int,
+    value: ::core::ffi::c_int,
+) {
+    atomic.value.store(value, core::sync::atomic::Ordering::Release);
+}
 #[inline]
-unsafe extern "C" fn vpx_atomic_load_acquire(
-    mut atomic: *const vpx_atomic_int,
-) -> ::core::ffi::c_int { unsafe {
-    return (*atomic).value.load(core::sync::atomic::Ordering::Acquire);
-}}
+fn vpx_atomic_load_acquire(
+    atomic: &vpx_atomic_int,
+) -> ::core::ffi::c_int {
+    atomic.value.load(core::sync::atomic::Ordering::Acquire)
+}
 #[inline]
-unsafe extern "C" fn vp8_atomic_spin_wait(
-    mut mb_col: ::core::ffi::c_int,
-    mut last_row_current_mb_col: *const vpx_atomic_int,
+fn vp8_atomic_spin_wait(
+    mb_col: ::core::ffi::c_int,
+    last_row_current_mb_col: &vpx_atomic_int,
     nsync: ::core::ffi::c_int,
-) { unsafe {
+) {
     while mb_col > vpx_atomic_load_acquire(last_row_current_mb_col) - nsync {}
-}}
+}
 
 #[inline]
 
@@ -251,7 +251,7 @@ fn setup_decoding_thread_data(
     for i in 0..pc.mb_rows {
         unsafe {
             vpx_atomic_store_release(
-                pbi.mt_current_mb_col.offset(i as isize) as *mut vpx_atomic_int,
+                &*pbi.mt_current_mb_col.offset(i as isize),
                 -1,
             );
         }
@@ -617,10 +617,10 @@ fn mt_decode_mb_rows(
         mb_col = 0 as ::core::ffi::c_int;
         while mb_col < (*pc).mb_cols {
             if (mb_col - 1 as ::core::ffi::c_int) % nsync == 0 as ::core::ffi::c_int {
-                vpx_atomic_store_release(current_mb_col, mb_col - 1 as ::core::ffi::c_int);
+                vpx_atomic_store_release(&*current_mb_col, mb_col - 1 as ::core::ffi::c_int);
             }
             if mb_row != 0 && mb_col & nsync - 1 as ::core::ffi::c_int == 0 {
-                vp8_atomic_spin_wait(mb_col, last_row_current_mb_col, nsync);
+                vp8_atomic_spin_wait(mb_col, &*last_row_current_mb_col, nsync);
             }
             (*xd).mb_to_left_edge =
                 -((mb_col * 16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int);
@@ -638,7 +638,7 @@ fn mt_decode_mb_rows(
                 while mb_row < (*pc).mb_rows {
                     current_mb_col =
                         (*pbi).mt_current_mb_col.offset(mb_row as isize) as *mut vpx_atomic_int;
-                    vpx_atomic_store_release(current_mb_col, (*pc).mb_cols + nsync);
+                    vpx_atomic_store_release(&*current_mb_col, (*pc).mb_cols + nsync);
                     mb_row = (mb_row as ::core::ffi::c_uint).wrapping_add(
                         (*pbi)
                             .decoding_thread_count
@@ -939,7 +939,7 @@ fn mt_decode_mb_rows(
                 mb_row,
             );
         }
-        vpx_atomic_store_release(current_mb_col, mb_col + nsync);
+        vpx_atomic_store_release(&*current_mb_col, mb_col + nsync);
         (*xd).mode_info_context = (*xd).mode_info_context.offset(1);
         (*xd).up_available = 1 as ::core::ffi::c_int;
         (*xd).mode_info_context = (*xd).mode_info_context.offset(
@@ -970,14 +970,14 @@ unsafe extern "C" fn thread_decoding_proc(
         v: [0; 2],
         y2: 0,
     };
-    while !(vpx_atomic_load_acquire(&raw mut (*pbi).b_multithreaded_rd) == 0 as ::core::ffi::c_int)
+    while !(vpx_atomic_load_acquire(&(*pbi).b_multithreaded_rd) == 0 as ::core::ffi::c_int)
     {
         if !(crate::thread_shim::vp8_semaphore_wait(*(*pbi).h_event_start_decoding.offset(ithread as isize))
             == 0 as ::core::ffi::c_int)
         {
             continue;
         }
-        if vpx_atomic_load_acquire(&raw mut (*pbi).b_multithreaded_rd) == 0 as ::core::ffi::c_int {
+        if vpx_atomic_load_acquire(&(*pbi).b_multithreaded_rd) == 0 as ::core::ffi::c_int {
             break;
         }
         let mut xd: *mut MACROBLOCKD = &raw mut (*mbrd).mbd;
@@ -997,7 +997,7 @@ unsafe extern "C" fn thread_decoding_proc(
 pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) { unsafe {
     let mut core_count: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     let mut ithread: ::core::ffi::c_uint = 0;
-    vpx_atomic_init(&raw mut (*pbi).b_multithreaded_rd, 0 as ::core::ffi::c_int);
+    vpx_atomic_init(&(*pbi).b_multithreaded_rd, 0 as ::core::ffi::c_int);
     (*pbi).allocated_decoding_thread_count = 0 as ::core::ffi::c_int;
     core_count = if (*pbi).max_threads > 8 as ::core::ffi::c_int {
         8 as ::core::ffi::c_int
@@ -1008,7 +1008,7 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi: *mut VP8D_COMP) { u
         core_count = (*pbi).common.processor_core_count;
     }
     if core_count > 1 as ::core::ffi::c_int {
-        vpx_atomic_init(&raw mut (*pbi).b_multithreaded_rd, 1 as ::core::ffi::c_int);
+        vpx_atomic_init(&(*pbi).b_multithreaded_rd, 1 as ::core::ffi::c_int);
         (*pbi).decoding_thread_count =
             (core_count - 1 as ::core::ffi::c_int) as ::core::ffi::c_uint;
         let count = (*pbi).decoding_thread_count as usize;
@@ -1211,7 +1211,7 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
 ) { unsafe {
     let pc: *mut VP8_COMMON = &raw mut (*pbi).common;
     let mut uv_width: ::core::ffi::c_int = 0;
-    if vpx_atomic_load_acquire(&raw mut (*pbi).b_multithreaded_rd) != 0 {
+    if vpx_atomic_load_acquire(&(*pbi).b_multithreaded_rd) != 0 {
         vp8mt_de_alloc_temp_buffers(pbi, prev_mb_rows);
         if width & 0xf as ::core::ffi::c_int != 0 as ::core::ffi::c_int {
             width += 16 as ::core::ffi::c_int - (width & 0xf as ::core::ffi::c_int);
@@ -1239,7 +1239,7 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
         }
         for i in 0..mb_rows_usize {
             vpx_atomic_init(
-                (*pbi).mt_current_mb_col.add(i),
+                &*(*pbi).mt_current_mb_col.add(i),
                 0 as ::core::ffi::c_int,
             );
         }
@@ -1427,9 +1427,9 @@ pub unsafe extern "C" fn vp8mt_alloc_temp_buffers(
 }}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_decoder_remove_threads(mut pbi: *mut VP8D_COMP) { unsafe {
-    if vpx_atomic_load_acquire(&raw mut (*pbi).b_multithreaded_rd) != 0 {
+    if vpx_atomic_load_acquire(&(*pbi).b_multithreaded_rd) != 0 {
         let mut i: ::core::ffi::c_int = 0;
-        vpx_atomic_store_release(&raw mut (*pbi).b_multithreaded_rd, 0 as ::core::ffi::c_int);
+        vpx_atomic_store_release(&(*pbi).b_multithreaded_rd, 0 as ::core::ffi::c_int);
         i = 0 as ::core::ffi::c_int;
         while i < (*pbi).allocated_decoding_thread_count {
             crate::thread_shim::vp8_semaphore_signal(*(*pbi).h_event_start_decoding.offset(i as isize));

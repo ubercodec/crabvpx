@@ -1518,20 +1518,11 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int { unsafe {
             while k < PREV_COEF_CONTEXTS {
                 l = 0 as ::core::ffi::c_int;
                 while l < ENTROPY_NODES {
-                    let p: *mut vp8_prob =
-                        (&raw mut *(&raw mut *(&raw mut *(&raw mut (*pc).fc.coef_probs
-                            as *mut [[[vp8_prob; 11]; 3]; 8])
-                            .offset(i as isize)
-                            as *mut [[vp8_prob; 11]; 3])
-                            .offset(j as isize)
-                            as *mut [vp8_prob; 11])
-                            .offset(k as isize) as *mut vp8_prob)
-                            .offset(l as isize);
                     if safe_decoder.read_bool(vp8_coef_update_probs[i as usize][j as usize][k as usize][l as usize] as i32) != 0 {
-                        *p = safe_decoder.read_literal(8) as vp8_prob;
+                        (*pc).fc.coef_probs[i as usize][j as usize][k as usize][l as usize] = safe_decoder.read_literal(8) as vp8_prob;
                     }
                     if k > 0 as ::core::ffi::c_int
-                        && *p as ::core::ffi::c_int
+                        && (*pc).fc.coef_probs[i as usize][j as usize][k as usize][l as usize] as ::core::ffi::c_int
                             != (*pc).fc.coef_probs[i as usize][j as usize]
                                 [(k - 1 as ::core::ffi::c_int) as usize]
                                 [l as usize] as ::core::ffi::c_int
