@@ -14,8 +14,6 @@ unsafe extern "C" {
     fn vp8_copy_mem8x4_c(src: *mut c_uchar, src_stride: c_int, dst: *mut c_uchar, dst_stride: c_int);
     fn vp8_copy_mem8x8_c(src: *mut c_uchar, src_stride: c_int, dst: *mut c_uchar, dst_stride: c_int);
     fn vp8_dc_only_idct_add_c(input_dc: c_short, pred_ptr: *mut c_uchar, pred_stride: c_int, dst_ptr: *mut c_uchar, dst_stride: c_int);
-    fn vp8_dequant_idct_add_uv_block_c(q: *mut c_short, dq: *mut c_short, dst_u: *mut c_uchar, dst_v: *mut c_uchar, stride: c_int, eobs: *mut c_char);
-    fn vp8_dequant_idct_add_y_block_c(q: *mut c_short, dq: *mut c_short, dst: *mut c_uchar, stride: c_int, eobs: *mut c_char);
     fn vp8_loop_filter_bh_c(y_ptr: *mut c_uchar, u_ptr: *mut c_uchar, v_ptr: *mut c_uchar, y_stride: c_int, uv_stride: c_int, lfi: *mut c_void);
     fn vp8_loop_filter_bv_c(y_ptr: *mut c_uchar, u_ptr: *mut c_uchar, v_ptr: *mut c_uchar, y_stride: c_int, uv_stride: c_int, lfi: *mut c_void);
     fn vp8_loop_filter_mbh_c(y_ptr: *mut c_uchar, u_ptr: *mut c_uchar, v_ptr: *mut c_uchar, y_stride: c_int, uv_stride: c_int, lfi: *mut c_void);
@@ -76,15 +74,6 @@ pub unsafe extern "C" fn vp8_dc_only_idct_add_neon(input_dc: c_short, pred_ptr: 
 }
 
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_dequant_idct_add_uv_block_neon(q: *mut c_short, dq: *mut c_short, dst_u: *mut c_uchar, dst_v: *mut c_uchar, stride: c_int, eobs: *mut c_char) {
-    vp8_dequant_idct_add_uv_block_c(q, dq, dst_u, dst_v, stride, eobs);
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_dequant_idct_add_y_block_neon(q: *mut c_short, dq: *mut c_short, dst: *mut c_uchar, stride: c_int, eobs: *mut c_char) {
-    vp8_dequant_idct_add_y_block_c(q, dq, dst, stride, eobs);
-}
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_dequantize_b_neon(d: *mut c_void, DQC: *mut c_short) {
