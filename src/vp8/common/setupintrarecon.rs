@@ -1,10 +1,4 @@
-unsafe extern "C" {
-    fn memset(
-        __b: *mut ::core::ffi::c_void,
-        __c: ::core::ffi::c_int,
-        __len: size_t,
-    ) -> *mut ::core::ffi::c_void;
-}
+
 pub use crate::vp8::common::types::*;
 pub type vpx_color_space = ::core::ffi::c_uint;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
@@ -23,58 +17,96 @@ pub type vpx_color_range_t = vpx_color_range;
 pub type __darwin_size_t = usize;
 pub type size_t = __darwin_size_t;
 pub type uint8_t = u8;
+pub fn vp8_setup_intra_recon_safe(ybf: &mut YV12_BUFFER_CONFIG) {
+    let y_border = ybf.border as usize;
+    let y_stride = ybf.y_stride as usize;
+    let y_width = ybf.y_width as usize;
+    let y_height = ybf.y_height as usize;
+
+    let uv_border = (ybf.border / 2) as usize;
+    let uv_stride = ybf.uv_stride as usize;
+    let uv_width = ybf.uv_width as usize;
+    let uv_height = ybf.uv_height as usize;
+
+    // Safety: We are accessing the underlying buffers of YV12_BUFFER_CONFIG.
+    // The slice helpers are raw pointer based and require raw construction to obtain slices.
+    // We assume the buffer config is valid and borders are correctly allocated.
+    unsafe {
+        if y_border >= 1 {
+            let y_slice = ybf.y_slice_mut();
+            
+            // Top line setup (same as vp8_setup_intra_recon_top_line)
+            let y_idx = (y_border - 1) * y_stride + (y_border - 1);
+            let len = y_width + 5;
+            if y_idx + len <= y_slice.len() {
+                y_slice[y_idx..y_idx + len].fill(127);
+            } else {
+                debug_assert!(false, "Y slice top-line overflow in vp8_setup_intra_recon_safe");
+            }
+
+            // Left column setup
+            for i in 0..y_height {
+                let idx = (y_border + i) * y_stride + (y_border - 1);
+                if idx < y_slice.len() {
+                    y_slice[idx] = 129;
+                } else {
+                    debug_assert!(false, "Y slice left-col overflow in vp8_setup_intra_recon_safe");
+                }
+            }
+        }
+
+        if uv_border >= 1 {
+            // U plane setup
+            let u_slice = ybf.u_slice_mut();
+            
+            // Top line
+            let uv_idx = (uv_border - 1) * uv_stride + (uv_border - 1);
+            let len = uv_width + 5;
+            if uv_idx + len <= u_slice.len() {
+                u_slice[uv_idx..uv_idx + len].fill(127);
+            } else {
+                debug_assert!(false, "U slice top-line overflow in vp8_setup_intra_recon_safe");
+            }
+
+            // Left column
+            for i in 0..uv_height {
+                let idx = (uv_border + i) * uv_stride + (uv_border - 1);
+                if idx < u_slice.len() {
+                    u_slice[idx] = 129;
+                } else {
+                    debug_assert!(false, "U slice left-col overflow in vp8_setup_intra_recon_safe");
+                }
+            }
+
+            // V plane setup
+            let v_slice = ybf.v_slice_mut();
+            
+            // Top line
+            if uv_idx + len <= v_slice.len() {
+                v_slice[uv_idx..uv_idx + len].fill(127);
+            } else {
+                debug_assert!(false, "V slice top-line overflow in vp8_setup_intra_recon_safe");
+            }
+
+            // Left column
+            for i in 0..uv_height {
+                let idx = (uv_border + i) * uv_stride + (uv_border - 1);
+                if idx < v_slice.len() {
+                    v_slice[idx] = 129;
+                } else {
+                    debug_assert!(false, "V slice left-col overflow in vp8_setup_intra_recon_safe");
+                }
+            }
+        }
+    }
+}
+
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) { unsafe {
-    let mut i: ::core::ffi::c_int = 0;
-    memset(
-        (*ybf)
-            .y_buffer
-            .offset(-(1 as ::core::ffi::c_int as isize))
-            .offset(-((*ybf).y_stride as isize)) as *mut ::core::ffi::c_void,
-        127 as ::core::ffi::c_int,
-        ((*ybf).y_width + 5 as ::core::ffi::c_int) as size_t,
-    );
-    i = 0 as ::core::ffi::c_int;
-    while i < (*ybf).y_height {
-        *(*ybf)
-            .y_buffer
-            .offset(((*ybf).y_stride * i - 1 as ::core::ffi::c_int) as isize) =
-            129 as ::core::ffi::c_int as ::core::ffi::c_uchar as uint8_t;
-        i += 1;
+pub unsafe extern "C" fn vp8_setup_intra_recon(mut ybf: *mut YV12_BUFFER_CONFIG) {
+    if !ybf.is_null() {
+        vp8_setup_intra_recon_safe(&mut *ybf);
     }
-    memset(
-        (*ybf)
-            .u_buffer
-            .offset(-(1 as ::core::ffi::c_int as isize))
-            .offset(-((*ybf).uv_stride as isize)) as *mut ::core::ffi::c_void,
-        127 as ::core::ffi::c_int,
-        ((*ybf).uv_width + 5 as ::core::ffi::c_int) as size_t,
-    );
-    i = 0 as ::core::ffi::c_int;
-    while i < (*ybf).uv_height {
-        *(*ybf)
-            .u_buffer
-            .offset(((*ybf).uv_stride * i - 1 as ::core::ffi::c_int) as isize) =
-            129 as ::core::ffi::c_int as ::core::ffi::c_uchar as uint8_t;
-        i += 1;
-    }
-    memset(
-        (*ybf)
-            .v_buffer
-            .offset(-(1 as ::core::ffi::c_int as isize))
-            .offset(-((*ybf).uv_stride as isize)) as *mut ::core::ffi::c_void,
-        127 as ::core::ffi::c_int,
-        ((*ybf).uv_width + 5 as ::core::ffi::c_int) as size_t,
-    );
-    i = 0 as ::core::ffi::c_int;
-    while i < (*ybf).uv_height {
-        *(*ybf)
-            .v_buffer
-            .offset(((*ybf).uv_stride * i - 1 as ::core::ffi::c_int) as isize) =
-            129 as ::core::ffi::c_int as ::core::ffi::c_uchar as uint8_t;
-        i += 1;
-    }
-}}
+}
 pub fn vp8_setup_intra_recon_top_line(ybf: &mut YV12_BUFFER_CONFIG) {
     let y_border = ybf.border as usize;
     let y_stride = ybf.y_stride as usize;
@@ -85,7 +117,7 @@ pub fn vp8_setup_intra_recon_top_line(ybf: &mut YV12_BUFFER_CONFIG) {
     let uv_width = ybf.uv_width as usize;
 
     // Safety: We are accessing the underlying buffers of YV12_BUFFER_CONFIG.
-    // The slice helpers are unsafe because they construct slices from raw pointers.
+    // The slice helpers are raw pointer based and require raw construction to obtain slices.
     // We assume the buffer config is valid and borders are correctly allocated.
     unsafe {
         if y_border >= 1 {
