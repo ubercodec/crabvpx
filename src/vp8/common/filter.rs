@@ -136,29 +136,36 @@ fn filter_block2d_first_pass_safe(
     vp8_filter: &[i16; 6],
     output: &mut [i32],
 ) {
-    for i in 0..output_height {
-        let src_row_start = i * src_stride;
-        let out_row_start = i * output_width;
-        for j in 0..output_width {
-            let base = src_row_start + j;
-            let val0 = src[base + 0] as i32;
-            let val1 = src[base + 1] as i32;
-            let val2 = src[base + 2] as i32;
-            let val3 = src[base + 3] as i32;
-            let val4 = src[base + 4] as i32;
-            let val5 = src[base + 5] as i32;
+    let f0 = vp8_filter[0] as i32;
+    let f1 = vp8_filter[1] as i32;
+    let f2 = vp8_filter[2] as i32;
+    let f3 = vp8_filter[3] as i32;
+    let f4 = vp8_filter[4] as i32;
+    let f5 = vp8_filter[5] as i32;
+    let half_weight = VP8_FILTER_WEIGHT >> 1;
 
-            let mut temp = val0 * vp8_filter[0] as i32
-                + val1 * vp8_filter[1] as i32
-                + val2 * vp8_filter[2] as i32
-                + val3 * vp8_filter[3] as i32
-                + val4 * vp8_filter[4] as i32
-                + val5 * vp8_filter[5] as i32
-                + (VP8_FILTER_WEIGHT >> 1);
+    let req_src = (output_height.saturating_sub(1)) * src_stride + output_width + 5;
+    let req_out = output_height * output_width;
+    if src.len() < req_src || output.len() < req_out {
+        return;
+    }
+    let src = &src[..req_src];
+    let output = &mut output[..req_out];
+
+    for i in 0..output_height {
+        let src_row = &src[i * src_stride..i * src_stride + output_width + 5];
+        let out_row = &mut output[i * output_width..(i + 1) * output_width];
+        for (out, window) in out_row.iter_mut().zip(src_row.windows(6)) {
+            let mut temp = window[0] as i32 * f0
+                + window[1] as i32 * f1
+                + window[2] as i32 * f2
+                + window[3] as i32 * f3
+                + window[4] as i32 * f4
+                + window[5] as i32 * f5
+                + half_weight;
 
             temp >>= VP8_FILTER_SHIFT;
-            let clamped = temp.clamp(0, 255);
-            output[out_row_start + j] = clamped;
+            *out = temp.clamp(0, 255);
         }
     }
 }
@@ -172,26 +179,42 @@ fn filter_block2d_second_pass_safe(
     output_width: usize,
     vp8_filter: &[i16; 6],
 ) {
-    for i in 0..output_height {
-        for j in 0..output_width {
-            let val0 = src[(i + 0) * src_stride + j];
-            let val1 = src[(i + 1) * src_stride + j];
-            let val2 = src[(i + 2) * src_stride + j];
-            let val3 = src[(i + 3) * src_stride + j];
-            let val4 = src[(i + 4) * src_stride + j];
-            let val5 = src[(i + 5) * src_stride + j];
+    let f0 = vp8_filter[0] as i32;
+    let f1 = vp8_filter[1] as i32;
+    let f2 = vp8_filter[2] as i32;
+    let f3 = vp8_filter[3] as i32;
+    let f4 = vp8_filter[4] as i32;
+    let f5 = vp8_filter[5] as i32;
+    let half_weight = VP8_FILTER_WEIGHT >> 1;
 
-            let mut temp = val0 * vp8_filter[0] as i32
-                + val1 * vp8_filter[1] as i32
-                + val2 * vp8_filter[2] as i32
-                + val3 * vp8_filter[3] as i32
-                + val4 * vp8_filter[4] as i32
-                + val5 * vp8_filter[5] as i32
-                + (VP8_FILTER_WEIGHT >> 1);
+    let req_src = (output_height + 5) * src_stride;
+    let req_dst = (output_height.saturating_sub(1)) * dst_pitch + output_width;
+    if src.len() < req_src || dst.len() < req_dst {
+        return;
+    }
+    let src = &src[..req_src];
+    let dst = &mut dst[..req_dst];
+
+    for i in 0..output_height {
+        let r0 = &src[(i + 0) * src_stride..(i + 0) * src_stride + output_width];
+        let r1 = &src[(i + 1) * src_stride..(i + 1) * src_stride + output_width];
+        let r2 = &src[(i + 2) * src_stride..(i + 2) * src_stride + output_width];
+        let r3 = &src[(i + 3) * src_stride..(i + 3) * src_stride + output_width];
+        let r4 = &src[(i + 4) * src_stride..(i + 4) * src_stride + output_width];
+        let r5 = &src[(i + 5) * src_stride..(i + 5) * src_stride + output_width];
+        let dst_row = &mut dst[i * dst_pitch..i * dst_pitch + output_width];
+
+        for j in 0..output_width {
+            let mut temp = r0[j] * f0
+                + r1[j] * f1
+                + r2[j] * f2
+                + r3[j] * f3
+                + r4[j] * f4
+                + r5[j] * f5
+                + half_weight;
 
             temp >>= VP8_FILTER_SHIFT;
-            let clamped = temp.clamp(0, 255) as u8;
-            dst[i * dst_pitch + j] = clamped;
+            dst_row[j] = temp.clamp(0, 255) as u8;
         }
     }
 }
@@ -233,19 +256,24 @@ fn filter_block2d_bil_first_pass_safe(
     width: usize,
     vp8_filter: &[i16; 2],
 ) {
+    let f0 = vp8_filter[0] as i32;
+    let f1 = vp8_filter[1] as i32;
+    let half_weight = VP8_FILTER_WEIGHT / 2;
+
+    let req_src = (height.saturating_sub(1)) * src_stride + width + 1;
+    let req_dst = height * dst_width;
+    if src.len() < req_src || dst.len() < req_dst {
+        return;
+    }
+    let src = &src[..req_src];
+    let dst = &mut dst[..req_dst];
+
     for i in 0..height {
-        let src_row_start = i * src_stride;
-        let dst_row_start = i * dst_width;
-        for j in 0..width {
-            let base = src_row_start + j;
-            let val0 = src[base] as i32;
-            let val1 = src[base + 1] as i32;
-
-            let temp = val0 * vp8_filter[0] as i32
-                + val1 * vp8_filter[1] as i32
-                + (VP8_FILTER_WEIGHT / 2);
-
-            dst[dst_row_start + j] = (temp >> VP8_FILTER_SHIFT) as u16;
+        let src_row = &src[i * src_stride..i * src_stride + width + 1];
+        let dst_row = &mut dst[i * dst_width..(i + 1) * dst_width];
+        for (out, window) in dst_row.iter_mut().zip(src_row.windows(2)) {
+            let temp = window[0] as i32 * f0 + window[1] as i32 * f1 + half_weight;
+            *out = (temp >> VP8_FILTER_SHIFT) as u16;
         }
     }
 }
@@ -259,17 +287,26 @@ fn filter_block2d_bil_second_pass_safe(
     width: usize,
     vp8_filter: &[i16; 2],
 ) {
+    let f0 = vp8_filter[0] as i32;
+    let f1 = vp8_filter[1] as i32;
+    let half_weight = VP8_FILTER_WEIGHT / 2;
+
+    let req_src = (height + 1) * src_stride;
+    let req_dst = (height.saturating_sub(1)) * dst_pitch + width;
+    if src.len() < req_src || dst.len() < req_dst {
+        return;
+    }
+    let src = &src[..req_src];
+    let dst = &mut dst[..req_dst];
+
     for i in 0..height {
+        let r0 = &src[i * src_stride..i * src_stride + width];
+        let r1 = &src[(i + 1) * src_stride..(i + 1) * src_stride + width];
+        let dst_row = &mut dst[i * dst_pitch..i * dst_pitch + width];
+
         for j in 0..width {
-            let base = i * src_stride + j;
-            let val0 = src[base] as i32;
-            let val1 = src[base + src_stride] as i32;
-
-            let temp = val0 * vp8_filter[0] as i32
-                + val1 * vp8_filter[1] as i32
-                + (VP8_FILTER_WEIGHT / 2);
-
-            dst[i * dst_pitch + j] = (temp >> VP8_FILTER_SHIFT) as u8;
+            let temp = r0[j] as i32 * f0 + r1[j] as i32 * f1 + half_weight;
+            dst_row[j] = (temp >> VP8_FILTER_SHIFT) as u8;
         }
     }
 }
