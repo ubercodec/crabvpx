@@ -166,6 +166,15 @@ pub fn vp8_intra4x4_predict_safe(
                 &Left[0..4],
             );
         }
+        B_VR_PRED => {
+            let (_, dst_after) = y_slice.split_at_mut(dst_offset);
+            crate::vpx_dsp::intrapred::vpx_d117_predictor_4x4_safe(
+                dst_after,
+                dst_stride,
+                &Aboveb[3..8],
+                &Left[0..3],
+            );
+        }
         B_VL_PRED => {
             let (_, dst_after) = y_slice.split_at_mut(dst_offset);
             crate::vpx_dsp::intrapred::vpx_d63e_predictor_4x4_safe(
