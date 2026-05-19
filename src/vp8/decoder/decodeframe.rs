@@ -50,11 +50,6 @@ unsafe extern "C" {
         dst_pitch: ::core::ffi::c_int,
     );
 
-    fn vp8_short_inv_walsh4x4_neon(
-        input: *mut ::core::ffi::c_short,
-        mb_dqcoeff: *mut ::core::ffi::c_short,
-    );
-
     fn vp8_sixtap_predict16x16_neon(
         src_ptr: *mut ::core::ffi::c_uchar,
         src_pixels_per_line: ::core::ffi::c_int,

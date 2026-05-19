@@ -19,7 +19,6 @@ unsafe extern "C" {
     fn vp8_loop_filter_bhs_c(y_ptr: *mut c_uchar, y_stride: c_int, blimit: *const c_uchar);
     fn vp8_loop_filter_bvs_c(y_ptr: *mut c_uchar, y_stride: c_int, blimit: *const c_uchar);
     fn vp8_short_idct4x4llm_c(input: *mut c_short, pred_ptr: *mut c_uchar, pred_stride: c_int, dst_ptr: *mut c_uchar, dst_stride: c_int);
-    fn vp8_short_inv_walsh4x4_c(input: *mut c_short, mb_dqcoeff: *mut c_short);
     fn vp8_sixtap_predict16x16_c(src_ptr: *mut c_uchar, src_pixels_per_line: c_int, xoffset: c_int, yoffset: c_int, dst_ptr: *mut c_uchar, dst_pitch: c_int);
     fn vp8_sixtap_predict4x4_c(src_ptr: *mut c_uchar, src_pixels_per_line: c_int, xoffset: c_int, yoffset: c_int, dst_ptr: *mut c_uchar, dst_pitch: c_int);
     fn vp8_sixtap_predict8x4_c(src_ptr: *mut c_uchar, src_pixels_per_line: c_int, xoffset: c_int, yoffset: c_int, dst_ptr: *mut c_uchar, dst_pitch: c_int);
@@ -107,11 +106,6 @@ pub unsafe extern "C" fn vp8_loop_filter_bvs_neon(y_ptr: *mut c_uchar, y_stride:
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_short_idct4x4llm_neon(input: *mut c_short, pred_ptr: *mut c_uchar, pred_stride: c_int, dst_ptr: *mut c_uchar, dst_stride: c_int) {
     vp8_short_idct4x4llm_c(input, pred_ptr, pred_stride, dst_ptr, dst_stride);
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_short_inv_walsh4x4_neon(input: *mut c_short, mb_dqcoeff: *mut c_short) {
-    vp8_short_inv_walsh4x4_c(input, mb_dqcoeff);
 }
 
 #[unsafe(no_mangle)]

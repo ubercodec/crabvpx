@@ -124,20 +124,6 @@ pub extern "C" fn vp8_dc_only_idct_add_c(
         vp8_dc_only_idct_add_safe(input_dc, pred_slice, pred_stride, dst_slice, dst_stride);
     }
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn vp8_short_inv_walsh4x4_c(
-    input: *mut ::core::ffi::c_short,
-    mb_dqcoeff: *mut ::core::ffi::c_short,
-) {
-    if input.is_null() || mb_dqcoeff.is_null() {
-        return;
-    }
-    unsafe {
-        let input_ref = &*(input as *const [i16; 16]);
-        let mb_dqcoeff_slice = std::slice::from_raw_parts_mut(mb_dqcoeff, 256);
-        vp8_short_inv_walsh4x4_safe(input_ref, mb_dqcoeff_slice);
-    }
-}
 pub fn vp8_short_inv_walsh4x4_1_safe(
     input: &[i16],
     mb_dqcoeff: &mut [i16],

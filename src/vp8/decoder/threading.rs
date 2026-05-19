@@ -66,10 +66,6 @@ unsafe extern "C" {
         y_stride: ::core::ffi::c_int,
         blimit: *const ::core::ffi::c_uchar,
     );
-    fn vp8_short_inv_walsh4x4_neon(
-        input: *mut ::core::ffi::c_short,
-        mb_dqcoeff: *mut ::core::ffi::c_short,
-    );
 
     fn setjmp(_: *mut ::core::ffi::c_int) -> ::core::ffi::c_int;
     fn vpx_internal_error(
