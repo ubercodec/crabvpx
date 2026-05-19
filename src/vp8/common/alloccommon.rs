@@ -8,7 +8,6 @@ unsafe extern "Rust" {
         border: i32,
     ) -> i32;
     fn vp8_yv12_de_alloc_frame_buffer(ybf: *mut Yv12BufferConfig) -> i32;
-    fn vpx_calloc(num: usize, size: usize) -> *mut c_void;
     fn vpx_free(memblk: *mut c_void);
     fn vp8_init_mbmode_probs(x: *mut Vp8Common);
     fn vp8_default_bmode_probs(dest: *mut u8);
