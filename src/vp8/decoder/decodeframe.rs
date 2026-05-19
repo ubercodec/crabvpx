@@ -814,25 +814,6 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
                 xd.left_available = 1 as ::core::ffi::c_int;
                 xd.corrupted |= vp8dx_bool_error(&pbi.mbc[xd.current_bc_idx]);
                 
-                xd.recon_above[0 as ::core::ffi::c_int as usize] = xd.recon_above
-                    [0 as ::core::ffi::c_int as usize]
-                    .offset(16 as ::core::ffi::c_int as isize);
-                xd.recon_above[1 as ::core::ffi::c_int as usize] = xd.recon_above
-                    [1 as ::core::ffi::c_int as usize]
-                    .offset(8 as ::core::ffi::c_int as isize);
-                xd.recon_above[2 as ::core::ffi::c_int as usize] = xd.recon_above
-                    [2 as ::core::ffi::c_int as usize]
-                    .offset(8 as ::core::ffi::c_int as isize);
-                xd.recon_left[0 as ::core::ffi::c_int as usize] = xd.recon_left
-                    [0 as ::core::ffi::c_int as usize]
-                    .offset(16 as ::core::ffi::c_int as isize);
-                xd.recon_left[1 as ::core::ffi::c_int as usize] = xd.recon_left
-                    [1 as ::core::ffi::c_int as usize]
-                    .offset(8 as ::core::ffi::c_int as isize);
-                xd.recon_left[2 as ::core::ffi::c_int as usize] = xd.recon_left
-                    [2 as ::core::ffi::c_int as usize]
-                    .offset(8 as ::core::ffi::c_int as isize);
-                
                 recon_yoffset += 16 as ::core::ffi::c_int;
                 recon_uvoffset += 8 as ::core::ffi::c_int;
                 

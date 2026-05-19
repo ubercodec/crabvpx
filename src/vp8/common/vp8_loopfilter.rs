@@ -334,15 +334,11 @@ pub fn vp8_loop_filter_row_normal_safe(
             lfi.lim = lfi_n.lim[filter_level as usize].as_ptr();
             lfi.hev_thr = lfi_n.hev_thr[hev_index as usize].as_ptr();
 
-            let (y_ptr, u_ptr, v_ptr) = unsafe {
-                (
-                    y_slice.as_mut_ptr().add(cur_y_offset),
-                    u_slice.as_mut_ptr().add(cur_u_offset),
-                    v_slice.as_mut_ptr().add(cur_v_offset),
-                )
-            };
-
             unsafe {
+                let y_ptr = y_slice.as_mut_ptr().add(cur_y_offset);
+                let u_ptr = u_slice.as_mut_ptr().add(cur_u_offset);
+                let v_ptr = v_slice.as_mut_ptr().add(cur_v_offset);
+
                 if mb_col > 0 as ::core::ffi::c_int {
                     vp8_loop_filter_mbv_neon(
                         y_ptr,
@@ -425,39 +421,33 @@ pub fn vp8_loop_filter_row_simple_safe(
         filter_level = lfi_n.lvl[seg as usize][ref_frame as usize][mode_index as usize]
             as ::core::ffi::c_int;
         if filter_level != 0 {
-            let y_ptr = unsafe { y_slice.as_mut_ptr().add(cur_y_offset) };
-            let mblim_ptr = lfi_n.mblim[filter_level as usize].as_ptr();
-            let blim_ptr = lfi_n.blim[filter_level as usize].as_ptr();
+            unsafe {
+                let y_ptr = y_slice.as_mut_ptr().add(cur_y_offset);
+                let mblim_ptr = lfi_n.mblim[filter_level as usize].as_ptr();
+                let blim_ptr = lfi_n.blim[filter_level as usize].as_ptr();
 
-            if mb_col > 0 as ::core::ffi::c_int {
-                unsafe {
+                if mb_col > 0 as ::core::ffi::c_int {
                     vp8_loop_filter_mbvs_neon(
                         y_ptr,
                         post_ystride,
                         mblim_ptr as *mut ::core::ffi::c_uchar,
                     );
                 }
-            }
-            if skip_lf == 0 {
-                unsafe {
+                if skip_lf == 0 {
                     vp8_loop_filter_bvs_neon(
                         y_ptr,
                         post_ystride,
                         blim_ptr as *mut ::core::ffi::c_uchar,
                     );
                 }
-            }
-            if mb_row > 0 as ::core::ffi::c_int {
-                unsafe {
+                if mb_row > 0 as ::core::ffi::c_int {
                     vp8_loop_filter_mbhs_neon(
                         y_ptr,
                         post_ystride,
                         mblim_ptr as *mut ::core::ffi::c_uchar,
                     );
                 }
-            }
-            if skip_lf == 0 {
-                unsafe {
+                if skip_lf == 0 {
                     vp8_loop_filter_bhs_neon(
                         y_ptr,
                         post_ystride,
