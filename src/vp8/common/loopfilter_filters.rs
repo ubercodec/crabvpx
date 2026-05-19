@@ -405,74 +405,128 @@ fn vp8_simple_filter_mask(
 ) -> i8 {
     (((p0 as i32 - q0 as i32).abs() * 2 + (p1 as i32 - q1 as i32).abs() / 2 <= blimit as i32) as i32 * -1) as i8
 }
-unsafe extern "C" fn vp8_simple_filter(
-    mut mask: ::core::ffi::c_schar,
-    mut op1: *mut uc,
-    mut op0: *mut uc,
-    mut oq0: *mut uc,
-    mut oq1: *mut uc,
-) { unsafe {
-    let mut filter_value: ::core::ffi::c_schar = 0;
-    let mut Filter1: ::core::ffi::c_schar = 0;
-    let mut Filter2: ::core::ffi::c_schar = 0;
-    let mut p1: ::core::ffi::c_schar = (*op1 as ::core::ffi::c_schar as ::core::ffi::c_int
-        ^ 0x80 as ::core::ffi::c_int)
-        as ::core::ffi::c_schar;
-    let mut p0: ::core::ffi::c_schar = (*op0 as ::core::ffi::c_schar as ::core::ffi::c_int
-        ^ 0x80 as ::core::ffi::c_int)
-        as ::core::ffi::c_schar;
-    let mut q0: ::core::ffi::c_schar = (*oq0 as ::core::ffi::c_schar as ::core::ffi::c_int
-        ^ 0x80 as ::core::ffi::c_int)
-        as ::core::ffi::c_schar;
-    let mut q1: ::core::ffi::c_schar = (*oq1 as ::core::ffi::c_schar as ::core::ffi::c_int
-        ^ 0x80 as ::core::ffi::c_int)
-        as ::core::ffi::c_schar;
-    let mut u: ::core::ffi::c_schar = 0;
-    filter_value = vp8_signed_char_clamp(p1 as ::core::ffi::c_int - q1 as ::core::ffi::c_int);
+
+fn vp8_simple_filter_safe(
+    mask: i8,
+    op1: u8,
+    op0: &mut u8,
+    oq0: &mut u8,
+    oq1: u8,
+) {
+    let mut filter_value: i8;
+    let filter1: i8;
+    let filter2: i8;
+    let p1 = ((op1 as i8 as i32) ^ 0x80) as i8;
+    let p0 = ((*op0 as i8 as i32) ^ 0x80) as i8;
+    let q0 = ((*oq0 as i8 as i32) ^ 0x80) as i8;
+    let q1 = ((oq1 as i8 as i32) ^ 0x80) as i8;
+    let mut u: i8;
+    filter_value = vp8_signed_char_clamp(p1 as i32 - q1 as i32);
     filter_value = vp8_signed_char_clamp(
-        filter_value as ::core::ffi::c_int
-            + 3 as ::core::ffi::c_int * (q0 as ::core::ffi::c_int - p0 as ::core::ffi::c_int),
+        filter_value as i32
+            + 3 * (q0 as i32 - p0 as i32),
     );
-    filter_value =
-        (filter_value as ::core::ffi::c_int & mask as ::core::ffi::c_int) as ::core::ffi::c_schar;
-    Filter1 = vp8_signed_char_clamp(filter_value as ::core::ffi::c_int + 4 as ::core::ffi::c_int);
-    Filter1 = (Filter1 as ::core::ffi::c_int >> 3 as ::core::ffi::c_int) as ::core::ffi::c_schar;
-    u = vp8_signed_char_clamp(q0 as ::core::ffi::c_int - Filter1 as ::core::ffi::c_int);
-    *oq0 = (u as ::core::ffi::c_int ^ 0x80 as ::core::ffi::c_int) as uc;
-    Filter2 = vp8_signed_char_clamp(filter_value as ::core::ffi::c_int + 3 as ::core::ffi::c_int);
-    Filter2 = (Filter2 as ::core::ffi::c_int >> 3 as ::core::ffi::c_int) as ::core::ffi::c_schar;
-    u = vp8_signed_char_clamp(p0 as ::core::ffi::c_int + Filter2 as ::core::ffi::c_int);
-    *op0 = (u as ::core::ffi::c_int ^ 0x80 as ::core::ffi::c_int) as uc;
-}}
+    filter_value = (filter_value as i32 & mask as i32) as i8;
+    filter1 = vp8_signed_char_clamp(filter_value as i32 + 4);
+    let filter1_shifted = (filter1 as i32 >> 3) as i8;
+    u = vp8_signed_char_clamp(q0 as i32 - filter1_shifted as i32);
+    *oq0 = (u as i32 ^ 0x80) as u8;
+    filter2 = vp8_signed_char_clamp(filter_value as i32 + 3);
+    let filter2_shifted = (filter2 as i32 >> 3) as i8;
+    u = vp8_signed_char_clamp(p0 as i32 + filter2_shifted as i32);
+    *op0 = (u as i32 ^ 0x80) as u8;
+}
+
+fn vp8_loop_filter_simple_horizontal_edge_safe(
+    y: &mut [u8],
+    y_offset: usize,
+    y_stride: usize,
+    blimit: u8,
+) {
+    let mut mask: i8;
+    for i in 0..16 {
+        let idx = y_offset + i;
+        let p1_val = y[idx - 2 * y_stride];
+        let mut p0_val = y[idx - y_stride];
+        let mut q0_val = y[idx];
+        let q1_val = y[idx + y_stride];
+
+        mask = vp8_simple_filter_mask(
+            blimit,
+            p1_val,
+            p0_val,
+            q0_val,
+            q1_val,
+        );
+
+        vp8_simple_filter_safe(
+            mask,
+            p1_val,
+            &mut p0_val,
+            &mut q0_val,
+            q1_val,
+        );
+
+        y[idx - y_stride] = p0_val;
+        y[idx] = q0_val;
+    }
+}
+
+fn vp8_loop_filter_simple_vertical_edge_safe(
+    y: &mut [u8],
+    y_offset: usize,
+    y_stride: usize,
+    blimit: u8,
+) {
+    let mut mask: i8;
+    for i in 0..16 {
+        let idx = y_offset + i * y_stride;
+        let p1_val = y[idx - 2];
+        let mut p0_val = y[idx - 1];
+        let mut q0_val = y[idx];
+        let q1_val = y[idx + 1];
+
+        mask = vp8_simple_filter_mask(
+            blimit,
+            p1_val,
+            p0_val,
+            q0_val,
+            q1_val,
+        );
+
+        vp8_simple_filter_safe(
+            mask,
+            p1_val,
+            &mut p0_val,
+            &mut q0_val,
+            q1_val,
+        );
+
+        y[idx - 1] = p0_val;
+        y[idx] = q0_val;
+    }
+}
+
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_loop_filter_simple_horizontal_edge_c(
     mut y_ptr: *mut ::core::ffi::c_uchar,
     mut y_stride: ::core::ffi::c_int,
     mut blimit: *const ::core::ffi::c_uchar,
 ) { unsafe {
-    let mut mask: ::core::ffi::c_schar = 0 as ::core::ffi::c_schar;
-    let mut i: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    loop {
-        mask = vp8_simple_filter_mask(
-            *blimit.offset(0 as ::core::ffi::c_int as isize) as uc,
-            *y_ptr.offset((-(2 as ::core::ffi::c_int) * y_stride) as isize) as uc,
-            *y_ptr.offset((-(1 as ::core::ffi::c_int) * y_stride) as isize) as uc,
-            *y_ptr.offset((0 as ::core::ffi::c_int * y_stride) as isize) as uc,
-            *y_ptr.offset((1 as ::core::ffi::c_int * y_stride) as isize) as uc,
-        );
-        vp8_simple_filter(
-            mask,
-            y_ptr.offset(-((2 as ::core::ffi::c_int * y_stride) as isize)),
-            y_ptr.offset(-((1 as ::core::ffi::c_int * y_stride) as isize)),
-            y_ptr as *mut uc,
-            y_ptr.offset((1 as ::core::ffi::c_int * y_stride) as isize),
-        );
-        y_ptr = y_ptr.offset(1);
-        i += 1;
-        if !(i < 16 as ::core::ffi::c_int) {
-            break;
-        }
-    }
+    let y_stride_usize = y_stride as usize;
+    let y_slice = core::slice::from_raw_parts_mut(
+        y_ptr.offset(-2 * y_stride as isize),
+        3 * y_stride_usize + 16,
+    );
+    let blimit_val = *blimit;
+
+    vp8_loop_filter_simple_horizontal_edge_safe(
+        y_slice,
+        2 * y_stride_usize,
+        y_stride_usize,
+        blimit_val,
+    );
 }}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_loop_filter_simple_vertical_edge_c(
@@ -480,29 +534,19 @@ pub unsafe extern "C" fn vp8_loop_filter_simple_vertical_edge_c(
     mut y_stride: ::core::ffi::c_int,
     mut blimit: *const ::core::ffi::c_uchar,
 ) { unsafe {
-    let mut mask: ::core::ffi::c_schar = 0 as ::core::ffi::c_schar;
-    let mut i: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    loop {
-        mask = vp8_simple_filter_mask(
-            *blimit.offset(0 as ::core::ffi::c_int as isize) as uc,
-            *y_ptr.offset(-(2 as ::core::ffi::c_int) as isize) as uc,
-            *y_ptr.offset(-(1 as ::core::ffi::c_int) as isize) as uc,
-            *y_ptr.offset(0 as ::core::ffi::c_int as isize) as uc,
-            *y_ptr.offset(1 as ::core::ffi::c_int as isize) as uc,
-        );
-        vp8_simple_filter(
-            mask,
-            y_ptr.offset(-(2 as ::core::ffi::c_int as isize)),
-            y_ptr.offset(-(1 as ::core::ffi::c_int as isize)),
-            y_ptr as *mut uc,
-            y_ptr.offset(1 as ::core::ffi::c_int as isize),
-        );
-        y_ptr = y_ptr.offset(y_stride as isize);
-        i += 1;
-        if !(i < 16 as ::core::ffi::c_int) {
-            break;
-        }
-    }
+    let y_stride_usize = y_stride as usize;
+    let y_slice = core::slice::from_raw_parts_mut(
+        y_ptr.offset(-2),
+        15 * y_stride_usize + 4,
+    );
+    let blimit_val = *blimit;
+
+    vp8_loop_filter_simple_vertical_edge_safe(
+        y_slice,
+        2,
+        y_stride_usize,
+        blimit_val,
+    );
 }}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_loop_filter_mbh_c(
