@@ -169,6 +169,13 @@ pub fn vp8_build_intra_predictors_mby_safe(
                 &yabove[1..],
             );
         }
+        H_PRED => {
+            crate::vpx_dsp::intrapred::vpx_h_predictor_16x16_safe(
+                ypred_slice,
+                y_stride,
+                yleft,
+            );
+        }
         _ => {
             let fn_0 = if mode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_uint {
                 dc_pred[left_available as usize][up_available as usize]
@@ -212,6 +219,18 @@ pub fn vp8_build_intra_predictors_mbuv_safe(
                 vpred_slice,
                 uv_stride,
                 &vabove[1..],
+            );
+        }
+        H_PRED => {
+            crate::vpx_dsp::intrapred::vpx_h_predictor_8x8_safe(
+                upred_slice,
+                uv_stride,
+                uleft,
+            );
+            crate::vpx_dsp::intrapred::vpx_h_predictor_8x8_safe(
+                vpred_slice,
+                uv_stride,
+                vleft,
             );
         }
         _ => {

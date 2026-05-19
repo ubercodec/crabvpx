@@ -1386,15 +1386,35 @@ pub unsafe extern "C" fn vpx_v_predictor_4x4_c(
 ) { unsafe {
     v_predictor(dst, stride, 4 as ::core::ffi::c_int, above, left);
 }}
+pub fn vpx_h_predictor_16x16_safe(
+    dst: &mut [u8],
+    stride: usize,
+    left: &[u8],
+) {
+    for r in 0..16 {
+        let start = r * stride;
+        let val = left[r];
+        dst[start..start + 16].fill(val);
+    }
+}
+
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vpx_h_predictor_16x16_c(
-    mut dst: *mut uint8_t,
-    mut stride: ptrdiff_t,
-    mut above: *const uint8_t,
-    mut left: *const uint8_t,
-) { unsafe {
-    h_predictor(dst, stride, 16 as ::core::ffi::c_int, above, left);
-}}
+pub extern "C" fn vpx_h_predictor_16x16_c(
+    dst: *mut uint8_t,
+    stride: ptrdiff_t,
+    _above: *const uint8_t,
+    left: *const uint8_t,
+) {
+    if dst.is_null() || left.is_null() {
+        return;
+    }
+    unsafe {
+        let dst_len = 15 * stride as usize + 16;
+        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
+        let left_slice = core::slice::from_raw_parts(left, 16);
+        vpx_h_predictor_16x16_safe(dst_slice, stride as usize, left_slice);
+    }
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vpx_h_predictor_32x32_c(
     mut dst: *mut uint8_t,
@@ -1404,15 +1424,35 @@ pub unsafe extern "C" fn vpx_h_predictor_32x32_c(
 ) { unsafe {
     h_predictor(dst, stride, 32 as ::core::ffi::c_int, above, left);
 }}
+pub fn vpx_h_predictor_8x8_safe(
+    dst: &mut [u8],
+    stride: usize,
+    left: &[u8],
+) {
+    for r in 0..8 {
+        let start = r * stride;
+        let val = left[r];
+        dst[start..start + 8].fill(val);
+    }
+}
+
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vpx_h_predictor_8x8_c(
-    mut dst: *mut uint8_t,
-    mut stride: ptrdiff_t,
-    mut above: *const uint8_t,
-    mut left: *const uint8_t,
-) { unsafe {
-    h_predictor(dst, stride, 8 as ::core::ffi::c_int, above, left);
-}}
+pub extern "C" fn vpx_h_predictor_8x8_c(
+    dst: *mut uint8_t,
+    stride: ptrdiff_t,
+    _above: *const uint8_t,
+    left: *const uint8_t,
+) {
+    if dst.is_null() || left.is_null() {
+        return;
+    }
+    unsafe {
+        let dst_len = 7 * stride as usize + 8;
+        let dst_slice = core::slice::from_raw_parts_mut(dst, dst_len);
+        let left_slice = core::slice::from_raw_parts(left, 8);
+        vpx_h_predictor_8x8_safe(dst_slice, stride as usize, left_slice);
+    }
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vpx_h_predictor_4x4_c(
     mut dst: *mut uint8_t,
