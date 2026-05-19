@@ -399,17 +399,9 @@ pub fn vp8_build_inter16x16_predictors_mb(
 
     // Reconstruct global Y slices
     let (mut dst_y_slice, pre_y_slice) = unsafe {
-        let dst_y_global_active = x.dst.y_buffer.offset(-(recon_yoffset as isize));
-        let dst_y_global_start = dst_y_global_active.offset(-((border * dst_y_stride as usize + border) as isize));
-        let dst_y_total_size = (x.dst.y_height as usize + 2 * border) * dst_y_stride as usize;
-        
-        let pre_y_global_active = x.pre.y_buffer.offset(-(pre_recon_yoffset as isize));
-        let pre_y_global_start = pre_y_global_active.offset(-((border * pre_y_stride as usize + border) as isize));
-        let pre_y_total_size = (x.pre.y_height as usize + 2 * border) * pre_y_stride as usize;
-        
         (
-            core::slice::from_raw_parts_mut(dst_y_global_start, dst_y_total_size),
-            core::slice::from_raw_parts(pre_y_global_start, pre_y_total_size),
+            x.dst.y_slice_mut_with_offset(recon_yoffset),
+            x.pre.y_slice_with_offset(pre_recon_yoffset),
         )
     };
 
@@ -476,27 +468,11 @@ pub fn vp8_build_inter16x16_predictors_mb(
 
     // Reconstruct global UV slices
     let (mut dst_u_slice, mut dst_v_slice, pre_u_slice, pre_v_slice) = unsafe {
-        let dst_u_global_active = x.dst.u_buffer.offset(-(recon_uvoffset as isize));
-        let dst_u_global_start = dst_u_global_active.offset(-((uv_border * dst_uv_stride as usize + uv_border) as isize));
-        let dst_u_total_size = (x.dst.uv_height as usize + 2 * uv_border) * dst_uv_stride as usize;
-
-        let dst_v_global_active = x.dst.v_buffer.offset(-(recon_uvoffset as isize));
-        let dst_v_global_start = dst_v_global_active.offset(-((uv_border * dst_uv_stride as usize + uv_border) as isize));
-        let dst_v_total_size = (x.dst.uv_height as usize + 2 * uv_border) * dst_uv_stride as usize;
-
-        let pre_u_global_active = x.pre.u_buffer.offset(-(pre_recon_uvoffset as isize));
-        let pre_u_global_start = pre_u_global_active.offset(-((uv_border * pre_uv_stride as usize + uv_border) as isize));
-        let pre_u_total_size = (x.pre.uv_height as usize + 2 * uv_border) * pre_uv_stride as usize;
-
-        let pre_v_global_active = x.pre.v_buffer.offset(-(pre_recon_uvoffset as isize));
-        let pre_v_global_start = pre_v_global_active.offset(-((uv_border * pre_uv_stride as usize + uv_border) as isize));
-        let pre_v_total_size = (x.pre.uv_height as usize + 2 * uv_border) * pre_uv_stride as usize;
-
         (
-            core::slice::from_raw_parts_mut(dst_u_global_start, dst_u_total_size),
-            core::slice::from_raw_parts_mut(dst_v_global_start, dst_v_total_size),
-            core::slice::from_raw_parts(pre_u_global_start, pre_u_total_size),
-            core::slice::from_raw_parts(pre_v_global_start, pre_v_total_size),
+            x.dst.u_slice_mut_with_offset(recon_uvoffset),
+            x.dst.v_slice_mut_with_offset(recon_uvoffset),
+            x.pre.u_slice_with_offset(pre_recon_uvoffset),
+            x.pre.v_slice_with_offset(pre_recon_uvoffset),
         )
     };
 
@@ -608,15 +584,12 @@ fn build_inter4x4_predictors_mb(x: &mut MACROBLOCKD) {
     let subpixel_predict = x.subpixel_predict;
     
     // Reconstruct global Y slices
-    let dst_y_global_active = unsafe { x.dst.y_buffer.offset(-(recon_yoffset as isize)) };
-    let dst_y_global_start = unsafe { dst_y_global_active.offset(-((border * dst_y_stride as usize + border) as isize)) };
-    let dst_y_total_size = (x.dst.y_height as usize + 2 * border) * dst_y_stride as usize;
-    let mut dst_y_slice = unsafe { core::slice::from_raw_parts_mut(dst_y_global_start, dst_y_total_size) };
-    
-    let pre_y_global_active = unsafe { x.pre.y_buffer.offset(-(pre_recon_yoffset as isize)) };
-    let pre_y_global_start = unsafe { pre_y_global_active.offset(-((border * pre_y_stride as usize + border) as isize)) };
-    let pre_y_total_size = (x.pre.y_height as usize + 2 * border) * pre_y_stride as usize;
-    let pre_y_slice = unsafe { core::slice::from_raw_parts(pre_y_global_start, pre_y_total_size) };
+    let (mut dst_y_slice, pre_y_slice) = unsafe {
+        (
+            x.dst.y_slice_mut_with_offset(recon_yoffset),
+            x.pre.y_slice_with_offset(pre_recon_yoffset),
+        )
+    };
     
     let dst_y_active_offset = border * dst_y_stride as usize + border + recon_yoffset;
     let pre_y_active_offset = border * pre_y_stride as usize + border + pre_recon_yoffset;
@@ -705,15 +678,12 @@ fn build_inter4x4_predictors_mb(x: &mut MACROBLOCKD) {
     drop(dst_y_slice);
     
     // Reconstruct global U slices
-    let dst_u_global_active = unsafe { x.dst.u_buffer.offset(-(recon_uvoffset as isize)) };
-    let dst_u_global_start = unsafe { dst_u_global_active.offset(-((uv_border * dst_uv_stride as usize + uv_border) as isize)) };
-    let dst_u_total_size = (x.dst.uv_height as usize + 2 * uv_border) * dst_uv_stride as usize;
-    let mut dst_u_slice = unsafe { core::slice::from_raw_parts_mut(dst_u_global_start, dst_u_total_size) };
-    
-    let pre_u_global_active = unsafe { x.pre.u_buffer.offset(-(pre_recon_uvoffset as isize)) };
-    let pre_u_global_start = unsafe { pre_u_global_active.offset(-((uv_border * pre_uv_stride as usize + uv_border) as isize)) };
-    let pre_u_total_size = (x.pre.uv_height as usize + 2 * uv_border) * pre_uv_stride as usize;
-    let pre_u_slice = unsafe { core::slice::from_raw_parts(pre_u_global_start, pre_u_total_size) };
+    let (mut dst_u_slice, pre_u_slice) = unsafe {
+        (
+            x.dst.u_slice_mut_with_offset(recon_uvoffset),
+            x.pre.u_slice_with_offset(pre_recon_uvoffset),
+        )
+    };
     
     let dst_uv_active_offset = uv_border * dst_uv_stride as usize + uv_border + recon_uvoffset;
     let pre_uv_active_offset = uv_border * pre_uv_stride as usize + uv_border + pre_recon_uvoffset;
@@ -760,15 +730,12 @@ fn build_inter4x4_predictors_mb(x: &mut MACROBLOCKD) {
     drop(dst_u_slice);
     
     // Reconstruct global V slices
-    let dst_v_global_active = unsafe { x.dst.v_buffer.offset(-(recon_uvoffset as isize)) };
-    let dst_v_global_start = unsafe { dst_v_global_active.offset(-((uv_border * dst_uv_stride as usize + uv_border) as isize)) };
-    let dst_v_total_size = (x.dst.uv_height as usize + 2 * uv_border) * dst_uv_stride as usize;
-    let mut dst_v_slice = unsafe { core::slice::from_raw_parts_mut(dst_v_global_start, dst_v_total_size) };
-    
-    let pre_v_global_active = unsafe { x.pre.v_buffer.offset(-(pre_recon_uvoffset as isize)) };
-    let pre_v_global_start = unsafe { pre_v_global_active.offset(-((uv_border * pre_uv_stride as usize + uv_border) as isize)) };
-    let pre_v_total_size = (x.pre.uv_height as usize + 2 * uv_border) * pre_uv_stride as usize;
-    let pre_v_slice = unsafe { core::slice::from_raw_parts(pre_v_global_start, pre_v_total_size) };
+    let (mut dst_v_slice, pre_v_slice) = unsafe {
+        (
+            x.dst.v_slice_mut_with_offset(recon_uvoffset),
+            x.pre.v_slice_with_offset(pre_recon_uvoffset),
+        )
+    };
     
     {
         for i in (20..24).step_by(2) {
