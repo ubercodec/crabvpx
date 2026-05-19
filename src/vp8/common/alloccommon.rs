@@ -129,11 +129,8 @@ pub fn vp8_alloc_frame_buffers(
                 let mip_box = vec![MODE_INFO::default(); mip_count].into_boxed_slice();
                 oci.mip = Some(mip_box);
                 if oci.mip.is_some() {
-                    oci.mi = unsafe {
-                        oci.mip.as_ref().unwrap().as_ptr()
-                            .offset(oci.mode_info_stride as isize)
-                            .offset(1 as ::core::ffi::c_int as isize) as *mut _
-                    };
+                    let offset = (oci.mode_info_stride + 1) as usize;
+                    oci.mi = &raw mut oci.mip.as_mut().unwrap()[offset];
                     let above_context_count = oci.mb_cols as usize;
                     let above_context_box = vec![ENTROPY_CONTEXT_PLANES::default(); above_context_count].into_boxed_slice();
                     oci.above_context = Some(above_context_box);
