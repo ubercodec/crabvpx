@@ -1,10 +1,4 @@
-unsafe extern "C" {
-    fn memcpy(
-        __dst: *mut ::core::ffi::c_void,
-        __src: *const ::core::ffi::c_void,
-        __n: size_t,
-    ) -> *mut ::core::ffi::c_void;
-}
+
 pub use crate::vp8::common::types::*;
 pub type uint32_t = u32;
 
