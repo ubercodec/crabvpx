@@ -12,7 +12,7 @@ pub fn vp8dx_start_decode_safe(
     decrypt_state: *mut ::core::ffi::c_void,
 ) {
     br.user_buffer = source.as_ptr();
-    br.user_buffer_end = unsafe { source.as_ptr().add(source.len()) };
+    br.user_buffer_end = source.as_ptr_range().end;
     br.value = 0 as VP8_BD_VALUE;
     br.count = -8;
     br.range = 255;
