@@ -1020,6 +1020,7 @@ fn setup_token_decoder(
     
     let mut new_ptrs: [*const u8; 9] = [core::ptr::null(); 9];
     let mut new_sizes: [u32; 9] = [0; 9];
+    let mut new_slices: [Option<&[u8]>; 9] = [None; 9];
     let mut new_count = 0;
 
     let mut fragment_idx = 0;
@@ -1055,6 +1056,7 @@ fn setup_token_decoder(
             
             new_ptrs[0] = first_part.as_ptr();
             new_sizes[0] = first_part.len() as u32;
+            new_slices[0] = Some(first_part);
             new_count = 1;
             target_partition_idx = 1;
             
@@ -1081,6 +1083,7 @@ fn setup_token_decoder(
             
             new_ptrs[target_partition_idx] = partition.as_ptr();
             new_sizes[target_partition_idx] = partition.len() as u32;
+            new_slices[target_partition_idx] = Some(partition);
             new_count = target_partition_idx + 1;
             
             target_partition_idx += 1;
@@ -1097,17 +1100,8 @@ fn setup_token_decoder(
     }
 
     let mut partition_idx = 1;
-    while partition_idx < pbi.fragments.count {
-        let partition_ptr = pbi.fragments.ptrs[partition_idx as usize];
-        let partition_size = pbi.fragments.sizes[partition_idx as usize];
-        if partition_size != 0 && partition_ptr.is_null() {
-            pbi.common.error.trigger(
-                VPX_CODEC_MEM_ERROR,
-                &format!("Failed to allocate bool decoder {}", partition_idx),
-            );
-        } else {
-            // SAFETY: We just populated these pointers from valid slices, so they are valid.
-            let slice = unsafe { core::slice::from_raw_parts(partition_ptr, partition_size as usize) };
+    while partition_idx < new_count {
+        if let Some(slice) = new_slices[partition_idx] {
             crate::vp8::decoder::dboolhuff::vp8dx_start_decode_safe(
                 &mut pbi.mbc[(partition_idx - 1) as usize],
                 slice,
