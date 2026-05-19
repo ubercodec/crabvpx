@@ -56,11 +56,7 @@ pub unsafe fn vp8_yv12_de_alloc_frame_buffer(mut ybf: *mut Yv12BufferConfig) -> 
     unsafe {
         if !ybf.is_null() {
             if (*ybf).buffer_alloc_sz > 0 as usize && !(*ybf).buffer_alloc_base.is_null() {
-                let _ = Vec::from_raw_parts(
-                    (*ybf).buffer_alloc_base,
-                    0,
-                    (*ybf).buffer_alloc_cap,
-                );
+                let _ = Vec::from_raw_parts((*ybf).buffer_alloc_base, 0, (*ybf).buffer_alloc_cap);
             }
             *ybf = Default::default();
         } else {

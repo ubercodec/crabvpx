@@ -224,8 +224,14 @@ pub unsafe fn vp8_de_alloc_frame_buffers(mut oci: *mut Vp8Common) {
             i += 1;
         }
         vp8_yv12_de_alloc_frame_buffer(&raw mut (*oci).temp_scale_frame);
-        vpx_free((*oci).above_context as *mut c_void);
-        vpx_free((*oci).mip as *mut c_void);
+        if !(*oci).above_context.is_null() {
+            let ac_count = (*oci).mb_cols as usize;
+            let _ = Vec::from_raw_parts((*oci).above_context, 0, ac_count);
+        }
+        if !(*oci).mip.is_null() {
+            let mip_count = (((*oci).mb_cols + 1) * ((*oci).mb_rows + 1)) as usize;
+            let _ = Vec::from_raw_parts((*oci).mip, 0, mip_count);
+        }
         (*oci).above_context = ::core::ptr::null_mut::<EntropyContextPlanes>();
         (*oci).mip = ::core::ptr::null_mut::<ModeInfo>();
         (*oci).mi = ::core::ptr::null_mut::<ModeInfo>();
@@ -288,20 +294,24 @@ pub unsafe fn vp8_alloc_frame_buffers(
                 (*oci).mb_cols = width >> 4 as i32;
                 (*oci).mbs = (*oci).mb_rows * (*oci).mb_cols;
                 (*oci).mode_info_stride = (*oci).mb_cols + 1 as i32;
-                (*oci).mip = vpx_calloc(
-                    (((*oci).mb_cols + 1 as i32) * ((*oci).mb_rows + 1 as i32)) as usize,
-                    ::core::mem::size_of::<ModeInfo>() as usize,
-                ) as *mut ModeInfo;
+
+                let mip_count =
+                    (((*oci).mb_cols + 1 as i32) * ((*oci).mb_rows + 1 as i32)) as usize;
+                let mut mip_vec = Vec::<ModeInfo>::with_capacity(mip_count);
+                mip_vec.resize(mip_count, core::mem::zeroed());
+                (*oci).mip = mip_vec.as_mut_ptr();
+                core::mem::forget(mip_vec);
+
                 if !(*oci).mip.is_null() {
                     (*oci).mi = (*oci)
                         .mip
                         .offset((*oci).mode_info_stride as isize)
                         .offset(1 as isize);
-                    (*oci).above_context = vpx_calloc(
-                        (::core::mem::size_of::<EntropyContextPlanes>() as usize)
-                            .wrapping_mul((*oci).mb_cols as usize),
-                        1 as usize,
-                    ) as *mut EntropyContextPlanes;
+                    let ac_count = (*oci).mb_cols as usize;
+                    let mut ac_vec = Vec::<EntropyContextPlanes>::with_capacity(ac_count);
+                    ac_vec.resize(ac_count, core::mem::zeroed());
+                    (*oci).above_context = ac_vec.as_mut_ptr();
+                    core::mem::forget(ac_vec);
                     if !(*oci).above_context.is_null() {
                         return 0 as i32;
                     }
