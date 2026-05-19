@@ -47,42 +47,6 @@ unsafe extern "C" {
         above: *const uint8_t,
         left: *const uint8_t,
     );
-    fn vpx_h_predictor_16x16_neon(
-        dst: *mut uint8_t,
-        stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
-    );
-    fn vpx_h_predictor_8x8_neon(
-        dst: *mut uint8_t,
-        stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
-    );
-    fn vpx_tm_predictor_16x16_neon(
-        dst: *mut uint8_t,
-        stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
-    );
-    fn vpx_tm_predictor_8x8_neon(
-        dst: *mut uint8_t,
-        stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
-    );
-    fn vpx_v_predictor_16x16_neon(
-        dst: *mut uint8_t,
-        stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
-    );
-    fn vpx_v_predictor_8x8_neon(
-        dst: *mut uint8_t,
-        stride: ptrdiff_t,
-        above: *const uint8_t,
-        left: *const uint8_t,
-    );
 }
 pub type __darwin_ptrdiff_t = isize;
 pub type __darwin_size_t = usize;
@@ -114,21 +78,7 @@ pub const SIZE_8: C2RustUnnamed = 1;
 pub type C2RustUnnamed = ::core::ffi::c_uint;
 pub const NUM_SIZES: C2RustUnnamed = 2;
 
-static pred: [[intra_pred_fn; 2]; 4] = [
-    [None, None],
-    [
-        Some(vpx_v_predictor_16x16_neon),
-        Some(vpx_v_predictor_8x8_neon),
-    ],
-    [
-        Some(vpx_h_predictor_16x16_neon),
-        Some(vpx_h_predictor_8x8_neon),
-    ],
-    [
-        Some(vpx_tm_predictor_16x16_neon),
-        Some(vpx_tm_predictor_8x8_neon),
-    ],
-];
+
 
 static dc_pred: [[[intra_pred_fn; 2]; 2]; 2] = [
     [
@@ -176,13 +126,18 @@ pub fn vp8_build_intra_predictors_mby_safe(
                 yleft,
             );
         }
+        TM_PRED => {
+            crate::vpx_dsp::intrapred::vpx_tm_predictor_16x16_safe(
+                ypred_slice,
+                y_stride,
+                &yabove[1..17],
+                yleft,
+                yabove[0],
+            );
+        }
         _ => {
-            let fn_0 = if mode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_uint {
-                dc_pred[left_available as usize][up_available as usize]
-                    [SIZE_16 as usize]
-            } else {
-                pred[mode as usize][SIZE_16 as usize]
-            };
+            debug_assert_eq!(mode, DC_PRED);
+            let fn_0 = dc_pred[left_available as usize][up_available as usize][SIZE_16 as usize];
             if let Some(pred_fn) = fn_0 {
                 unsafe {
                     pred_fn(
@@ -233,13 +188,25 @@ pub fn vp8_build_intra_predictors_mbuv_safe(
                 vleft,
             );
         }
+        TM_PRED => {
+            crate::vpx_dsp::intrapred::vpx_tm_predictor_8x8_safe(
+                upred_slice,
+                uv_stride,
+                &uabove[1..9],
+                uleft,
+                uabove[0],
+            );
+            crate::vpx_dsp::intrapred::vpx_tm_predictor_8x8_safe(
+                vpred_slice,
+                uv_stride,
+                &vabove[1..9],
+                vleft,
+                vabove[0],
+            );
+        }
         _ => {
-            let fn_0 = if uvmode as ::core::ffi::c_uint == DC_PRED as ::core::ffi::c_uint {
-                dc_pred[left_available as usize][up_available as usize]
-                    [SIZE_8 as usize]
-            } else {
-                pred[uvmode as usize][SIZE_8 as usize]
-            };
+            debug_assert_eq!(uvmode, DC_PRED);
+            let fn_0 = dc_pred[left_available as usize][up_available as usize][SIZE_8 as usize];
             if let Some(pred_fn) = fn_0 {
                 unsafe {
                     pred_fn(
