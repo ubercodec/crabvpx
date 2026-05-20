@@ -123,23 +123,10 @@ pub fn vp8_yv12_realloc_frame_buffer_safe(
     ybf.border = border;
     ybf.frame_size = frame_size;
 
-    unsafe {
-        ybf.y_buffer = ybf
-            .buffer_alloc
-            .offset((border * y_stride) as isize)
-            .offset(border as isize);
-        ybf.u_buffer = ybf
-            .buffer_alloc
-            .offset(yplane_size as isize)
-            .offset(((border / 2) * uv_stride) as isize)
-            .offset((border / 2) as isize);
-        ybf.v_buffer = ybf
-            .buffer_alloc
-            .offset(yplane_size as isize)
-            .offset(uvplane_size as isize)
-            .offset(((border / 2) * uv_stride) as isize)
-            .offset((border / 2) as isize);
-    }
+    let base = ybf.buffer_alloc as usize;
+    ybf.y_buffer = (base + (border * y_stride + border) as usize) as *mut u8;
+    ybf.u_buffer = (base + yplane_size as usize + ((border / 2) * uv_stride + border / 2) as usize) as *mut u8;
+    ybf.v_buffer = (base + yplane_size as usize + uvplane_size as usize + ((border / 2) * uv_stride + border / 2) as usize) as *mut u8;
     ybf.alpha_buffer = core::ptr::null_mut();
     ybf.corrupted = 0;
 

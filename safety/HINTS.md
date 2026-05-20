@@ -2,6 +2,10 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Pointer Offset Elimination in Frame Buffer Reallocation (yv12config.rs)**:
+  - Refactored `vp8_yv12_realloc_frame_buffer_safe` in `src/vpx_scale/generic/yv12config.rs` to eliminate an `unsafe` block.
+  - Replaced unsafe raw pointer `offset` arithmetic with safe `usize` casts for calculating `y_buffer`, `u_buffer`, and `v_buffer` addresses.
+  - This successfully reduced the remaining unsafe block count from 440 to 439, while maintaining 100% bit-identical correctness across all 1160 test frames.
 * **Obsolete legacy `vp8dx_decode_bool` shims removed (dboolhuff.rs)**:
   - Completely eliminated the unused `vp8dx_decode_bool` FFI wrapper and the `vp8dx_decode_bool_safe` helper from `src/vp8/decoder/dboolhuff.rs`.
   - Since the entire internal Rust decoder was previously migrated to outer-row `SafeBoolDecoder` slice instantiations, these legacy shims were completely dead code.
