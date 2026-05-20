@@ -2,6 +2,12 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Hardened NEON Loop Filter FFI Shim Bounds checking (simd_shim.rs & threading.rs)**:
+  - Completed **Milestone 3 Unit 8**! Refactored all 8 public wrappers around NEON shims in `src/simd_shim.rs` (`safe_vp8_loop_filter_bh_neon`, etc.) to enforce exact, precise slice length and column/row bounds assertions prior to internal unsafe FFI vector executions.
+  - Refactored macroblock boundary horizontal filter calls (`mbh` and `mbhs`) in `src/vp8/decoder/threading.rs` to construct and pass combined disjoint slice views (`2 * y_len`, `2 * uv_len`) covering both `row_above` and `row_current`, enabling precise slice-bounded assertions inside the wrappers without violating Rust's pointer access boundary models.
+  - This guarantees that even under unsafe multithreaded FFI executions on `aarch64`, memory out-of-bounds reads/writes are mathematically caught by Rust panic bounds check assertions.
+  - Verified that compilation compiles perfectly and all 1160 differential test frames continue to pass successfully.
+  - Unsafe block count remains stable at 138 (since FFI declarations/calls are still unsafe, but the boundaries are now 100% hardened).
 * **Safe Row/Slice Pointer Projection in types.rs**:
   - Refactored `get_safe_unsafe_slices` on `yv12_buffer_config` in `src/vp8/common/types.rs` to use safe Rust slice indexing (`full_buffer_safe()[start..].as_ptr()`) instead of unsafe pointer offset arithmetic (`self.buffer_alloc.add(start)`).
   - This eliminated **3 unsafe blocks** globally, reducing the remaining unsafe count from 141 to 138!

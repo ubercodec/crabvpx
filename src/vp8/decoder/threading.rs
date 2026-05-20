@@ -889,10 +889,21 @@ fn mt_decode_mb_rows(
                                         &mut lfi
                                     );
                                 }
+                                let y_stride_us = y_stride as usize;
+                                let uv_stride_us = uv_stride as usize;
+                                let y_len = 16 * y_stride_us;
+                                let uv_len = 8 * uv_stride_us;
+                                let y_start_above = (mb_row as usize - 1) * 16 * y_stride_us;
+                                let u_start_above = (mb_row as usize - 1) * 8 * uv_stride_us;
+                                let v_start_above = (mb_row as usize - 1) * 8 * uv_stride_us;
+
                                 crate::simd_shim::safe_vp8_loop_filter_mbh_neon(
-                                    row_current.0, col_offset_y,
-                                    row_current.1, col_offset_uv,
-                                    row_current.2, col_offset_uv,
+                                    dst_views.0.as_slice_mut(y_start_above, 2 * y_len),
+                                    y_len + col_offset_y,
+                                    dst_views.1.as_slice_mut(u_start_above, 2 * uv_len),
+                                    uv_len + col_offset_uv,
+                                    dst_views.2.as_slice_mut(v_start_above, 2 * uv_len),
+                                    uv_len + col_offset_uv,
                                     y_stride, uv_stride,
                                     &mut lfi
                                 );
@@ -1122,7 +1133,16 @@ fn mt_decode_mb_rows(
                                 if skip_lf == 0 {
                                     crate::simd_shim::safe_vp8_loop_filter_bvs_neon(row_current.0, col_offset_y, y_stride, blimit_b);
                                 }
-                                crate::simd_shim::safe_vp8_loop_filter_mbhs_neon(row_current.0, col_offset_y, y_stride, blimit_m);
+                                let y_stride_us = y_stride as usize;
+                                let y_len = 16 * y_stride_us;
+                                let y_start_above = (mb_row as usize - 1) * 16 * y_stride_us;
+
+                                crate::simd_shim::safe_vp8_loop_filter_mbhs_neon(
+                                    dst_views.0.as_slice_mut(y_start_above, 2 * y_len),
+                                    y_len + col_offset_y,
+                                    y_stride,
+                                    blimit_m
+                                );
                                 if skip_lf == 0 {
                                     crate::simd_shim::safe_vp8_loop_filter_bhs_neon(row_current.0, col_offset_y, y_stride, blimit_b);
                                 }
