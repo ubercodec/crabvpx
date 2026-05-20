@@ -2,6 +2,15 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Macroblock Row Decoder Threading (threading.rs, types.rs, decodeframe.rs, vp8_dx_iface.rs)**:
+  - Refactored `pbi.mb_row_di` in `VP8D_COMP` to store thread-local `MB_ROW_DEC` context inside safe thread-safe `std::sync::Arc<std::sync::Mutex<MB_ROW_DEC>>` wrappers instead of raw arrays.
+  - Updated thread creation in `vp8_decoder_create_threads` to safely clone the `Arc` and pass it directly to `thread_decoding_proc`, completely eliminating the need to pass `mbrd_addr` as a `usize` address.
+  - Eliminated the unsafe raw pointer dereference of `mbrd_addr` inside `thread_decoding_proc`, reducing the internal unsafety of the worker threads.
+  - Updated `setup_decoding_thread_data` to safely lock the mutexes to initialize the macroblock thread data before frame decoding.
+  - Updated `decodeframe.rs` and `vp8_dx_iface.rs` to lock the mutexes when accessing thread-local macroblock context status.
+  - This successfully eliminated **1 unsafe block** globally, reducing the remaining unsafe count from 129 to 128.
+  - Verified 100% bit-identical correctness across all 1160 differential test frames using `./scripts/compare.py`.
+
 * **Safe Image Retrieval in Top-Level Decoder (api.rs, vp8_dx_iface.rs)**:
   - Refactored `Vp8DecoderInstance::get_frame` in `src/vp8/vp8_dx_iface.rs` to return a safe immutable reference `Option<&vpx_image_t>` instead of a raw pointer `Option<*const vpx_image_t>`.
   - Dereferenced the raw pointer safely inside the existing `unsafe` block in `Vp8DecoderInstance::get_frame`.

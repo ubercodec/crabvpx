@@ -1154,7 +1154,7 @@ pub struct VP8D_COMP {
     pub allocated_decoding_thread_count: ::core::ffi::c_int,
     pub mt_baseline_filter_level: [::core::ffi::c_int; 4],
     pub mt_sync: VP8D_MT_SYNC,
-    pub mb_row_di: Option<Box<[MB_ROW_DEC]>>,
+    pub mb_row_di: Option<Box<[std::sync::Arc<std::sync::Mutex<MB_ROW_DEC>>]>>,
     pub ready_for_new_data: ::core::ffi::c_int,
     pub prob_intra: vp8_prob,
     pub prob_last: vp8_prob,

@@ -980,7 +980,8 @@ unsafe extern "C" fn vp8_decode(
             (*xd).pre_border = (*pc_0).yv12_fb[lst_fb_idx].border;
             i = 0 as ::core::ffi::c_int;
             while i < (*pbi_1).allocated_decoding_thread_count {
-                let mbd = &mut (*pbi_1).mb_row_di.as_mut().unwrap()[i as usize].mbd;
+                let mut m_guard = (*pbi_1).mb_row_di.as_mut().unwrap()[i as usize].lock().unwrap();
+                let mbd = &mut m_guard.mbd;
                 mbd.dst_fb_idx = new_fb_idx;
                 mbd.dst_y_stride = (*pc_0).yv12_fb[new_fb_idx].y_stride;
                 mbd.dst_uv_stride = (*pc_0).yv12_fb[new_fb_idx].uv_stride;
