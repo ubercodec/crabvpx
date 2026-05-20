@@ -737,7 +737,7 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
                     ALTREF_FRAME => pc.alt_fb_idx as usize,
                     _ => panic!("Invalid ref frame"),
                 };
-                let (pre_y, pre_u, pre_v) = {
+                let (pre_y, pre_u, pre_v, pre_alloc, pre_alloc_sz) = {
                     let ref_fb = &pc.yv12_fb[fb_idx];
                     let border = ref_fb.border as usize;
                     let stride = ref_fb.y_stride as usize;
@@ -756,11 +756,15 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
                         y_slice[y_offset..].as_ptr() as *mut u8,
                         u_slice[u_offset..].as_ptr() as *mut u8,
                         v_slice[v_offset..].as_ptr() as *mut u8,
+                        ref_fb.buffer_alloc,
+                        ref_fb.buffer_alloc_sz,
                     )
                 };
                 xd.pre.y_buffer = pre_y;
                 xd.pre.u_buffer = pre_u;
                 xd.pre.v_buffer = pre_v;
+                xd.pre.buffer_alloc = pre_alloc;
+                xd.pre.buffer_alloc_sz = pre_alloc_sz;
             } else {
                 xd.pre.y_buffer = ::core::ptr::null_mut::<uint8_t>();
                 xd.pre.u_buffer = ::core::ptr::null_mut::<uint8_t>();
@@ -1128,6 +1132,8 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int {
     let mut prev_independent_partitions: ::core::ffi::c_int = pbi.independent_partitions;
     
     let new_fb_idx = pbi.common.new_fb_idx as usize;
+    pbi.mb.dst = pbi.common.yv12_fb[new_fb_idx];
+    pbi.mb.pre = pbi.common.yv12_fb[new_fb_idx];
     pbi.common.yv12_fb[new_fb_idx].corrupted = 0 as ::core::ffi::c_int;
     pbi.mb.corrupted = 0 as ::core::ffi::c_int;
     
@@ -1209,9 +1215,6 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int {
             } else {
                 data_idx = data_slice.len();
             }
-        } else {
-            pbi.mb.pre = pbi.common.yv12_fb[new_fb_idx];
-            pbi.mb.dst = pbi.common.yv12_fb[new_fb_idx];
         }
     }
     if pbi.decoded_key_frame == 0

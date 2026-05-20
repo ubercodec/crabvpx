@@ -2,6 +2,13 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Frame Buffer Slice Refactoring & Pointer Mismatch Fix**:
+  - Refactored all 15 slice helper methods in `yv12_buffer_config` in `src/vp8/common/types.rs` (such as `y_slice_safe`, `u_slice_mut_safe`, and `_with_offset_safe` variants) to use safe bounds-checked slicing on `full_buffer_safe()` and `full_buffer_mut_safe()`.
+  - Implemented a static `safe_len` helper to dynamically truncate slice lengths to the remaining allocation size, preventing out-of-bounds slice creation panics.
+  - Discovered and fixed a critical memory safety bug where `xd.pre` and `xd.dst` `buffer_alloc` fields were mismatched (pointing to incorrect allocations) when their `y_buffer` pointers were mutated to point to different frame buffers.
+  - Fixed `xd.pre` mismatch in `decodeframe.rs` and `threading.rs` by explicitly copying `buffer_alloc` and `buffer_alloc_sz` from the reference frame.
+  - Fixed `xd.dst` mismatch by initializing `pbi.mb.dst` and `pbi.mb.pre` early in `vp8_decode_frame` on every frame (including key frames), resolving a hidden resolution-change bug.
+  - This successfully eliminated **13 unsafe blocks** from `types.rs`, reducing the remaining unsafe count from 487 to 474. All 1160 frames pass differential testing perfectly.
 * **Dead Unsafe Code Elimination & Safety Scope Minimization**:
   - Identified and removed 15 unused unsafe methods from `yv12_buffer_config` in `src/vp8/common/types.rs` (e.g., `y_slice`, `y_slice_mut`, and their `_with_offset`/`_view` counterparts). These were dead code left over after the transition to their safe `_safe` counterparts. This reduced the remaining unsafe block count from 502 to 487.
   - Shrunk the scope of the `unsafe` block in `thread_decoding_proc` inside `src/vp8/decoder/threading.rs` to only cover the FFI `setjmp` call. The rest of the function, including `split_mt_mut` and `mt_decode_mb_rows` calls, now executes safely.

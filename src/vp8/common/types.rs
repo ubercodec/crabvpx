@@ -222,205 +222,275 @@ pub struct yv12_buffer_config {
 pub type YV12_BUFFER_CONFIG = yv12_buffer_config;
 
 impl yv12_buffer_config {
+    fn safe_len(start: usize, desired_len: usize, total_len: usize) -> usize {
+        std::cmp::min(desired_len, total_len.saturating_sub(start))
+    }
+
+    pub fn full_buffer_safe(&self) -> &[u8] {
+        if self.buffer_alloc.is_null() {
+            &[]
+        } else {
+            unsafe { core::slice::from_raw_parts(self.buffer_alloc, self.buffer_alloc_sz) }
+        }
+    }
+
+    pub fn full_buffer_mut_safe(&mut self) -> &mut [u8] {
+        if self.buffer_alloc.is_null() {
+            &mut []
+        } else {
+            unsafe { core::slice::from_raw_parts_mut(self.buffer_alloc, self.buffer_alloc_sz) }
+        }
+    }
 
     pub fn views_mut(&mut self) -> (&mut [u8], &mut [u8], &mut [u8]) {
+        let border = self.border as usize;
         let y_stride = self.y_stride as usize;
         let y_height = self.y_height as usize;
         let uv_stride = self.uv_stride as usize;
         let uv_height = self.uv_height as usize;
-        unsafe {
-            (
-                core::slice::from_raw_parts_mut(self.y_buffer, y_height * y_stride),
-                core::slice::from_raw_parts_mut(self.u_buffer, uv_height * uv_stride),
-                core::slice::from_raw_parts_mut(self.v_buffer, uv_height * uv_stride),
-            )
-        }
+        
+        let yplane_size = (y_height + 2 * border) * y_stride;
+        let uvplane_size = (uv_height + border) * uv_stride;
+        
+        let y_offset = (self.y_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let u_offset = (self.u_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let v_offset = (self.v_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        
+        let full = self.full_buffer_mut_safe();
+        
+        let (y_plane, rest) = full.split_at_mut(yplane_size);
+        let (u_plane, v_plane) = rest.split_at_mut(uvplane_size);
+        
+        let y_len = Self::safe_len(y_offset, y_height * y_stride, y_plane.len());
+        let y_active = &mut y_plane[y_offset .. y_offset + y_len];
+        
+        let u_start = u_offset.saturating_sub(yplane_size);
+        let u_len = Self::safe_len(u_start, uv_height * uv_stride, u_plane.len());
+        let u_active = &mut u_plane[u_start .. u_start + u_len];
+        
+        let v_start = v_offset.saturating_sub(yplane_size + uvplane_size);
+        let v_len = Self::safe_len(v_start, uv_height * uv_stride, v_plane.len());
+        let v_active = &mut v_plane[v_start .. v_start + v_len];
+        
+        (y_active, u_active, v_active)
     }
 
     pub fn y_slice_safe(&self) -> &[u8] {
-        unsafe {
-            let border = self.border as usize;
-            let stride = self.y_stride as usize;
-            let height = self.y_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let start_ptr = self.y_buffer.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts(start_ptr, total_size)
-        }
+        let border = self.border as usize;
+        let stride = self.y_stride as usize;
+        let height = self.y_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset = (self.y_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset.saturating_sub(border * stride + border);
+        let full = self.full_buffer_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &full[start .. start + len]
     }
 
     pub fn y_slice_mut_safe(&mut self) -> &mut [u8] {
-        unsafe {
-            let border = self.border as usize;
-            let stride = self.y_stride as usize;
-            let height = self.y_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let start_ptr = self.y_buffer.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts_mut(start_ptr, total_size)
-        }
+        let border = self.border as usize;
+        let stride = self.y_stride as usize;
+        let height = self.y_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset = (self.y_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset.saturating_sub(border * stride + border);
+        let full = self.full_buffer_mut_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &mut full[start .. start + len]
     }
 
     pub fn u_slice_safe(&self) -> &[u8] {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let start_ptr = self.u_buffer.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts(start_ptr, total_size)
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset = (self.u_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset.saturating_sub(border * stride + border);
+        let full = self.full_buffer_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &full[start .. start + len]
     }
 
     pub fn u_slice_mut_safe(&mut self) -> &mut [u8] {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let start_ptr = self.u_buffer.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts_mut(start_ptr, total_size)
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset = (self.u_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset.saturating_sub(border * stride + border);
+        let full = self.full_buffer_mut_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &mut full[start .. start + len]
     }
 
     pub fn v_slice_safe(&self) -> &[u8] {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let start_ptr = self.v_buffer.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts(start_ptr, total_size)
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset = (self.v_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset.saturating_sub(border * stride + border);
+        let full = self.full_buffer_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &full[start .. start + len]
     }
 
     pub fn v_slice_mut_safe(&mut self) -> &mut [u8] {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let start_ptr = self.v_buffer.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts_mut(start_ptr, total_size)
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset = (self.v_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset.saturating_sub(border * stride + border);
+        let full = self.full_buffer_mut_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &mut full[start .. start + len]
     }
 
     pub fn y_slice_with_offset_safe(&self, offset: usize) -> &[u8] {
-        unsafe {
-            let border = self.border as usize;
-            let stride = self.y_stride as usize;
-            let height = self.y_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let active_ptr = self.y_buffer.offset(-(offset as isize));
-            let start_ptr = active_ptr.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts(start_ptr, total_size)
-        }
+        let border = self.border as usize;
+        let stride = self.y_stride as usize;
+        let height = self.y_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset_y = (self.y_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset_y.saturating_sub(offset).saturating_sub(border * stride + border);
+        let full = self.full_buffer_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &full[start .. start + len]
     }
 
     pub fn y_slice_mut_with_offset_safe(&mut self, offset: usize) -> &mut [u8] {
-        unsafe {
-            let border = self.border as usize;
-            let stride = self.y_stride as usize;
-            let height = self.y_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let active_ptr = self.y_buffer.offset(-(offset as isize));
-            let start_ptr = active_ptr.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts_mut(start_ptr, total_size)
-        }
+        let border = self.border as usize;
+        let stride = self.y_stride as usize;
+        let height = self.y_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset_y = (self.y_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset_y.saturating_sub(offset).saturating_sub(border * stride + border);
+        let full = self.full_buffer_mut_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &mut full[start .. start + len]
     }
 
     pub fn u_slice_with_offset_safe(&self, offset: usize) -> &[u8] {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let active_ptr = self.u_buffer.offset(-(offset as isize));
-            let start_ptr = active_ptr.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts(start_ptr, total_size)
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset_u = (self.u_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset_u.saturating_sub(offset).saturating_sub(border * stride + border);
+        let full = self.full_buffer_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &full[start .. start + len]
     }
 
     pub fn u_slice_mut_with_offset_safe(&mut self, offset: usize) -> &mut [u8] {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let active_ptr = self.u_buffer.offset(-(offset as isize));
-            let start_ptr = active_ptr.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts_mut(start_ptr, total_size)
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset_u = (self.u_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset_u.saturating_sub(offset).saturating_sub(border * stride + border);
+        let full = self.full_buffer_mut_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &mut full[start .. start + len]
     }
 
     pub fn v_slice_with_offset_safe(&self, offset: usize) -> &[u8] {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let active_ptr = self.v_buffer.offset(-(offset as isize));
-            let start_ptr = active_ptr.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts(start_ptr, total_size)
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset_v = (self.v_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset_v.saturating_sub(offset).saturating_sub(border * stride + border);
+        let full = self.full_buffer_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &full[start .. start + len]
     }
 
     pub fn v_slice_mut_with_offset_safe(&mut self, offset: usize) -> &mut [u8] {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let active_ptr = self.v_buffer.offset(-(offset as isize));
-            let start_ptr = active_ptr.offset(-((border * stride + border) as isize));
-            core::slice::from_raw_parts_mut(start_ptr, total_size)
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset_v = (self.v_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start = offset_v.saturating_sub(offset).saturating_sub(border * stride + border);
+        let full = self.full_buffer_mut_safe();
+        let len = Self::safe_len(start, total_size, full.len());
+        &mut full[start .. start + len]
     }
 
     pub fn uv_slices_with_offset_safe(&self, offset: usize) -> (&[u8], &[u8]) {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let u_active_ptr = self.u_buffer.offset(-(offset as isize));
-            let u_start_ptr = u_active_ptr.offset(-((border * stride + border) as isize));
-            let v_active_ptr = self.v_buffer.offset(-(offset as isize));
-            let v_start_ptr = v_active_ptr.offset(-((border * stride + border) as isize));
-            (
-                core::slice::from_raw_parts(u_start_ptr, total_size),
-                core::slice::from_raw_parts(v_start_ptr, total_size),
-            )
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset_u = (self.u_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start_u = offset_u.saturating_sub(offset).saturating_sub(border * stride + border);
+        
+        let offset_v = (self.v_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start_v = offset_v.saturating_sub(offset).saturating_sub(border * stride + border);
+        
+        let full = self.full_buffer_safe();
+        let len_u = Self::safe_len(start_u, total_size, full.len());
+        let len_v = Self::safe_len(start_v, total_size, full.len());
+        (
+            &full[start_u .. start_u + len_u],
+            &full[start_v .. start_v + len_v],
+        )
     }
 
     pub fn uv_slices_mut_with_offset_safe(&mut self, offset: usize) -> (&mut [u8], &mut [u8]) {
-        unsafe {
-            let border = (self.border / 2) as usize;
-            let stride = self.uv_stride as usize;
-            let height = self.uv_height as usize;
-            let total_height = height + 2 * border;
-            let total_size = total_height * stride;
-            let u_active_ptr = self.u_buffer.offset(-(offset as isize));
-            let u_start_ptr = u_active_ptr.offset(-((border * stride + border) as isize));
-            let v_active_ptr = self.v_buffer.offset(-(offset as isize));
-            let v_start_ptr = v_active_ptr.offset(-((border * stride + border) as isize));
-            (
-                core::slice::from_raw_parts_mut(u_start_ptr, total_size),
-                core::slice::from_raw_parts_mut(v_start_ptr, total_size),
-            )
-        }
+        let border = (self.border / 2) as usize;
+        let stride = self.uv_stride as usize;
+        let height = self.uv_height as usize;
+        let total_height = height + 2 * border;
+        let total_size = total_height * stride;
+        
+        let offset_u = (self.u_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start_u = offset_u.saturating_sub(offset).saturating_sub(border * stride + border);
+        
+        let offset_v = (self.v_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let start_v = offset_v.saturating_sub(offset).saturating_sub(border * stride + border);
+        
+        let full = self.full_buffer_mut_safe();
+        let full_len = full.len();
+        
+        let split_pos = std::cmp::min(start_v, full_len);
+        let (part_u, part_v) = full.split_at_mut(split_pos);
+        
+        let len_u = Self::safe_len(start_u, total_size, part_u.len());
+        let u_slice = &mut part_u[start_u .. start_u + len_u];
+        
+        let len_v = Self::safe_len(0, total_size, part_v.len());
+        let v_slice = &mut part_v[0 .. len_v];
+        
+        (u_slice, v_slice)
     }
 }
 

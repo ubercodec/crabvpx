@@ -722,6 +722,8 @@ fn mt_decode_mb_rows(
                 xd.pre.y_buffer = &slice_y[y_offset] as *const u8 as *mut u8;
                 xd.pre.u_buffer = &slice_u[uv_offset] as *const u8 as *mut u8;
                 xd.pre.v_buffer = &slice_v[uv_offset] as *const u8 as *mut u8;
+                xd.pre.buffer_alloc = this_fb.buffer_alloc;
+                xd.pre.buffer_alloc_sz = this_fb.buffer_alloc_sz;
             } else {
                 xd.pre.y_buffer = ::core::ptr::null_mut();
                 xd.pre.u_buffer = ::core::ptr::null_mut();
