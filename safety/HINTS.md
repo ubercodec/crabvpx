@@ -2,6 +2,12 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Unused FFI Loop Filter Wrappers Removal (loopfilter_filters.rs)**:
+  - Identified and removed 8 unused legacy C-ABI FFI wrappers (`vp8_loop_filter_simple_horizontal_edge_c`, `vp8_loop_filter_simple_vertical_edge_c`, `vp8_loop_filter_mbh_c`, `vp8_loop_filter_mbv_c`, `vp8_loop_filter_bh_c`, `vp8_loop_filter_bhs_c`, `vp8_loop_filter_bv_c`, `vp8_loop_filter_bvs_c`) from `src/vp8/common/loopfilter_filters.rs`.
+  - These wrappers were only used for C compatibility which is no longer needed as the entire decoder uses native safe Rust dispatch or direct NEON assembly calls on `aarch64`.
+  - Removing them eliminated **16 unsafe keywords** (including 8 `unsafe` blocks and 8 `#[unsafe(no_mangle)]` attributes) globally, reducing the remaining unsafe count from 355 to 339.
+  - Verified 100% bit-identical correctness across all 1160 test frames.
+
 * **Dead Darwin Pthread and System Types Removal (decodeframe.rs, decodemv.rs, detokenize.rs, threading.rs, vp8_dx_iface.rs)**:
   - Identified and removed unused Darwin-specific pthread and system type definitions (e.g., `__darwin_pthread_handler_rec`, `_opaque_pthread_t`, `__darwin_pthread_t`, `mach_port_t`, `size_t` where unused, etc.) from multiple decoder files.
   - These types were transpiled leftovers that were completely unreferenced in the Rust implementation (which uses safe standard Rust threading and sync).
@@ -194,6 +200,8 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
    - [x] **Address remaining `unsafe` blocks in `src/vp8/common/vp8_loopfilter.rs` and `extend.rs`** by replacing FFI boundary styles with native safe Rust patterns where possible (excluding assembly RTCD paths). (Completed! Unused FFI wrappers were deleted, and internal functions were cleaned of `#[unsafe(no_mangle)]` and `extern "C"`).
    - [x] **Remove obsolete `#[unsafe(no_mangle)]` from `vp8_default_mv_context` in `src/vp8/common/entropymv.rs`**: This static table is only used internally in `decodeframe.rs` and can have its `#[unsafe(no_mangle)]` attribute removed safely to reduce unsafe keyword count. (Completed!)
    - [x] **Audit `blockd.rs` for dead code**: `vp8_block2left` and `vp8_block2above` in `src/vp8/common/blockd.rs` appear to be encoder-only and completely unused in CrabVPX. They can likely be removed entirely to clean up the codebase and remove 2 more unsafe keywords. (Completed!)
+   - [x] **Audit `loopfilter_filters.rs` for unused FFI wrappers**: Identified and removed 8 unused legacy C-ABI FFI wrappers, eliminating 16 unsafe keywords. (Completed!)
    - **Audit other FFI wrappers in `src/vp8/decoder/dboolhuff.rs`** (`vp8dx_start_decode` and `vp8dx_bool_decoder_fill`) to see if they can also be deprecated/removed or if they are required for external ABI linkage.
-    - **Audit other dead tables in `src/vp8/common/entropy.rs`**: `vp8_coef_encodings` also appears to be completely unused in the decoder and can be removed to clean up the codebase. (Already successfully removed `vp8_extra_bits`, `vp8_extra_bit_struct`, and `vp8_tree_p` in this turn!).
+   - **Audit other dead tables in `src/vp8/common/entropy.rs`**: `vp8_coef_encodings` is confirmed completely unused in the decoder and ready to be removed.
+   - **Audit other common files for unused FFI wrappers**: Check `filter.rs`, `reconintra.rs`, `reconinter.rs` for unused `_c` wrappers that can be safely removed to reduce unsafe count.
 
