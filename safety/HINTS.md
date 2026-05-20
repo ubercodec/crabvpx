@@ -2,6 +2,12 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Decoder Instance Creation Initialization (onyxd_if.rs)**:
+  - Refactored `create_decompressor` in `src/vp8/decoder/onyxd_if.rs` to completely eliminate the redundant `setjmp` error handling block and associated `std::mem::ManuallyDrop` complexity.
+  - Because all internal initialization functions called during decompressor creation (`vp8_create_common`, `vp8cx_init_de_quantizer`, `vp8_loop_filter_init`) are safe and cannot fail or trigger FFI panic jumps, the `setjmp` guard was entirely obsolete.
+  - This successfully made `create_decompressor` 100% safe Rust and eliminated **1 unsafe block** globally, reducing the remaining unsafe count from 128 to 127.
+  - Verified 100% bit-identical correctness across all 1160 differential test frames using `./scripts/compare.py`.
+
 * **Safe Macroblock Row Decoder Threading (threading.rs, types.rs, decodeframe.rs, vp8_dx_iface.rs)**:
   - Refactored `pbi.mb_row_di` in `VP8D_COMP` to store thread-local `MB_ROW_DEC` context inside safe thread-safe `std::sync::Arc<std::sync::Mutex<MB_ROW_DEC>>` wrappers instead of raw arrays.
   - Updated thread creation in `vp8_decoder_create_threads` to safely clone the `Arc` and pass it directly to `thread_decoding_proc`, completely eliminating the need to pass `mbrd_addr` as a `usize` address.
