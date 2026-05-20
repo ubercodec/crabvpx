@@ -2,6 +2,12 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Removal of Unused FFI Shim and Obsolete Attributes (thread_shim.rs, threading.rs)**:
+  - Identified and completely removed the unused C-style `pthread_once` FFI shim and its associated static `ONCE_MAP` from `src/thread_shim.rs`, as it was completely unreferenced in the codebase.
+  - Audited `src/vp8/decoder/threading.rs` and identified `vp8_decoder_create_threads` and `vp8mt_decode_mb_rows` as internal safe Rust functions that are only imported via `use` within the Rust codebase.
+  - Removed the obsolete `#[unsafe(no_mangle)]` attributes from both `vp8_decoder_create_threads` and `vp8mt_decode_mb_rows` since they do not require FFI export.
+  - This successfully eliminated **5 unsafe keywords/blocks** globally, reducing the remaining unsafe count from 155 to 150.
+  - Verified 100% bit-identical correctness across all 1160 test frames.
 * **Unused and Dead Code Removal (vpx_image, vpx_encoder, vpx_decoder, vpx_codec, and vpx_mem FFI)**:
   - Identified and completely eliminated several transpiled dead-code files: `src/vpx/src/vpx_image.rs`, `src/vpx/src/vpx_encoder.rs`, `src/vpx/src/vpx_decoder.rs`, and `src/vpx/src/vpx_codec.rs`.
   - Completely removed unused C-style FFI wrappers from `src/vpx_mem/vpx_mem.rs` (`vpx_memalign`, `vpx_malloc`, `vpx_calloc`, `vpx_free`), since they are entirely unused by the native Rust implementation.

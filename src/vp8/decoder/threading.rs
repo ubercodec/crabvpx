@@ -1083,7 +1083,6 @@ fn thread_decoding_proc(data: DECODETHREAD_DATA) {
         }
     }
 }
-#[unsafe(no_mangle)]
 pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) {
     let pbi_raw_ptr = pbi as *mut VP8D_COMP as *mut ::core::ffi::c_void;
     let mut core_count: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
@@ -1326,7 +1325,6 @@ pub fn vp8_decoder_remove_threads(pbi: &mut VP8D_COMP) {
         vp8mt_de_alloc_temp_buffers(pbi, mb_rows);
     }
 }
-#[unsafe(no_mangle)]
 pub fn vp8mt_decode_mb_rows(
     pbi: &mut VP8D_COMP,
 ) -> ::core::ffi::c_int {

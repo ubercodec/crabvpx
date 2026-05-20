@@ -35,31 +35,4 @@ impl Semaphore {
 
 
 
-static ONCE_MAP: OnceLock<Mutex<HashMap<usize, bool>>> = OnceLock::new();
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn pthread_once(
-    lock: *mut c_void,
-    init_routine: Option<unsafe extern "C" fn()>,
-) -> i32 {
-    if let Some(routine) = init_routine {
-        let lock_addr = lock as usize;
-        let map_mutex = ONCE_MAP.get_or_init(|| Mutex::new(HashMap::new()));
-        
-        let mut should_run = false;
-        {
-            let mut map = map_mutex.lock().unwrap();
-            if !map.contains_key(&lock_addr) {
-                map.insert(lock_addr, true);
-                should_run = true;
-            }
-        }
-        
-        if should_run {
-            routine();
-        }
-        0
-    } else {
-        -1
-    }
-}
