@@ -146,14 +146,7 @@ impl Decoder for Vp8Decoder {
             .as_mut()
             .ok_or_else(|| "Decoder not initialized".to_string())?;
         if let Some(img) = inst.get_frame() {
-            unsafe {
-                if img.is_null() {
-                    return Ok(None);
-                }
-                Ok(Some(Image {
-                    img: &*(img as *const vpx_image_t),
-                }))
-            }
+            Ok(Some(Image { img }))
         } else {
             Ok(None)
         }

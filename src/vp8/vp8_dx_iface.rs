@@ -1603,14 +1603,14 @@ impl Vp8DecoderInstance {
         }
     }
 
-    pub fn get_frame(&mut self) -> Option<*const vpx_image_t> {
+    pub fn get_frame(&mut self) -> Option<&vpx_image_t> {
         unsafe {
             let mut iter: vpx_codec_iter_t = ::core::ptr::null();
             let img = vp8_get_frame(self.priv_0, &raw mut iter);
             if img.is_null() {
                 None
             } else {
-                Some(img as *const vpx_image_t)
+                Some(&*img)
             }
         }
     }

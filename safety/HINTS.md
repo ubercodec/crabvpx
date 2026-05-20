@@ -2,6 +2,13 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Image Retrieval in Top-Level Decoder (api.rs, vp8_dx_iface.rs)**:
+  - Refactored `Vp8DecoderInstance::get_frame` in `src/vp8/vp8_dx_iface.rs` to return a safe immutable reference `Option<&vpx_image_t>` instead of a raw pointer `Option<*const vpx_image_t>`.
+  - Dereferenced the raw pointer safely inside the existing `unsafe` block in `Vp8DecoderInstance::get_frame`.
+  - Refactored `Vp8Decoder::get_frame` in `src/api.rs` to utilize the new safe signature, completely eliminating its internal `unsafe` block.
+  - This successfully eliminated **1 unsafe block** globally, reducing the remaining unsafe count from 130 to 129.
+  - Verified 100% bit-identical correctness across all 1160 differential test frames using `./scripts/compare.py`.
+
 * **Safe Multithreaded NEON Loop Filtering Shim Isolation (threading.rs, simd_shim.rs)**:
   - Refactored the multithreaded loop filtering on `aarch64` (ARM) to completely eliminate direct FFI raw pointer calls and `unsafe` blocks from `src/vp8/decoder/threading.rs`.
   - Created 8 safe Rust wrapper functions in `src/simd_shim.rs` (`safe_vp8_loop_filter_bh_neon`, `safe_vp8_loop_filter_mbv_neon`, etc.) that accept safe, bounds-checked Rust slices (`&mut [u8]`) and offsets, performing necessary safety checks prior to FFI execution.
