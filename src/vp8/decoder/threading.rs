@@ -640,46 +640,9 @@ fn mt_decode_mb_rows(
         xd.mb_to_bottom_edge = ((pc.mb_rows - 1 - mb_row) * 16) << 3;
         
         if pc.filter_level != 0 {
-            let slice_y = mt_sync.mt_yabove_row.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_slice();
-            xd.recon_above[0] = &slice_y[32] as *const u8 as *mut u8;
-            
-            let slice_u = mt_sync.mt_uabove_row.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_slice();
-            xd.recon_above[1] = &slice_u[16] as *const u8 as *mut u8;
-            
-            let slice_v = mt_sync.mt_vabove_row.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_slice();
-            xd.recon_above[2] = &slice_v[16] as *const u8 as *mut u8;
-                
-            xd.recon_left[0] = mt_sync.mt_yleft_col.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr();
-            xd.recon_left[1] = mt_sync.mt_uleft_col.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr();
-            xd.recon_left[2] = mt_sync.mt_vleft_col.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr();
-            
             xd.recon_left_stride[0] = 1;
             xd.recon_left_stride[1] = 1;
         } else {
-            let ybf = &pc.yv12_fb[new_fb_idx];
-            let slice_y = ybf.y_slice_safe();
-            let slice_u = ybf.u_slice_safe();
-            let slice_v = ybf.v_slice_safe();
-            
-            let border_y = ybf.border as usize;
-            let stride_y = ybf.y_stride as usize;
-            let active_start_y = border_y * stride_y + border_y;
-            
-            let border_uv = (ybf.border / 2) as usize;
-            let stride_uv = ybf.uv_stride as usize;
-            let active_start_uv = border_uv * stride_uv + border_uv;
-            
-            let y_offset = active_start_y + recon_yoffset as usize;
-            let uv_offset = active_start_uv + recon_uvoffset as usize;
-            
-            xd.recon_above[0] = &slice_y[y_offset - stride_y] as *const u8 as *mut u8;
-            xd.recon_above[1] = &slice_u[uv_offset - stride_uv] as *const u8 as *mut u8;
-            xd.recon_above[2] = &slice_v[uv_offset - stride_uv] as *const u8 as *mut u8;
-            
-            xd.recon_left[0] = &slice_y[y_offset - 1] as *const u8 as *mut u8;
-            xd.recon_left[1] = &slice_u[uv_offset - 1] as *const u8 as *mut u8;
-            xd.recon_left[2] = &slice_v[uv_offset - 1] as *const u8 as *mut u8;
-            
             xd.recon_left_stride[0] = xd.dst.y_stride;
             xd.recon_left_stride[1] = xd.dst.uv_stride;
             
@@ -803,16 +766,6 @@ fn mt_decode_mb_rows(
             
             xd.left_available = 1;
             xd.corrupted |= vp8dx_safe_bool_error(&safe_decoder);
-            unsafe {
-                xd.recon_above[0] = xd.recon_above[0].offset(16);
-                xd.recon_above[1] = xd.recon_above[1].offset(8);
-                xd.recon_above[2] = xd.recon_above[2].offset(8);
-                if pc.filter_level == 0 {
-                    xd.recon_left[0] = xd.recon_left[0].offset(16);
-                    xd.recon_left[1] = xd.recon_left[1].offset(8);
-                    xd.recon_left[2] = xd.recon_left[2].offset(8);
-                }
-            }
             
             if pc.filter_level != 0 {
                 let cur_mbmi = &xd.mode_info(mip).mbmi;
