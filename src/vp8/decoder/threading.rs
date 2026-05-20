@@ -1,7 +1,6 @@
 use crate::vp8::decoder::detokenize::{vp8_decode_mb_tokens, vp8_reset_mb_tokens_context};
 use crate::vp8::common::vp8_loopfilter::vp8_loop_filter_frame_init;
 use crate::vp8::decoder::decodeframe::vp8_mb_init_dequantizer;
-use crate::vp8::common::mbpitch::vp8_setup_block_dptrs;
 use crate::vp8::common::extend::vp8_extend_mb_row;
 use crate::vp8::common::reconintra::intra_prediction_down_copy;
 use crate::vp8::common::idctllm::vp8_short_inv_walsh4x4_1_safe;
@@ -1124,8 +1123,6 @@ pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) {
         
         ithread = 0 as ::core::ffi::c_uint;
         while ithread < pbi.decoding_thread_count {
-            vp8_setup_block_dptrs(&mut mb_row_di[ithread as usize].mbd);
-            
             let mbrd_addr = &mut mb_row_di[ithread as usize] as *mut MB_ROW_DEC as usize;
             let ithread_i32 = ithread as i32;
             

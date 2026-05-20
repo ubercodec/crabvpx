@@ -17,51 +17,7 @@ pub type size_t = __darwin_size_t;
 pub type uint8_t = u8;
 pub type uint32_t = u32;
 pub use crate::vp8::common::types::*;
-pub fn vp8_setup_block_dptrs(x: &mut MACROBLOCKD) {
-    let mut r: ::core::ffi::c_int = 0;
-    let mut c: ::core::ffi::c_int = 0;
-    r = 0 as ::core::ffi::c_int;
-    while r < 4 as ::core::ffi::c_int {
-        c = 0 as ::core::ffi::c_int;
-        while c < 4 as ::core::ffi::c_int {
-            let idx = (r * 64 + c * 4) as usize;
-            x.block[(r * 4 as ::core::ffi::c_int + c) as usize].predictor =
-                &raw mut x.predictor[idx];
-            c += 1;
-        }
-        r += 1;
-    }
-    r = 0 as ::core::ffi::c_int;
-    while r < 2 as ::core::ffi::c_int {
-        c = 0 as ::core::ffi::c_int;
-        while c < 2 as ::core::ffi::c_int {
-            let idx = (256 + r * 32 + c * 4) as usize;
-            x.block[(16 as ::core::ffi::c_int + r * 2 as ::core::ffi::c_int + c) as usize]
-                .predictor = &raw mut x.predictor[idx];
-            c += 1;
-        }
-        r += 1;
-    }
-    r = 0 as ::core::ffi::c_int;
-    while r < 2 as ::core::ffi::c_int {
-        c = 0 as ::core::ffi::c_int;
-        while c < 2 as ::core::ffi::c_int {
-            let idx = (320 + r * 32 + c * 4) as usize;
-            x.block[(20 as ::core::ffi::c_int + r * 2 as ::core::ffi::c_int + c) as usize]
-                .predictor = &raw mut x.predictor[idx];
-            c += 1;
-        }
-        r += 1;
-    }
-    r = 0 as ::core::ffi::c_int;
-    while r < 25 as ::core::ffi::c_int {
-        let q_idx = (r * 16) as usize;
-        x.block[r as usize].qcoeff = &raw mut x.qcoeff[q_idx];
-        x.block[r as usize].dqcoeff = &raw mut x.dqcoeff[q_idx];
-        x.block[r as usize].eob = &raw mut x.eobs[r as usize];
-        r += 1;
-    }
-}
+
 pub fn vp8_build_block_doffsets(x: &mut MACROBLOCKD) {
     let mut block: ::core::ffi::c_int = 0;
     block = 0 as ::core::ffi::c_int;

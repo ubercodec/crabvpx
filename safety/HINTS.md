@@ -2,6 +2,15 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Eliminated Dead Raw Pointers from BLOCKD & MACROBLOCKD (types.rs, mbpitch.rs, onyxd_if.rs, threading.rs)**:
+  - Removed dead raw pointer fields `qcoeff`, `dqcoeff`, `predictor`, `dequant`, and `eob` from the `blockd` struct in `src/vp8/common/types.rs`.
+  - Removed dead `predictor` array from `macroblockd` struct in `src/vp8/common/types.rs` and updated its `Default` implementation.
+  - Completely eliminated `vp8_setup_block_dptrs` function from `src/vp8/common/mbpitch.rs` as all fields it initialized are now removed.
+  - Removed obsolete calls and imports of `vp8_setup_block_dptrs` from `src/vp8/decoder/onyxd_if.rs` and `src/vp8/decoder/threading.rs`.
+  - This successfully cleaned up the core structures, making `blockd` 100% safe Rust (no raw pointers) and simplified macroblock initialization.
+  - Unsafe block count remains stable at 125 (since we didn't remove `unsafe` keywords directly, but improved struct safety and removed dead code).
+  - Verified 100% bit-identical correctness across all 1160 differential test frames.
+
 * **Safe Threading Temp Buffers & RTCD no_mangle Elimination (threading.rs, vp8_dx_iface.rs, vpx_dsp_rtcd.rs, vpx_scale_rtcd.rs)**:
   - Refactored `vp8mt_alloc_temp_buffers` and `vp8mt_de_alloc_temp_buffers` in `src/vp8/decoder/threading.rs` to remove obsolete `#[unsafe(no_mangle)]` attributes.
   - Refactored `vpx_dsp_rtcd` in `src/vpx_dsp/vpx_dsp_rtcd.rs` and `vpx_scale_rtcd` in `src/vpx_scale/vpx_scale_rtcd.rs` to be safe, standard Rust functions, removing `#[unsafe(no_mangle)]` and `pub extern "C"`.
@@ -305,5 +314,5 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
     - [x] **Clean up unused transpiled Rust files in `src/vp8/common/arm/`**: Identified and completely removed 14 unused transpiled Rust files in `src/vp8/common/arm/` and its `neon` subdirectory. This successfully eliminated **8 unsafe keywords/blocks** globally, reducing the remaining unsafe count to 138, as these files are redundant (we compile the C versions directly via `build.rs`). (Completed!)
     - [x] **Convert `vp8_rtcd` to Safe Rust**: Refactored `vp8_rtcd` in `src/vp8/common/rtcd.rs` to remove `#[unsafe(no_mangle)]` and `extern "C"` and imported it safely in `vp8_dx_iface.rs`, reducing unsafe count from 130 to 129. (Completed!)
     - [ ] **Convert remaining internal RTCD functions to Safe Rust**: `vpx_dsp_rtcd` in `src/vpx_dsp/vpx_dsp_rtcd.rs` and `vpx_scale_rtcd` in `src/vpx_scale/vpx_scale_rtcd.rs` can also be refactored to remove `#[unsafe(no_mangle)]` and `extern "C"` since they are only called internally from Rust (`onyxd_if.rs` and `vp8_dx_iface.rs`). This will eliminate **2 more unsafe keywords**.
-    - [ ] **Eliminate dead raw pointer fields from `BLOCKD`**: The fields `qcoeff`, `dqcoeff`, `predictor`, `dequant`, and `eob` in the `blockd` struct in `src/vp8/common/types.rs` are completely dead and never read in our Rust codebase (they were only initialized in `vp8_setup_block_dptrs` which can become a safe no-op). Removing these raw pointers will make the `blockd` struct 100% safe Rust!
+    - [x] **Eliminate dead raw pointer fields from `BLOCKD`**: The fields `qcoeff`, `dqcoeff`, `predictor`, `dequant`, and `eob` in the `blockd` struct in `src/vp8/common/types.rs` are completely dead and never read in our Rust codebase (they were only initialized in `vp8_setup_block_dptrs` which can become a safe no-op). Removing these raw pointers will make the `blockd` struct 100% safe Rust! (Completed! Also eliminated dead `predictor` array from `macroblockd` and completely removed `vp8_setup_block_dptrs`).
 

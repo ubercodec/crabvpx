@@ -148,12 +148,7 @@ impl Default for MB_MODE_INFO {
 #[derive(Copy, Clone, Default)]
 #[repr(C)]
 pub struct blockd {
-    pub qcoeff: *mut ::core::ffi::c_short,
-    pub dqcoeff: *mut ::core::ffi::c_short,
-    pub predictor: *mut ::core::ffi::c_uchar,
-    pub dequant: *mut ::core::ffi::c_short,
     pub offset: ::core::ffi::c_int,
-    pub eob: *mut ::core::ffi::c_char,
     pub bmi: b_mode_info,
 }
 
@@ -678,7 +673,6 @@ pub type vp8_subpix_fn_t = Option<
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct macroblockd {
-    pub predictor: [::core::ffi::c_uchar; 384],
     pub qcoeff: [::core::ffi::c_short; 400],
     pub dqcoeff: [::core::ffi::c_short; 400],
     pub eobs: [::core::ffi::c_char; 25],
@@ -731,7 +725,6 @@ pub struct macroblockd {
 impl Default for macroblockd {
     fn default() -> Self {
         macroblockd {
-            predictor: [0; 384],
             qcoeff: [0; 400],
             dqcoeff: [0; 400],
             eobs: [0; 25],

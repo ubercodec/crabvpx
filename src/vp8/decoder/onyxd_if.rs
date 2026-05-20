@@ -1,5 +1,4 @@
 use crate::vp8::decoder::decodeframe::{vp8cx_init_de_quantizer, vp8_decode_frame};
-use crate::vp8::common::mbpitch::vp8_setup_block_dptrs;
 use crate::vp8::common::vp8_loopfilter::vp8_loop_filter_init;
 use std::sync::Once;
 use crate::vpx_dsp::vpx_dsp_rtcd::vpx_dsp_rtcd;
@@ -93,7 +92,6 @@ fn create_decompressor() -> Option<Box<VP8D_COMP>> {
     pbi_mut.ec_active = 0;
     pbi_mut.decoded_key_frame = 0;
     pbi_mut.independent_partitions = 0;
-    vp8_setup_block_dptrs(&mut pbi_mut.mb);
     INIT.call_once(initialize_dec);
     Some(std::mem::ManuallyDrop::into_inner(pbi))
 }
