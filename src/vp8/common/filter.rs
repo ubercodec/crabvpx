@@ -353,6 +353,39 @@ pub(crate) fn filter_block2d_bil_safe(
     );
 }
 
+pub(crate) fn filter_block2d_sixtap_safe(
+    src: &[u8],
+    src_stride: usize,
+    dst: &mut [u8],
+    dst_pitch: usize,
+    width: usize,
+    height: usize,
+    h_filter: &[i16; 6],
+    v_filter: &[i16; 6],
+) {
+    let mut f_data = [0i32; 336];
+    let f_data_len = (height + 5) * width;
+    let f_data_slice = &mut f_data[..f_data_len];
+
+    filter_block2d_first_pass_safe(
+        src,
+        src_stride,
+        height + 5,
+        width,
+        h_filter,
+        f_data_slice,
+    );
+    filter_block2d_second_pass_safe(
+        f_data_slice,
+        width,
+        dst,
+        dst_pitch,
+        height,
+        width,
+        v_filter,
+    );
+}
+
 // FFI Wrappers
 
 #[unsafe(no_mangle)]
