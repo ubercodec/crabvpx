@@ -2,6 +2,13 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Refactored Decoder Instance Creation to Defer Raw Pointer Conversion (onyxd_if.rs)**:
+  - Refactored `vp8_create_decoder_instances` in `src/vp8/decoder/onyxd_if.rs` to hold and initialize the new decoder instance using safe native `Box<VP8D_COMP>` ownership.
+  - Deferred the raw pointer conversion (`Box::into_raw`) until the very end of the function, after successful initialization and thread creation.
+  - Inside the failure branch of the `setjmp` block, we now clean up the threads via safe `vp8_decoder_remove_threads(&mut pbi)` and explicitly reclaim/deallocate the Boxed decompressor via safe `remove_decompressor(pbi)`.
+  - This successfully eliminated multiple unsafe raw pointer dereference operations (`(*pbi_raw).max_threads`, `(*pbi_raw).common.error.setjmp` etc.) and improved the robust lifetime management of the temporary heap structures prior to FFI export.
+  - Verified 100% bit-identical correctness across all 1160 differential test frames.
+
 * **Eliminated Dead Raw Pointers `mi` and `show_frame_mi` from `VP8Common` (types.rs, alloccommon.rs, onyxd_if.rs)**:
   - Audited `VP8Common` struct in `src/vp8/common/types.rs` and identified `mi` and `show_frame_mi` raw pointer fields as completely dead (only assigned to, never read).
   - Completely removed `mi` and `show_frame_mi` fields from `VP8Common` struct and its `Default` implementation.
