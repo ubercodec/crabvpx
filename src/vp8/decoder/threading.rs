@@ -492,7 +492,18 @@ fn mt_decode_macroblock(
         let ref_idx = xd.pre_fb_idx;
         let dst_idx = xd.dst_fb_idx;
         let (pre_fb, dst_fb) = common.get_ref_and_dst_fb(ref_idx, dst_idx);
-        crate::vp8::common::reconinter::vp8_build_inter_predictors_mb(xd, &mi, dst_fb, pre_fb);
+        let (dst_y, dst_u, dst_v) = dst_fb.views_mut_with_borders();
+        let (pre_y, pre_u, pre_v) = pre_fb.views_with_borders();
+        crate::vp8::common::reconinter::vp8_build_inter_predictors_mb(
+            xd,
+            &mi,
+            dst_y,
+            dst_u,
+            dst_v,
+            pre_y,
+            pre_u,
+            pre_v,
+        );
     }
 
     if mi.mbmi.mb_skip_coeff == 0 {

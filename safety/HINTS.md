@@ -66,6 +66,11 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
   - Resolved complex borrow-checker conflicts in `decodeframe.rs` and `threading.rs` (arising from long-lived `mip` slices locking `common`) by copying the `MODE_INFO` struct early in `decode_macroblock` and using the local copied values for all prediction decisions.
   - Corrected a critical offset mismatch bug where Y/UV reconstruction slices were writing to the top-left of the frame instead of the current macroblock because the base `views_mut()` were not offset by `recon_yoffset` / `recon_uvoffset`.
   - Compilation and all 1160 differential test frames pass perfectly! Remaining unsafe count: 443.
+* **Milestone 2 Complete (Refactor Inter-Prediction & Motion Compensation with Explicit Dataflow)**:
+  - Successfully implemented 100% safe `views_mut_with_borders` and `views_with_borders` on `YV12_BUFFER_CONFIG` in `types.rs` using pure safe contiguous slicing (`split_at_mut`), completely bypassing FFI/unsafe.
+  - Refactored inter-prediction orchestrator functions in `reconinter.rs` (`vp8_build_inter_predictors_mb`, `vp8_build_inter16x16_predictors_mb`, and `build_inter4x4_predictors_mb`) to accept separate Y, U, V plane slices for both destination and reference planes explicitly, rather than passing whole `YV12_BUFFER_CONFIG` structs.
+  - Updated call sites in both single-threaded (`decodeframe.rs`) and multithreaded (`threading.rs`) row/macroblock decoding pipelines to extract disjoint plane slices at the orchestrator level using the new border-inclusive views and pass them to the prediction engine.
+  - All 1160 differential test frames pass perfectly with bit-identical matching, and remaining unsafe count remains stable at 443.
 
 
 ## Architectural Quirks to Watch Out For
@@ -74,4 +79,7 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
 * **Duplicated Structs (Resolved)**: Struct definitions like `YV12_BUFFER_CONFIG` and `VP8Common` were previously duplicated by `c2rust` across dozens of files. They have now been centralized into `src/vp8/common/types.rs` (Phase 3 complete). Agents can externalize to Phase 4 (Safe API Refactoring).
 
 ## Next Steps for Future Agents
-1. **Module-Internal Refactoring**: Explore other modules for internal functions that can be refactored to safe Rust slices and references. For example, border extension logic across modules.
+1. **Milestone 3: Refactor Loop Filtering Slicing (Disjoint Borrows)**:
+   - Unit 6: Implement a `split_rows_mut` or safe chunking method on `YV12_BUFFER_CONFIG` that yields disjoint mutable slices for individual macroblock rows.
+   - Unit 7: Refactor multithreaded loop filtering in `threading.rs` to assign each thread a strictly disjoint mutable slice of the frame, proving to the borrow checker that parallel loop filtering is 100% race-free.
+

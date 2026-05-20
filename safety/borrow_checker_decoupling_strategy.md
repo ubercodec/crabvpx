@@ -93,18 +93,18 @@ Before removing more `unsafe` blocks from the reconstruction and filtering modul
 ### Milestone 1: Decouple `macroblockd` from `YV12_BUFFER_CONFIG` (Structural Decoupling)
 Goal: Eliminate the direct inclusion of `YV12_BUFFER_CONFIG` inside `macroblockd` to prevent lifetime infection.
 
-*   **[ ] Unit 1 (`types.rs`):** Replace `pub pre: YV12_BUFFER_CONFIG` and `pub dst: YV12_BUFFER_CONFIG` in `struct macroblockd` with index fields (`pre_fb_idx: usize`, `dst_fb_idx: usize`) and metadata fields (strides, dimensions).
-*   **[ ] Unit 2 (`decodeframe.rs`):** Update call sites that perform `pbi.mb.pre = ...` to instead copy the corresponding indices:
+*   **[x] Unit 1 (`types.rs`):** Replace `pub pre: YV12_BUFFER_CONFIG` and `pub dst: YV12_BUFFER_CONFIG` in `struct macroblockd` with index fields (`pre_fb_idx: usize`, `dst_fb_idx: usize`) and metadata fields (strides, dimensions).
+*   **[x] Unit 2 (`decodeframe.rs`):** Update call sites that perform `pbi.mb.pre = ...` to instead copy the corresponding indices:
     ```rust
     pbi.mb.dst_fb_idx = new_fb_idx;
     pbi.mb.pre_fb_idx = ref_fb_idx;
     ```
-*   **[ ] Unit 3 (`threading.rs`):** Apply the same index assignment refactor to the multithreaded row decoder initialization.
+*   **[x] Unit 3 (`threading.rs`):** Apply the same index assignment refactor to the multithreaded row decoder initialization.
 
 ### Milestone 2: Refactor Inter-Prediction & Motion Compensation (Explicit Dataflow)
 Goal: Stop passing `*mut macroblockd` to prediction functions; pass slices explicitly.
 
-*   **[ ] Unit 4 (`reconinter.rs`):** Refactor inter-prediction helpers (e.g., `vp8_build_inter_predictors`) to accept input/output slices explicitly:
+*   **[x] Unit 4 (`reconinter.rs`):** Refactor inter-prediction helpers (e.g., `vp8_build_inter_predictors`) to accept input/output slices explicitly:
     ```rust
     pub fn vp8_build_inter_predictors_safe(
         xd: &macroblockd,
@@ -112,7 +112,7 @@ Goal: Stop passing `*mut macroblockd` to prediction functions; pass slices expli
         dst_y: &mut [u8], dst_u: &mut [u8], dst_v: &mut [u8],
     )
     ```
-*   **[ ] Unit 5 (`decodeframe.rs` & `threading.rs`):** Update macroblock decoding pipelines to extract slices using `views_mut()` at the row loop level, and pass them to the refactored inter-prediction helpers.
+*   **[x] Unit 5 (`decodeframe.rs` & `threading.rs`):** Update macroblock decoding pipelines to extract slices using `views_mut()` at the row loop level, and pass them to the refactored inter-prediction helpers.
 
 ### Milestone 3: Refactor Loop Filtering Slicing (Disjoint Borrows)
 Goal: Perform loop filtering in-place on disjoint slices without locking the entire frame structure.

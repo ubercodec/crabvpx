@@ -312,8 +312,12 @@ fn clamp_uvmv_to_umv_border(
 pub fn vp8_build_inter16x16_predictors_mb(
     x: &mut MACROBLOCKD,
     mi: &MODE_INFO,
-    dst_fb: &mut YV12_BUFFER_CONFIG,
-    pre_fb: &YV12_BUFFER_CONFIG,
+    mut dst_y_slice: &mut [u8],
+    mut dst_u_slice: &mut [u8],
+    mut dst_v_slice: &mut [u8],
+    pre_y_slice: &[u8],
+    pre_u_slice: &[u8],
+    pre_v_slice: &[u8],
 ) {
     let dst_y_stride = x.dst_y_stride;
     let dst_uv_stride = x.dst_uv_stride;
@@ -354,10 +358,6 @@ pub fn vp8_build_inter16x16_predictors_mb(
     
     let pre_recon_yoffset = mb_row * 16 * pre_y_stride as usize + mb_col * 16;
     let pre_recon_uvoffset = mb_row * 8 * pre_uv_stride as usize + mb_col * 8;
-
-    // Reconstruct global Y slices
-    let mut dst_y_slice = dst_fb.y_slice_mut_safe();
-    let pre_y_slice = pre_fb.y_slice_safe();
 
     let dst_y_active_offset = border * dst_y_stride as usize + border + recon_yoffset;
     let pre_y_active_offset = border * pre_y_stride as usize + border + pre_recon_yoffset;
@@ -419,10 +419,6 @@ pub fn vp8_build_inter16x16_predictors_mb(
         return;
     }
 
-    // Reconstruct global UV slices
-    let (mut dst_u_slice, mut dst_v_slice) = dst_fb.uv_slices_mut_with_offset_safe(0);
-    let (pre_u_slice, pre_v_slice) = pre_fb.uv_slices_with_offset_safe(0);
-
     let dst_uv_active_offset = uv_border * dst_uv_stride as usize + uv_border + recon_uvoffset;
     let pre_uv_active_offset = uv_border * pre_uv_stride as usize + uv_border + pre_recon_uvoffset;
 
@@ -469,8 +465,12 @@ pub fn vp8_build_inter16x16_predictors_mb(
 fn build_inter4x4_predictors_mb(
     x: &mut MACROBLOCKD,
     mi: &MODE_INFO,
-    dst_fb: &mut YV12_BUFFER_CONFIG,
-    pre_fb: &YV12_BUFFER_CONFIG,
+    mut dst_y_slice: &mut [u8],
+    mut dst_u_slice: &mut [u8],
+    mut dst_v_slice: &mut [u8],
+    pre_y_slice: &[u8],
+    pre_u_slice: &[u8],
+    pre_v_slice: &[u8],
 ) {
     let partitioning = mi.mbmi.partitioning;
     let need_to_clamp_mvs = mi.mbmi.need_to_clamp_mvs;
@@ -532,10 +532,6 @@ fn build_inter4x4_predictors_mb(
     let subpixel_predict8x8 = x.subpixel_predict8x8;
     let subpixel_predict8x4 = x.subpixel_predict8x4;
     let subpixel_predict = x.subpixel_predict;
-    
-    // Reconstruct global Y slices
-    let mut dst_y_slice = dst_fb.y_slice_mut_safe();
-    let pre_y_slice = pre_fb.y_slice_safe();
     
     let dst_y_active_offset = border * dst_y_stride as usize + border + recon_yoffset;
     let pre_y_active_offset = border * pre_y_stride as usize + border + pre_recon_yoffset;
@@ -621,12 +617,6 @@ fn build_inter4x4_predictors_mb(
         }
     }
     
-    drop(dst_y_slice);
-    
-    // Reconstruct global U slices
-    let mut dst_u_slice = dst_fb.u_slice_mut_with_offset_safe(0);
-    let pre_u_slice = pre_fb.u_slice_with_offset_safe(0);
-    
     let dst_uv_active_offset = uv_border * dst_uv_stride as usize + uv_border + recon_uvoffset;
     let pre_uv_active_offset = uv_border * pre_uv_stride as usize + uv_border + pre_recon_uvoffset;
     
@@ -669,12 +659,6 @@ fn build_inter4x4_predictors_mb(
             }
         }
     }
-    drop(dst_u_slice);
-    
-    // Reconstruct global V slices
-    let mut dst_v_slice = dst_fb.v_slice_mut_with_offset_safe(0);
-    let pre_v_slice = pre_fb.v_slice_with_offset_safe(0);
-    
     {
         for i in (20..24).step_by(2) {
             let d0 = &x.block[i];
@@ -796,13 +780,17 @@ fn build_4x4uvmvs(x: &mut MACROBLOCKD, mi: &MODE_INFO) {
 pub fn vp8_build_inter_predictors_mb(
     xd: &mut MACROBLOCKD,
     mi: &MODE_INFO,
-    dst_fb: &mut YV12_BUFFER_CONFIG,
-    pre_fb: &YV12_BUFFER_CONFIG,
+    dst_y: &mut [u8],
+    dst_u: &mut [u8],
+    dst_v: &mut [u8],
+    pre_y: &[u8],
+    pre_u: &[u8],
+    pre_v: &[u8],
 ) {
     if mi.mbmi.mode as ::core::ffi::c_int != SPLITMV as ::core::ffi::c_int {
-        vp8_build_inter16x16_predictors_mb(xd, mi, dst_fb, pre_fb);
+        vp8_build_inter16x16_predictors_mb(xd, mi, dst_y, dst_u, dst_v, pre_y, pre_u, pre_v);
     } else {
         build_4x4uvmvs(xd, mi);
-        build_inter4x4_predictors_mb(xd, mi, dst_fb, pre_fb);
+        build_inter4x4_predictors_mb(xd, mi, dst_y, dst_u, dst_v, pre_y, pre_u, pre_v);
     };
 }

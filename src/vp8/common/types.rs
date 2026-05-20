@@ -275,6 +275,57 @@ impl yv12_buffer_config {
         (y_active, u_active, v_active)
     }
 
+    pub fn views_mut_with_borders(&mut self) -> (&mut [u8], &mut [u8], &mut [u8]) {
+        let border = self.border as usize;
+        let y_stride = self.y_stride as usize;
+        let y_height = self.y_height as usize;
+        let uv_border = border / 2;
+        let uv_stride = self.uv_stride as usize;
+        let uv_height = self.uv_height as usize;
+        
+        let yplane_size = (y_height + 2 * border) * y_stride;
+        let uvplane_size = (uv_height + 2 * uv_border) * uv_stride;
+        
+        let full = self.full_buffer_mut_safe();
+        
+        assert!(yplane_size + 2 * uvplane_size <= full.len());
+        
+        let (y_slice, rest) = full.split_at_mut(yplane_size);
+        let (u_slice, v_slice) = rest.split_at_mut(uvplane_size);
+        
+        (
+            &mut y_slice[0..yplane_size],
+            &mut u_slice[0..uvplane_size],
+            &mut v_slice[0..uvplane_size],
+        )
+    }
+
+    pub fn views_with_borders(&self) -> (&[u8], &[u8], &[u8]) {
+        let border = self.border as usize;
+        let y_stride = self.y_stride as usize;
+        let y_height = self.y_height as usize;
+        let uv_border = border / 2;
+        let uv_stride = self.uv_stride as usize;
+        let uv_height = self.uv_height as usize;
+        
+        let yplane_size = (y_height + 2 * border) * y_stride;
+        let uvplane_size = (uv_height + 2 * uv_border) * uv_stride;
+        
+        let full = self.full_buffer_safe();
+        
+        assert!(yplane_size + 2 * uvplane_size <= full.len());
+        
+        let (y_slice, rest) = full.split_at(yplane_size);
+        let (u_slice, v_slice) = rest.split_at(uvplane_size);
+        
+        (
+            &y_slice[0..yplane_size],
+            &u_slice[0..uvplane_size],
+            &v_slice[0..uvplane_size],
+        )
+    }
+
+
     pub fn y_slice_safe(&self) -> &[u8] {
         let border = self.border as usize;
         let stride = self.y_stride as usize;
