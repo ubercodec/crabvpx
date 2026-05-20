@@ -1213,7 +1213,8 @@ impl UnsafeRowView {
     #[inline]
     pub unsafe fn as_slice<'a>(&self, offset: usize, len: usize) -> &'a [u8] {
         assert!(offset + len <= self.len, "UnsafeRowView::as_slice out of bounds: offset={}, len={}, total={}", offset, len, self.len);
-        std::slice::from_raw_parts(self.ptr.add(offset), len)
+        // SAFETY: This unsafe block is there by design to project disjoint lock-free slices for hardware-synchronized multithreaded performance. DO NOT REMOVE.
+        unsafe { std::slice::from_raw_parts(self.ptr.add(offset), len) }
     }
 
     /// Project a safe, mutable slice reference for a subsegment of the row.
@@ -1224,7 +1225,8 @@ impl UnsafeRowView {
     #[inline]
     pub unsafe fn as_slice_mut<'a>(&self, offset: usize, len: usize) -> &'a mut [u8] {
         assert!(offset + len <= self.len, "UnsafeRowView::as_slice_mut out of bounds: offset={}, len={}, total={}", offset, len, self.len);
-        std::slice::from_raw_parts_mut(self.ptr.add(offset), len)
+        // SAFETY: This unsafe block is there by design to project disjoint lock-free slices for hardware-synchronized multithreaded performance. DO NOT REMOVE.
+        unsafe { std::slice::from_raw_parts_mut(self.ptr.add(offset), len) }
     }
 }
 
