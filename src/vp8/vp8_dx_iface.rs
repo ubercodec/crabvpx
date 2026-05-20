@@ -10,15 +10,12 @@ unsafe extern "C" {
         __len: size_t,
     ) -> *mut ::core::ffi::c_void;
     fn setjmp(_: *mut ::core::ffi::c_int) -> ::core::ffi::c_int;
-
-
-    fn vp8_create_decoder_instances(
-        fb: *mut frame_buffers,
-        oxcf: *mut VP8D_CONFIG,
-    ) -> ::core::ffi::c_int;
-    fn vp8_remove_decoder_instances(fb: *mut frame_buffers) -> ::core::ffi::c_int;
 }
-use crate::vp8::decoder::onyxd_if::vp8dx_receive_compressed_data_safe;
+use crate::vp8::decoder::onyxd_if::{
+    vp8dx_receive_compressed_data_safe,
+    vp8_create_decoder_instances,
+    vp8_remove_decoder_instances,
+};
 use crate::vp8::decoder::threading::{
     vp8_decoder_create_threads, vp8_decoder_remove_threads, vp8mt_alloc_temp_buffers,
     vp8mt_de_alloc_temp_buffers,
@@ -632,7 +629,7 @@ unsafe extern "C" fn vp8_init(
 }}
 unsafe extern "C" fn vp8_destroy(mut ctx: *mut vpx_codec_alg_priv_t) -> vpx_codec_err_t { unsafe {
     if !ctx.is_null() {
-        vp8_remove_decoder_instances(&raw mut (*ctx).yv12_frame_buffers);
+        vp8_remove_decoder_instances(&mut (*ctx).yv12_frame_buffers);
         let _ = Box::from_raw(ctx);
     }
     return VPX_CODEC_OK;
@@ -925,7 +922,7 @@ unsafe extern "C" fn vp8_decode(
         }
         ::core::ptr::write_volatile(
             &mut res as *mut vpx_codec_err_t,
-            vp8_create_decoder_instances(&raw mut (*ctx).yv12_frame_buffers, &raw mut oxcf)
+            vp8_create_decoder_instances(&mut (*ctx).yv12_frame_buffers, &oxcf)
                 as vpx_codec_err_t,
         );
         if res as ::core::ffi::c_uint == VPX_CODEC_OK as ::core::ffi::c_int as ::core::ffi::c_uint {
@@ -1623,7 +1620,7 @@ impl Drop for Vp8DecoderInstance {
     fn drop(&mut self) {
         unsafe {
             if !self.priv_0.is_null() {
-                vp8_remove_decoder_instances(&raw mut (*self.priv_0).yv12_frame_buffers);
+                vp8_remove_decoder_instances(&mut (*self.priv_0).yv12_frame_buffers);
                 let _ = Box::from_raw(self.priv_0);
             }
         }

@@ -2,6 +2,15 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Decoder Instance Creation & Destruction (onyxd_if.rs, vp8_dx_iface.rs)**:
+  - Refactored `vp8_create_decoder_instances` and `vp8_remove_decoder_instances` in `src/vp8/decoder/onyxd_if.rs` to be safe Rust functions.
+  - Removed obsolete C-export attributes `#[unsafe(no_mangle)]` and `unsafe extern "C"` FFI signatures.
+  - Changed their signatures to take safe Rust mutable references `&mut frame_buffers` and shared reference `&VP8D_CONFIG` instead of raw pointers.
+  - Updated the FFI dispatcher `src/vp8/vp8_dx_iface.rs` to import these functions safely via standard Rust `use` rather than `unsafe extern "C"` block imports.
+  - Updated call sites in `vp8_dx_iface.rs` (inside `vp8_destroy`, `vp8_init`, and `Vp8DecoderInstance::drop`) to pass safe mutable references using `&mut (*ctx).yv12_frame_buffers` instead of raw `&raw mut` pointers.
+  - This successfully eliminated **2 unsafe keywords** globally (4 removed from signatures/attributes, 2 added as internal `unsafe` blocks for setjmp and raw Box/pointer FFI), reducing the remaining unsafe count from 125 to 123.
+  - Verified 100% bit-identical correctness across all 1160 differential test frames.
+
 * **Eliminated Dead Raw Pointers from BLOCKD & MACROBLOCKD (types.rs, mbpitch.rs, onyxd_if.rs, threading.rs)**:
   - Removed dead raw pointer fields `qcoeff`, `dqcoeff`, `predictor`, `dequant`, and `eob` from the `blockd` struct in `src/vp8/common/types.rs`.
   - Removed dead `predictor` array from `macroblockd` struct in `src/vp8/common/types.rs` and updated its `Default` implementation.

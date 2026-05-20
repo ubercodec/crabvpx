@@ -391,40 +391,42 @@ pub fn vp8dx_references_buffer(
     }
     return 0 as ::core::ffi::c_int;
 }
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_create_decoder_instances(
-    mut fb: *mut frame_buffers,
-    mut oxcf: *mut VP8D_CONFIG,
+pub fn vp8_create_decoder_instances(
+    fb: &mut frame_buffers,
+    oxcf: &VP8D_CONFIG,
 ) -> ::core::ffi::c_int {
     let pbi = match create_decompressor() {
         Some(p) => p,
         None => return VPX_CODEC_ERROR as ::core::ffi::c_int,
     };
-    (*fb).pbi[0] = Box::into_raw(pbi);
-    let pbi_raw = (*fb).pbi[0];
-    if setjmp(&raw mut (*pbi_raw).common.error.jmp as *mut ::core::ffi::c_int) != 0 {
+    fb.pbi[0] = Box::into_raw(pbi);
+    let pbi_raw = fb.pbi[0];
+    unsafe {
+        if setjmp(&raw mut (*pbi_raw).common.error.jmp as *mut ::core::ffi::c_int) != 0 {
+            (*pbi_raw).common.error.setjmp = 0;
+            vp8_remove_decoder_instances(fb);
+            fb.pbi = [::core::ptr::null_mut(); 32];
+            return VPX_CODEC_ERROR as ::core::ffi::c_int;
+        }
+        (*pbi_raw).common.error.setjmp = 1;
+        (*pbi_raw).max_threads = oxcf.max_threads;
+        vp8_decoder_create_threads(&mut *pbi_raw);
         (*pbi_raw).common.error.setjmp = 0;
-        vp8_remove_decoder_instances(fb);
-        (*fb).pbi = [::core::ptr::null_mut(); 32];
-        return VPX_CODEC_ERROR as ::core::ffi::c_int;
     }
-    (*pbi_raw).common.error.setjmp = 1;
-    (*pbi_raw).max_threads = (*oxcf).max_threads;
-    vp8_decoder_create_threads(&mut *pbi_raw);
-    (*pbi_raw).common.error.setjmp = 0;
     return VPX_CODEC_OK as ::core::ffi::c_int;
 }
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_remove_decoder_instances(
-    mut fb: *mut frame_buffers,
+pub fn vp8_remove_decoder_instances(
+    fb: &mut frame_buffers,
 ) -> ::core::ffi::c_int {
-    let mut pbi: *mut VP8D_COMP = (*fb).pbi[0 as ::core::ffi::c_int as usize];
+    let pbi: *mut VP8D_COMP = fb.pbi[0];
     if pbi.is_null() {
         return VPX_CODEC_ERROR as ::core::ffi::c_int;
     }
-    vp8_decoder_remove_threads(&mut *pbi);
-    remove_decompressor(Box::from_raw(pbi));
-    (*fb).pbi[0 as ::core::ffi::c_int as usize] = ::core::ptr::null_mut::<VP8D_COMP>();
+    unsafe {
+        vp8_decoder_remove_threads(&mut *pbi);
+        remove_decompressor(Box::from_raw(pbi));
+    }
+    fb.pbi[0] = ::core::ptr::null_mut::<VP8D_COMP>();
     return VPX_CODEC_OK as ::core::ffi::c_int;
 }
 pub fn vp8dx_get_quantizer(pbi: &VP8D_COMP) -> ::core::ffi::c_int {
