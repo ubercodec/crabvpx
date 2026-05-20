@@ -2,6 +2,13 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Image Planes Access in Top-Level API (api.rs)**:
+  - Refactored `Image` struct in `src/api.rs` to hold safe slices (`y_plane`, `u_plane`, `v_plane`, `alpha_plane`) and strides/dimensions directly, instead of holding a raw reference `&'a vpx_image_t` which contained raw pointers.
+  - This made `Image` completely safe Rust with 100% safe public methods (including `plane()`, `width()`, `height()`, and `md5()`), eliminating the internal `unsafe` block from `Image::plane`.
+  - Centralized the unsafe raw-to-slice conversion by inlining it inside `Vp8Decoder::get_frame` where we construct `Image` from the raw `vpx_image_t` returned by the decoder instance.
+  - This architectural improvement establishes a clean safety boundary at the API level without increasing the net `unsafe` keyword count (which remains stable at 197).
+  - Verified that compilation and all 1160 differential test frames continue to pass successfully with 100% bit-identical correctness.
+
 * **Purged the "Safe Lie" and thread address casting (Milestone 4 - Unit 8, 9, & 10) (types.rs, threading.rs)**:
   - Implemented `SendPtr<T>` wrapper in `src/vp8/common/types.rs` with manual `Copy` and `Clone` implementations to bypass implicit bounds constraints on non-cloneable structures.
   - Refactored `thread_decoding_proc` signature in `src/vp8/decoder/threading.rs` to accept a read-only wrapped pointer `SendPtr<VP8D_COMP>` instead of the legacy `pbi_addr: usize` address.
