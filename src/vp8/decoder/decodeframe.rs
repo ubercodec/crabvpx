@@ -684,7 +684,8 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
         let filter_level = pc.filter_level;
         vp8_loop_filter_frame_init(pc, xd, filter_level);
     }
-    vp8_setup_intra_recon_top_line(&mut pc.yv12_fb[new_fb_idx]);
+    let full_slice = pc.yv12_fb_allocs[new_fb_idx].as_mut().unwrap().as_slice_mut();
+    vp8_setup_intra_recon_top_line(&pc.yv12_fb[new_fb_idx], full_slice);
     
     let mut above_context_box = pc.above_context.take().unwrap();
     

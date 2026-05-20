@@ -1667,8 +1667,8 @@ pub fn vp8mt_decode_mb_rows(
     if filter_branch {
         vp8_loop_filter_frame_init(pc_ref, &pbi.mb, filter_level);
     } else {
-        let yv12_fb_new_ref = &mut pc_ref.yv12_fb[new_fb_idx];
-        vp8_setup_intra_recon_top_line(yv12_fb_new_ref);
+        let full_slice = pc_ref.yv12_fb_allocs[new_fb_idx].as_mut().unwrap().as_slice_mut();
+        vp8_setup_intra_recon_top_line(&pc_ref.yv12_fb[new_fb_idx], full_slice);
     }
     
     let mb_row_di = pbi.mb_row_di.as_mut().unwrap();
