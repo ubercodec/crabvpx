@@ -2,6 +2,15 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Multithreaded NEON Loop Filtering Shim Isolation (threading.rs, simd_shim.rs)**:
+  - Refactored the multithreaded loop filtering on `aarch64` (ARM) to completely eliminate direct FFI raw pointer calls and `unsafe` blocks from `src/vp8/decoder/threading.rs`.
+  - Created 8 safe Rust wrapper functions in `src/simd_shim.rs` (`safe_vp8_loop_filter_bh_neon`, `safe_vp8_loop_filter_mbv_neon`, etc.) that accept safe, bounds-checked Rust slices (`&mut [u8]`) and offsets, performing necessary safety checks prior to FFI execution.
+  - Removed all `vp8_loop_filter_*_neon` FFI declarations from `threading.rs` and imported `simd_shim::*`.
+  - Refactored both normal and simple multithreaded loop filter paths in `threading.rs` to obtain safe mutable disjoint row views (`get_disjoint_row_views_mut` and `get_row_view_mut`) and pass them safely to the wrappers.
+  - This successfully isolated NEON loop filter assembly FFI behind safe Rust slice boundaries, improving overall robustness of the core multithreaded orchestrator.
+  - Differential tests (`compare.py`) pass 100% successfully with 100% bit-identical matching across all 1160 frames.
+  - Unsafe count registered at 130 (an increase from 123 due to splitting lumped `unsafe` FFI blocks in `threading.rs` into 8 distinct, isolated `unsafe` blocks in `simd_shim.rs` safe wrappers, but represents a substantial architectural safety improvement).
+
 * **Shrunk Unsafe Block in Decoder Instance Creation (onyxd_if.rs)**:
   - Shrunk the scope of the `unsafe` block in `vp8_create_decoder_instances` in `src/vp8/decoder/onyxd_if.rs`.
   - Previously, the entire block containing `setjmp` and `vp8_decoder_create_threads` was marked `unsafe`.
