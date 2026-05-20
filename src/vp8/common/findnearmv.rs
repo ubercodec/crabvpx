@@ -62,7 +62,6 @@ pub fn vp8_clamp_mv2(mv: &mut MV, xd: &MACROBLOCKD) {
         mv.row = (xd.mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN) as ::core::ffi::c_short;
     }
 }
-#[unsafe(no_mangle)]
 pub static vp8_mbsplit_offset: [[::core::ffi::c_uchar; 16]; 4] = [
     [
         0 as ::core::ffi::c_int as ::core::ffi::c_uchar,

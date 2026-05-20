@@ -72,7 +72,6 @@ pub fn vp8_de_alloc_frame_buffers(oci: &mut VP8_COMMON) {
     oci.show_frame_mi = ::core::ptr::null_mut::<MODE_INFO>();
     oci.frame_to_show_idx = None;
 }
-#[unsafe(no_mangle)]
 pub fn vp8_alloc_frame_buffers(
     oci: &mut VP8_COMMON,
     mut width: ::core::ffi::c_int,

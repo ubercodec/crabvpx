@@ -3,18 +3,8 @@ use crabvpx::vp8::decoder::dboolhuff::*;
 #[test]
 fn test_bool_decoder_init() {
     let data = [0u8; 10];
-    let mut br = BOOL_DECODER {
-        user_buffer_end: core::ptr::null(),
-        user_buffer: core::ptr::null(),
-        value: 0,
-        count: 0,
-        range: 0,
-        decrypt_cb: None,
-        decrypt_state: core::ptr::null_mut(),
-    };
-    unsafe {
-        vp8dx_start_decode(&mut br, data.as_ptr(), data.len() as u32, None, core::ptr::null_mut());
-    }
+    let mut br = BOOL_DECODER::default();
+    vp8dx_start_decode(&mut br, data.as_ptr(), data.len() as u32, None, core::ptr::null_mut());
     assert_eq!(br.range, 255);
     assert_eq!(br.count, 56);
 }

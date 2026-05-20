@@ -2,6 +2,12 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Test Harness and Unnecessary Attribute Cleanup (findnearmv.rs, alloccommon.rs, bool_decoder_test.rs)**:
+  - Fixed `tests/bool_decoder_test.rs` to compile with modernized `BOOL_DECODER` by using `BOOL_DECODER::default()`.
+  - Removed unnecessary `unsafe` block around `vp8dx_start_decode` call in `tests/bool_decoder_test.rs`.
+  - Removed obsolete `#[unsafe(no_mangle)]` attribute from internal static table `vp8_mbsplit_offset` in `src/vp8/common/findnearmv.rs` as it is only used internally via safe Rust imports.
+  - Removed obsolete `#[unsafe(no_mangle)]` attribute from internal function `vp8_alloc_frame_buffers` in `src/vp8/common/alloccommon.rs` as it is only called internally.
+  - This successfully reduced the remaining unsafe count from 423 to 421 (2 unsafe keywords removed) while keeping 100% bit-identical correctness across all 1160 test frames.
 * **FFI Wrapper and Attribute Cleanup in Common Modules (extend.rs, vp8_loopfilter.rs, filter.rs, reconintra.rs)**:
   - Completely eliminated unused FFI wrappers `vp8_copy_and_extend_frame` and `vp8_copy_and_extend_frame_with_rect` from `src/vp8/common/extend.rs`.
   - Completely eliminated unused FFI wrappers `vp8_loop_filter_frame`, `vp8_loop_filter_frame_yonly`, and `vp8_loop_filter_partial_frame` from `src/vp8/common/vp8_loopfilter.rs`.
