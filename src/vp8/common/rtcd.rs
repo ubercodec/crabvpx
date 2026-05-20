@@ -8,8 +8,7 @@ fn setup_rtcd_internal() {
     let _flags = arm_cpu_caps();
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn vp8_rtcd() {
+pub fn vp8_rtcd() {
     INIT.call_once(|| {
         setup_rtcd_internal();
     });

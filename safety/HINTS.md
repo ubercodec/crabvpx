@@ -2,6 +2,13 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe RTCD Setup & no_mangle Elimination (rtcd.rs, vp8_dx_iface.rs)**:
+  - Refactored `vp8_rtcd` in `src/vp8/common/rtcd.rs` to be a safe, standard Rust function, removing the obsolete C FFI export attributes `#[unsafe(no_mangle)]` and `extern "C"`.
+  - This RTCD initialization function is only called internally within our Rust modules, so maintaining dynamic FFI linkage was completely unnecessary.
+  - Updated `src/vp8/vp8_dx_iface.rs` to import `vp8_rtcd` safely and removed its FFI declaration from the `unsafe extern "C"` block.
+  - This successfully eliminated **1 unsafe keyword** globally, reducing the remaining unsafe count from 130 to 129.
+  - Verified 100% bit-identical correctness across all 1160 differential test frames.
+
 * **Safe Threading Data Flow & DECODETHREAD_DATA Elimination (threading.rs, types.rs)**:
   - Completely eliminated `DECODETHREAD_DATA` struct and its associated `unsafe impl Send` from `src/vp8/common/types.rs`.
   - Removed `de_thread_data` field from `VP8D_COMP` struct, simplifying its layout and removing non-repr(C) field.
@@ -288,4 +295,7 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
    - [x] **Audit `yv12config.rs` for unused FFI wrappers**: Identified and removed three unused C-ABI wrappers (`vp8_yv12_de_alloc_frame_buffer`, `vp8_yv12_realloc_frame_buffer`, `vp8_yv12_alloc_frame_buffer`), eliminating 3 unsafe keywords. (Completed!)
     - [x] **Remove obsolete `#[unsafe(no_mangle)]` from `arm_cpu_caps` in `src/vpx_ports/aarch64_cpudetect.rs`**: Removed the attribute and `extern "C"` to eliminate 1 unsafe keyword globally, as it is only called internally from Rust. (Completed!)
     - [x] **Clean up unused transpiled Rust files in `src/vp8/common/arm/`**: Identified and completely removed 14 unused transpiled Rust files in `src/vp8/common/arm/` and its `neon` subdirectory. This successfully eliminated **8 unsafe keywords/blocks** globally, reducing the remaining unsafe count to 138, as these files are redundant (we compile the C versions directly via `build.rs`). (Completed!)
+    - [x] **Convert `vp8_rtcd` to Safe Rust**: Refactored `vp8_rtcd` in `src/vp8/common/rtcd.rs` to remove `#[unsafe(no_mangle)]` and `extern "C"` and imported it safely in `vp8_dx_iface.rs`, reducing unsafe count from 130 to 129. (Completed!)
+    - [ ] **Convert remaining internal RTCD functions to Safe Rust**: `vpx_dsp_rtcd` in `src/vpx_dsp/vpx_dsp_rtcd.rs` and `vpx_scale_rtcd` in `src/vpx_scale/vpx_scale_rtcd.rs` can also be refactored to remove `#[unsafe(no_mangle)]` and `extern "C"` since they are only called internally from Rust (`onyxd_if.rs` and `vp8_dx_iface.rs`). This will eliminate **2 more unsafe keywords**.
+    - [ ] **Eliminate dead raw pointer fields from `BLOCKD`**: The fields `qcoeff`, `dqcoeff`, `predictor`, `dequant`, and `eob` in the `blockd` struct in `src/vp8/common/types.rs` are completely dead and never read in our Rust codebase (they were only initialized in `vp8_setup_block_dptrs` which can become a safe no-op). Removing these raw pointers will make the `blockd` struct 100% safe Rust!
 

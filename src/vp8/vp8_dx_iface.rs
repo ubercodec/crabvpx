@@ -9,7 +9,6 @@ unsafe extern "C" {
         __c: ::core::ffi::c_int,
         __len: size_t,
     ) -> *mut ::core::ffi::c_void;
-    fn vp8_rtcd();
     fn vpx_dsp_rtcd();
     fn vpx_scale_rtcd();
     fn setjmp(_: *mut ::core::ffi::c_int) -> ::core::ffi::c_int;
@@ -29,6 +28,7 @@ unsafe extern "C" {
 }
 use crate::vp8::decoder::onyxd_if::vp8dx_receive_compressed_data_safe;
 use crate::vp8::decoder::threading::{vp8_decoder_create_threads, vp8_decoder_remove_threads};
+use crate::vp8::common::rtcd::vp8_rtcd;
 pub type int64_t = i64;
 pub type size_t = usize;
 pub type uint8_t = u8;
