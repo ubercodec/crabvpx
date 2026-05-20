@@ -12,8 +12,8 @@ use crate::vp8::common::dequantize::vp8_dequant_idct_add_safe;
 use crate::vp8::common::idctllm::vp8_dc_only_idct_add_safe;
 use crate::vp8::common::reconintra4x4::vp8_intra4x4_predict_safe;
 
+#[cfg(target_arch = "aarch64")]
 unsafe extern "C" {
-
     fn vp8_loop_filter_bh_neon(
         y_ptr: *mut ::core::ffi::c_uchar,
         u_ptr: *mut ::core::ffi::c_uchar,
@@ -66,7 +66,9 @@ unsafe extern "C" {
         y_stride: ::core::ffi::c_int,
         blimit: *const ::core::ffi::c_uchar,
     );
+}
 
+unsafe extern "C" {
     fn setjmp(_: *mut ::core::ffi::c_int) -> ::core::ffi::c_int;
     fn vpx_internal_error(
         info: *mut vpx_internal_error_info,
@@ -88,9 +90,6 @@ unsafe extern "C" {
     fn vpx_malloc(size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_calloc(num: size_t, size: size_t) -> *mut ::core::ffi::c_void;
     fn vpx_free(memblk: *mut ::core::ffi::c_void);
-
-    
-
 }
 static mach_task_self_: mach_port_t = 0;
 use crate::vp8::common::setupintrarecon::vp8_setup_intra_recon_top_line;
@@ -885,119 +884,370 @@ fn mt_decode_mb_rows(
                     if (*pc).filter_type as ::core::ffi::c_uint
                         == NORMAL_LOOPFILTER as ::core::ffi::c_int as ::core::ffi::c_uint
                     {
-                        let mut lfi: loop_filter_info = loop_filter_info {
-                            mblim: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                            blim: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                            lim: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                            hev_thr: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                        };
-                        let mut frame_type: FRAME_TYPE = (*pc).frame_type;
-                        let hev_index: ::core::ffi::c_int = (*lfi_n).hev_thr_lut
-                            [frame_type as usize][filter_level as usize]
-                            as ::core::ffi::c_int;
-                        lfi.mblim = &raw mut *(&raw mut (*lfi_n).mblim
-                            as *mut [::core::ffi::c_uchar; 1])
-                            .offset(filter_level as isize)
-                            as *mut ::core::ffi::c_uchar;
-                        lfi.blim = &raw mut *(&raw mut (*lfi_n).blim
-                            as *mut [::core::ffi::c_uchar; 1])
-                            .offset(filter_level as isize)
-                            as *mut ::core::ffi::c_uchar;
-                        lfi.lim = &raw mut *(&raw mut (*lfi_n).lim
-                            as *mut [::core::ffi::c_uchar; 1])
-                            .offset(filter_level as isize)
-                            as *mut ::core::ffi::c_uchar;
-                        lfi.hev_thr = &raw mut *(&raw mut (*lfi_n).hev_thr
-                            as *mut [::core::ffi::c_uchar; 1])
-                            .offset(hev_index as isize)
-                            as *mut ::core::ffi::c_uchar;
-                        if mb_col > 0 as ::core::ffi::c_int {
-                            let mb_idx = mb_row * (*pc).mb_cols + mb_col;
-
-                            vp8_loop_filter_mbv_neon(
-                                (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
-                                recon_y_stride,
-                                recon_uv_stride,
-                                &raw mut lfi,
-                            );
-
+                        #[cfg(target_arch = "aarch64")]
+                        {
+                            let mut lfi: loop_filter_info = loop_filter_info {
+                                mblim: ::core::ptr::null::<::core::ffi::c_uchar>(),
+                                blim: ::core::ptr::null::<::core::ffi::c_uchar>(),
+                                lim: ::core::ptr::null::<::core::ffi::c_uchar>(),
+                                hev_thr: ::core::ptr::null::<::core::ffi::c_uchar>(),
+                            };
+                            let mut frame_type: FRAME_TYPE = (*pc).frame_type;
+                            let hev_index: ::core::ffi::c_int = (*lfi_n).hev_thr_lut
+                                [frame_type as usize][filter_level as usize]
+                                as ::core::ffi::c_int;
+                            lfi.mblim = &raw mut *(&raw mut (*lfi_n).mblim
+                                as *mut [::core::ffi::c_uchar; 1])
+                                .offset(filter_level as isize)
+                                as *mut ::core::ffi::c_uchar;
+                            lfi.blim = &raw mut *(&raw mut (*lfi_n).blim
+                                as *mut [::core::ffi::c_uchar; 1])
+                                .offset(filter_level as isize)
+                                as *mut ::core::ffi::c_uchar;
+                            lfi.lim = &raw mut *(&raw mut (*lfi_n).lim
+                                as *mut [::core::ffi::c_uchar; 1])
+                                .offset(filter_level as isize)
+                                as *mut ::core::ffi::c_uchar;
+                            lfi.hev_thr = &raw mut *(&raw mut (*lfi_n).hev_thr
+                                as *mut [::core::ffi::c_uchar; 1])
+                                .offset(hev_index as isize)
+                                as *mut ::core::ffi::c_uchar;
+                            if mb_col > 0 as ::core::ffi::c_int {
+                                vp8_loop_filter_mbv_neon(
+                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                                    recon_y_stride,
+                                    recon_uv_stride,
+                                    &raw mut lfi,
+                                );
+                            }
+                            if skip_lf == 0 {
+                                vp8_loop_filter_bv_neon(
+                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                                    recon_y_stride,
+                                    recon_uv_stride,
+                                    &raw mut lfi,
+                                );
+                            }
+                            if mb_row > 0 as ::core::ffi::c_int {
+                                vp8_loop_filter_mbh_neon(
+                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                                    recon_y_stride,
+                                    recon_uv_stride,
+                                    &raw mut lfi,
+                                );
+                            }
+                            if skip_lf == 0 {
+                                vp8_loop_filter_bh_neon(
+                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
+                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
+                                    recon_y_stride,
+                                    recon_uv_stride,
+                                    &raw mut lfi,
+                                );
+                            }
                         }
-                        if skip_lf == 0 {
-                            vp8_loop_filter_bv_neon(
-                                (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
-                                recon_y_stride,
-                                recon_uv_stride,
-                                &raw mut lfi,
-                            );
-                        }
-                        if mb_row > 0 as ::core::ffi::c_int {
-                            let mb_idx = mb_row * (*pc).mb_cols + mb_col;
+                        #[cfg(not(target_arch = "aarch64"))]
+                        {
+                            let y_border = xd.dst.border as usize;
+                            let y_stride = xd.dst.y_stride as usize;
+                            let y_active_start = y_border * y_stride + y_border;
 
-                            vp8_loop_filter_mbh_neon(
-                                (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
-                                recon_y_stride,
-                                recon_uv_stride,
-                                &raw mut lfi,
-                            );
+                            let uv_border = (xd.dst.border / 2) as usize;
+                            let uv_stride = xd.dst.uv_stride as usize;
+                            let uv_active_start = uv_border * uv_stride + uv_border;
 
-                        }
-                        if skip_lf == 0 {
-                            let mb_idx = mb_row * (*pc).mb_cols + mb_col;
+                            let frame_type = (*pc).frame_type;
+                            let hev_index = (*lfi_n).hev_thr_lut[frame_type as usize][filter_level as usize] as usize;
 
-                            vp8_loop_filter_bh_neon(
-                                (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
-                                recon_y_stride,
-                                recon_uv_stride,
-                                &raw mut lfi,
-                            );
+                            let blimit_m_slice = &(*lfi_n).mblim[filter_level as usize];
+                            let blimit_b_slice = &(*lfi_n).blim[filter_level as usize];
+                            let limit_slice = &(*lfi_n).lim[filter_level as usize];
+                            let thresh_slice = &(*lfi_n).hev_thr[hev_index];
 
+                            if mb_col > 0 as ::core::ffi::c_int {
+                                {
+                                    let y_slice = xd.dst.y_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(
+                                        y_slice,
+                                        y_active_start,
+                                        y_stride,
+                                        blimit_m_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        2,
+                                    );
+                                }
+                                if !(*xd).dst.u_buffer.is_null() {
+                                    let u_slice = xd.dst.u_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(
+                                        u_slice,
+                                        uv_active_start,
+                                        uv_stride,
+                                        blimit_m_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        1,
+                                    );
+                                }
+                                if !(*xd).dst.v_buffer.is_null() {
+                                    let v_slice = xd.dst.v_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(
+                                        v_slice,
+                                        uv_active_start,
+                                        uv_stride,
+                                        blimit_m_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        1,
+                                    );
+                                }
+                            }
+                            if skip_lf == 0 {
+                                {
+                                    let y_slice = xd.dst.y_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
+                                        y_slice,
+                                        y_active_start + 4,
+                                        y_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        2,
+                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
+                                        y_slice,
+                                        y_active_start + 8,
+                                        y_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        2,
+                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
+                                        y_slice,
+                                        y_active_start + 12,
+                                        y_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        2,
+                                    );
+                                }
+                                if !(*xd).dst.u_buffer.is_null() {
+                                    let u_slice = xd.dst.u_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
+                                        u_slice,
+                                        uv_active_start + 4,
+                                        uv_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        1,
+                                    );
+                                }
+                                if !(*xd).dst.v_buffer.is_null() {
+                                    let v_slice = xd.dst.v_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
+                                        v_slice,
+                                        uv_active_start + 4,
+                                        uv_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        1,
+                                    );
+                                }
+                            }
+                            if mb_row > 0 as ::core::ffi::c_int {
+                                {
+                                    let y_slice = xd.dst.y_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(
+                                        y_slice,
+                                        y_active_start,
+                                        y_stride,
+                                        blimit_m_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        2,
+                                    );
+                                }
+                                if !(*xd).dst.u_buffer.is_null() {
+                                    let u_slice = xd.dst.u_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(
+                                        u_slice,
+                                        uv_active_start,
+                                        uv_stride,
+                                        blimit_m_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        1,
+                                    );
+                                }
+                                if !(*xd).dst.v_buffer.is_null() {
+                                    let v_slice = xd.dst.v_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(
+                                        v_slice,
+                                        uv_active_start,
+                                        uv_stride,
+                                        blimit_m_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        1,
+                                    );
+                                }
+                            }
+                            if skip_lf == 0 {
+                                {
+                                    let y_slice = xd.dst.y_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
+                                        y_slice,
+                                        y_active_start + 4 * y_stride,
+                                        y_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        2,
+                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
+                                        y_slice,
+                                        y_active_start + 8 * y_stride,
+                                        y_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        2,
+                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
+                                        y_slice,
+                                        y_active_start + 12 * y_stride,
+                                        y_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        2,
+                                    );
+                                }
+                                if !(*xd).dst.u_buffer.is_null() {
+                                    let u_slice = xd.dst.u_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
+                                        u_slice,
+                                        uv_active_start + 4 * uv_stride,
+                                        uv_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        1,
+                                    );
+                                }
+                                if !(*xd).dst.v_buffer.is_null() {
+                                    let v_slice = xd.dst.v_slice_mut_safe();
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
+                                        v_slice,
+                                        uv_active_start + 4 * uv_stride,
+                                        uv_stride,
+                                        blimit_b_slice,
+                                        limit_slice,
+                                        thresh_slice,
+                                        1,
+                                    );
+                                }
+                            }
                         }
                     } else {
-                        if mb_col > 0 as ::core::ffi::c_int {
-                            vp8_loop_filter_mbvs_neon(
-                                (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                recon_y_stride,
-                                &raw mut *(&raw mut (*lfi_n).mblim
-                                    as *mut [::core::ffi::c_uchar; 1])
-                                    .offset(filter_level as isize)
-                                    as *mut ::core::ffi::c_uchar,
-                            );
+                        #[cfg(target_arch = "aarch64")]
+                        {
+                            if mb_col > 0 as ::core::ffi::c_int {
+                                vp8_loop_filter_mbvs_neon(
+                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    recon_y_stride,
+                                    &raw mut *(&raw mut (*lfi_n).mblim
+                                        as *mut [::core::ffi::c_uchar; 1])
+                                        .offset(filter_level as isize)
+                                        as *mut ::core::ffi::c_uchar,
+                                );
+                            }
+                            if skip_lf == 0 {
+                                vp8_loop_filter_bvs_neon(
+                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    recon_y_stride,
+                                    &raw mut *(&raw mut (*lfi_n).blim as *mut [::core::ffi::c_uchar; 1])
+                                        .offset(filter_level as isize)
+                                        as *mut ::core::ffi::c_uchar,
+                                );
+                            }
+                            if mb_row > 0 as ::core::ffi::c_int {
+                                vp8_loop_filter_mbhs_neon(
+                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    recon_y_stride,
+                                    &raw mut *(&raw mut (*lfi_n).mblim
+                                        as *mut [::core::ffi::c_uchar; 1])
+                                        .offset(filter_level as isize)
+                                        as *mut ::core::ffi::c_uchar,
+                                );
+                            }
+                            if skip_lf == 0 {
+                                vp8_loop_filter_bhs_neon(
+                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
+                                    recon_y_stride,
+                                    &raw mut *(&raw mut (*lfi_n).blim as *mut [::core::ffi::c_uchar; 1])
+                                        .offset(filter_level as isize)
+                                        as *mut ::core::ffi::c_uchar,
+                                );
+                            }
                         }
-                        if skip_lf == 0 {
-                            vp8_loop_filter_bvs_neon(
-                                (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                recon_y_stride,
-                                &raw mut *(&raw mut (*lfi_n).blim as *mut [::core::ffi::c_uchar; 1])
-                                    .offset(filter_level as isize)
-                                    as *mut ::core::ffi::c_uchar,
-                            );
-                        }
-                        if mb_row > 0 as ::core::ffi::c_int {
-                            vp8_loop_filter_mbhs_neon(
-                                (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                recon_y_stride,
-                                &raw mut *(&raw mut (*lfi_n).mblim
-                                    as *mut [::core::ffi::c_uchar; 1])
-                                    .offset(filter_level as isize)
-                                    as *mut ::core::ffi::c_uchar,
-                            );
-                        }
-                        if skip_lf == 0 {
-                            vp8_loop_filter_bhs_neon(
-                                (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                recon_y_stride,
-                                &raw mut *(&raw mut (*lfi_n).blim as *mut [::core::ffi::c_uchar; 1])
-                                    .offset(filter_level as isize)
-                                    as *mut ::core::ffi::c_uchar,
-                            );
+                        #[cfg(not(target_arch = "aarch64"))]
+                        {
+                            let y_border = xd.dst.border as usize;
+                            let y_stride = xd.dst.y_stride as usize;
+                            let y_active_start = y_border * y_stride + y_border;
+
+                            if mb_col > 0 as ::core::ffi::c_int {
+                                let blimit_val = (*lfi_n).mblim[filter_level as usize][0];
+                                let y_slice = xd.dst.y_slice_mut_safe();
+                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_vertical_edge_safe(
+                                    y_slice,
+                                    y_active_start,
+                                    y_stride,
+                                    blimit_val,
+                                );
+                            }
+                            if skip_lf == 0 {
+                                let blimit_val = (*lfi_n).blim[filter_level as usize][0];
+                                let y_slice = xd.dst.y_slice_mut_safe();
+                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_bvs_safe(
+                                    y_slice,
+                                    y_active_start,
+                                    y_stride,
+                                    blimit_val,
+                                );
+                            }
+                            if mb_row > 0 as ::core::ffi::c_int {
+                                let blimit_val = (*lfi_n).mblim[filter_level as usize][0];
+                                let y_slice = xd.dst.y_slice_mut_safe();
+                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_horizontal_edge_safe(
+                                    y_slice,
+                                    y_active_start,
+                                    y_stride,
+                                    blimit_val,
+                                );
+                            }
+                            if skip_lf == 0 {
+                                let blimit_val = (*lfi_n).blim[filter_level as usize][0];
+                                let y_slice = xd.dst.y_slice_mut_safe();
+                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_bhs_safe(
+                                    y_slice,
+                                    y_active_start,
+                                    y_stride,
+                                    blimit_val,
+                                );
+                            }
                         }
                     }
                 }
