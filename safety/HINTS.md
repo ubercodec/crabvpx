@@ -2,6 +2,17 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Frame Buffer Deallocation & 100% Safe yv12config.rs (yv12config.rs, types.rs, alloccommon.rs)**:
+  - Refactored `YV12_BUFFER_CONFIG` memory lifecycle to use Rust's standard ownership model.
+  - Added `yv12_fb_allocs: [Option<AlignedBox>; 4]` and `temp_scale_frame_alloc: Option<AlignedBox>` to `VP8Common` in `src/vp8/common/types.rs` to serve as the single source of truth for frame buffer ownership.
+  - Removed `Clone` derivation from `VP8Common` since it contains non-cloneable `AlignedBox`, which was safe as it was never cloned in the codebase.
+  - Refactored `vp8_yv12_de_alloc_frame_buffer_safe`, `vp8_yv12_realloc_frame_buffer_safe`, and `vp8_yv12_alloc_frame_buffer_safe` in `src/vpx_scale/generic/yv12config.rs` to accept `&mut Option<AlignedBox>` and manage it safely.
+  - Replaced manual raw pointer `AlignedBox::from_raw` deallocation with safe `*alloc = None` assignment, letting Rust's `Drop` handle the deallocation.
+  - This completely eliminated the last `unsafe` block in `src/vpx_scale/generic/yv12config.rs`, making the entire file **100% safe Rust**!
+  - Updated call sites in `src/vp8/common/alloccommon.rs` to pass the new allocator fields.
+  - This successfully eliminated **1 unsafe block** globally, reducing the remaining unsafe count from 138 to 137.
+  - Verified 100% bit-identical correctness across all 1160 differential test frames.
+
 * **Cleaned up Unused Transpiled ARM Rust Files (src/vp8/common/arm/)**:
   - Audited and completely removed 14 unused transpiled Rust files in `src/vp8/common/arm/` (and its `neon` subdirectory).
   - These files were not included in the module tree (`src/lib.rs`) and thus not compiled. The decoder instead compiles the C versions of these NEON helpers directly via `build.rs`.

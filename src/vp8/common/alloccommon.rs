@@ -60,11 +60,13 @@ pub fn vp8_de_alloc_frame_buffers(oci: &mut VP8_COMMON) {
     let mut i: ::core::ffi::c_int = 0;
     i = 0 as ::core::ffi::c_int;
     while i < NUM_YV12_BUFFERS {
-        vp8_yv12_de_alloc_frame_buffer_safe(&mut oci.yv12_fb[i as usize]);
+        let (fb, alloc) = (&mut oci.yv12_fb[i as usize], &mut oci.yv12_fb_allocs[i as usize]);
+        vp8_yv12_de_alloc_frame_buffer_safe(fb, alloc);
         oci.fb_idx_ref_cnt[i as usize] = 0 as ::core::ffi::c_int;
         i += 1;
     }
-    vp8_yv12_de_alloc_frame_buffer_safe(&mut oci.temp_scale_frame);
+    let (temp_fb, temp_alloc) = (&mut oci.temp_scale_frame, &mut oci.temp_scale_frame_alloc);
+    vp8_yv12_de_alloc_frame_buffer_safe(temp_fb, temp_alloc);
     
     oci.above_context = None;
     oci.mip = None;
@@ -72,6 +74,7 @@ pub fn vp8_de_alloc_frame_buffers(oci: &mut VP8_COMMON) {
     oci.show_frame_mi = ::core::ptr::null_mut::<MODE_INFO>();
     oci.frame_to_show_idx = None;
 }
+
 pub fn vp8_alloc_frame_buffers(
     oci: &mut VP8_COMMON,
     mut width: ::core::ffi::c_int,
@@ -92,11 +95,13 @@ pub fn vp8_alloc_frame_buffers(
             current_block = 10886091980245723256;
             break;
         }
+        let (fb, alloc) = (&mut oci.yv12_fb[i as usize], &mut oci.yv12_fb_allocs[i as usize]);
         if vp8_yv12_alloc_frame_buffer_safe(
-            &mut oci.yv12_fb[i as usize],
+            fb,
             width,
             height,
             VP8BORDERINPIXELS,
+            alloc,
         ).is_err() {
             current_block = 9271424053274658668;
             break;
@@ -113,12 +118,15 @@ pub fn vp8_alloc_frame_buffers(
             oci.fb_idx_ref_cnt[1 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
             oci.fb_idx_ref_cnt[2 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
             oci.fb_idx_ref_cnt[3 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
+            let (temp_fb, temp_alloc) = (&mut oci.temp_scale_frame, &mut oci.temp_scale_frame_alloc);
             if vp8_yv12_alloc_frame_buffer_safe(
-                &mut oci.temp_scale_frame,
+                temp_fb,
                 width,
                 16 as ::core::ffi::c_int,
                 VP8BORDERINPIXELS,
+                temp_alloc,
             ).is_ok()
+
             {
                 oci.mb_rows = height >> 4 as ::core::ffi::c_int;
                 oci.mb_cols = width >> 4 as ::core::ffi::c_int;

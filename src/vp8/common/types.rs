@@ -933,7 +933,6 @@ pub type CLAMP_TYPE = ::core::ffi::c_uint;
 pub const RECON_CLAMP_NOTREQUIRED: CLAMP_TYPE = 1;
 pub const RECON_CLAMP_REQUIRED: CLAMP_TYPE = 0;
 
-#[derive(Clone)]
 #[repr(C)]
 pub struct VP8Common {
     pub error: vpx_internal_error_info,
@@ -947,13 +946,16 @@ pub struct VP8Common {
     pub clamp_type: CLAMP_TYPE,
     pub frame_to_show_idx: Option<usize>,
     pub yv12_fb: [YV12_BUFFER_CONFIG; 4],
+    pub yv12_fb_allocs: [Option<crate::vpx_mem::vpx_mem::AlignedBox>; 4],
     pub fb_idx_ref_cnt: [::core::ffi::c_int; 4],
     pub new_fb_idx: ::core::ffi::c_int,
     pub lst_fb_idx: ::core::ffi::c_int,
     pub gld_fb_idx: ::core::ffi::c_int,
     pub alt_fb_idx: ::core::ffi::c_int,
     pub temp_scale_frame: YV12_BUFFER_CONFIG,
+    pub temp_scale_frame_alloc: Option<crate::vpx_mem::vpx_mem::AlignedBox>,
     pub last_frame_type: FRAME_TYPE,
+
     pub frame_type: FRAME_TYPE,
     pub show_frame: ::core::ffi::c_int,
     pub frame_flags: ::core::ffi::c_int,
@@ -1011,12 +1013,15 @@ impl Default for VP8Common {
             clamp_type: 0,
             frame_to_show_idx: None,
             yv12_fb: [YV12_BUFFER_CONFIG::default(); 4],
+            yv12_fb_allocs: [None, None, None, None],
             fb_idx_ref_cnt: [0; 4],
             new_fb_idx: 0,
             lst_fb_idx: 0,
             gld_fb_idx: 0,
             alt_fb_idx: 0,
             temp_scale_frame: YV12_BUFFER_CONFIG::default(),
+            temp_scale_frame_alloc: None,
+
             last_frame_type: 0,
             frame_type: 0,
             show_frame: 0,

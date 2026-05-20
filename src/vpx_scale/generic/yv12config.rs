@@ -23,46 +23,14 @@ pub type size_t = __darwin_size_t;
 
 pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
 pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
-pub fn vp8_yv12_de_alloc_frame_buffer_safe(ybf: &mut YV12_BUFFER_CONFIG) {
-    if !ybf.buffer_alloc.is_null() {
-        // SAFETY: ybf.buffer_alloc was allocated by AlignedBox in vp8_yv12_realloc_frame_buffer_safe.
-        unsafe {
-            let _ = AlignedBox::from_raw(ybf.buffer_alloc);
-        }
-    }
-    *ybf = YV12_BUFFER_CONFIG {
-        y_width: 0,
-        y_height: 0,
-        y_crop_width: 0,
-        y_crop_height: 0,
-        y_stride: 0,
-        uv_width: 0,
-        uv_height: 0,
-        uv_crop_width: 0,
-        uv_crop_height: 0,
-        uv_stride: 0,
-        alpha_width: 0,
-        alpha_height: 0,
-        alpha_stride: 0,
-        y_buffer: core::ptr::null_mut(),
-        u_buffer: core::ptr::null_mut(),
-        v_buffer: core::ptr::null_mut(),
-        alpha_buffer: core::ptr::null_mut(),
-        buffer_alloc: core::ptr::null_mut(),
-        buffer_alloc_sz: 0,
-        border: 0,
-        frame_size: 0,
-        subsampling_x: 0,
-        subsampling_y: 0,
-        bit_depth: 0,
-        color_space: 0,
-        color_range: 0,
-        render_width: 0,
-        render_height: 0,
-        corrupted: 0,
-        flags: 0,
-    };
+pub fn vp8_yv12_de_alloc_frame_buffer_safe(
+    ybf: &mut YV12_BUFFER_CONFIG,
+    alloc: &mut Option<AlignedBox>,
+) {
+    *alloc = None;
+    *ybf = YV12_BUFFER_CONFIG::default();
 }
+
 
 
 pub fn vp8_yv12_realloc_frame_buffer_safe(
@@ -70,6 +38,7 @@ pub fn vp8_yv12_realloc_frame_buffer_safe(
     width: i32,
     height: i32,
     border: i32,
+    alloc: &mut Option<AlignedBox>,
 ) -> Result<(), i32> {
     let aligned_width = (width + 15) & !15;
     let aligned_height = (height + 15) & !15;
@@ -81,7 +50,7 @@ pub fn vp8_yv12_realloc_frame_buffer_safe(
     let uvplane_size = (uv_height + border) * uv_stride;
     let frame_size = (yplane_size + 2 * uvplane_size) as usize;
 
-    if ybf.buffer_alloc.is_null() {
+    if alloc.is_none() {
         let aligned_box = match AlignedBox::new(32, frame_size) {
             Some(b) => b,
             None => {
@@ -89,8 +58,9 @@ pub fn vp8_yv12_realloc_frame_buffer_safe(
                 return Err(-1);
             }
         };
-        ybf.buffer_alloc = aligned_box.into_raw();
+        ybf.buffer_alloc = aligned_box.as_ptr();
         ybf.buffer_alloc_sz = frame_size;
+        *alloc = Some(aligned_box);
     }
 
     if ybf.buffer_alloc_sz < frame_size {
@@ -127,14 +97,17 @@ pub fn vp8_yv12_realloc_frame_buffer_safe(
 }
 
 
+
 pub fn vp8_yv12_alloc_frame_buffer_safe(
     ybf: &mut YV12_BUFFER_CONFIG,
     width: i32,
     height: i32,
     border: i32,
+    alloc: &mut Option<AlignedBox>,
 ) -> Result<(), i32> {
-    vp8_yv12_de_alloc_frame_buffer_safe(ybf);
-    vp8_yv12_realloc_frame_buffer_safe(ybf, width, height, border)
+    vp8_yv12_de_alloc_frame_buffer_safe(ybf, alloc);
+    vp8_yv12_realloc_frame_buffer_safe(ybf, width, height, border, alloc)
 }
+
 
 
