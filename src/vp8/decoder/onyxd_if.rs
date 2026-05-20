@@ -413,10 +413,12 @@ pub fn vp8_remove_decoder_instances(
     if pbi.is_null() {
         return VPX_CODEC_ERROR as ::core::ffi::c_int;
     }
-    unsafe {
-        vp8_decoder_remove_threads(&mut *pbi);
-        remove_decompressor(Box::from_raw(pbi));
-    }
+    // SAFETY: We safely reclaim exclusive ownership of the heap-allocated decoder context
+    // from the raw pointer stored in `fb.pbi[0]` (which was previously created via `Box::into_raw`
+    // during `vp8_create_decoder_instances`).
+    let mut decompressor = unsafe { Box::from_raw(pbi) };
+    vp8_decoder_remove_threads(&mut *decompressor);
+    remove_decompressor(decompressor);
     fb.pbi[0] = ::core::ptr::null_mut::<VP8D_COMP>();
     return VPX_CODEC_OK as ::core::ffi::c_int;
 }

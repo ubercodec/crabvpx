@@ -2,6 +2,13 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Isolated Unsafe Raw Pointer Box Reclamation in Decoder Destruction (onyxd_if.rs)**:
+  - Refactored `vp8_remove_decoder_instances` in `src/vp8/decoder/onyxd_if.rs` to minimize the scope of the `unsafe` block.
+  - Reclaimed exclusive `Box<VP8D_COMP>` ownership from the raw pointer stored in `fb.pbi[0]` via a single-line isolated `unsafe { Box::from_raw(pbi) }` call.
+  - Performed the subsequent `vp8_decoder_remove_threads` thread cleanup and `remove_decompressor` deallocation completely in 100% safe Rust on the reclaimed Box wrapper.
+  - This isolates memory unsafety strictly to the boundary reclamation point, leaving the entire rest of the cleanup sequence safely managed by the Rust borrow checker.
+  - Verified that all 1160 differential test frames continue to pass successfully with 100% bit-identical correctness.
+
 * **Safe Row Buffer Initialization in Multithreaded Row Decoding (threading.rs)**:
   - Refactored the single-threaded setup phase in `vp8mt_decode_mb_rows` in `src/vp8/decoder/threading.rs` to completely eliminate its internal `unsafe` block.
   - Bypassed `UnsafeRowView` raw pointer slice projections by accessing `mt_yabove_row_allocs` etc. directly, which hold safe, owned `AlignedBox` buffers.
