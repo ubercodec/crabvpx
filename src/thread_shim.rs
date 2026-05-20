@@ -1,9 +1,6 @@
 use std::ffi::c_void;
 use std::sync::{Arc, Mutex, Condvar, OnceLock};
-use std::thread::{self, JoinHandle};
 use std::collections::HashMap;
-
-pub type pthread_t = *mut c_void;
 
 
 // Opaque struct for semaphore
@@ -36,53 +33,7 @@ impl Semaphore {
 }
 
 
-struct ThreadHandle {
-    handle: Option<JoinHandle<usize>>,
-}
 
-struct ThreadArg(*mut c_void);
-unsafe impl Send for ThreadArg {}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_pthread_create(
-    thread: *mut pthread_t,
-    attr: *const c_void,
-    start_routine: Option<unsafe extern "C" fn(*mut c_void) -> *mut c_void>,
-    arg: *mut c_void,
-) -> i32 {
-    if let Some(routine) = start_routine {
-        let routine_ptr = routine as usize;
-        let arg_ptr = arg as usize;
-        let handle = thread::spawn(move || {
-            let r: unsafe extern "C" fn(*mut c_void) -> *mut c_void = core::mem::transmute(routine_ptr);
-            r(arg_ptr as *mut c_void) as usize
-        });
-        
-        let th = Box::new(ThreadHandle { handle: Some(handle) });
-        *thread = Box::into_raw(th) as *mut c_void;
-        0
-    } else {
-        -1
-    }
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_pthread_join(
-    thread: pthread_t,
-    retval: *mut *mut c_void,
-) -> i32 {
-    if thread.is_null() {
-        return -1;
-    }
-    let mut th = Box::from_raw(thread as *mut ThreadHandle);
-    if let Some(handle) = th.handle.take() {
-        let res = handle.join().unwrap_or(0);
-        if !retval.is_null() {
-            *retval = res as *mut c_void;
-        }
-    }
-    0
-}
 
 static ONCE_MAP: OnceLock<Mutex<HashMap<usize, bool>>> = OnceLock::new();
 

@@ -1038,25 +1038,19 @@ fn mt_decode_mb_rows(
         }
     }
 }
-unsafe extern "C" fn thread_decoding_proc(
-    p_data: *mut ::core::ffi::c_void,
-) -> *mut ::core::ffi::c_void {
-    let (ithread, pbi, mbrd) = unsafe {
-        let td = &*(p_data as *const DECODETHREAD_DATA);
-        (
-            td.ithread,
-            &mut *(td.ptr1 as *mut VP8D_COMP),
-            &mut *(td.ptr2 as *mut MB_ROW_DEC),
-        )
-    };
-    unsafe {
-        while vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0 {
-            let start_decoding_sem = &pbi.mt_sync.h_event_start_decoding.as_ref().unwrap()[ithread as usize];
-            start_decoding_sem.wait();
-            if vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) == 0 {
-                break;
-            }
-            let xd = &mut mbrd.mbd;
+fn thread_decoding_proc(data: DECODETHREAD_DATA) {
+    let ithread = data.ithread;
+    let pbi = unsafe { &mut *(data.ptr1 as *mut VP8D_COMP) };
+    let mbrd = unsafe { &mut *(data.ptr2 as *mut MB_ROW_DEC) };
+    
+    while vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0 {
+        let start_decoding_sem = &pbi.mt_sync.h_event_start_decoding.as_ref().unwrap()[ithread as usize];
+        start_decoding_sem.wait();
+        if vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) == 0 {
+            break;
+        }
+        let xd = &mut mbrd.mbd;
+        unsafe {
             if setjmp(&raw mut xd.error_info.jmp as *mut ::core::ffi::c_int) != 0 {
                 xd.error_info.setjmp = 0;
                 pbi.mt_sync.h_event_end_decoding.as_ref().unwrap().signal();
@@ -1069,7 +1063,6 @@ unsafe extern "C" fn thread_decoding_proc(
             }
         }
     }
-    THREAD_EXIT_SUCCESS
 }
 #[unsafe(no_mangle)]
 pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) {
@@ -1100,58 +1093,52 @@ pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) {
         
         pbi.mt_sync.h_event_end_decoding = Some(std::sync::Arc::new(crate::thread_shim::Semaphore::new(0)));
         
-        pbi.mt_sync.h_decoding_thread = Some(vec![core::ptr::null_mut::<core::ffi::c_void>(); count].into_boxed_slice());
+        let mut threads = Vec::new();
+        threads.resize_with(count, || None);
+        pbi.mt_sync.h_decoding_thread = Some(threads.into_boxed_slice());
         
         let mb_row_di_vec = vec![MB_ROW_DEC::default(); count];
         pbi.mb_row_di = Some(mb_row_di_vec.into_boxed_slice());
         
         pbi.de_thread_data = Some(vec![DECODETHREAD_DATA { ithread: 0, ptr1: core::ptr::null_mut(), ptr2: core::ptr::null_mut() }; count].into_boxed_slice());
         
-        unsafe {
-            let h_event_start_decoding = pbi.mt_sync.h_event_start_decoding.as_mut().unwrap();
-            let h_decoding_thread = pbi.mt_sync.h_decoding_thread.as_mut().unwrap();
-            let de_thread_data = pbi.de_thread_data.as_mut().unwrap();
-            let mb_row_di = pbi.mb_row_di.as_mut().unwrap();
+        let h_decoding_thread = pbi.mt_sync.h_decoding_thread.as_mut().unwrap();
+        let de_thread_data = pbi.de_thread_data.as_mut().unwrap();
+        let mb_row_di = pbi.mb_row_di.as_mut().unwrap();
+        
+        ithread = 0 as ::core::ffi::c_uint;
+        while ithread < pbi.decoding_thread_count {
+            vp8_setup_block_dptrs(&mut mb_row_di[ithread as usize].mbd);
             
-            ithread = 0 as ::core::ffi::c_uint;
-            while ithread < pbi.decoding_thread_count {
-                vp8_setup_block_dptrs(&mut mb_row_di[ithread as usize].mbd);
-                
-                de_thread_data[ithread as usize].ithread = ithread as ::core::ffi::c_int;
-                de_thread_data[ithread as usize].ptr1 = pbi_raw_ptr;
-                de_thread_data[ithread as usize].ptr2 = &mut mb_row_di[ithread as usize] as *mut MB_ROW_DEC as *mut ::core::ffi::c_void;
-                
-                if crate::thread_shim::vp8_pthread_create(
-                    &mut h_decoding_thread[ithread as usize] as *mut pthread_t,
-                    ::core::ptr::null::<pthread_attr_t>() as *const ::core::ffi::c_void,
-                    Some(
-                        thread_decoding_proc
-                            as unsafe extern "C" fn(
-                                *mut ::core::ffi::c_void,
-                            )
-                                -> *mut ::core::ffi::c_void,
-                    ),
-                    &mut de_thread_data[ithread as usize] as *mut DECODETHREAD_DATA
-                        as *mut ::core::ffi::c_void,
-                ) != 0
-                {
-                    break;
-                } else {
+            de_thread_data[ithread as usize].ithread = ithread as ::core::ffi::c_int;
+            de_thread_data[ithread as usize].ptr1 = pbi_raw_ptr;
+            de_thread_data[ithread as usize].ptr2 = &mut mb_row_di[ithread as usize] as *mut MB_ROW_DEC as *mut ::core::ffi::c_void;
+            
+            let data = de_thread_data[ithread as usize];
+            let builder = std::thread::Builder::new();
+            match builder.spawn(move || {
+                thread_decoding_proc(data);
+            }) {
+                Ok(handle) => {
+                    h_decoding_thread[ithread as usize] = Some(handle);
                     ithread = ithread.wrapping_add(1);
                 }
-            }
-            pbi.allocated_decoding_thread_count = ithread as ::core::ffi::c_int;
-            if pbi.allocated_decoding_thread_count
-                != pbi.decoding_thread_count as ::core::ffi::c_int
-            {
-                if pbi.allocated_decoding_thread_count == 0 as ::core::ffi::c_int {
-                    pbi.mt_sync.h_event_end_decoding = None;
+                Err(_) => {
+                    break;
                 }
-                pbi.common.error.trigger(
-                    VPX_CODEC_MEM_ERROR,
-                    "Failed to create threads",
-                );
             }
+        }
+        pbi.allocated_decoding_thread_count = ithread as ::core::ffi::c_int;
+        if pbi.allocated_decoding_thread_count
+            != pbi.decoding_thread_count as ::core::ffi::c_int
+        {
+            if pbi.allocated_decoding_thread_count == 0 as ::core::ffi::c_int {
+                pbi.mt_sync.h_event_end_decoding = None;
+            }
+            pbi.common.error.trigger(
+                VPX_CODEC_MEM_ERROR,
+                "Failed to create threads",
+            );
         }
     }
 }
@@ -1300,24 +1287,22 @@ pub fn vp8_decoder_remove_threads(pbi: &mut VP8D_COMP) {
         vpx_atomic_store_release(&pbi.b_multithreaded_rd, 0);
         
         let h_event_start_decoding = pbi.mt_sync.h_event_start_decoding.as_ref().unwrap();
-        let h_decoding_thread = pbi.mt_sync.h_decoding_thread.as_ref().unwrap();
+        let h_decoding_thread = pbi.mt_sync.h_decoding_thread.as_mut().unwrap();
         
         let mut i: i32 = 0;
-        unsafe {
-            while i < pbi.allocated_decoding_thread_count {
-                h_event_start_decoding[i as usize].signal();
-                crate::thread_shim::vp8_pthread_join(
-                    h_decoding_thread[i as usize] as pthread_t,
-                    ::core::ptr::null_mut(),
-                );
-                i += 1;
+        while i < pbi.allocated_decoding_thread_count {
+            h_event_start_decoding[i as usize].signal();
+            if let Some(handle) = h_decoding_thread[i as usize].take() {
+                let _ = handle.join();
             }
-            pbi.mt_sync.h_decoding_thread = None;
-            pbi.mt_sync.h_event_start_decoding = None;
-            pbi.mt_sync.h_event_end_decoding = None;
-            pbi.mb_row_di = None;
-            pbi.de_thread_data = None;
+            i += 1;
         }
+        pbi.mt_sync.h_decoding_thread = None;
+        pbi.mt_sync.h_event_start_decoding = None;
+        pbi.mt_sync.h_event_end_decoding = None;
+        pbi.mb_row_di = None;
+        pbi.de_thread_data = None;
+        
         let mb_rows = pbi.common.mb_rows;
         vp8mt_de_alloc_temp_buffers(pbi, mb_rows);
     }

@@ -917,7 +917,7 @@ pub struct VP8Common {
 }
 pub type VP8_COMMON = VP8Common;
 
-pub type pthread_t = *mut ::core::ffi::c_void;
+
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -926,6 +926,7 @@ pub struct DECODETHREAD_DATA {
     pub ptr1: *mut ::core::ffi::c_void,
     pub ptr2: *mut ::core::ffi::c_void,
 }
+unsafe impl Send for DECODETHREAD_DATA {}
 
 #[derive(Copy, Clone, Default)]
 #[repr(C, align(32))]
@@ -976,7 +977,7 @@ pub struct VP8D_MT_SYNC {
     pub mt_yleft_col: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
     pub mt_uleft_col: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
     pub mt_vleft_col: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
-    pub h_decoding_thread: Option<Box<[pthread_t]>>,
+    pub h_decoding_thread: Option<Box<[Option<std::thread::JoinHandle<()>>]>>,
     pub h_event_start_decoding: Option<Box<[std::sync::Arc<crate::thread_shim::Semaphore>]>>,
     pub h_event_end_decoding: Option<std::sync::Arc<crate::thread_shim::Semaphore>>,
 }
