@@ -26,7 +26,6 @@ unsafe extern "C" {
         oxcf: *mut VP8D_CONFIG,
     ) -> ::core::ffi::c_int;
     fn vp8_remove_decoder_instances(fb: *mut frame_buffers) -> ::core::ffi::c_int;
-    fn vp8_decoder_create_threads(pbi: *mut VP8D_COMP);
     fn vp8mt_alloc_temp_buffers(
         pbi: *mut VP8D_COMP,
         width: ::core::ffi::c_int,
@@ -35,7 +34,7 @@ unsafe extern "C" {
     fn vp8mt_de_alloc_temp_buffers(pbi: *mut VP8D_COMP, mb_rows: ::core::ffi::c_int);
 }
 use crate::vp8::decoder::onyxd_if::vp8dx_receive_compressed_data_safe;
-use crate::vp8::decoder::threading::vp8_decoder_remove_threads;
+use crate::vp8::decoder::threading::{vp8_decoder_create_threads, vp8_decoder_remove_threads};
 pub type __builtin_va_list = *mut ::core::ffi::c_char;
 pub type __darwin_natural_t = ::core::ffi::c_uint;
 pub type __darwin_size_t = usize;
@@ -928,7 +927,7 @@ unsafe extern "C" fn vp8_decode(
         }
         (*pbi_0).common.error.setjmp = 1 as ::core::ffi::c_int;
         (*pbi_0).max_threads = (*ctx).cfg.threads as ::core::ffi::c_int;
-        vp8_decoder_create_threads(pbi_0);
+        vp8_decoder_create_threads(&mut *pbi_0);
         if vpx_atomic_load_acquire(&(*pbi_0).b_multithreaded_rd) != 0 {
             vp8mt_alloc_temp_buffers(pbi_0, (*pc).Width, (*pc).mb_rows);
         }

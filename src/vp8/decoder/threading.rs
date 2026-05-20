@@ -1130,11 +1130,8 @@ unsafe extern "C" fn thread_decoding_proc(
     THREAD_EXIT_SUCCESS
 }
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi_raw: *mut VP8D_COMP) {
-    if pbi_raw.is_null() {
-        return;
-    }
-    let pbi = &mut *pbi_raw;
+pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) {
+    let pbi_raw_ptr = pbi as *mut VP8D_COMP as *mut ::core::ffi::c_void;
     let mut core_count: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     let mut ithread: ::core::ffi::c_uint = 0;
     vpx_atomic_init(&pbi.b_multithreaded_rd, 0 as ::core::ffi::c_int);
@@ -1195,7 +1192,7 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi_raw: *mut VP8D_COMP)
                 vp8_setup_block_dptrs(&mut mb_row_di[ithread as usize].mbd);
                 
                 de_thread_data[ithread as usize].ithread = ithread as ::core::ffi::c_int;
-                de_thread_data[ithread as usize].ptr1 = pbi_raw as *mut ::core::ffi::c_void;
+                de_thread_data[ithread as usize].ptr1 = pbi_raw_ptr;
                 de_thread_data[ithread as usize].ptr2 = &mut mb_row_di[ithread as usize] as *mut MB_ROW_DEC as *mut ::core::ffi::c_void;
                 
                 if crate::thread_shim::vp8_pthread_create(
