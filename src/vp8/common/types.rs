@@ -972,6 +972,21 @@ pub struct VP8D_CONFIG {
 }
 
 #[repr(C)]
+pub struct VP8D_MT_SYNC {
+    pub sync_range: ::core::ffi::c_int,
+    pub mt_current_mb_col: Option<Box<[vpx_atomic_int]>>,
+    pub mt_yabove_row: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
+    pub mt_uabove_row: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
+    pub mt_vabove_row: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
+    pub mt_yleft_col: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
+    pub mt_uleft_col: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
+    pub mt_vleft_col: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
+    pub h_decoding_thread: Option<Box<[pthread_t]>>,
+    pub h_event_start_decoding: Option<Box<[semaphore_t]>>,
+    pub h_event_end_decoding: semaphore_t,
+}
+
+#[repr(C)]
 pub struct VP8D_COMP {
     pub mb: MACROBLOCKD,
     pub common: VP8_COMMON,
@@ -984,19 +999,9 @@ pub struct VP8D_COMP {
     pub decoding_thread_count: ::core::ffi::c_uint,
     pub allocated_decoding_thread_count: ::core::ffi::c_int,
     pub mt_baseline_filter_level: [::core::ffi::c_int; 4],
-    pub sync_range: ::core::ffi::c_int,
-    pub mt_current_mb_col: Option<Box<[vpx_atomic_int]>>,
-    pub mt_yabove_row: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
-    pub mt_uabove_row: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
-    pub mt_vabove_row: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
-    pub mt_yleft_col: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
-    pub mt_uleft_col: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
-    pub mt_vleft_col: Option<Box<[Option<crate::vpx_mem::vpx_mem::AlignedBox>]>>,
+    pub mt_sync: VP8D_MT_SYNC,
     pub mb_row_di: Option<Box<[MB_ROW_DEC]>>,
     pub de_thread_data: Option<Box<[DECODETHREAD_DATA]>>,
-    pub h_decoding_thread: Option<Box<[pthread_t]>>,
-    pub h_event_start_decoding: Option<Box<[semaphore_t]>>,
-    pub h_event_end_decoding: semaphore_t,
     pub ready_for_new_data: ::core::ffi::c_int,
     pub prob_intra: vp8_prob,
     pub prob_last: vp8_prob,
@@ -1016,6 +1021,9 @@ impl VP8D_COMP {
     /// Safely splits the root structure into disjoint mutable components
     pub fn split_mut(&mut self) -> (&mut MACROBLOCKD, &mut VP8_COMMON, &mut [vp8_reader; 9]) {
         (&mut self.mb, &mut self.common, &mut self.mbc)
+    }
+    pub fn split_mt_mut(&mut self) -> (&mut VP8_COMMON, &mut [vp8_reader; 9], &mut VP8D_MT_SYNC) {
+        (&mut self.common, &mut self.mbc, &mut self.mt_sync)
     }
 }
 

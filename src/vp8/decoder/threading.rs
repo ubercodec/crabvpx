@@ -557,25 +557,29 @@ fn mt_decode_macroblock(
 
 }
 fn mt_decode_mb_rows(
-    pbi: &mut VP8D_COMP,
+    common: &mut VP8_COMMON,
+    mbc: &mut [vp8_reader; 9],
+    mt_sync: &mut VP8D_MT_SYNC,
     xd: &mut MACROBLOCKD,
     start_mb_row: ::core::ffi::c_int,
-) { unsafe {
+    decoding_thread_count: ::core::ffi::c_uint,
+) {
     let mut mb_row: ::core::ffi::c_int = 0;
-    let mut pc: *mut VP8_COMMON = &raw mut (*pbi).common;
-    let nsync: ::core::ffi::c_int = (*pbi).sync_range;
+    let pc = common;
+    let nsync: ::core::ffi::c_int = mt_sync.sync_range;
     let first_row_no_sync_above: vpx_atomic_int = vpx_atomic_int {
-        value: core::sync::atomic::AtomicI32::new((*pc).mb_cols + nsync),
+        value: core::sync::atomic::AtomicI32::new(pc.mb_cols + nsync),
     };
     let mut num_part: ::core::ffi::c_int =
-        (1 as ::core::ffi::c_int) << (*pbi).common.multi_token_partition as ::core::ffi::c_uint;
+        (1 as ::core::ffi::c_int) << pc.multi_token_partition as ::core::ffi::c_uint;
     let mut last_mb_row: ::core::ffi::c_int = start_mb_row;
-    let mut yv12_fb_new: *mut YV12_BUFFER_CONFIG =
-        &raw mut (*pbi).common.yv12_fb[(*pbi).common.new_fb_idx as usize];
-    let mut yv12_fb_lst: *mut YV12_BUFFER_CONFIG =
-        &raw mut (*pbi).common.yv12_fb[(*pbi).common.lst_fb_idx as usize];
-    let mut recon_y_stride: ::core::ffi::c_int = (*yv12_fb_new).y_stride;
-    let mut recon_uv_stride: ::core::ffi::c_int = (*yv12_fb_new).uv_stride;
+    
+    let new_fb_idx = pc.new_fb_idx as usize;
+    let lst_fb_idx = pc.lst_fb_idx as usize;
+    
+    let recon_y_stride = pc.yv12_fb[new_fb_idx].y_stride;
+    let recon_uv_stride = pc.yv12_fb[new_fb_idx].uv_stride;
+    
     let mut ref_buffer: [[*mut ::core::ffi::c_uchar; 3]; 4] =
         [[::core::ptr::null_mut::<::core::ffi::c_uchar>(); 3]; 4];
     let mut dst_buffer: [*mut ::core::ffi::c_uchar; 3] =
@@ -583,197 +587,217 @@ fn mt_decode_mb_rows(
     let mut i: ::core::ffi::c_int = 0;
     let mut ref_fb_corrupted: [::core::ffi::c_int; 4] = [0; 4];
     ref_fb_corrupted[INTRA_FRAME as ::core::ffi::c_int as usize] = 0 as ::core::ffi::c_int;
+    
     i = 1 as ::core::ffi::c_int;
     while i < MAX_REF_FRAMES as ::core::ffi::c_int {
         let fb_idx = match i {
-            1 => (*pbi).common.lst_fb_idx as usize,
-            2 => (*pbi).common.gld_fb_idx as usize,
-            3 => (*pbi).common.alt_fb_idx as usize,
+            1 => pc.lst_fb_idx as usize,
+            2 => pc.gld_fb_idx as usize,
+            3 => pc.alt_fb_idx as usize,
             _ => panic!("Invalid ref frame index"),
         };
-        let mut this_fb: *mut YV12_BUFFER_CONFIG = &raw mut (*pbi).common.yv12_fb[fb_idx];
-        ref_buffer[i as usize][0 as ::core::ffi::c_int as usize] =
-            (*this_fb).y_buffer as *mut ::core::ffi::c_uchar;
-        ref_buffer[i as usize][1 as ::core::ffi::c_int as usize] =
-            (*this_fb).u_buffer as *mut ::core::ffi::c_uchar;
-        ref_buffer[i as usize][2 as ::core::ffi::c_int as usize] =
-            (*this_fb).v_buffer as *mut ::core::ffi::c_uchar;
-        ref_fb_corrupted[i as usize] = (*this_fb).corrupted;
+        let this_fb = &pc.yv12_fb[fb_idx];
+        ref_buffer[i as usize][0 as ::core::ffi::c_int as usize] = this_fb.y_buffer;
+        ref_buffer[i as usize][1 as ::core::ffi::c_int as usize] = this_fb.u_buffer;
+        ref_buffer[i as usize][2 as ::core::ffi::c_int as usize] = this_fb.v_buffer;
+        ref_fb_corrupted[i as usize] = this_fb.corrupted;
         i += 1;
     }
-    dst_buffer[0 as ::core::ffi::c_int as usize] =
-        (*yv12_fb_new).y_buffer as *mut ::core::ffi::c_uchar;
-    dst_buffer[1 as ::core::ffi::c_int as usize] =
-        (*yv12_fb_new).u_buffer as *mut ::core::ffi::c_uchar;
-    dst_buffer[2 as ::core::ffi::c_int as usize] =
-        (*yv12_fb_new).v_buffer as *mut ::core::ffi::c_uchar;
-    (*xd).up_available = (start_mb_row != 0 as ::core::ffi::c_int) as ::core::ffi::c_int;
-    (*xd).mode_info_idx = ((*pc).mode_info_stride * (start_mb_row + 1) + 1) as usize;
-    (*xd).mode_info_stride = (*pc).mode_info_stride;
+    
+    let yv12_fb_new = &pc.yv12_fb[new_fb_idx];
+    dst_buffer[0 as ::core::ffi::c_int as usize] = yv12_fb_new.y_buffer;
+    dst_buffer[1 as ::core::ffi::c_int as usize] = yv12_fb_new.u_buffer;
+    dst_buffer[2 as ::core::ffi::c_int as usize] = yv12_fb_new.v_buffer;
+    
+    xd.up_available = (start_mb_row != 0 as ::core::ffi::c_int) as ::core::ffi::c_int;
+    xd.mode_info_idx = (pc.mode_info_stride * (start_mb_row + 1) + 1) as usize;
+    xd.mode_info_stride = pc.mode_info_stride;
+    
+    let mip = pc.mip_ptr();
     mb_row = start_mb_row;
-    while mb_row < (*pc).mb_rows {
+    while mb_row < pc.mb_rows {
         let mut recon_yoffset: ::core::ffi::c_int = 0;
         let mut recon_uvoffset: ::core::ffi::c_int = 0;
         let mut mb_col: ::core::ffi::c_int = 0;
         let mut filter_level: ::core::ffi::c_int = 0;
-        let mut lfi_n: *mut loop_filter_info_n = &raw mut (*pc).lf_info;
+        
+        let lfi_n = &pc.lf_info;
+        
         last_mb_row = mb_row;
-        (*xd).current_bc_idx = (mb_row % num_part) as usize;
-        let bc_idx = (*xd).current_bc_idx;
-        let mut safe_decoder = crate::vp8::decoder::dboolhuff::SafeBoolDecoder::from_bool_decoder(&(*pbi).mbc[bc_idx]);
-        let mt_current_mb_col = pbi.mt_current_mb_col.as_ref().unwrap();
+        xd.current_bc_idx = (mb_row % num_part) as usize;
+        let bc_idx = xd.current_bc_idx;
+        
+        let mut safe_decoder = crate::vp8::decoder::dboolhuff::SafeBoolDecoder::from_bool_decoder(&mbc[bc_idx]);
+        
+        let mt_current_mb_col = mt_sync.mt_current_mb_col.as_ref().unwrap();
         let last_row_current_mb_col: &vpx_atomic_int = if mb_row > 0 {
             &mt_current_mb_col[(mb_row - 1) as usize]
         } else {
             &first_row_no_sync_above
         };
         let current_mb_col: &vpx_atomic_int = &mt_current_mb_col[mb_row as usize];
+        
         recon_yoffset = mb_row * recon_y_stride * 16 as ::core::ffi::c_int;
         recon_uvoffset = mb_row * recon_uv_stride * 8 as ::core::ffi::c_int;
-        (*xd).above_context_idx = 0;
+        xd.above_context_idx = 0;
         let mut left_context = ENTROPY_CONTEXT_PLANES::default();
-        (*xd).left_available = 0 as ::core::ffi::c_int;
-        (*xd).mb_to_top_edge = -((mb_row * 16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int);
-        (*xd).mb_to_bottom_edge = (((*pc).mb_rows - 1 as ::core::ffi::c_int - mb_row)
-            * 16 as ::core::ffi::c_int)
-            << 3 as ::core::ffi::c_int;
-        if (*pbi).common.filter_level != 0 {
-            (*xd).recon_above[0 as ::core::ffi::c_int as usize] =
-                (*pbi).mt_yabove_row.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr()
-                    .offset((0 as ::core::ffi::c_int * 16 as ::core::ffi::c_int) as isize)
-                    .offset(32 as ::core::ffi::c_int as isize);
-            (*xd).recon_above[1 as ::core::ffi::c_int as usize] =
-                (*pbi).mt_uabove_row.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr()
-                    .offset((0 as ::core::ffi::c_int * 8 as ::core::ffi::c_int) as isize)
-                    .offset(16 as ::core::ffi::c_int as isize);
-            (*xd).recon_above[2 as ::core::ffi::c_int as usize] =
-                (*pbi).mt_vabove_row.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr()
-                    .offset((0 as ::core::ffi::c_int * 8 as ::core::ffi::c_int) as isize)
-                    .offset(16 as ::core::ffi::c_int as isize);
-            (*xd).recon_left[0 as ::core::ffi::c_int as usize] =
-                (*pbi).mt_yleft_col.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr();
-            (*xd).recon_left[1 as ::core::ffi::c_int as usize] =
-                (*pbi).mt_uleft_col.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr();
-            (*xd).recon_left[2 as ::core::ffi::c_int as usize] =
-                (*pbi).mt_vleft_col.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr();
-            (*xd).recon_left_stride[0 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
-            (*xd).recon_left_stride[1 as ::core::ffi::c_int as usize] = 1 as ::core::ffi::c_int;
+        xd.left_available = 0 as ::core::ffi::c_int;
+        xd.mb_to_top_edge = -((mb_row * 16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int);
+        xd.mb_to_bottom_edge = ((pc.mb_rows - 1 - mb_row) * 16) << 3;
+        
+        if pc.filter_level != 0 {
+            let slice_y = mt_sync.mt_yabove_row.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_slice();
+            xd.recon_above[0] = &slice_y[32] as *const u8 as *mut u8;
+            
+            let slice_u = mt_sync.mt_uabove_row.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_slice();
+            xd.recon_above[1] = &slice_u[16] as *const u8 as *mut u8;
+            
+            let slice_v = mt_sync.mt_vabove_row.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_slice();
+            xd.recon_above[2] = &slice_v[16] as *const u8 as *mut u8;
+                
+            xd.recon_left[0] = mt_sync.mt_yleft_col.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr();
+            xd.recon_left[1] = mt_sync.mt_uleft_col.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr();
+            xd.recon_left[2] = mt_sync.mt_vleft_col.as_ref().unwrap()[mb_row as usize].as_ref().unwrap().as_ptr();
+            
+            xd.recon_left_stride[0] = 1;
+            xd.recon_left_stride[1] = 1;
         } else {
-            (*xd).recon_above[0 as ::core::ffi::c_int as usize] =
-                dst_buffer[0 as ::core::ffi::c_int as usize].offset(recon_yoffset as isize);
-            (*xd).recon_above[1 as ::core::ffi::c_int as usize] =
-                dst_buffer[1 as ::core::ffi::c_int as usize].offset(recon_uvoffset as isize);
-            (*xd).recon_above[2 as ::core::ffi::c_int as usize] =
-                dst_buffer[2 as ::core::ffi::c_int as usize].offset(recon_uvoffset as isize);
-            (*xd).recon_left[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [0 as ::core::ffi::c_int as usize]
-                .offset(-(1 as ::core::ffi::c_int as isize));
-            (*xd).recon_left[1 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [1 as ::core::ffi::c_int as usize]
-                .offset(-(1 as ::core::ffi::c_int as isize));
-            (*xd).recon_left[2 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [2 as ::core::ffi::c_int as usize]
-                .offset(-(1 as ::core::ffi::c_int as isize));
-            (*xd).recon_above[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [0 as ::core::ffi::c_int as usize]
-                .offset(-((*xd).dst.y_stride as isize));
-            (*xd).recon_above[1 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [1 as ::core::ffi::c_int as usize]
-                .offset(-((*xd).dst.uv_stride as isize));
-            (*xd).recon_above[2 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [2 as ::core::ffi::c_int as usize]
-                .offset(-((*xd).dst.uv_stride as isize));
-            (*xd).recon_left_stride[0 as ::core::ffi::c_int as usize] = (*xd).dst.y_stride;
-            (*xd).recon_left_stride[1 as ::core::ffi::c_int as usize] = (*xd).dst.uv_stride;
-            {
-                let new_fb_idx = pbi.common.new_fb_idx as usize;
-                let yv12_fb_new_ref = &mut pbi.common.yv12_fb[new_fb_idx];
-                crate::vp8::decoder::decodeframe::setup_intra_recon_left(
-                    yv12_fb_new_ref,
-                    mb_row,
-                );
-            }
+            let ybf = &pc.yv12_fb[new_fb_idx];
+            let slice_y = ybf.y_slice_safe();
+            let slice_u = ybf.u_slice_safe();
+            let slice_v = ybf.v_slice_safe();
+            
+            let border_y = ybf.border as usize;
+            let stride_y = ybf.y_stride as usize;
+            let active_start_y = border_y * stride_y + border_y;
+            
+            let border_uv = (ybf.border / 2) as usize;
+            let stride_uv = ybf.uv_stride as usize;
+            let active_start_uv = border_uv * stride_uv + border_uv;
+            
+            let y_offset = active_start_y + recon_yoffset as usize;
+            let uv_offset = active_start_uv + recon_uvoffset as usize;
+            
+            xd.recon_above[0] = &slice_y[y_offset - stride_y] as *const u8 as *mut u8;
+            xd.recon_above[1] = &slice_u[uv_offset - stride_uv] as *const u8 as *mut u8;
+            xd.recon_above[2] = &slice_v[uv_offset - stride_uv] as *const u8 as *mut u8;
+            
+            xd.recon_left[0] = &slice_y[y_offset - 1] as *const u8 as *mut u8;
+            xd.recon_left[1] = &slice_u[uv_offset - 1] as *const u8 as *mut u8;
+            xd.recon_left[2] = &slice_v[uv_offset - 1] as *const u8 as *mut u8;
+            
+            xd.recon_left_stride[0] = xd.dst.y_stride;
+            xd.recon_left_stride[1] = xd.dst.uv_stride;
+            
+            let yv12_fb_new_ref = &mut pc.yv12_fb[new_fb_idx];
+            crate::vp8::decoder::decodeframe::setup_intra_recon_left(yv12_fb_new_ref, mb_row);
         }
-        mb_col = 0 as ::core::ffi::c_int;
-        while mb_col < (*pc).mb_cols {
-            if (mb_col - 1 as ::core::ffi::c_int) % nsync == 0 as ::core::ffi::c_int {
-                vpx_atomic_store_release(current_mb_col, mb_col - 1 as ::core::ffi::c_int);
+        
+        mb_col = 0;
+        while mb_col < pc.mb_cols {
+            if (mb_col - 1) % nsync == 0 {
+                vpx_atomic_store_release(current_mb_col, mb_col - 1);
             }
-            if mb_row != 0 && mb_col & nsync - 1 as ::core::ffi::c_int == 0 {
+            if mb_row != 0 && mb_col & nsync - 1 == 0 {
                 vp8_atomic_spin_wait(mb_col, last_row_current_mb_col, nsync);
             }
-            (*xd).mb_to_left_edge =
-                -((mb_col * 16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int);
-            (*xd).mb_to_right_edge = (((*pc).mb_cols - 1 as ::core::ffi::c_int - mb_col)
-                * 16 as ::core::ffi::c_int)
-                << 3 as ::core::ffi::c_int;
-            (*xd).dst.y_buffer = dst_buffer[0 as ::core::ffi::c_int as usize]
-                .offset(recon_yoffset as isize) as *mut uint8_t;
-            (*xd).dst.u_buffer = dst_buffer[1 as ::core::ffi::c_int as usize]
-                .offset(recon_uvoffset as isize) as *mut uint8_t;
-            (*xd).dst.v_buffer = dst_buffer[2 as ::core::ffi::c_int as usize]
-                .offset(recon_uvoffset as isize) as *mut uint8_t;
-            let cur_ref_frame = (*xd).mode_info((*pc).mip_ptr()).mbmi.ref_frame;
-            (*xd).corrupted |= ref_fb_corrupted[cur_ref_frame as usize];
-            if (*xd).corrupted != 0 {
-                let mt_current_mb_col = pbi.mt_current_mb_col.as_ref().unwrap();
-                while mb_row < (*pc).mb_rows {
+            xd.mb_to_left_edge = -((mb_col * 16) << 3);
+            xd.mb_to_right_edge = ((pc.mb_cols - 1 - mb_col) * 16) << 3;
+            
+            let yv12_fb_new = &pc.yv12_fb[new_fb_idx];
+            let slice_y = yv12_fb_new.y_slice_safe();
+            let slice_u = yv12_fb_new.u_slice_safe();
+            let slice_v = yv12_fb_new.v_slice_safe();
+            
+            let border_y = yv12_fb_new.border as usize;
+            let stride_y = yv12_fb_new.y_stride as usize;
+            let active_start_y = border_y * stride_y + border_y;
+            
+            let border_uv = (yv12_fb_new.border / 2) as usize;
+            let stride_uv = yv12_fb_new.uv_stride as usize;
+            let active_start_uv = border_uv * stride_uv + border_uv;
+            
+            let y_offset = active_start_y + recon_yoffset as usize;
+            let uv_offset = active_start_uv + recon_uvoffset as usize;
+            
+            xd.dst.y_buffer = &slice_y[y_offset] as *const u8 as *mut u8;
+            xd.dst.u_buffer = &slice_u[uv_offset] as *const u8 as *mut u8;
+            xd.dst.v_buffer = &slice_v[uv_offset] as *const u8 as *mut u8;
+            
+            let cur_ref_frame = xd.mode_info(mip).mbmi.ref_frame;
+            xd.corrupted |= ref_fb_corrupted[cur_ref_frame as usize];
+            if xd.corrupted != 0 {
+                let mt_current_mb_col = mt_sync.mt_current_mb_col.as_ref().unwrap();
+                while mb_row < pc.mb_rows {
                     let cur_col = &mt_current_mb_col[mb_row as usize];
-                    vpx_atomic_store_release(cur_col, (*pc).mb_cols + nsync);
-                    mb_row = (mb_row as ::core::ffi::c_uint).wrapping_add(
-                        (*pbi)
-                            .decoding_thread_count
-                            .wrapping_add(1 as ::core::ffi::c_uint),
-                    ) as ::core::ffi::c_int;
+                    vpx_atomic_store_release(cur_col, pc.mb_cols + nsync);
+                    mb_row = (mb_row as u32).wrapping_add(decoding_thread_count.wrapping_add(1)) as i32;
                 }
-                vpx_internal_error(
-                    &raw mut (*xd).error_info,
-                    VPX_CODEC_CORRUPT_FRAME,
-                    b"Corrupted reference frame\0" as *const u8 as *const ::core::ffi::c_char,
-                );
+                unsafe {
+                    vpx_internal_error(
+                        &raw mut xd.error_info,
+                        VPX_CODEC_CORRUPT_FRAME,
+                        b"Corrupted reference frame\0" as *const u8 as *const ::core::ffi::c_char,
+                    );
+                }
             }
-            if cur_ref_frame as ::core::ffi::c_int
-                >= LAST_FRAME as ::core::ffi::c_int
-            {
-                let ref_0: MV_REFERENCE_FRAME =
-                    cur_ref_frame as MV_REFERENCE_FRAME;
-                (*xd).pre.y_buffer = ref_buffer[ref_0 as usize][0 as ::core::ffi::c_int as usize]
-                    .offset(recon_yoffset as isize)
-                    as *mut uint8_t;
-                (*xd).pre.u_buffer = ref_buffer[ref_0 as usize][1 as ::core::ffi::c_int as usize]
-                    .offset(recon_uvoffset as isize)
-                    as *mut uint8_t;
-                (*xd).pre.v_buffer = ref_buffer[ref_0 as usize][2 as ::core::ffi::c_int as usize]
-                    .offset(recon_uvoffset as isize)
-                    as *mut uint8_t;
+            
+            if cur_ref_frame as ::core::ffi::c_int >= LAST_FRAME as ::core::ffi::c_int {
+                let ref_0 = cur_ref_frame as MV_REFERENCE_FRAME;
+                let fb_idx = match ref_0 {
+                    1 => pc.lst_fb_idx as usize,
+                    2 => pc.gld_fb_idx as usize,
+                    3 => pc.alt_fb_idx as usize,
+                    _ => panic!("Invalid ref frame index"),
+                };
+                let this_fb = &pc.yv12_fb[fb_idx];
+                let slice_y = this_fb.y_slice_safe();
+                let slice_u = this_fb.u_slice_safe();
+                let slice_v = this_fb.v_slice_safe();
+                
+                let border_y = this_fb.border as usize;
+                let stride_y = this_fb.y_stride as usize;
+                let active_start_y = border_y * stride_y + border_y;
+                
+                let border_uv = (this_fb.border / 2) as usize;
+                let stride_uv = this_fb.uv_stride as usize;
+                let active_start_uv = border_uv * stride_uv + border_uv;
+                
+                let y_offset = active_start_y + recon_yoffset as usize;
+                let uv_offset = active_start_uv + recon_uvoffset as usize;
+                
+                xd.pre.y_buffer = &slice_y[y_offset] as *const u8 as *mut u8;
+                xd.pre.u_buffer = &slice_u[uv_offset] as *const u8 as *mut u8;
+                xd.pre.v_buffer = &slice_v[uv_offset] as *const u8 as *mut u8;
             } else {
-                (*xd).pre.y_buffer = ::core::ptr::null_mut::<uint8_t>();
-                (*xd).pre.u_buffer = ::core::ptr::null_mut::<uint8_t>();
-                (*xd).pre.v_buffer = ::core::ptr::null_mut::<uint8_t>();
+                xd.pre.y_buffer = ::core::ptr::null_mut();
+                xd.pre.u_buffer = ::core::ptr::null_mut();
+                xd.pre.v_buffer = ::core::ptr::null_mut();
             }
-            let (above_y, above_u, above_v, left_y, left_u, left_v) = if (*pbi).common.filter_level != 0 {
+            
+            let (above_y, above_u, above_v, left_y, left_u, left_v) = if pc.filter_level != 0 {
                 let mb_row_us = mb_row as usize;
                 let mb_col_us = mb_col as usize;
                 
-                let ay = &(*pbi).mt_yabove_row.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()
+                let ay = &mt_sync.mt_yabove_row.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()
                     [31 + mb_col_us * 16 .. 31 + mb_col_us * 16 + 24];
-                let au = &(*pbi).mt_uabove_row.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()
+                let au = &mt_sync.mt_uabove_row.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()
                     [15 + mb_col_us * 8 .. 15 + mb_col_us * 8 + 9];
-                let av = &(*pbi).mt_vabove_row.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()
+                let av = &mt_sync.mt_vabove_row.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()
                     [15 + mb_col_us * 8 .. 15 + mb_col_us * 8 + 9];
                     
-                let ly = &(*pbi).mt_yleft_col.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()[0..16];
-                let lu = &(*pbi).mt_uleft_col.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()[0..8];
-                let lv = &(*pbi).mt_vleft_col.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()[0..8];
+                let ly = &mt_sync.mt_yleft_col.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()[0..16];
+                let lu = &mt_sync.mt_uleft_col.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()[0..8];
+                let lv = &mt_sync.mt_vleft_col.as_ref().unwrap()[mb_row_us].as_ref().unwrap().as_slice()[0..8];
                 
                 (Some(ay), Some(au), Some(av), Some(ly), Some(lu), Some(lv))
             } else {
                 (None, None, None, None, None, None)
             };
-
-            let mb_idx = (mb_row * (*pc).mb_cols + mb_col) as ::core::ffi::c_uint;
+            
+            let mb_idx = (mb_row * pc.mb_cols + mb_col) as u32;
             mt_decode_macroblock(
-                &pbi.common,
+                pc,
                 &mut safe_decoder,
                 xd,
                 mb_idx,
@@ -785,60 +809,44 @@ fn mt_decode_mb_rows(
                 left_v,
                 &mut left_context,
             );
-            (*xd).left_available = 1 as ::core::ffi::c_int;
-            (*xd).corrupted |= vp8dx_safe_bool_error(&safe_decoder);
-            (*xd).recon_above[0 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [0 as ::core::ffi::c_int as usize]
-                .offset(16 as ::core::ffi::c_int as isize);
-            (*xd).recon_above[1 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [1 as ::core::ffi::c_int as usize]
-                .offset(8 as ::core::ffi::c_int as isize);
-            (*xd).recon_above[2 as ::core::ffi::c_int as usize] = (*xd).recon_above
-                [2 as ::core::ffi::c_int as usize]
-                .offset(8 as ::core::ffi::c_int as isize);
-            if (*pbi).common.filter_level == 0 {
-                (*xd).recon_left[0 as ::core::ffi::c_int as usize] = (*xd).recon_left
-                    [0 as ::core::ffi::c_int as usize]
-                    .offset(16 as ::core::ffi::c_int as isize);
-                (*xd).recon_left[1 as ::core::ffi::c_int as usize] = (*xd).recon_left
-                    [1 as ::core::ffi::c_int as usize]
-                    .offset(8 as ::core::ffi::c_int as isize);
-                (*xd).recon_left[2 as ::core::ffi::c_int as usize] = (*xd).recon_left
-                    [2 as ::core::ffi::c_int as usize]
-                    .offset(8 as ::core::ffi::c_int as isize);
+            
+            xd.left_available = 1;
+            xd.corrupted |= vp8dx_safe_bool_error(&safe_decoder);
+            unsafe {
+                xd.recon_above[0] = xd.recon_above[0].offset(16);
+                xd.recon_above[1] = xd.recon_above[1].offset(8);
+                xd.recon_above[2] = xd.recon_above[2].offset(8);
+                if pc.filter_level == 0 {
+                    xd.recon_left[0] = xd.recon_left[0].offset(16);
+                    xd.recon_left[1] = xd.recon_left[1].offset(8);
+                    xd.recon_left[2] = xd.recon_left[2].offset(8);
+                }
             }
-            if (*pbi).common.filter_level != 0 {
-                let cur_mbmi = &(*xd).mode_info((*pc).mip_ptr()).mbmi;
-                let mut skip_lf: ::core::ffi::c_int = (cur_mbmi.mode
-                    as ::core::ffi::c_int
-                    != B_PRED as ::core::ffi::c_int
-                    && cur_mbmi.mode as ::core::ffi::c_int
-                        != SPLITMV as ::core::ffi::c_int
-                    && cur_mbmi.mb_skip_coeff as ::core::ffi::c_int != 0)
-                    as ::core::ffi::c_int;
-                let mode_index: ::core::ffi::c_int = (*lfi_n).mode_lf_lut
-                    [cur_mbmi.mode as usize]
-                    as ::core::ffi::c_int;
-                let seg: ::core::ffi::c_int =
-                    cur_mbmi.segment_id as ::core::ffi::c_int;
-                let ref_frame: ::core::ffi::c_int =
-                    cur_mbmi.ref_frame as ::core::ffi::c_int;
-                filter_level = (*lfi_n).lvl[seg as usize][ref_frame as usize][mode_index as usize]
-                    as ::core::ffi::c_int;
-                if mb_row != (*pc).mb_rows - 1 as ::core::ffi::c_int {
+            
+            if pc.filter_level != 0 {
+                let cur_mbmi = &xd.mode_info(mip).mbmi;
+                let skip_lf = (cur_mbmi.mode as ::core::ffi::c_int != B_PRED as ::core::ffi::c_int
+                    && cur_mbmi.mode as ::core::ffi::c_int != SPLITMV as ::core::ffi::c_int
+                    && cur_mbmi.mb_skip_coeff as ::core::ffi::c_int != 0) as ::core::ffi::c_int;
+                let mode_index = lfi_n.mode_lf_lut[cur_mbmi.mode as usize] as ::core::ffi::c_int;
+                let seg = cur_mbmi.segment_id as usize;
+                let ref_frame = cur_mbmi.ref_frame as usize;
+                filter_level = lfi_n.lvl[seg][ref_frame][mode_index as usize] as ::core::ffi::c_int;
+                
+                if mb_row != pc.mb_rows - 1 {
                     let border = xd.dst.border as usize;
                     let stride = xd.dst.y_stride as usize;
                     let src_idx = (border + 15) * stride + border;
                     let src_slice = &xd.dst.y_slice_safe()[src_idx..src_idx + 16];
                     
-                    let dst_ab = pbi.mt_yabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
+                    let dst_ab = mt_sync.mt_yabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
                     let border_uv = (xd.dst.border / 2) as usize;
                     let stride_uv = xd.dst.uv_stride as usize;
                     let src_idx_u = (border_uv + 7) * stride_uv + border_uv;
                     let src_slice_u = &xd.dst.u_slice_safe()[src_idx_u..src_idx_u + 8];
                     let src_slice_v = &xd.dst.v_slice_safe()[src_idx_u..src_idx_u + 8];
-                    let dst_ab_u = pbi.mt_uabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
-                    let dst_ab_v = pbi.mt_vabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
+                    let dst_ab_u = mt_sync.mt_uabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
+                    let dst_ab_v = mt_sync.mt_vabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
                     
                     let offset = 32 + (mb_col * 16) as usize;
                     dst_ab.as_slice_mut()[offset..offset + 16].copy_from_slice(src_slice);
@@ -847,21 +855,20 @@ fn mt_decode_mb_rows(
                     dst_ab_u.as_slice_mut()[offset_uv..offset_uv + 8].copy_from_slice(src_slice_u);
                     dst_ab_v.as_slice_mut()[offset_uv..offset_uv + 8].copy_from_slice(src_slice_v);
                 }
-                if mb_col != (*pc).mb_cols - 1 as ::core::ffi::c_int {
-                    let next_mbmi = &(*pc).mip.as_ref().unwrap()[(*xd).mode_info_idx + 1].mbmi;
-                    if next_mbmi.ref_frame as ::core::ffi::c_int
-                        == INTRA_FRAME as ::core::ffi::c_int
-                    {
+                
+                if mb_col != pc.mb_cols - 1 {
+                    let next_mbmi = &pc.mip.as_ref().unwrap()[xd.mode_info_idx + 1].mbmi;
+                    if next_mbmi.ref_frame as ::core::ffi::c_int == INTRA_FRAME as ::core::ffi::c_int {
                         let border = xd.dst.border as usize;
                         let stride = xd.dst.y_stride as usize;
                         let y_slice = xd.dst.y_slice_safe();
-                        let dst_ab = pbi.mt_yleft_col.as_mut().unwrap()[mb_row as usize].as_mut().unwrap();
+                        let dst_ab = mt_sync.mt_yleft_col.as_mut().unwrap()[mb_row as usize].as_mut().unwrap();
                         let border_uv = (xd.dst.border / 2) as usize;
                         let stride_uv = xd.dst.uv_stride as usize;
                         let u_slice = xd.dst.u_slice_safe();
                         let v_slice = xd.dst.v_slice_safe();
-                        let dst_ab_u = pbi.mt_uleft_col.as_mut().unwrap()[mb_row as usize].as_mut().unwrap();
-                        let dst_ab_v = pbi.mt_vleft_col.as_mut().unwrap()[mb_row as usize].as_mut().unwrap();
+                        let dst_ab_u = mt_sync.mt_uleft_col.as_mut().unwrap()[mb_row as usize].as_mut().unwrap();
+                        let dst_ab_v = mt_sync.mt_vleft_col.as_mut().unwrap()[mb_row as usize].as_mut().unwrap();
                         
                         let dst_slice = dst_ab.as_slice_mut();
                         for i in 0..16 {
@@ -878,79 +885,37 @@ fn mt_decode_mb_rows(
                         }
                     }
                 }
-                let mb_idx = mb_row * (*pc).mb_cols + mb_col;
-
+                
                 if filter_level != 0 {
-                    if (*pc).filter_type as ::core::ffi::c_uint
-                        == NORMAL_LOOPFILTER as ::core::ffi::c_int as ::core::ffi::c_uint
-                    {
+                    if pc.filter_type as ::core::ffi::c_uint == NORMAL_LOOPFILTER as ::core::ffi::c_int as ::core::ffi::c_uint {
                         #[cfg(target_arch = "aarch64")]
                         {
-                            let mut lfi: loop_filter_info = loop_filter_info {
-                                mblim: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                                blim: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                                lim: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                                hev_thr: ::core::ptr::null::<::core::ffi::c_uchar>(),
-                            };
-                            let mut frame_type: FRAME_TYPE = (*pc).frame_type;
-                            let hev_index: ::core::ffi::c_int = (*lfi_n).hev_thr_lut
-                                [frame_type as usize][filter_level as usize]
-                                as ::core::ffi::c_int;
-                            lfi.mblim = &raw mut *(&raw mut (*lfi_n).mblim
-                                as *mut [::core::ffi::c_uchar; 1])
-                                .offset(filter_level as isize)
-                                as *mut ::core::ffi::c_uchar;
-                            lfi.blim = &raw mut *(&raw mut (*lfi_n).blim
-                                as *mut [::core::ffi::c_uchar; 1])
-                                .offset(filter_level as isize)
-                                as *mut ::core::ffi::c_uchar;
-                            lfi.lim = &raw mut *(&raw mut (*lfi_n).lim
-                                as *mut [::core::ffi::c_uchar; 1])
-                                .offset(filter_level as isize)
-                                as *mut ::core::ffi::c_uchar;
-                            lfi.hev_thr = &raw mut *(&raw mut (*lfi_n).hev_thr
-                                as *mut [::core::ffi::c_uchar; 1])
-                                .offset(hev_index as isize)
-                                as *mut ::core::ffi::c_uchar;
-                            if mb_col > 0 as ::core::ffi::c_int {
-                                vp8_loop_filter_mbv_neon(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
-                                    recon_y_stride,
-                                    recon_uv_stride,
-                                    &raw mut lfi,
-                                );
-                            }
-                            if skip_lf == 0 {
-                                vp8_loop_filter_bv_neon(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
-                                    recon_y_stride,
-                                    recon_uv_stride,
-                                    &raw mut lfi,
-                                );
-                            }
-                            if mb_row > 0 as ::core::ffi::c_int {
-                                vp8_loop_filter_mbh_neon(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
-                                    recon_y_stride,
-                                    recon_uv_stride,
-                                    &raw mut lfi,
-                                );
-                            }
-                            if skip_lf == 0 {
-                                vp8_loop_filter_bh_neon(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.u_buffer as *mut ::core::ffi::c_uchar,
-                                    (*xd).dst.v_buffer as *mut ::core::ffi::c_uchar,
-                                    recon_y_stride,
-                                    recon_uv_stride,
-                                    &raw mut lfi,
-                                );
+                            unsafe {
+                                let mut lfi: loop_filter_info = loop_filter_info {
+                                    mblim: ::core::ptr::null(),
+                                    blim: ::core::ptr::null(),
+                                    lim: ::core::ptr::null(),
+                                    hev_thr: ::core::ptr::null(),
+                                };
+                                let frame_type = pc.frame_type;
+                                let hev_index = lfi_n.hev_thr_lut[frame_type as usize][filter_level as usize] as usize;
+                                lfi.mblim = lfi_n.mblim[filter_level as usize].as_ptr();
+                                lfi.blim = lfi_n.blim[filter_level as usize].as_ptr();
+                                lfi.lim = lfi_n.lim[filter_level as usize].as_ptr();
+                                lfi.hev_thr = lfi_n.hev_thr[hev_index].as_ptr();
+                                
+                                if mb_col > 0 {
+                                    vp8_loop_filter_mbv_neon(xd.dst.y_buffer, xd.dst.u_buffer, xd.dst.v_buffer, recon_y_stride, recon_uv_stride, &mut lfi);
+                                }
+                                if skip_lf == 0 {
+                                    vp8_loop_filter_bv_neon(xd.dst.y_buffer, xd.dst.u_buffer, xd.dst.v_buffer, recon_y_stride, recon_uv_stride, &mut lfi);
+                                }
+                                if mb_row > 0 {
+                                    vp8_loop_filter_mbh_neon(xd.dst.y_buffer, xd.dst.u_buffer, xd.dst.v_buffer, recon_y_stride, recon_uv_stride, &mut lfi);
+                                }
+                                if skip_lf == 0 {
+                                    vp8_loop_filter_bh_neon(xd.dst.y_buffer, xd.dst.u_buffer, xd.dst.v_buffer, recon_y_stride, recon_uv_stride, &mut lfi);
+                                }
                             }
                         }
                         #[cfg(not(target_arch = "aarch64"))]
@@ -958,248 +923,96 @@ fn mt_decode_mb_rows(
                             let y_border = xd.dst.border as usize;
                             let y_stride = xd.dst.y_stride as usize;
                             let y_active_start = y_border * y_stride + y_border;
-
+                            
                             let uv_border = (xd.dst.border / 2) as usize;
                             let uv_stride = xd.dst.uv_stride as usize;
                             let uv_active_start = uv_border * uv_stride + uv_border;
-
-                            let frame_type = (*pc).frame_type;
-                            let hev_index = (*lfi_n).hev_thr_lut[frame_type as usize][filter_level as usize] as usize;
-
-                            let blimit_m_slice = &(*lfi_n).mblim[filter_level as usize];
-                            let blimit_b_slice = &(*lfi_n).blim[filter_level as usize];
-                            let limit_slice = &(*lfi_n).lim[filter_level as usize];
-                            let thresh_slice = &(*lfi_n).hev_thr[hev_index];
-
-                            if mb_col > 0 as ::core::ffi::c_int {
+                            
+                            let frame_type = pc.frame_type;
+                            let hev_index = lfi_n.hev_thr_lut[frame_type as usize][filter_level as usize] as usize;
+                            
+                            let blimit_m_slice = &lfi_n.mblim[filter_level as usize];
+                            let blimit_b_slice = &lfi_n.blim[filter_level as usize];
+                            let limit_slice = &lfi_n.lim[filter_level as usize];
+                            let thresh_slice = &lfi_n.hev_thr[hev_index];
+                            
+                            if mb_col > 0 {
                                 {
                                     let y_slice = xd.dst.y_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(
-                                        y_slice,
-                                        y_active_start,
-                                        y_stride,
-                                        blimit_m_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        2,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(y_slice, y_active_start, y_stride, blimit_m_slice, limit_slice, thresh_slice, 2);
                                 }
-                                if !(*xd).dst.u_buffer.is_null() {
+                                if !xd.dst.u_buffer.is_null() {
                                     let u_slice = xd.dst.u_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(
-                                        u_slice,
-                                        uv_active_start,
-                                        uv_stride,
-                                        blimit_m_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        1,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(u_slice, uv_active_start, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
                                 }
-                                if !(*xd).dst.v_buffer.is_null() {
+                                if !xd.dst.v_buffer.is_null() {
                                     let v_slice = xd.dst.v_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(
-                                        v_slice,
-                                        uv_active_start,
-                                        uv_stride,
-                                        blimit_m_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        1,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(v_slice, uv_active_start, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
                                 }
                             }
                             if skip_lf == 0 {
                                 {
                                     let y_slice = xd.dst.y_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
-                                        y_slice,
-                                        y_active_start + 4,
-                                        y_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        2,
-                                    );
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
-                                        y_slice,
-                                        y_active_start + 8,
-                                        y_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        2,
-                                    );
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
-                                        y_slice,
-                                        y_active_start + 12,
-                                        y_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        2,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(y_slice, y_active_start + 4, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(y_slice, y_active_start + 8, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(y_slice, y_active_start + 12, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
                                 }
-                                if !(*xd).dst.u_buffer.is_null() {
+                                if !xd.dst.u_buffer.is_null() {
                                     let u_slice = xd.dst.u_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
-                                        u_slice,
-                                        uv_active_start + 4,
-                                        uv_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        1,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(u_slice, uv_active_start + 4, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
                                 }
-                                if !(*xd).dst.v_buffer.is_null() {
+                                if !xd.dst.v_buffer.is_null() {
                                     let v_slice = xd.dst.v_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
-                                        v_slice,
-                                        uv_active_start + 4,
-                                        uv_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        1,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(v_slice, uv_active_start + 4, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
                                 }
                             }
-                            if mb_row > 0 as ::core::ffi::c_int {
+                            if mb_row > 0 {
                                 {
                                     let y_slice = xd.dst.y_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(
-                                        y_slice,
-                                        y_active_start,
-                                        y_stride,
-                                        blimit_m_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        2,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(y_slice, y_active_start, y_stride, blimit_m_slice, limit_slice, thresh_slice, 2);
                                 }
-                                if !(*xd).dst.u_buffer.is_null() {
+                                if !xd.dst.u_buffer.is_null() {
                                     let u_slice = xd.dst.u_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(
-                                        u_slice,
-                                        uv_active_start,
-                                        uv_stride,
-                                        blimit_m_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        1,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(u_slice, uv_active_start, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
                                 }
-                                if !(*xd).dst.v_buffer.is_null() {
+                                if !xd.dst.v_buffer.is_null() {
                                     let v_slice = xd.dst.v_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(
-                                        v_slice,
-                                        uv_active_start,
-                                        uv_stride,
-                                        blimit_m_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        1,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(v_slice, uv_active_start, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
                                 }
                             }
                             if skip_lf == 0 {
                                 {
                                     let y_slice = xd.dst.y_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
-                                        y_slice,
-                                        y_active_start + 4 * y_stride,
-                                        y_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        2,
-                                    );
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
-                                        y_slice,
-                                        y_active_start + 8 * y_stride,
-                                        y_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        2,
-                                    );
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
-                                        y_slice,
-                                        y_active_start + 12 * y_stride,
-                                        y_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        2,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(y_slice, y_active_start + 4 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(y_slice, y_active_start + 8 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(y_slice, y_active_start + 12 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
                                 }
-                                if !(*xd).dst.u_buffer.is_null() {
+                                if !xd.dst.u_buffer.is_null() {
                                     let u_slice = xd.dst.u_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
-                                        u_slice,
-                                        uv_active_start + 4 * uv_stride,
-                                        uv_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        1,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(u_slice, uv_active_start + 4 * uv_stride, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
                                 }
-                                if !(*xd).dst.v_buffer.is_null() {
+                                if !xd.dst.v_buffer.is_null() {
                                     let v_slice = xd.dst.v_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
-                                        v_slice,
-                                        uv_active_start + 4 * uv_stride,
-                                        uv_stride,
-                                        blimit_b_slice,
-                                        limit_slice,
-                                        thresh_slice,
-                                        1,
-                                    );
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(v_slice, uv_active_start + 4 * uv_stride, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
                                 }
                             }
                         }
                     } else {
                         #[cfg(target_arch = "aarch64")]
                         {
-                            if mb_col > 0 as ::core::ffi::c_int {
-                                vp8_loop_filter_mbvs_neon(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    recon_y_stride,
-                                    &raw mut *(&raw mut (*lfi_n).mblim
-                                        as *mut [::core::ffi::c_uchar; 1])
-                                        .offset(filter_level as isize)
-                                        as *mut ::core::ffi::c_uchar,
-                                );
-                            }
-                            if skip_lf == 0 {
-                                vp8_loop_filter_bvs_neon(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    recon_y_stride,
-                                    &raw mut *(&raw mut (*lfi_n).blim as *mut [::core::ffi::c_uchar; 1])
-                                        .offset(filter_level as isize)
-                                        as *mut ::core::ffi::c_uchar,
-                                );
-                            }
-                            if mb_row > 0 as ::core::ffi::c_int {
-                                vp8_loop_filter_mbhs_neon(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    recon_y_stride,
-                                    &raw mut *(&raw mut (*lfi_n).mblim
-                                        as *mut [::core::ffi::c_uchar; 1])
-                                        .offset(filter_level as isize)
-                                        as *mut ::core::ffi::c_uchar,
-                                );
-                            }
-                            if skip_lf == 0 {
-                                vp8_loop_filter_bhs_neon(
-                                    (*xd).dst.y_buffer as *mut ::core::ffi::c_uchar,
-                                    recon_y_stride,
-                                    &raw mut *(&raw mut (*lfi_n).blim as *mut [::core::ffi::c_uchar; 1])
-                                        .offset(filter_level as isize)
-                                        as *mut ::core::ffi::c_uchar,
-                                );
+                            unsafe {
+                                if mb_col > 0 {
+                                    vp8_loop_filter_mbvs_neon(xd.dst.y_buffer, recon_y_stride, lfi_n.mblim[filter_level as usize].as_ptr());
+                                }
+                                if skip_lf == 0 {
+                                    vp8_loop_filter_bvs_neon(xd.dst.y_buffer, recon_y_stride, lfi_n.blim[filter_level as usize].as_ptr());
+                                }
+                                if mb_row > 0 {
+                                    vp8_loop_filter_mbhs_neon(xd.dst.y_buffer, recon_y_stride, lfi_n.mblim[filter_level as usize].as_ptr());
+                                }
+                                if skip_lf == 0 {
+                                    vp8_loop_filter_bhs_neon(xd.dst.y_buffer, recon_y_stride, lfi_n.blim[filter_level as usize].as_ptr());
+                                }
                             }
                         }
                         #[cfg(not(target_arch = "aarch64"))]
@@ -1207,67 +1020,49 @@ fn mt_decode_mb_rows(
                             let y_border = xd.dst.border as usize;
                             let y_stride = xd.dst.y_stride as usize;
                             let y_active_start = y_border * y_stride + y_border;
-
-                            if mb_col > 0 as ::core::ffi::c_int {
-                                let blimit_val = (*lfi_n).mblim[filter_level as usize][0];
+                            
+                            if mb_col > 0 {
+                                let blimit_val = lfi_n.mblim[filter_level as usize][0];
                                 let y_slice = xd.dst.y_slice_mut_safe();
-                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_vertical_edge_safe(
-                                    y_slice,
-                                    y_active_start,
-                                    y_stride,
-                                    blimit_val,
-                                );
+                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_vertical_edge_safe(y_slice, y_active_start, y_stride, blimit_val);
                             }
                             if skip_lf == 0 {
-                                let blimit_val = (*lfi_n).blim[filter_level as usize][0];
+                                let blimit_val = lfi_n.blim[filter_level as usize][0];
                                 let y_slice = xd.dst.y_slice_mut_safe();
-                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_bvs_safe(
-                                    y_slice,
-                                    y_active_start,
-                                    y_stride,
-                                    blimit_val,
-                                );
+                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_bvs_safe(y_slice, y_active_start, y_stride, blimit_val);
                             }
-                            if mb_row > 0 as ::core::ffi::c_int {
-                                let blimit_val = (*lfi_n).mblim[filter_level as usize][0];
+                            if mb_row > 0 {
+                                let blimit_val = lfi_n.mblim[filter_level as usize][0];
                                 let y_slice = xd.dst.y_slice_mut_safe();
-                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_horizontal_edge_safe(
-                                    y_slice,
-                                    y_active_start,
-                                    y_stride,
-                                    blimit_val,
-                                );
+                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_horizontal_edge_safe(y_slice, y_active_start, y_stride, blimit_val);
                             }
                             if skip_lf == 0 {
-                                let blimit_val = (*lfi_n).blim[filter_level as usize][0];
+                                let blimit_val = lfi_n.blim[filter_level as usize][0];
                                 let y_slice = xd.dst.y_slice_mut_safe();
-                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_bhs_safe(
-                                    y_slice,
-                                    y_active_start,
-                                    y_stride,
-                                    blimit_val,
-                                );
+                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_bhs_safe(y_slice, y_active_start, y_stride, blimit_val);
                             }
                         }
                     }
                 }
             }
-            recon_yoffset += 16 as ::core::ffi::c_int;
-            recon_uvoffset += 8 as ::core::ffi::c_int;
-            (*xd).mode_info_idx += 1;
-            (*xd).above_context_idx += 1;
+            
+            recon_yoffset += 16;
+            recon_uvoffset += 8;
+            xd.mode_info_idx += 1;
+            xd.above_context_idx += 1;
             mb_col += 1;
         }
-        safe_decoder.update_bool_decoder(&mut (*pbi).mbc[bc_idx]);
-        if (*pbi).common.filter_level != 0 {
-            if mb_row != (*pc).mb_rows - 1 as ::core::ffi::c_int {
-                let mut lasty: ::core::ffi::c_int = (*yv12_fb_lst).y_width + VP8BORDERINPIXELS;
-                let mut lastuv: ::core::ffi::c_int = ((*yv12_fb_lst).y_width
-                    >> 1 as ::core::ffi::c_int)
-                    + (VP8BORDERINPIXELS >> 1 as ::core::ffi::c_int);
-                let dst_ab = pbi.mt_yabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
-                let dst_ab_u = pbi.mt_uabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
-                let dst_ab_v = pbi.mt_vabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
+        
+        safe_decoder.update_bool_decoder(&mut mbc[bc_idx]);
+        
+        if pc.filter_level != 0 {
+            if mb_row != pc.mb_rows - 1 {
+                let mut lasty = pc.yv12_fb[lst_fb_idx].y_width + VP8BORDERINPIXELS;
+                let mut lastuv = (pc.yv12_fb[lst_fb_idx].y_width >> 1) + (VP8BORDERINPIXELS >> 1);
+                
+                let dst_ab = mt_sync.mt_yabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
+                let dst_ab_u = mt_sync.mt_uabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
+                let dst_ab_v = mt_sync.mt_vabove_row.as_mut().unwrap()[(mb_row + 1) as usize].as_mut().unwrap();
                 
                 let dst_slice = dst_ab.as_slice_mut();
                 let val = dst_slice[lasty as usize - 1];
@@ -1282,31 +1077,23 @@ fn mt_decode_mb_rows(
                 dst_slice_v[lastuv as usize..lastuv as usize + 4].fill(val_v);
             }
         } else {
-            {
-                let new_fb_idx = pbi.common.new_fb_idx as usize;
-                let yv12_fb_new_ref = &mut pbi.common.yv12_fb[new_fb_idx];
-                vp8_extend_mb_row(
-                    yv12_fb_new_ref,
-                    mb_row,
-                );
-            }
+            let yv12_fb_new_ref = &mut pc.yv12_fb[new_fb_idx];
+            vp8_extend_mb_row(yv12_fb_new_ref, mb_row);
         }
+        
         vpx_atomic_store_release(current_mb_col, mb_col + nsync);
-        (*xd).mode_info_idx += 1;
-        (*xd).up_available = 1 as ::core::ffi::c_int;
-        (*xd).mode_info_idx += ((*xd).mode_info_stride as usize) * ((*pbi).decoding_thread_count as usize);
-        mb_row = (mb_row as ::core::ffi::c_uint).wrapping_add(
-            (*pbi)
-                .decoding_thread_count
-                .wrapping_add(1 as ::core::ffi::c_uint),
-        ) as ::core::ffi::c_int as ::core::ffi::c_int;
+        xd.mode_info_idx += 1;
+        xd.up_available = 1;
+        xd.mode_info_idx += (xd.mode_info_stride as usize) * (decoding_thread_count as usize);
+        mb_row = (mb_row as u32).wrapping_add(decoding_thread_count.wrapping_add(1)) as i32;
     }
-    if last_mb_row + (*pbi).decoding_thread_count as ::core::ffi::c_int + 1 as ::core::ffi::c_int
-        >= (*pc).mb_rows
-    {
-        crate::thread_shim::vp8_semaphore_signal((*pbi).h_event_end_decoding);
+    
+    if last_mb_row + decoding_thread_count as i32 + 1 >= pc.mb_rows {
+        unsafe {
+            crate::thread_shim::vp8_semaphore_signal(mt_sync.h_event_end_decoding);
+        }
     }
-}}
+}
 unsafe extern "C" fn thread_decoding_proc(
     p_data: *mut ::core::ffi::c_void,
 ) -> *mut ::core::ffi::c_void {
@@ -1320,7 +1107,7 @@ unsafe extern "C" fn thread_decoding_proc(
     };
     unsafe {
         while vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0 {
-            let start_decoding_sem = pbi.h_event_start_decoding.as_ref().unwrap()[ithread as usize];
+            let start_decoding_sem = pbi.mt_sync.h_event_start_decoding.as_ref().unwrap()[ithread as usize];
             if crate::thread_shim::vp8_semaphore_wait(start_decoding_sem) != 0 {
                 continue;
             }
@@ -1330,10 +1117,12 @@ unsafe extern "C" fn thread_decoding_proc(
             let xd = &mut mbrd.mbd;
             if setjmp(&raw mut xd.error_info.jmp as *mut ::core::ffi::c_int) != 0 {
                 xd.error_info.setjmp = 0;
-                crate::thread_shim::vp8_semaphore_signal(pbi.h_event_end_decoding);
+                crate::thread_shim::vp8_semaphore_signal(pbi.mt_sync.h_event_end_decoding);
             } else {
                 xd.error_info.setjmp = 1;
-                mt_decode_mb_rows(pbi, xd, ithread + 1);
+                let decoding_thread_count = pbi.decoding_thread_count;
+                let (common, mbc, mt_sync) = pbi.split_mt_mut();
+                mt_decode_mb_rows(common, mbc, mt_sync, xd, ithread + 1, decoding_thread_count);
                 xd.error_info.setjmp = 0;
             }
         }
@@ -1364,8 +1153,8 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi_raw: *mut VP8D_COMP)
             (core_count - 1 as ::core::ffi::c_int) as ::core::ffi::c_uint;
         let count = pbi.decoding_thread_count as usize;
         
-        pbi.h_decoding_thread = Some(vec![core::ptr::null_mut::<core::ffi::c_void>(); count].into_boxed_slice());
-        pbi.h_event_start_decoding = Some(vec![core::ptr::null_mut::<core::ffi::c_void>(); count].into_boxed_slice());
+        pbi.mt_sync.h_decoding_thread = Some(vec![core::ptr::null_mut::<core::ffi::c_void>(); count].into_boxed_slice());
+        pbi.mt_sync.h_event_start_decoding = Some(vec![core::ptr::null_mut::<core::ffi::c_void>(); count].into_boxed_slice());
         
         let mb_row_di_vec = vec![MB_ROW_DEC::default(); count];
         pbi.mb_row_di = Some(mb_row_di_vec.into_boxed_slice());
@@ -1375,7 +1164,7 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi_raw: *mut VP8D_COMP)
         unsafe {
             if crate::thread_shim::vp8_semaphore_create(
                 mach_task_self_ as task_t,
-                &raw mut pbi.h_event_end_decoding,
+                &raw mut pbi.mt_sync.h_event_end_decoding,
                 SYNC_POLICY_FIFO,
                 0,
             ) != 0
@@ -1387,8 +1176,8 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi_raw: *mut VP8D_COMP)
                 );
             }
             
-            let h_event_start_decoding = pbi.h_event_start_decoding.as_mut().unwrap();
-            let h_decoding_thread = pbi.h_decoding_thread.as_mut().unwrap();
+            let h_event_start_decoding = pbi.mt_sync.h_event_start_decoding.as_mut().unwrap();
+            let h_decoding_thread = pbi.mt_sync.h_decoding_thread.as_mut().unwrap();
             let de_thread_data = pbi.de_thread_data.as_mut().unwrap();
             let mb_row_di = pbi.mb_row_di.as_mut().unwrap();
             
@@ -1437,7 +1226,7 @@ pub unsafe extern "C" fn vp8_decoder_create_threads(mut pbi_raw: *mut VP8D_COMP)
                 != pbi.decoding_thread_count as ::core::ffi::c_int
             {
                 if pbi.allocated_decoding_thread_count == 0 as ::core::ffi::c_int {
-                    crate::thread_shim::vp8_semaphore_destroy(mach_task_self_ as task_t, pbi.h_event_end_decoding);
+                    crate::thread_shim::vp8_semaphore_destroy(mach_task_self_ as task_t, pbi.mt_sync.h_event_end_decoding);
                 }
                 vpx_internal_error(
                     &raw mut pbi.common.error,
@@ -1453,13 +1242,13 @@ pub fn vp8mt_de_alloc_temp_buffers(
     pbi: &mut VP8D_COMP,
     _mb_rows: ::core::ffi::c_int,
 ) {
-    pbi.mt_current_mb_col = None;
-    pbi.mt_yabove_row = None;
-    pbi.mt_uabove_row = None;
-    pbi.mt_vabove_row = None;
-    pbi.mt_yleft_col = None;
-    pbi.mt_uleft_col = None;
-    pbi.mt_vleft_col = None;
+    pbi.mt_sync.mt_current_mb_col = None;
+    pbi.mt_sync.mt_yabove_row = None;
+    pbi.mt_sync.mt_uabove_row = None;
+    pbi.mt_sync.mt_vabove_row = None;
+    pbi.mt_sync.mt_yleft_col = None;
+    pbi.mt_sync.mt_uleft_col = None;
+    pbi.mt_sync.mt_vleft_col = None;
 }
 #[unsafe(no_mangle)]
 pub fn vp8mt_alloc_temp_buffers(
@@ -1474,13 +1263,13 @@ pub fn vp8mt_alloc_temp_buffers(
             width += 16 as ::core::ffi::c_int - (width & 0xf as ::core::ffi::c_int);
         }
         if width < 640 as ::core::ffi::c_int {
-            pbi.sync_range = 1 as ::core::ffi::c_int;
+            pbi.mt_sync.sync_range = 1 as ::core::ffi::c_int;
         } else if width <= 1280 as ::core::ffi::c_int {
-            pbi.sync_range = 8 as ::core::ffi::c_int;
+            pbi.mt_sync.sync_range = 8 as ::core::ffi::c_int;
         } else if width <= 2560 as ::core::ffi::c_int {
-            pbi.sync_range = 16 as ::core::ffi::c_int;
+            pbi.mt_sync.sync_range = 16 as ::core::ffi::c_int;
         } else {
-            pbi.sync_range = 32 as ::core::ffi::c_int;
+            pbi.mt_sync.sync_range = 32 as ::core::ffi::c_int;
         }
         uv_width = width >> 1 as ::core::ffi::c_int;
         let mb_rows_usize = pbi.common.mb_rows as usize;
@@ -1489,7 +1278,7 @@ pub fn vp8mt_alloc_temp_buffers(
         for i in 0..mb_rows_usize {
             vpx_atomic_init(&current_mb_col_vec[i], 0);
         }
-        pbi.mt_current_mb_col = Some(current_mb_col_vec.into_boxed_slice());
+        pbi.mt_sync.mt_current_mb_col = Some(current_mb_col_vec.into_boxed_slice());
         
         // mt_yabove_row
         let mut yabove = Vec::with_capacity(mb_rows_usize);
@@ -1505,7 +1294,7 @@ pub fn vp8mt_alloc_temp_buffers(
             }
             yabove.push(ab);
         }
-        pbi.mt_yabove_row = Some(yabove.into_boxed_slice());
+        pbi.mt_sync.mt_yabove_row = Some(yabove.into_boxed_slice());
         
         // mt_uabove_row
         let mut uabove = Vec::with_capacity(mb_rows_usize);
@@ -1521,7 +1310,7 @@ pub fn vp8mt_alloc_temp_buffers(
             }
             uabove.push(ab);
         }
-        pbi.mt_uabove_row = Some(uabove.into_boxed_slice());
+        pbi.mt_sync.mt_uabove_row = Some(uabove.into_boxed_slice());
         
         // mt_vabove_row
         let mut vabove = Vec::with_capacity(mb_rows_usize);
@@ -1537,7 +1326,7 @@ pub fn vp8mt_alloc_temp_buffers(
             }
             vabove.push(ab);
         }
-        pbi.mt_vabove_row = Some(vabove.into_boxed_slice());
+        pbi.mt_sync.mt_vabove_row = Some(vabove.into_boxed_slice());
         
         // mt_yleft_col
         let mut yleft = Vec::with_capacity(mb_rows_usize);
@@ -1553,7 +1342,7 @@ pub fn vp8mt_alloc_temp_buffers(
             }
             yleft.push(ab);
         }
-        pbi.mt_yleft_col = Some(yleft.into_boxed_slice());
+        pbi.mt_sync.mt_yleft_col = Some(yleft.into_boxed_slice());
         
         // mt_uleft_col
         let mut uleft = Vec::with_capacity(mb_rows_usize);
@@ -1569,7 +1358,7 @@ pub fn vp8mt_alloc_temp_buffers(
             }
             uleft.push(ab);
         }
-        pbi.mt_uleft_col = Some(uleft.into_boxed_slice());
+        pbi.mt_sync.mt_uleft_col = Some(uleft.into_boxed_slice());
         
         // mt_vleft_col
         let mut vleft = Vec::with_capacity(mb_rows_usize);
@@ -1585,7 +1374,7 @@ pub fn vp8mt_alloc_temp_buffers(
             }
             vleft.push(ab);
         }
-        pbi.mt_vleft_col = Some(vleft.into_boxed_slice());
+        pbi.mt_sync.mt_vleft_col = Some(vleft.into_boxed_slice());
     }
 }
 #[unsafe(no_mangle)]
@@ -1593,8 +1382,8 @@ pub fn vp8_decoder_remove_threads(pbi: &mut VP8D_COMP) {
     if vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0 {
         vpx_atomic_store_release(&pbi.b_multithreaded_rd, 0);
         
-        let h_event_start_decoding = pbi.h_event_start_decoding.as_ref().unwrap();
-        let h_decoding_thread = pbi.h_decoding_thread.as_ref().unwrap();
+        let h_event_start_decoding = pbi.mt_sync.h_event_start_decoding.as_ref().unwrap();
+        let h_decoding_thread = pbi.mt_sync.h_decoding_thread.as_ref().unwrap();
         
         let mut i: i32 = 0;
         unsafe {
@@ -1615,10 +1404,10 @@ pub fn vp8_decoder_remove_threads(pbi: &mut VP8D_COMP) {
                 i += 1;
             }
             if pbi.allocated_decoding_thread_count != 0 {
-                crate::thread_shim::vp8_semaphore_destroy(mach_task_self_ as task_t, pbi.h_event_end_decoding);
+                crate::thread_shim::vp8_semaphore_destroy(mach_task_self_ as task_t, pbi.mt_sync.h_event_end_decoding);
             }
-            pbi.h_decoding_thread = None;
-            pbi.h_event_start_decoding = None;
+            pbi.mt_sync.h_decoding_thread = None;
+            pbi.mt_sync.h_event_start_decoding = None;
             pbi.mb_row_di = None;
             pbi.de_thread_data = None;
         }
@@ -1646,11 +1435,11 @@ pub fn vp8mt_decode_mb_rows(
     let mut filter_branch = false;
     
     if filter_level != 0 {
-        let yabove_ab = pbi.mt_yabove_row.as_mut().unwrap()[0].as_mut().unwrap();
+        let yabove_ab = pbi.mt_sync.mt_yabove_row.as_mut().unwrap()[0].as_mut().unwrap();
         let len = (y_width + 5) as usize;
-        let uabove_ab = pbi.mt_uabove_row.as_mut().unwrap()[0].as_mut().unwrap();
+        let uabove_ab = pbi.mt_sync.mt_uabove_row.as_mut().unwrap()[0].as_mut().unwrap();
         let len_uv = ((y_width >> 1) + 5) as usize;
-        let vabove_ab = pbi.mt_vabove_row.as_mut().unwrap()[0].as_mut().unwrap();
+        let vabove_ab = pbi.mt_sync.mt_vabove_row.as_mut().unwrap()[0].as_mut().unwrap();
         
         yabove_ab.as_slice_mut()[31..31+len].fill(127);
         uabove_ab.as_slice_mut()[15..15+len_uv].fill(127);
@@ -1658,9 +1447,9 @@ pub fn vp8mt_decode_mb_rows(
         
         j = 1;
         while j < pc_ref.mb_rows {
-            let yabove_ab = pbi.mt_yabove_row.as_mut().unwrap()[j as usize].as_mut().unwrap();
-            let uabove_ab = pbi.mt_uabove_row.as_mut().unwrap()[j as usize].as_mut().unwrap();
-            let vabove_ab = pbi.mt_vabove_row.as_mut().unwrap()[j as usize].as_mut().unwrap();
+            let yabove_ab = pbi.mt_sync.mt_yabove_row.as_mut().unwrap()[j as usize].as_mut().unwrap();
+            let uabove_ab = pbi.mt_sync.mt_uabove_row.as_mut().unwrap()[j as usize].as_mut().unwrap();
+            let vabove_ab = pbi.mt_sync.mt_vabove_row.as_mut().unwrap()[j as usize].as_mut().unwrap();
             yabove_ab.as_slice_mut()[31] = 129;
             uabove_ab.as_slice_mut()[15] = 129;
             vabove_ab.as_slice_mut()[15] = 129;
@@ -1669,9 +1458,9 @@ pub fn vp8mt_decode_mb_rows(
         
         j = 0;
         while j < pc_ref.mb_rows {
-            let yleft_ab = pbi.mt_yleft_col.as_mut().unwrap()[j as usize].as_mut().unwrap();
-            let uleft_ab = pbi.mt_uleft_col.as_mut().unwrap()[j as usize].as_mut().unwrap();
-            let vleft_ab = pbi.mt_vleft_col.as_mut().unwrap()[j as usize].as_mut().unwrap();
+            let yleft_ab = pbi.mt_sync.mt_yleft_col.as_mut().unwrap()[j as usize].as_mut().unwrap();
+            let uleft_ab = pbi.mt_sync.mt_uleft_col.as_mut().unwrap()[j as usize].as_mut().unwrap();
+            let vleft_ab = pbi.mt_sync.mt_vleft_col.as_mut().unwrap()[j as usize].as_mut().unwrap();
             yleft_ab.as_slice_mut()[..16].fill(129);
             uleft_ab.as_slice_mut()[..8].fill(129);
             vleft_ab.as_slice_mut()[..8].fill(129);
@@ -1687,17 +1476,16 @@ pub fn vp8mt_decode_mb_rows(
         vp8_setup_intra_recon_top_line(yv12_fb_new_ref);
     }
     
-    let xd_ptr = &raw mut pbi.mb;
     let mb_row_di = pbi.mb_row_di.as_mut().unwrap();
     
     setup_decoding_thread_data(
         &pbi.common,
-        pbi.mt_current_mb_col.as_deref(),
+        pbi.mt_sync.mt_current_mb_col.as_deref(),
         &pbi.mb,
         mb_row_di,
     );
 
-    let h_event_start_decoding = pbi.h_event_start_decoding.as_ref().unwrap();
+    let h_event_start_decoding = pbi.mt_sync.h_event_start_decoding.as_ref().unwrap();
 
     unsafe {
         i = 0;
@@ -1706,25 +1494,33 @@ pub fn vp8mt_decode_mb_rows(
             i = i.wrapping_add(1);
         }
         
-        let setjmp_res = setjmp(&raw mut (*xd_ptr).error_info.jmp as *mut ::core::ffi::c_int);
+        let xd = &mut pbi.mb;
+        let setjmp_res = setjmp(&raw mut xd.error_info.jmp as *mut ::core::ffi::c_int);
         if setjmp_res != 0 {
-            (*xd_ptr).error_info.setjmp = 0;
-            (*xd_ptr).corrupted = 1;
+            xd.error_info.setjmp = 0;
+            xd.corrupted = 1;
             i = 0;
             while i < pbi.decoding_thread_count {
-                crate::thread_shim::vp8_semaphore_wait(pbi.h_event_end_decoding);
+                crate::thread_shim::vp8_semaphore_wait(pbi.mt_sync.h_event_end_decoding);
                 i = i.wrapping_add(1);
             }
             return -1;
         }
         
-        (*xd_ptr).error_info.setjmp = 1;
-        mt_decode_mb_rows(pbi, &mut *xd_ptr, 0);
-        (*xd_ptr).error_info.setjmp = 0;
+        xd.error_info.setjmp = 1;
+        
+        let decoding_thread_count = pbi.decoding_thread_count;
+        let common = &mut pbi.common;
+        let mbc = &mut pbi.mbc;
+        let mt_sync = &mut pbi.mt_sync;
+        
+        mt_decode_mb_rows(common, mbc, mt_sync, xd, 0, decoding_thread_count);
+        
+        xd.error_info.setjmp = 0;
         
         i = 0;
         while i < pbi.decoding_thread_count.wrapping_add(1) {
-            crate::thread_shim::vp8_semaphore_wait(pbi.h_event_end_decoding);
+            crate::thread_shim::vp8_semaphore_wait(pbi.mt_sync.h_event_end_decoding);
             i = i.wrapping_add(1);
         }
     }
