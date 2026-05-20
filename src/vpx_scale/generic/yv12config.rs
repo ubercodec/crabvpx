@@ -1,4 +1,5 @@
 pub use crate::vp8::common::types::*;
+use crate::vpx_mem::vpx_mem::AlignedBox;
 pub type uint8_t = u8;
 
 pub type __darwin_size_t = usize;
@@ -18,18 +19,15 @@ pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
 pub type size_t = __darwin_size_t;
 
-#[derive(Clone, Copy)]
-#[repr(align(32))]
-struct Align32([u8; 32]);
+
 
 pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
 pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
 pub fn vp8_yv12_de_alloc_frame_buffer_safe(ybf: &mut YV12_BUFFER_CONFIG) {
-    if ybf.buffer_alloc_sz > 0 {
-        let alloc_size = ybf.buffer_alloc_sz / 32;
-        let ptr = ybf.buffer_alloc as *mut Align32;
+    if !ybf.buffer_alloc.is_null() {
+        // SAFETY: ybf.buffer_alloc was allocated by AlignedBox in vp8_yv12_realloc_frame_buffer_safe.
         unsafe {
-            let _vec = Vec::from_raw_parts(ptr, alloc_size, alloc_size);
+            let _ = AlignedBox::from_raw(ybf.buffer_alloc);
         }
     }
     *ybf = YV12_BUFFER_CONFIG {
@@ -91,15 +89,15 @@ pub fn vp8_yv12_realloc_frame_buffer_safe(
     let frame_size = (yplane_size + 2 * uvplane_size) as usize;
 
     if ybf.buffer_alloc.is_null() {
-        let alloc_size = (frame_size + 31) / 32;
-        let mut vec = vec![Align32([0; 32]); alloc_size];
-        ybf.buffer_alloc = vec.as_mut_ptr() as *mut u8;
-        core::mem::forget(vec);
-        if ybf.buffer_alloc.is_null() {
-            ybf.buffer_alloc_sz = 0;
-            return Err(-1);
-        }
-        ybf.buffer_alloc_sz = alloc_size * 32;
+        let aligned_box = match AlignedBox::new(32, frame_size) {
+            Some(b) => b,
+            None => {
+                ybf.buffer_alloc_sz = 0;
+                return Err(-1);
+            }
+        };
+        ybf.buffer_alloc = aligned_box.into_raw();
+        ybf.buffer_alloc_sz = frame_size;
     }
 
     if ybf.buffer_alloc_sz < frame_size {
