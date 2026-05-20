@@ -2,6 +2,11 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Dead FFI Predictor Cleanup & Unsafe Reduction**:
+  - Identified that the transpiled C reference predictors (`vp8_sixtap_predict..._c` and `vp8_bilinear_predict..._c`) in `src/vp8/common/filter.rs` were completely unused in our Rust implementation.
+  - Our Rust implementation uses `filter_block2d_sixtap_safe` and `filter_block2d_bil_safe` directly via safe wrappers in `safe_predict.rs` (on non-aarch64), or uses NEON assembly (on aarch64), completely bypassing these transpiled C versions.
+  - Completely removed these 8 dead FFI predictor functions and their 2 internal unsafe helpers (`get_src_slice`, `get_bil_src_slice`) from `filter.rs`.
+  - This successfully eliminated **26 unsafe blocks/keywords** globally, reducing the remaining unsafe count from 473 to 447. All 1160 differential test frames pass perfectly.
 * **Safe Tree Pointer Detection & Unsafe Fallback Elimination**:
   - Implemented a 100% safe `detect_tree_slice` helper in `src/vp8/common/treecoder.rs` that matches FFI raw tree pointers (`*const vp8_tree_index`) against the known, safe static VP8 tree arrays (such as `vp8_coef_tree`, `vp8_bmode_tree`, etc.).
   - Exported the private extra bit trees `cat1` to `cat6` from `entropy.rs` as `pub` so they can be matched in `treecoder.rs`.
