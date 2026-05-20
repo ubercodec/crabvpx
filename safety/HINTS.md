@@ -2,6 +2,12 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Multithreaded Loop Filtering (Milestone 3 - Unit 7 Complete)**:
+  - Refactored multithreaded loop filtering in `src/vp8/decoder/threading.rs` to use safe disjoint row views, fully resolving the concurrency race conditions in parallel decoding.
+  - Implemented `get_row_view_mut` and `get_disjoint_row_views_mut` on `YV12_BUFFER_CONFIG` in `src/vp8/common/types.rs` to dynamically partition the destination frame buffer into disjoint mutable slices per row without any heap allocation overhead (avoiding global allocator lock contention that caused hangs).
+  - Designed and implemented `mbloop_filter_horizontal_edge_split_safe` and `vp8_loop_filter_simple_horizontal_edge_split_safe` in `src/vp8/common/loopfilter_filters.rs` to perform horizontal boundary filtering across disjoint row slices safely.
+  - Made the boundary horizontal filter dynamic to support both Y (16 lines) and U/V (8 lines) row heights, fixing a critical out-of-bounds panic in chroma filtering.
+  - Verified that both single-threaded and multithreaded (tested with `CRABVPX_THREADS=4`) decoding pass 100% bit-identical differential tests for all 1160 frames.
 * **FFI Declaration Cleanup & Redundant Unsafe Removal**:
   - Identified and removed dead FFI declarations (`memcpy`, `vpx_memalign`, `vpx_free` in `src/vp8/decoder/onyxd_if.rs`; and `memcpy`, `memset`, `vpx_memalign`, `vpx_malloc`, `vpx_calloc`, `vpx_free` in `src/vp8/decoder/threading.rs`) which were unused in the Rust implementation.
   - Replaced a `memset` call in `vp8_create_decoder_instances` inside `onyxd_if.rs` with a safe Rust null-pointer array assignment.
@@ -85,7 +91,10 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
 
 
 ## Next Steps for Future Agents
-1. **Milestone 3: Refactor Loop Filtering Slicing (Disjoint Borrows)**:
+1. **Milestone 3: Refactor Loop Filtering Slicing (Disjoint Borrows) - ALL COMPLETE**:
    - [x] Unit 6: Implement a `split_rows_mut` or safe chunking method on `YV12_BUFFER_CONFIG` that yields disjoint mutable slices for individual macroblock rows. (Completed!)
-   - [ ] Unit 7: Refactor multithreaded loop filtering in `threading.rs` to assign each thread a strictly disjoint mutable slice of the frame, proving to the borrow checker that parallel loop filtering is 100% race-free.
+   - [x] Unit 7: Refactor multithreaded loop filtering in `threading.rs` to assign each thread a strictly disjoint mutable slice of the frame, proving to the borrow checker that parallel loop filtering is 100% race-free. (Completed!)
+2. **Future Safety Milestones**:
+   - **Modernize `BOOL_DECODER` (`src/vp8/decoder/dboolhuff.rs`)**: Eliminate residual raw pointer arithmetic (`user_buffer` additions) inside `SafeBoolDecoder` and fully leverage slice boundaries.
+   - **Address remaining `unsafe` blocks in `src/vp8/common/vp8_loopfilter.rs` and `extend.rs`** by replacing FFI boundary styles with native safe Rust patterns where possible (excluding assembly RTCD paths).
 

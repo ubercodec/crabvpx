@@ -118,7 +118,7 @@ Goal: Stop passing `*mut macroblockd` to prediction functions; pass slices expli
 Goal: Perform loop filtering in-place on disjoint slices without locking the entire frame structure.
 
 *   **[x] Unit 6 (`loopfilter.rs`):** Implement a `split_rows_mut` or safe chunking method on `YV12_BUFFER_CONFIG` that yields disjoint mutable slices for individual macroblock rows.
-*   **[ ] Unit 7 (`threading.rs`):** Refactor multithreaded loop filtering to assign each thread a strictly disjoint mutable slice of the frame, proving to the borrow checker that parallel loop filtering is 100% race-free.
+*   **[x] Unit 7 (`threading.rs`):** Refactor multithreaded loop filtering to assign each thread a strictly disjoint mutable slice of the frame, proving to the borrow checker that parallel loop filtering is 100% race-free.
 
 ---
 

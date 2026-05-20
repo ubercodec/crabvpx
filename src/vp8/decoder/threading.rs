@@ -866,13 +866,8 @@ fn mt_decode_mb_rows(
                         }
                         #[cfg(not(target_arch = "aarch64"))]
                         {
-                            let y_border = xd.dst_border as usize;
                             let y_stride = xd.dst_y_stride as usize;
-                            let y_active_start = y_border * y_stride + y_border;
-                            
-                            let uv_border = (xd.dst_border / 2) as usize;
                             let uv_stride = xd.dst_uv_stride as usize;
-                            let uv_active_start = uv_border * uv_stride + uv_border;
                             
                             let frame_type = pc.frame_type;
                             let hev_index = lfi_n.hev_thr_lut[frame_type as usize][filter_level as usize] as usize;
@@ -883,65 +878,95 @@ fn mt_decode_mb_rows(
                             let thresh_slice = &lfi_n.hev_thr[hev_index];
                             
                             let dst_fb = &mut pc.yv12_fb[xd.dst_fb_idx];
+                            let has_u = !dst_fb.u_buffer.is_null();
+                            let has_v = !dst_fb.v_buffer.is_null();
                             
-                            if mb_col > 0 {
-                                {
-                                    let y_slice = dst_fb.y_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(y_slice, y_active_start, y_stride, blimit_m_slice, limit_slice, thresh_slice, 2);
-                                }
-                                if !dst_fb.u_buffer.is_null() {
-                                    let u_slice = dst_fb.u_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(u_slice, uv_active_start, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
-                                }
-                                if !dst_fb.v_buffer.is_null() {
-                                    let v_slice = dst_fb.v_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(v_slice, uv_active_start, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
-                                }
-                            }
-                            if skip_lf == 0 {
-                                {
-                                    let y_slice = dst_fb.y_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(y_slice, y_active_start + 4, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(y_slice, y_active_start + 8, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(y_slice, y_active_start + 12, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
-                                }
-                                if !dst_fb.u_buffer.is_null() {
-                                    let u_slice = dst_fb.u_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(u_slice, uv_active_start + 4, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
-                                }
-                                if !dst_fb.v_buffer.is_null() {
-                                    let v_slice = dst_fb.v_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(v_slice, uv_active_start + 4, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
-                                }
-                            }
+                            let col_offset_y = (mb_col * 16) as usize;
+                            let col_offset_uv = (mb_col * 8) as usize;
+                            
                             if mb_row > 0 {
-                                {
-                                    let y_slice = dst_fb.y_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(y_slice, y_active_start, y_stride, blimit_m_slice, limit_slice, thresh_slice, 2);
+                                let (row_above, row_current) = dst_fb.get_disjoint_row_views_mut(mb_row as usize - 1, mb_row as usize);
+                                
+                                if mb_col > 0 {
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(row_current.0, col_offset_y, y_stride, blimit_m_slice, limit_slice, thresh_slice, 2);
+                                    if has_u {
+                                        crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(row_current.1, col_offset_uv, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
+                                    }
+                                    if has_v {
+                                        crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(row_current.2, col_offset_uv, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
+                                    }
                                 }
-                                if !dst_fb.u_buffer.is_null() {
-                                    let u_slice = dst_fb.u_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(u_slice, uv_active_start, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
+                                if skip_lf == 0 {
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.0, col_offset_y + 4, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.0, col_offset_y + 8, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.0, col_offset_y + 12, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    if has_u {
+                                        crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.1, col_offset_uv + 4, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                                    }
+                                    if has_v {
+                                        crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.2, col_offset_uv + 4, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                                    }
                                 }
-                                if !dst_fb.v_buffer.is_null() {
-                                    let v_slice = dst_fb.v_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(v_slice, uv_active_start, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
+                                
+                                crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_split_safe(
+                                    row_above.0, row_current.0, col_offset_y, y_stride, blimit_m_slice, limit_slice, thresh_slice, 2
+                                );
+                                if has_u {
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_split_safe(
+                                        row_above.1, row_current.1, col_offset_uv, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1
+                                    );
                                 }
-                            }
-                            if skip_lf == 0 {
-                                {
-                                    let y_slice = dst_fb.y_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(y_slice, y_active_start + 4 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(y_slice, y_active_start + 8 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(y_slice, y_active_start + 12 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                if has_v {
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_split_safe(
+                                        row_above.2, row_current.2, col_offset_uv, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1
+                                    );
                                 }
-                                if !dst_fb.u_buffer.is_null() {
-                                    let u_slice = dst_fb.u_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(u_slice, uv_active_start + 4 * uv_stride, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                                
+                                if skip_lf == 0 {
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.0, col_offset_y + 4 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.0, col_offset_y + 8 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.0, col_offset_y + 12 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    if has_u {
+                                        crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.1, col_offset_uv + 4 * uv_stride, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                                    }
+                                    if has_v {
+                                        crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.2, col_offset_uv + 4 * uv_stride, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                                    }
                                 }
-                                if !dst_fb.v_buffer.is_null() {
-                                    let v_slice = dst_fb.v_slice_mut_safe();
-                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(v_slice, uv_active_start + 4 * uv_stride, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                            } else {
+                                let mut row_current = dst_fb.get_row_view_mut(0);
+                                
+                                if mb_col > 0 {
+                                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(row_current.0, col_offset_y, y_stride, blimit_m_slice, limit_slice, thresh_slice, 2);
+                                    if has_u {
+                                        crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(row_current.1, col_offset_uv, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
+                                    }
+                                    if has_v {
+                                        crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(row_current.2, col_offset_uv, uv_stride, blimit_m_slice, limit_slice, thresh_slice, 1);
+                                    }
+                                }
+                                if skip_lf == 0 {
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.0, col_offset_y + 4, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.0, col_offset_y + 8, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.0, col_offset_y + 12, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    if has_u {
+                                        crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.1, col_offset_uv + 4, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                                    }
+                                    if has_v {
+                                        crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(row_current.2, col_offset_uv + 4, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                                    }
+                                }
+                                
+                                if skip_lf == 0 {
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.0, col_offset_y + 4 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.0, col_offset_y + 8 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.0, col_offset_y + 12 * y_stride, y_stride, blimit_b_slice, limit_slice, thresh_slice, 2);
+                                    if has_u {
+                                        crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.1, col_offset_uv + 4 * uv_stride, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                                    }
+                                    if has_v {
+                                        crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(row_current.2, col_offset_uv + 4 * uv_stride, uv_stride, blimit_b_slice, limit_slice, thresh_slice, 1);
+                                    }
                                 }
                             }
                         }
@@ -965,31 +990,50 @@ fn mt_decode_mb_rows(
                         }
                         #[cfg(not(target_arch = "aarch64"))]
                         {
-                            let y_border = xd.dst_border as usize;
                             let y_stride = xd.dst_y_stride as usize;
-                            let y_active_start = y_border * y_stride + y_border;
-                            
                             let dst_fb = &mut pc.yv12_fb[xd.dst_fb_idx];
                             
-                            if mb_col > 0 {
-                                let blimit_val = lfi_n.mblim[filter_level as usize][0];
-                                let y_slice = dst_fb.y_slice_mut_safe();
-                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_vertical_edge_safe(y_slice, y_active_start, y_stride, blimit_val);
-                            }
-                            if skip_lf == 0 {
-                                let blimit_val = lfi_n.blim[filter_level as usize][0];
-                                let y_slice = dst_fb.y_slice_mut_safe();
-                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_bvs_safe(y_slice, y_active_start, y_stride, blimit_val);
-                            }
+                            let col_offset_y = (mb_col * 16) as usize;
+                            
                             if mb_row > 0 {
-                                let blimit_val = lfi_n.mblim[filter_level as usize][0];
-                                let y_slice = dst_fb.y_slice_mut_safe();
-                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_horizontal_edge_safe(y_slice, y_active_start, y_stride, blimit_val);
-                            }
-                            if skip_lf == 0 {
-                                let blimit_val = lfi_n.blim[filter_level as usize][0];
-                                let y_slice = dst_fb.y_slice_mut_safe();
-                                crate::vp8::common::loopfilter_filters::vp8_loop_filter_bhs_safe(y_slice, y_active_start, y_stride, blimit_val);
+                                let (row_above, row_current) = dst_fb.get_disjoint_row_views_mut(mb_row as usize - 1, mb_row as usize);
+                                
+                                if mb_col > 0 {
+                                    let blimit_val = lfi_n.mblim[filter_level as usize][0];
+                                    crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_vertical_edge_safe(row_current.0, col_offset_y, y_stride, blimit_val);
+                                }
+                                if skip_lf == 0 {
+                                    let blimit_val = lfi_n.blim[filter_level as usize][0];
+                                    crate::vp8::common::loopfilter_filters::vp8_loop_filter_bvs_safe(row_current.0, col_offset_y, y_stride, blimit_val);
+                                }
+                                
+                                {
+                                    let blimit_val = lfi_n.mblim[filter_level as usize][0];
+                                    crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_horizontal_edge_split_safe(
+                                        row_above.0, row_current.0, col_offset_y, y_stride, blimit_val
+                                    );
+                                }
+                                
+                                if skip_lf == 0 {
+                                    let blimit_val = lfi_n.blim[filter_level as usize][0];
+                                    crate::vp8::common::loopfilter_filters::vp8_loop_filter_bhs_safe(row_current.0, col_offset_y, y_stride, blimit_val);
+                                }
+                            } else {
+                                let mut row_current = dst_fb.get_row_view_mut(0);
+                                
+                                if mb_col > 0 {
+                                    let blimit_val = lfi_n.mblim[filter_level as usize][0];
+                                    crate::vp8::common::loopfilter_filters::vp8_loop_filter_simple_vertical_edge_safe(row_current.0, col_offset_y, y_stride, blimit_val);
+                                }
+                                if skip_lf == 0 {
+                                    let blimit_val = lfi_n.blim[filter_level as usize][0];
+                                    crate::vp8::common::loopfilter_filters::vp8_loop_filter_bvs_safe(row_current.0, col_offset_y, y_stride, blimit_val);
+                                }
+                                
+                                if skip_lf == 0 {
+                                    let blimit_val = lfi_n.blim[filter_level as usize][0];
+                                    crate::vp8::common::loopfilter_filters::vp8_loop_filter_bhs_safe(row_current.0, col_offset_y, y_stride, blimit_val);
+                                }
                             }
                         }
                     }

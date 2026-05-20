@@ -275,19 +275,53 @@ impl yv12_buffer_config {
         (y_active, u_active, v_active)
     }
 
-    pub fn split_rows_mut(&mut self) -> Vec<(&mut [u8], &mut [u8], &mut [u8])> {
+    pub fn get_row_view_mut(&mut self, row: usize) -> (&mut [u8], &mut [u8], &mut [u8]) {
         let y_stride = self.y_stride as usize;
         let uv_stride = self.uv_stride as usize;
         
         let (y_active, u_active, v_active) = self.views_mut();
         
-        let y_chunks = y_active.chunks_mut(16 * y_stride);
-        let u_chunks = u_active.chunks_mut(8 * uv_stride);
-        let v_chunks = v_active.chunks_mut(8 * uv_stride);
+        let y_start = row * 16 * y_stride;
+        let u_start = row * 8 * uv_stride;
         
-        y_chunks.zip(u_chunks).zip(v_chunks)
-            .map(|((y, u), v)| (y, u, v))
-            .collect()
+        let y_row = &mut y_active[y_start .. y_start + 16 * y_stride];
+        let u_row = &mut u_active[u_start .. u_start + 8 * uv_stride];
+        let v_row = &mut v_active[u_start .. u_start + 8 * uv_stride];
+        
+        (y_row, u_row, v_row)
+    }
+
+    pub fn get_disjoint_row_views_mut(&mut self, row1: usize, row2: usize) -> (
+        (&mut [u8], &mut [u8], &mut [u8]),
+        (&mut [u8], &mut [u8], &mut [u8])
+    ) {
+        assert!(row1 < row2);
+        let y_stride = self.y_stride as usize;
+        let uv_stride = self.uv_stride as usize;
+        
+        let (y_active, u_active, v_active) = self.views_mut();
+        
+        let y_len = 16 * y_stride;
+        let y_start1 = row1 * 16 * y_stride;
+        let y_start2 = row2 * 16 * y_stride;
+        let (y_above_part, y_current_part) = y_active.split_at_mut(y_start2);
+        let y_row1 = &mut y_above_part[y_start1 .. y_start1 + y_len];
+        let y_row2 = &mut y_current_part[0 .. y_len];
+        
+        let uv_len = 8 * uv_stride;
+        let u_start1 = row1 * 8 * uv_stride;
+        let u_start2 = row2 * 8 * uv_stride;
+        let (u_above_part, u_current_part) = u_active.split_at_mut(u_start2);
+        let u_row1 = &mut u_above_part[u_start1 .. u_start1 + uv_len];
+        let u_row2 = &mut u_current_part[0 .. uv_len];
+        
+        let v_start1 = row1 * 8 * uv_stride;
+        let v_start2 = row2 * 8 * uv_stride;
+        let (v_above_part, v_current_part) = v_active.split_at_mut(v_start2);
+        let v_row1 = &mut v_above_part[v_start1 .. v_start1 + uv_len];
+        let v_row2 = &mut v_current_part[0 .. uv_len];
+        
+        ((y_row1, u_row1, v_row1), (y_row2, u_row2, v_row2))
     }
 
     pub fn views_mut_with_borders(&mut self) -> (&mut [u8], &mut [u8], &mut [u8]) {

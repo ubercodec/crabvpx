@@ -336,6 +336,82 @@ pub(crate) fn mbloop_filter_horizontal_edge_safe(
         s[idx + 2 * p] = oq2_val;
     }
 }
+
+pub(crate) fn mbloop_filter_horizontal_edge_split_safe(
+    row_above: &mut [u8],
+    row_current: &mut [u8],
+    col_offset: usize,
+    stride: usize,
+    blimit: &[u8],
+    limit: &[u8],
+    thresh: &[u8],
+    count: usize,
+) {
+    let mut hev: uc = 0;
+    let mut mask: i8 = 0;
+    let count_8 = count * 8;
+    let row_height = count_8; // row height is count * 8
+    
+    for i in 0..count_8 {
+        let c = col_offset + i;
+        
+        let p1_idx = c + (row_height - 1) * stride;
+        let p2_idx = c + (row_height - 2) * stride;
+        let p3_idx = c + (row_height - 3) * stride;
+        let p4_idx = c + (row_height - 4) * stride;
+        
+        let q0_idx = c + 0 * stride;
+        let q1_idx = c + 1 * stride;
+        let q2_idx = c + 2 * stride;
+        let q3_idx = c + 3 * stride;
+        
+        mask = vp8_filter_mask(
+            limit[0],
+            blimit[0],
+            row_above[p4_idx],
+            row_above[p3_idx],
+            row_above[p2_idx],
+            row_above[p1_idx],
+            row_current[q0_idx],
+            row_current[q1_idx],
+            row_current[q2_idx],
+            row_current[q3_idx],
+        );
+        hev = vp8_hevmask(
+            thresh[0],
+            row_above[p2_idx],
+            row_above[p1_idx],
+            row_current[q0_idx],
+            row_current[q1_idx],
+        ) as uc;
+
+        let mut op2_val = row_above[p3_idx];
+        let mut op1_val = row_above[p2_idx];
+        let mut op0_val = row_above[p1_idx];
+        let mut oq0_val = row_current[q0_idx];
+        let mut oq1_val = row_current[q1_idx];
+        let mut oq2_val = row_current[q2_idx];
+
+        vp8_mbfilter(
+            mask,
+            hev,
+            &mut op2_val,
+            &mut op1_val,
+            &mut op0_val,
+            &mut oq0_val,
+            &mut oq1_val,
+            &mut oq2_val,
+        );
+
+        row_above[p3_idx] = op2_val;
+        row_above[p2_idx] = op1_val;
+        row_above[p1_idx] = op0_val;
+        row_current[q0_idx] = oq0_val;
+        row_current[q1_idx] = oq1_val;
+        row_current[q2_idx] = oq2_val;
+    }
+}
+
 pub(crate) fn mbloop_filter_vertical_edge_safe(
     s: &mut [u8],
     s_offset: usize,
@@ -469,6 +545,47 @@ pub(crate) fn vp8_loop_filter_simple_horizontal_edge_safe(
 
         y[idx - y_stride] = p0_val;
         y[idx] = q0_val;
+    }
+}
+
+pub(crate) fn vp8_loop_filter_simple_horizontal_edge_split_safe(
+    row_above: &mut [u8],
+    row_current: &mut [u8],
+    col_offset: usize,
+    stride: usize,
+    blimit: u8,
+) {
+    let mut mask: i8;
+    for i in 0..16 {
+        let c = col_offset + i;
+        let p1_idx = c + 14 * stride;
+        let p0_idx = c + 15 * stride;
+        let q0_idx = c + 0 * stride;
+        let q1_idx = c + 1 * stride;
+        
+        let p1_val = row_above[p1_idx];
+        let mut p0_val = row_above[p0_idx];
+        let mut q0_val = row_current[q0_idx];
+        let q1_val = row_current[q1_idx];
+
+        mask = vp8_simple_filter_mask(
+            blimit,
+            p1_val,
+            p0_val,
+            q0_val,
+            q1_val,
+        );
+
+        vp8_simple_filter_safe(
+            mask,
+            p1_val,
+            &mut p0_val,
+            &mut q0_val,
+            q1_val,
+        );
+
+        row_above[p0_idx] = p0_val;
+        row_current[q0_idx] = q0_val;
     }
 }
 
