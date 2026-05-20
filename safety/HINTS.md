@@ -2,6 +2,11 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Dead FFI/Unused Code Elimination in Tree Coder (treecoder.rs)**:
+  - Completely eliminated unused transpiled FFI functions `vp8_tokens_from_tree`, `vp8_tokens_from_tree_offset`, and `vp8_tree_probs_from_distribution` along with their local safe helpers `detect_tree_slice`, `tree2tok_safe`, and `branch_counts_safe` from `src/vp8/common/treecoder.rs`.
+  - Since CrabVPX is strictly a VP8 decoder, these encoder-only routines were completely dead code and not referenced anywhere in the codebase or test harness.
+  - This successfully eliminated **9 unsafe blocks/keywords** globally, reducing the remaining unsafe count from 389 to 380.
+  - Verified 100% bit-identical correctness across all 1160 test frames.
 * **Dead FFI Wrappers Cleanup in Boolean Decoder (dboolhuff.rs)**:
   - Completely eliminated the unused FFI wrappers `vp8dx_start_decode` and `vp8dx_bool_decoder_fill` from `src/vp8/decoder/dboolhuff.rs`.
   - These wrappers were legacy C-ABI entry points that were no longer used by the internal Rust decoder (which uses `vp8dx_start_decode_safe` and `SafeBoolDecoder` directly).
