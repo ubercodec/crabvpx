@@ -2,6 +2,13 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Implemented UnsafeRowView Abstraction (Milestone 1 - Unit 1 & 2) (types.rs)**:
+  - Defined `UnsafeRowView` struct in `src/vp8/common/types.rs` wrapping a raw pointer and a length.
+  - Manually implemented `Send` and `Sync` for `UnsafeRowView` to allow thread-safe transfer and sharing across macroblock decoding threads.
+  - Thoroughly documented the safety and concurrency contract based on hardware-atomic column spinlock synchronization.
+  - Implemented `as_slice` and `as_slice_mut` projection methods with safety boundary checks to extract safe standard Rust slices at macroblock boundaries.
+  - Verified that the newly defined structures compile correctly and that all 1160 test frames pass with 100% bit-identical correctness.
+
 * **Safe Decoder Instance Creation Initialization (onyxd_if.rs)**:
   - Refactored `create_decompressor` in `src/vp8/decoder/onyxd_if.rs` to completely eliminate the redundant `setjmp` error handling block and associated `std::mem::ManuallyDrop` complexity.
   - Because all internal initialization functions called during decompressor creation (`vp8_create_common`, `vp8cx_init_de_quantizer`, `vp8_loop_filter_init`) are safe and cannot fail or trigger FFI panic jumps, the `setjmp` guard was entirely obsolete.

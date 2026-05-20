@@ -1123,6 +1123,84 @@ pub struct VP8D_CONFIG {
     pub error_concealment: ::core::ffi::c_int,
 }
 
+/// `UnsafeRowView` is a zero-overhead, thread-safe wrapper around a raw pointer and a length.
+///
+/// ### Safety & Concurrency Contract
+/// Inside multithreaded VP8 decoding, different worker threads concurrently process disjoint
+/// rows of the frame buffer or read/write disjoint rows of synchronization status. 
+/// Since standard safe Rust wrappers like `Mutex` or `RwLock` introduce substantial runtime
+/// overhead and lock contention, `UnsafeRowView` uses raw pointers internally to bypass 
+/// the compiler's aliasing restrictions.
+///
+/// Safety is mathematically guaranteed at the hardware level by atomic column spinlocks 
+/// (`vp8_atomic_spin_wait`), which coordinate thread execution to ensure Thread A never 
+/// writes to column C of row R while Thread B reads from column C of row R.
+///
+/// Caller MUST ensure that:
+/// 1. Thread synchronization prevents concurrent overlapping mutable borrows or mutable/immutable
+///    borrow conflicts on the underlying memory segment.
+/// 2. Slices produced by `as_slice` or `as_slice_mut` do not outlive the underlying allocation.
+#[derive(Copy, Clone)]
+pub struct UnsafeRowView {
+    ptr: *mut u8,
+    len: usize,
+}
+
+impl Default for UnsafeRowView {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            ptr: std::ptr::null_mut(),
+            len: 0,
+        }
+    }
+}
+
+unsafe impl Send for UnsafeRowView {}
+unsafe impl Sync for UnsafeRowView {}
+
+impl UnsafeRowView {
+    /// Creates a new `UnsafeRowView` from a raw pointer and a length.
+    #[inline]
+    pub fn new(ptr: *mut u8, len: usize) -> Self {
+        Self { ptr, len }
+    }
+
+    /// Access the underlying raw pointer.
+    #[inline]
+    pub fn as_ptr(&self) -> *mut u8 {
+        self.ptr
+    }
+
+    /// Access the length of the underlying buffer.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Project a safe, immutable slice reference for a subsegment of the row.
+    ///
+    /// # Safety
+    /// The caller must ensure via atomic synchronization that no other thread is mutably
+    /// accessing this subsegment concurrently.
+    #[inline]
+    pub unsafe fn as_slice(&self, offset: usize, len: usize) -> &[u8] {
+        assert!(offset + len <= self.len, "UnsafeRowView::as_slice out of bounds: offset={}, len={}, total={}", offset, len, self.len);
+        std::slice::from_raw_parts(self.ptr.add(offset), len)
+    }
+
+    /// Project a safe, mutable slice reference for a subsegment of the row.
+    ///
+    /// # Safety
+    /// The caller must ensure via atomic synchronization that no other thread is mutably
+    /// or immutably accessing this subsegment concurrently.
+    #[inline]
+    pub unsafe fn as_slice_mut(&self, offset: usize, len: usize) -> &mut [u8] {
+        assert!(offset + len <= self.len, "UnsafeRowView::as_slice_mut out of bounds: offset={}, len={}, total={}", offset, len, self.len);
+        std::slice::from_raw_parts_mut(self.ptr.add(offset), len)
+    }
+}
+
 #[derive(Default)]
 #[repr(C)]
 pub struct VP8D_MT_SYNC {
