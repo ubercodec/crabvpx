@@ -2,6 +2,12 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Dead FFI Wrappers Cleanup in Boolean Decoder (dboolhuff.rs)**:
+  - Completely eliminated the unused FFI wrappers `vp8dx_start_decode` and `vp8dx_bool_decoder_fill` from `src/vp8/decoder/dboolhuff.rs`.
+  - These wrappers were legacy C-ABI entry points that were no longer used by the internal Rust decoder (which uses `vp8dx_start_decode_safe` and `SafeBoolDecoder` directly).
+  - Updated `tests/bool_decoder_test.rs` to use `vp8dx_start_decode_safe` to maintain test coverage.
+  - This successfully eliminated **2 unsafe blocks** and **2 unsafe attributes** (4 `unsafe` keywords total) globally, reducing the remaining unsafe count from 393 to 389.
+  - Verified 100% bit-identical correctness across all 1160 test frames.
 * **Obsolete #[unsafe(no_mangle)] Removal in Entropy Mode (entropymode.rs)**:
   - Removed 26 obsolete `#[unsafe(no_mangle)]` attributes from all static tables, probability arrays, and trees in `src/vp8/common/entropymode.rs`.
   - Since CrabVPX is built as a Rust library (rlib) and all these tables are only accessed internally via standard Rust imports (e.g., in `decodemv.rs` and `treecoder.rs`), these FFI export attributes were completely obsolete.

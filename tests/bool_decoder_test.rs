@@ -4,7 +4,7 @@ use crabvpx::vp8::decoder::dboolhuff::*;
 fn test_bool_decoder_init() {
     let data = [0u8; 10];
     let mut br = BOOL_DECODER::default();
-    vp8dx_start_decode(&mut br, data.as_ptr(), data.len() as u32, None, core::ptr::null_mut());
+    vp8dx_start_decode_safe(&mut br, &data, None, core::ptr::null_mut());
     assert_eq!(br.range, 255);
     assert_eq!(br.count, 56);
 }

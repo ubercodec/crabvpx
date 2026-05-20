@@ -23,42 +23,6 @@ pub fn vp8dx_start_decode_safe(
     safe_decoder.update_bool_decoder(br);
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn vp8dx_start_decode(
-    mut br: *mut BOOL_DECODER,
-    mut source: *const ::core::ffi::c_uchar,
-    mut source_sz: ::core::ffi::c_uint,
-    mut decrypt_cb: vpx_decrypt_cb,
-    mut decrypt_state: *mut ::core::ffi::c_void,
-) -> ::core::ffi::c_int {
-    if br.is_null() {
-        return 1;
-    }
-    if source_sz != 0 && source.is_null() {
-        return 1;
-    }
-    unsafe {
-        let slice = if source.is_null() {
-            &[]
-        } else {
-            core::slice::from_raw_parts(source, source_sz as usize)
-        };
-        vp8dx_start_decode_safe(&mut *br, slice, decrypt_cb, decrypt_state);
-    }
-    0
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn vp8dx_bool_decoder_fill(mut br: *mut BOOL_DECODER) {
-    if br.is_null() {
-        return;
-    }
-    // SAFETY: br is not null.
-    let br_ref = unsafe { &mut *br };
-    let mut safe_decoder = SafeBoolDecoder::from_bool_decoder(br_ref);
-    safe_decoder.fill();
-    safe_decoder.update_bool_decoder(br_ref);
-}
 
 pub struct SafeBoolDecoder<'a> {
     pub buffer: &'a [u8],
