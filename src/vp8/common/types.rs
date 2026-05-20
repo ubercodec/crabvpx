@@ -275,6 +275,21 @@ impl yv12_buffer_config {
         (y_active, u_active, v_active)
     }
 
+    pub fn split_rows_mut(&mut self) -> Vec<(&mut [u8], &mut [u8], &mut [u8])> {
+        let y_stride = self.y_stride as usize;
+        let uv_stride = self.uv_stride as usize;
+        
+        let (y_active, u_active, v_active) = self.views_mut();
+        
+        let y_chunks = y_active.chunks_mut(16 * y_stride);
+        let u_chunks = u_active.chunks_mut(8 * uv_stride);
+        let v_chunks = v_active.chunks_mut(8 * uv_stride);
+        
+        y_chunks.zip(u_chunks).zip(v_chunks)
+            .map(|((y, u), v)| (y, u, v))
+            .collect()
+    }
+
     pub fn views_mut_with_borders(&mut self) -> (&mut [u8], &mut [u8], &mut [u8]) {
         let border = self.border as usize;
         let y_stride = self.y_stride as usize;

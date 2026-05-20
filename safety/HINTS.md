@@ -71,6 +71,11 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
   - Refactored inter-prediction orchestrator functions in `reconinter.rs` (`vp8_build_inter_predictors_mb`, `vp8_build_inter16x16_predictors_mb`, and `build_inter4x4_predictors_mb`) to accept separate Y, U, V plane slices for both destination and reference planes explicitly, rather than passing whole `YV12_BUFFER_CONFIG` structs.
   - Updated call sites in both single-threaded (`decodeframe.rs`) and multithreaded (`threading.rs`) row/macroblock decoding pipelines to extract disjoint plane slices at the orchestrator level using the new border-inclusive views and pass them to the prediction engine.
   - All 1160 differential test frames pass perfectly with bit-identical matching, and remaining unsafe count remains stable at 443.
+* **Milestone 3 - Unit 6 Complete (Safe Frame Buffer Row Chunking)**:
+  - Implemented `split_rows_mut` on `YV12_BUFFER_CONFIG` in `src/vp8/common/types.rs`.
+  - This method uses safe `chunks_mut` to split the active Y, U, and V planes into disjoint mutable slices for each macroblock row.
+  - This provides the foundational data structure for disjoint parallel loop filtering (Unit 7).
+  - Compilation and all 1160 differential test frames pass perfectly! Remaining unsafe count: 443.
 
 
 ## Architectural Quirks to Watch Out For
@@ -78,8 +83,9 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
 * **Hardcoded NEON Calls**: The transpiled Rust code explicitly calls `_neon` function names (e.g., `vp8_bilinear_predict16x16_neon` in `decodeframe.rs`), because it was transpiled from C code where NEON macros were active. This causes link errors on x86_64 when building the integration harness. (Forwarded via `simd_shim.rs`).
 * **Duplicated Structs (Resolved)**: Struct definitions like `YV12_BUFFER_CONFIG` and `VP8Common` were previously duplicated by `c2rust` across dozens of files. They have now been centralized into `src/vp8/common/types.rs` (Phase 3 complete). Agents can externalize to Phase 4 (Safe API Refactoring).
 
+
 ## Next Steps for Future Agents
 1. **Milestone 3: Refactor Loop Filtering Slicing (Disjoint Borrows)**:
-   - Unit 6: Implement a `split_rows_mut` or safe chunking method on `YV12_BUFFER_CONFIG` that yields disjoint mutable slices for individual macroblock rows.
-   - Unit 7: Refactor multithreaded loop filtering in `threading.rs` to assign each thread a strictly disjoint mutable slice of the frame, proving to the borrow checker that parallel loop filtering is 100% race-free.
+   - [x] Unit 6: Implement a `split_rows_mut` or safe chunking method on `YV12_BUFFER_CONFIG` that yields disjoint mutable slices for individual macroblock rows. (Completed!)
+   - [ ] Unit 7: Refactor multithreaded loop filtering in `threading.rs` to assign each thread a strictly disjoint mutable slice of the frame, proving to the borrow checker that parallel loop filtering is 100% race-free.
 
