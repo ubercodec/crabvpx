@@ -1,5 +1,4 @@
-use crate::vp8::vp8_dx_iface::vpx_image_t;
-use crate::vp8::vp8_dx_iface::Vp8DecoderInstance;
+use crate::vp8::vp8_dx_iface::{Vp8DecoderInstance, YV12_BUFFER_CONFIG};
 
 /// A safe wrapper around the decoded image planes.
 pub struct Image<'a> {
@@ -131,47 +130,25 @@ impl Decoder for Vp8Decoder {
             .instance
             .as_mut()
             .ok_or_else(|| "Decoder not initialized".to_string())?;
-        if let Some(img) = inst.get_frame() {
-            unsafe {
-                let get_plane = |idx: usize, chroma_shift: u32| -> Option<&'a [u8]> {
-                    let ptr = img.planes[idx];
-                    if ptr.is_null() {
-                        return None;
-                    }
-                    let stride = img.stride[idx];
-                    if stride <= 0 {
-                        return None;
-                    }
-                    let height = if idx > 0 && idx < 3 {
-                        (img.d_h + (1 << chroma_shift) - 1) >> chroma_shift
-                    } else {
-                        img.d_h
-                    };
-                    let len = (height as usize) * (stride as usize);
-                    Some(core::slice::from_raw_parts(ptr as *const u8, len))
-                };
+        if let Some((cfg, width, height)) = inst.get_frame() {
+            let (y_plane, u_plane, v_plane) = cfg.views();
+            let alpha_plane = None;
 
-                let y_plane = get_plane(0, img.y_chroma_shift).unwrap_or(&[]);
-                let u_plane = get_plane(1, img.y_chroma_shift).unwrap_or(&[]);
-                let v_plane = get_plane(2, img.y_chroma_shift).unwrap_or(&[]);
-                let alpha_plane = get_plane(3, img.y_chroma_shift);
-
-                Ok(Some(Image {
-                    d_w: img.d_w,
-                    d_h: img.d_h,
-                    y_plane,
-                    u_plane,
-                    v_plane,
-                    alpha_plane,
-                    bit_depth: img.bit_depth,
-                    strides: [
-                        img.stride[0] as usize,
-                        img.stride[1] as usize,
-                        img.stride[2] as usize,
-                        img.stride[3] as usize,
-                    ],
-                }))
-            }
+            Ok(Some(Image {
+                d_w: width as u32,
+                d_h: height as u32,
+                y_plane,
+                u_plane,
+                v_plane,
+                alpha_plane,
+                bit_depth: if cfg.bit_depth == 0 { 8 } else { cfg.bit_depth },
+                strides: [
+                    cfg.y_stride as usize,
+                    cfg.uv_stride as usize,
+                    cfg.uv_stride as usize,
+                    cfg.alpha_stride as usize,
+                ],
+            }))
         } else {
             Ok(None)
         }

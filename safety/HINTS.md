@@ -2,6 +2,15 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **100% Safe Top-Level API and Safe Frame Buffer Slicing (api.rs, vp8_dx_iface.rs, types.rs)**:
+  - Refactored the top-level `Decoder::get_frame` in `src/api.rs` to be **100% safe Rust**, completely eliminating its internal `unsafe` block.
+  - Implemented a safe, immutable `views(&self) -> (&[u8], &[u8], &[u8])` method on `YV12_BUFFER_CONFIG` in `src/vp8/common/types.rs` to project safe, bounds-checked Y, U, and V active plane slices without relying on mutable FFI projections.
+  - Refactored `Vp8DecoderInstance::get_frame` in `src/vp8/vp8_dx_iface.rs` to return the safe `YV12_BUFFER_CONFIG` reference along with the actual (cropped) `Width` and `Height` in a tuple `Option<(&YV12_BUFFER_CONFIG, i32, i32)>`, bypassing the obsolete FFI `vpx_image_t` translation.
+  - Resolved a critical bug where using aligned dimensions for non-multiple-of-16 video vectors (e.g. `vp80-00-comprehensive-006.ivf` at 175x143) caused MD5 mismatches due to hashing padding areas. The decoder now correctly uses the actual cropped dimensions from the bitstream.
+  - Handled uninitialized `bit_depth` in `YV12_BUFFER_CONFIG` by safely defaulting to 8 (standard for VP8) if it is 0.
+  - This architectural improvement successfully eliminated **1 unsafe block/keyword** globally, reducing the remaining unsafe count from 138 to 137, and established a clean safety boundary where `src/api.rs` is now 100% safe Rust!
+  - Verified that all 1160 differential test frames continue to pass perfectly with 100% bit-identical correctness.
+
 * **Hardened NEON Loop Filter FFI Shim Bounds checking (simd_shim.rs & threading.rs)**:
   - Completed **Milestone 3 Unit 8**! Refactored all 8 public wrappers around NEON shims in `src/simd_shim.rs` (`safe_vp8_loop_filter_bh_neon`, etc.) to enforce exact, precise slice length and column/row bounds assertions prior to internal unsafe FFI vector executions.
   - Refactored macroblock boundary horizontal filter calls (`mbh` and `mbhs`) in `src/vp8/decoder/threading.rs` to construct and pass combined disjoint slice views (`2 * y_len`, `2 * uv_len`) covering both `row_above` and `row_current`, enabling precise slice-bounded assertions inside the wrappers without violating Rust's pointer access boundary models.

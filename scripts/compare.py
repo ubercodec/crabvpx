@@ -86,6 +86,18 @@ def perform_differential_test(harness_dir: Path, harness_args: List[str]):
     
     if len(oracle_frames) != len(rust_frames):
         print(f"❌ Error: Frame count mismatch! Oracle: {len(oracle_frames)}, Rust: {len(rust_frames)}")
+        oracle_counts = {}
+        for f in oracle_frames:
+            oracle_counts[f['file']] = oracle_counts.get(f['file'], 0) + 1
+        rust_counts = {}
+        for f in rust_frames:
+            rust_counts[f['file']] = rust_counts.get(f['file'], 0) + 1
+        
+        for k in sorted(set(oracle_counts.keys()) | set(rust_counts.keys())):
+            oc = oracle_counts.get(k, 0)
+            rc = rust_counts.get(k, 0)
+            if oc != rc:
+                print(f"  File {k}: Oracle={oc}, Rust={rc}")
         sys.exit(1)
         
     mismatches = 0

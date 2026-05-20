@@ -1604,14 +1604,26 @@ impl Vp8DecoderInstance {
         }
     }
 
-    pub fn get_frame(&mut self) -> Option<&vpx_image_t> {
+    pub fn get_frame(&mut self) -> Option<(&YV12_BUFFER_CONFIG, i32, i32)> {
         unsafe {
-            let mut iter: vpx_codec_iter_t = ::core::ptr::null();
-            let img = vp8_get_frame(self.priv_0, &raw mut iter);
-            if img.is_null() {
-                None
+            if self.priv_0.is_null() {
+                return None;
+            }
+            let pbi = (*self.priv_0).yv12_frame_buffers.pbi[0];
+            if pbi.is_null() {
+                return None;
+            }
+            if (*pbi).ready_for_new_data == 1 {
+                return None;
+            }
+            if (*pbi).common.show_frame == 0 {
+                return None;
+            }
+            (*pbi).ready_for_new_data = 1;
+            if let Some(idx) = (*pbi).common.frame_to_show_idx {
+                Some((&(*pbi).common.yv12_fb[idx], (*pbi).common.Width, (*pbi).common.Height))
             } else {
-                Some(&*img)
+                None
             }
         }
     }

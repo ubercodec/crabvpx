@@ -237,6 +237,39 @@ impl yv12_buffer_config {
         }
     }
 
+    pub fn views(&self) -> (&[u8], &[u8], &[u8]) {
+        let border = self.border as usize;
+        let y_stride = self.y_stride as usize;
+        let y_height = self.y_height as usize;
+        let uv_stride = self.uv_stride as usize;
+        let uv_height = self.uv_height as usize;
+        
+        let yplane_size = (y_height + 2 * border) * y_stride;
+        let uvplane_size = (uv_height + border) * uv_stride;
+        
+        let y_offset = (self.y_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let u_offset = (self.u_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        let v_offset = (self.v_buffer as usize).saturating_sub(self.buffer_alloc as usize);
+        
+        let full = self.full_buffer_safe();
+        
+        let (y_plane, rest) = full.split_at(yplane_size);
+        let (u_plane, v_plane) = rest.split_at(uvplane_size);
+        
+        let y_len = Self::safe_len(y_offset, y_height * y_stride, y_plane.len());
+        let y_active = &y_plane[y_offset .. y_offset + y_len];
+        
+        let u_start = u_offset.saturating_sub(yplane_size);
+        let u_len = Self::safe_len(u_start, uv_height * uv_stride, u_plane.len());
+        let u_active = &u_plane[u_start .. u_start + u_len];
+        
+        let v_start = v_offset.saturating_sub(yplane_size + uvplane_size);
+        let v_len = Self::safe_len(v_start, uv_height * uv_stride, v_plane.len());
+        let v_active = &v_plane[v_start .. v_start + v_len];
+        
+        (y_active, u_active, v_active)
+    }
+
     pub fn views_mut(&mut self) -> (&mut [u8], &mut [u8], &mut [u8]) {
         let border = self.border as usize;
         let y_stride = self.y_stride as usize;
