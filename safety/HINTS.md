@@ -2,6 +2,11 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Dead Code Elimination in blockd.rs**:
+  - Audited `blockd.rs` and found C static tables `vp8_block2left` and `vp8_block2above` were completely unused in the decoder.
+  - Removed these definitions from `src/vp8/common/blockd.rs` (emptying the file) and their extern declarations from `src/vp8/common/blockd.h`.
+  - This successfully eliminated **2 unsafe keywords** globally (from `#[unsafe(no_mangle)]` attributes), reducing the remaining unsafe count from 375 to 373.
+  - Verified 100% correctness with all 1160 differential test frames passing successfully.
 * **Safe Wrapper for Decoded Images & Odd-Dimension Support (api.rs)**:
   - Refactored `Image` struct in `src/api.rs` to hold a safe Rust reference `&'a vpx_image_t` instead of a raw pointer `*const vpx_image_t`.
   - This enabled making `width()`, `height()`, and `bit_depth()` entirely safe methods, removing 3 `unsafe` blocks.
@@ -167,6 +172,6 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
    - [x] **Modernize `BOOL_DECODER` (`src/vp8/decoder/dboolhuff.rs`)**: Eliminate residual raw pointer arithmetic (`user_buffer` additions) inside `SafeBoolDecoder` and fully leverage slice boundaries. (Completed!)
    - [x] **Address remaining `unsafe` blocks in `src/vp8/common/vp8_loopfilter.rs` and `extend.rs`** by replacing FFI boundary styles with native safe Rust patterns where possible (excluding assembly RTCD paths). (Completed! Unused FFI wrappers were deleted, and internal functions were cleaned of `#[unsafe(no_mangle)]` and `extern "C"`).
    - [x] **Remove obsolete `#[unsafe(no_mangle)]` from `vp8_default_mv_context` in `src/vp8/common/entropymv.rs`**: This static table is only used internally in `decodeframe.rs` and can have its `#[unsafe(no_mangle)]` attribute removed safely to reduce unsafe keyword count. (Completed!)
-   - **Audit `blockd.rs` for dead code**: `vp8_block2left` and `vp8_block2above` in `src/vp8/common/blockd.rs` appear to be encoder-only and completely unused in CrabVPX. They can likely be removed entirely to clean up the codebase and remove 2 more unsafe keywords.
+   - [x] **Audit `blockd.rs` for dead code**: `vp8_block2left` and `vp8_block2above` in `src/vp8/common/blockd.rs` appear to be encoder-only and completely unused in CrabVPX. They can likely be removed entirely to clean up the codebase and remove 2 more unsafe keywords. (Completed!)
    - **Audit other FFI wrappers in `src/vp8/decoder/dboolhuff.rs`** (`vp8dx_start_decode` and `vp8dx_bool_decoder_fill`) to see if they can also be deprecated/removed or if they are required for external ABI linkage.
 

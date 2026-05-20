@@ -55,8 +55,7 @@ typedef struct {
   ENTROPY_CONTEXT y2;
 } ENTROPY_CONTEXT_PLANES;
 
-extern const unsigned char vp8_block2left[25];
-extern const unsigned char vp8_block2above[25];
+
 
 #define VP8_COMBINEENTROPYCONTEXTS(Dest, A, B) Dest = (A) + (B)
 
