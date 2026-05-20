@@ -2,6 +2,10 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Row/Slice Pointer Projection in types.rs**:
+  - Refactored `get_safe_unsafe_slices` on `yv12_buffer_config` in `src/vp8/common/types.rs` to use safe Rust slice indexing (`full_buffer_safe()[start..].as_ptr()`) instead of unsafe pointer offset arithmetic (`self.buffer_alloc.add(start)`).
+  - This eliminated **3 unsafe blocks** globally, reducing the remaining unsafe count from 141 to 138!
+  - Verified that compilation and all 1160 differential test frames pass perfectly with 100% bit-identical correctness.
 * **Removed Obsolete setjmp FFI Error Handling in Thread Creation (onyxd_if.rs & threading.rs)**:
   - Refactored `vp8_decoder_create_threads` in `src/vp8/decoder/threading.rs` to return an idiomatic safe Rust `Result<(), &'static str>` instead of calling `.error.trigger` which would trigger a `longjmp` call.
   - Removed the `setjmp` FFI import declaration and the `unsafe { setjmp(...) }` block from `vp8_create_decoder_instances` in `src/vp8/decoder/onyxd_if.rs`, replacing it with clean safe Rust error checking using the returned `Result`.

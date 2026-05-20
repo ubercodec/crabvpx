@@ -592,21 +592,31 @@ impl yv12_buffer_config {
     /// of the Y, U, and V slice configurations (including borders).
     #[inline]
     pub fn get_safe_unsafe_slices(&self) -> (UnsafeRowView, UnsafeRowView, UnsafeRowView) {
+        if self.buffer_alloc.is_null() {
+            return (
+                UnsafeRowView::new(std::ptr::null_mut(), 0),
+                UnsafeRowView::new(std::ptr::null_mut(), 0),
+                UnsafeRowView::new(std::ptr::null_mut(), 0),
+            );
+        }
+        
+        let full_buffer = self.full_buffer_safe();
+        
         let border = self.border as usize;
         let stride = self.y_stride as usize;
         let offset = (self.y_buffer as usize).saturating_sub(self.buffer_alloc as usize);
         let start_y = offset.saturating_sub(border * stride + border);
-        let ptr_y = unsafe { self.buffer_alloc.add(start_y) };
+        let ptr_y = full_buffer[start_y..].as_ptr() as *mut u8;
         
         let border_uv = (self.border / 2) as usize;
         let stride_uv = self.uv_stride as usize;
         let offset_u = (self.u_buffer as usize).saturating_sub(self.buffer_alloc as usize);
         let start_u = offset_u.saturating_sub(border_uv * stride_uv + border_uv);
-        let ptr_u = unsafe { self.buffer_alloc.add(start_u) };
+        let ptr_u = full_buffer[start_u..].as_ptr() as *mut u8;
         
         let offset_v = (self.v_buffer as usize).saturating_sub(self.buffer_alloc as usize);
         let start_v = offset_v.saturating_sub(border_uv * stride_uv + border_uv);
-        let ptr_v = unsafe { self.buffer_alloc.add(start_v) };
+        let ptr_v = full_buffer[start_v..].as_ptr() as *mut u8;
         
         (
             UnsafeRowView::new(ptr_y, self.buffer_alloc_sz.saturating_sub(start_y)),
