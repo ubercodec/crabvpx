@@ -1,6 +1,6 @@
 pub use crate::vp8::common::types::vp8_prob;
 pub type vp8_tree_index = ::core::ffi::c_schar;
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 #[repr(C)]
 pub struct vp8_token_struct {
     pub value: ::core::ffi::c_int,
@@ -9,144 +9,188 @@ pub struct vp8_token_struct {
 pub type vp8_token = vp8_token_struct;
 pub type uint64_t = u64;
 pub const vp8_prob_half: vp8_prob = 128 as ::core::ffi::c_int as vp8_prob;
-unsafe extern "C" fn tree2tok(
-    p: *mut vp8_token_struct,
-    mut t: *const vp8_tree_index,
-    mut i: ::core::ffi::c_int,
-    mut v: ::core::ffi::c_int,
-    mut L: ::core::ffi::c_int,
-) { unsafe {
+
+// Safe recursive helper to traverse the tree and populate the token table.
+fn tree2tok_safe(
+    p: &mut [vp8_token],
+    t: &[vp8_tree_index],
+    mut i: i32,
+    mut v: i32,
+    mut L: i32,
+    offset: i32,
+) {
     v += v;
     L += 1;
     loop {
         let fresh0 = i;
         i = i + 1;
-        let j: vp8_tree_index = *t.offset(fresh0 as isize);
-        if j as ::core::ffi::c_int <= 0 as ::core::ffi::c_int {
-            (*p.offset(-(j as ::core::ffi::c_int) as isize)).value = v;
-            (*p.offset(-(j as ::core::ffi::c_int) as isize)).Len = L;
+        let j = t[fresh0 as usize] as i32;
+        if j <= 0 {
+            let idx = -j - offset;
+            p[idx as usize].value = v;
+            p[idx as usize].Len = L;
         } else {
-            tree2tok(p, t, j as ::core::ffi::c_int, v, L);
+            tree2tok_safe(p, t, j, v, L, offset);
         }
         v += 1;
-        if !(v & 1 as ::core::ffi::c_int != 0) {
+        if (v & 1) == 0 {
             break;
         }
     }
-}}
+}
+
+// Safe helper to pre-scan tree bounds.
+unsafe fn get_tree_bounds(
+    t: *const vp8_tree_index,
+    i: i32,
+    visited: &mut [bool; 256],
+) -> (i32, i32) {
+    if i < 0 || i >= 256 || visited[i as usize] {
+        return (0, 0);
+    }
+    visited[i as usize] = true;
+    visited[(i + 1) as usize] = true;
+    
+    let mut max_token = 0;
+    let mut max_tree = i + 1;
+    
+    let j1 = *t.offset(i as isize) as i32;
+    if j1 <= 0 {
+        max_token = std::cmp::max(max_token, -j1);
+    } else {
+        let (tok, tr) = get_tree_bounds(t, j1, visited);
+        max_token = std::cmp::max(max_token, tok);
+        max_tree = std::cmp::max(max_tree, tr);
+    }
+    
+    let j2 = *t.offset((i + 1) as isize) as i32;
+    if j2 <= 0 {
+        max_token = std::cmp::max(max_token, -j2);
+    } else {
+        let (tok, tr) = get_tree_bounds(t, j2, visited);
+        max_token = std::cmp::max(max_token, tok);
+        max_tree = std::cmp::max(max_tree, tr);
+    }
+    
+    (max_token, max_tree)
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_tokens_from_tree(
-    mut p: *mut vp8_token_struct,
-    mut t: *const vp8_tree_index,
-) { unsafe {
-    tree2tok(
-        p,
-        t,
-        0 as ::core::ffi::c_int,
-        0 as ::core::ffi::c_int,
-        0 as ::core::ffi::c_int,
-    );
-}}
+    p: *mut vp8_token_struct,
+    t: *const vp8_tree_index,
+) {
+    if p.is_null() || t.is_null() {
+        return;
+    }
+    unsafe {
+        let mut visited = [false; 256];
+        let (max_token, max_tree) = get_tree_bounds(t, 0, &mut visited);
+        let p_slice = core::slice::from_raw_parts_mut(p, (max_token + 1) as usize);
+        let t_slice = core::slice::from_raw_parts(t, (max_tree + 1) as usize);
+        tree2tok_safe(p_slice, t_slice, 0, 0, 0, 0);
+    }
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_tokens_from_tree_offset(
-    mut p: *mut vp8_token_struct,
-    mut t: *const vp8_tree_index,
-    mut offset: ::core::ffi::c_int,
-) { unsafe {
-    tree2tok(
-        p.offset(-(offset as isize)),
-        t,
-        0 as ::core::ffi::c_int,
-        0 as ::core::ffi::c_int,
-        0 as ::core::ffi::c_int,
-    );
-}}
-unsafe extern "C" fn branch_counts(
-    mut n: ::core::ffi::c_int,
-    mut tok: *const vp8_token,
-    mut tree: *const vp8_tree_index,
-    mut branch_ct: *mut [::core::ffi::c_uint; 2],
-    mut num_events: *const ::core::ffi::c_uint,
-) { unsafe {
-    let tree_len: ::core::ffi::c_int = n - 1 as ::core::ffi::c_int;
-    let mut t: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    loop {
-        let ref mut fresh1 = (*branch_ct.offset(t as isize))[1 as ::core::ffi::c_int as usize];
-        *fresh1 = 0 as ::core::ffi::c_uint;
-        (*branch_ct.offset(t as isize))[0 as ::core::ffi::c_int as usize] = *fresh1;
-        t += 1;
-        if !(t < tree_len) {
-            break;
-        }
+    p: *mut vp8_token_struct,
+    t: *const vp8_tree_index,
+    offset: ::core::ffi::c_int,
+) {
+    if p.is_null() || t.is_null() {
+        return;
     }
-    t = 0 as ::core::ffi::c_int;
-    loop {
-        let mut L: ::core::ffi::c_int = (*tok.offset(t as isize)).Len;
-        let enc: ::core::ffi::c_int = (*tok.offset(t as isize)).value;
-        let ct: ::core::ffi::c_uint = *num_events.offset(t as isize);
-        let mut i: vp8_tree_index = 0 as vp8_tree_index;
+    unsafe {
+        let mut visited = [false; 256];
+        let (max_token, max_tree) = get_tree_bounds(t, 0, &mut visited);
+        let limit = (max_token - offset + 1) as usize;
+        let p_slice = core::slice::from_raw_parts_mut(p, limit);
+        let t_slice = core::slice::from_raw_parts(t, (max_tree + 1) as usize);
+        tree2tok_safe(p_slice, t_slice, 0, 0, 0, offset);
+    }
+}
+
+fn branch_counts_safe(
+    n: i32,
+    tok: &[vp8_token],
+    tree: &[vp8_tree_index],
+    branch_ct: &mut [[u32; 2]],
+    num_events: &[u32],
+) {
+    let tree_len = n - 1;
+    for t in 0..tree_len as usize {
+        branch_ct[t][0] = 0;
+        branch_ct[t][1] = 0;
+    }
+    for t in 0..n as usize {
+        let mut L = tok[t].Len;
+        let enc = tok[t].value;
+        let ct = num_events[t];
+        let mut i = 0 as vp8_tree_index;
         loop {
             L -= 1;
-            let b: ::core::ffi::c_int = enc >> L & 1 as ::core::ffi::c_int;
-            let j: ::core::ffi::c_int = i as ::core::ffi::c_int >> 1 as ::core::ffi::c_int;
-            let ref mut fresh2 = (*branch_ct.offset(j as isize))[b as usize];
-            *fresh2 = (*fresh2).wrapping_add(ct);
-            i = *tree.offset((i as ::core::ffi::c_int + b) as isize);
-            if !(i as ::core::ffi::c_int > 0 as ::core::ffi::c_int) {
+            let b = (enc >> L) & 1;
+            let j = (i as i32) >> 1;
+            branch_ct[j as usize][b as usize] = branch_ct[j as usize][b as usize].wrapping_add(ct);
+            i = tree[(i as i32 + b) as usize];
+            if i <= 0 {
                 break;
             }
         }
-        t += 1;
-        if !(t < n) {
-            break;
-        }
     }
-}}
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_tree_probs_from_distribution(
-    mut n: ::core::ffi::c_int,
-    mut tok: *const vp8_token,
-    mut tree: *const vp8_tree_index,
-    mut probs: *mut vp8_prob,
-    mut branch_ct: *mut [::core::ffi::c_uint; 2],
-    mut num_events: *const ::core::ffi::c_uint,
-    mut Pfactor: ::core::ffi::c_uint,
-    mut Round: ::core::ffi::c_int,
-) { unsafe {
-    let tree_len: ::core::ffi::c_int = n - 1 as ::core::ffi::c_int;
-    let mut t: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
-    branch_counts(n, tok, tree, branch_ct, num_events);
-    loop {
-        let c: *const ::core::ffi::c_uint =
-            &raw mut *branch_ct.offset(t as isize) as *mut ::core::ffi::c_uint;
-        let tot: ::core::ffi::c_uint = (*c.offset(0 as ::core::ffi::c_int as isize))
-            .wrapping_add(*c.offset(1 as ::core::ffi::c_int as isize));
-        if tot != 0 {
-            let p: ::core::ffi::c_uint = ((*c.offset(0 as ::core::ffi::c_int as isize) as uint64_t)
-                .wrapping_mul(Pfactor as uint64_t)
-                .wrapping_add(
-                    (if Round != 0 {
-                        tot >> 1 as ::core::ffi::c_int
+    n: ::core::ffi::c_int,
+    tok: *const vp8_token,
+    tree: *const vp8_tree_index,
+    probs: *mut vp8_prob,
+    branch_ct: *mut [::core::ffi::c_uint; 2],
+    num_events: *const ::core::ffi::c_uint,
+    Pfactor: ::core::ffi::c_uint,
+    Round: ::core::ffi::c_int,
+) {
+    if tok.is_null() || tree.is_null() || probs.is_null() || branch_ct.is_null() || num_events.is_null() {
+        return;
+    }
+    unsafe {
+        let tok_slice = core::slice::from_raw_parts(tok, n as usize);
+        let tree_slice = core::slice::from_raw_parts(tree, (2 * (n - 1)) as usize);
+        let probs_slice = core::slice::from_raw_parts_mut(probs, (n - 1) as usize);
+        let branch_ct_slice = core::slice::from_raw_parts_mut(branch_ct as *mut [u32; 2], (n - 1) as usize);
+        let num_events_slice = core::slice::from_raw_parts(num_events, n as usize);
+        
+        branch_counts_safe(n, tok_slice, tree_slice, branch_ct_slice, num_events_slice);
+        
+        let tree_len = n - 1;
+        for t in 0..tree_len as usize {
+            let c = &branch_ct_slice[t];
+            let tot = c[0].wrapping_add(c[1]);
+            if tot != 0 {
+                let p = ((c[0] as u64)
+                    .wrapping_mul(Pfactor as u64)
+                    .wrapping_add(
+                        (if Round != 0 {
+                            tot >> 1
+                        } else {
+                            0
+                        }) as u64,
+                    ) as u32)
+                    .wrapping_div(tot);
+                probs_slice[t] = (if p < 256 {
+                    if p != 0 {
+                        p
                     } else {
-                        0 as ::core::ffi::c_uint
-                    }) as uint64_t,
-                ) as ::core::ffi::c_uint)
-                .wrapping_div(tot);
-            *probs.offset(t as isize) = (if p < 256 as ::core::ffi::c_uint {
-                if p != 0 {
-                    p
+                        1
+                    }
                 } else {
-                    1 as ::core::ffi::c_uint
-                }
+                    255
+                }) as vp8_prob;
             } else {
-                255 as ::core::ffi::c_uint
-            }) as vp8_prob;
-        } else {
-            *probs.offset(t as isize) = vp8_prob_half;
-        }
-        t += 1;
-        if !(t < tree_len) {
-            break;
+                probs_slice[t] = vp8_prob_half;
+            }
         }
     }
-}}
+}
