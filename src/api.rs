@@ -3,8 +3,7 @@ use crate::vp8::vp8_dx_iface::Vp8DecoderInstance;
 
 /// A safe wrapper around the decoded image planes.
 pub struct Image<'a> {
-    img: *const vpx_image_t,
-    _marker: core::marker::PhantomData<&'a ()>,
+    img: &'a vpx_image_t,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -18,16 +17,16 @@ pub enum Plane {
 impl<'a> Image<'a> {
     /// Get the displayed width of the image.
     pub fn width(&self) -> u32 {
-        unsafe { (*self.img).d_w }
+        self.img.d_w
     }
 
     /// Get the displayed height of the image.
     pub fn height(&self) -> u32 {
-        unsafe { (*self.img).d_h }
+        self.img.d_h
     }
 
     /// Safely access a specific plane slice.
-    pub fn plane(&self, plane: Plane) -> Option<&[u8]> {
+    pub fn plane(&self, plane: Plane) -> Option<&'a [u8]> {
         unsafe {
             let idx = match plane {
                 Plane::Y => 0,
@@ -36,20 +35,20 @@ impl<'a> Image<'a> {
                 Plane::Alpha => 3,
             };
 
-            let ptr = (*self.img).planes[idx];
+            let ptr = self.img.planes[idx];
             if ptr.is_null() {
                 return None;
             }
 
-            let stride = (*self.img).stride[idx];
+            let stride = self.img.stride[idx];
             if stride <= 0 {
                 return None;
             }
 
             let height = if idx > 0 && idx < 3 {
-                (*self.img).d_h >> (*self.img).y_chroma_shift
+                (self.img.d_h + (1 << self.img.y_chroma_shift) - 1) >> self.img.y_chroma_shift
             } else {
-                (*self.img).d_h
+                self.img.d_h
             };
 
             let len = (height as usize) * (stride as usize);
@@ -59,30 +58,29 @@ impl<'a> Image<'a> {
 
     /// Get the bit depth of the image.
     pub fn bit_depth(&self) -> u32 {
-        unsafe { (*self.img).bit_depth }
+        self.img.bit_depth
     }
 
     /// Compute the MD5 hash of the image planes (matching Oracle behavior).
     pub fn md5(&self) -> String {
-        unsafe {
-            let img = &*self.img;
-            let mut context = md5::Context::new();
+        let mut context = md5::Context::new();
 
-            // Y, U, V planes
-            for plane in 0..3 {
-                let data = img.planes[plane];
-                let stride = img.stride[plane] as usize;
-                let w = if plane == 0 { img.d_w } else { (img.d_w + 1) >> 1 };
-                let h = if plane == 0 { img.d_h } else { (img.d_h + 1) >> 1 };
+        for (plane_idx, plane_type) in [(0, Plane::Y), (1, Plane::U), (2, Plane::V)] {
+            if let Some(plane_data) = self.plane(plane_type) {
+                let stride = self.img.stride[plane_idx] as usize;
+                let w = if plane_idx == 0 { self.img.d_w as usize } else { ((self.img.d_w + 1) >> 1) as usize };
+                let h = if plane_idx == 0 { self.img.d_h as usize } else { ((self.img.d_h + 1) >> 1) as usize };
 
                 for row in 0..h {
-                    let row_ptr = data.add(row as usize * stride);
-                    let row_data = core::slice::from_raw_parts(row_ptr, w as usize);
-                    context.consume(row_data);
+                    let start = row * stride;
+                    let end = start + w;
+                    if end <= plane_data.len() {
+                        context.consume(&plane_data[start..end]);
+                    }
                 }
             }
-            format!("{:x}", context.compute())
         }
+        format!("{:x}", context.compute())
     }
 }
 
@@ -148,10 +146,14 @@ impl Decoder for Vp8Decoder {
             .as_mut()
             .ok_or_else(|| "Decoder not initialized".to_string())?;
         if let Some(img) = inst.get_frame() {
-            Ok(Some(Image {
-                img: img as *const vpx_image_t,
-                _marker: core::marker::PhantomData,
-            }))
+            unsafe {
+                if img.is_null() {
+                    return Ok(None);
+                }
+                Ok(Some(Image {
+                    img: &*(img as *const vpx_image_t),
+                }))
+            }
         } else {
             Ok(None)
         }

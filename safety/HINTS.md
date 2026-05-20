@@ -2,6 +2,14 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Safe Wrapper for Decoded Images & Odd-Dimension Support (api.rs)**:
+  - Refactored `Image` struct in `src/api.rs` to hold a safe Rust reference `&'a vpx_image_t` instead of a raw pointer `*const vpx_image_t`.
+  - This enabled making `width()`, `height()`, and `bit_depth()` entirely safe methods, removing 3 `unsafe` blocks.
+  - Completely rewrote `md5()` to use the safe `plane()` slice-based accessor, eliminating another `unsafe` block.
+  - Fixed a critical bug in `plane()` height calculation for odd-dimension video vectors (e.g. 175x143). Height of U/V planes was previously calculated as `d_h >> shift` which rounded down (e.g. 143 >> 1 = 71). This was corrected to round up `(d_h + (1 << shift) - 1) >> shift` (e.g. (143 + 1) >> 1 = 72) to match the actual buffer allocations, preventing silent row-skipping in MD5 calculation for odd-sized frames.
+  - Centralized the necessary unsafety in `Vp8Decoder::get_frame` where the raw pointer returned by the decoder instance is safely dereferenced after null-checking.
+  - Net reduction of **3 unsafe blocks** globally (remaining count: 375).
+  - Verified 100% correctness with all 1160 differential test frames passing successfully.
 * **Obsolete #[unsafe(no_mangle)] Removal in Entropy MV (entropymv.rs)**:
   - Removed obsolete `#[unsafe(no_mangle)]` attribute from the static table `vp8_default_mv_context` in `src/vp8/common/entropymv.rs`.
   - Since this table is only accessed internally via safe Rust imports (in `decodeframe.rs`), the FFI export attribute was completely obsolete.
