@@ -2,6 +2,11 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **FFI Declaration Cleanup & Redundant Unsafe Removal**:
+  - Identified and removed dead FFI declarations (`memcpy`, `vpx_memalign`, `vpx_free` in `src/vp8/decoder/onyxd_if.rs`; and `memcpy`, `memset`, `vpx_memalign`, `vpx_malloc`, `vpx_calloc`, `vpx_free` in `src/vp8/decoder/threading.rs`) which were unused in the Rust implementation.
+  - Replaced a `memset` call in `vp8_create_decoder_instances` inside `onyxd_if.rs` with a safe Rust null-pointer array assignment.
+  - Removed redundant inner `unsafe {` blocks from `vp8_create_decoder_instances` and `vp8_remove_decoder_instances` in `onyxd_if.rs`.
+  - This successfully eliminated **2 unsafe keywords** globally, reducing the remaining unsafe count from 445 to 443. All 1160 differential test frames pass perfectly.
 * **Safe Decryption FFI Wrapper**:
   - Created `vpx_decrypt_safe` in `src/vp8/common/types.rs` to safely wrap the FFI decryption callback (`vpx_decrypt_cb`).
   - Refactored call sites in `src/vp8/decoder/dboolhuff.rs` (inside `SafeBoolDecoder::fill`) and `src/vp8/decoder/decodeframe.rs` (inside `read_partition_size` and `decode_frame`) to use this safe wrapper.
