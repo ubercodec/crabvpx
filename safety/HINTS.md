@@ -2,6 +2,11 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Removed Obsolete FFI Attributes in arm_cpu_caps (aarch64_cpudetect.rs)**:
+  - Removed obsolete `#[unsafe(no_mangle)]` and `extern "C"` from `arm_cpu_caps` in `src/vpx_ports/aarch64_cpudetect.rs`.
+  - This function is only called internally from Rust (`rtcd.rs`, `vpx_dsp_rtcd.rs`, `vpx_scale_rtcd.rs`) via standard Rust imports, so FFI linkage was completely unnecessary.
+  - This successfully eliminated **1 unsafe keyword** globally, reducing the remaining unsafe count from 147 to 146.
+  - Verified 100% bit-identical correctness across all 1160 test frames.
 * **Removed Unused FFI wrappers in yv12config.rs**:
   - Identified and removed three unused transpiled C-ABI FFI wrappers from `src/vpx_scale/generic/yv12config.rs`: `vp8_yv12_de_alloc_frame_buffer`, `vp8_yv12_realloc_frame_buffer`, and `vp8_yv12_alloc_frame_buffer`.
   - These were dead code, as all internal Rust components (like `alloccommon.rs`) call the safe equivalents directly, and they are not referenced by the out-of-scope public C FFI interface `vp8_dx_iface.rs`.
@@ -232,5 +237,6 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
    - **Audit other FFI wrappers in `src/vp8/decoder/dboolhuff.rs`** (`vp8dx_start_decode` and `vp8dx_bool_decoder_fill`) to see if they can also be deprecated/removed or if they are required for external ABI linkage.
    - **Audit other dead tables in `src/vp8/common/entropy.rs`**: `vp8_coef_encodings` is confirmed completely unused in the decoder and ready to be removed.
    - [x] **Audit `yv12config.rs` for unused FFI wrappers**: Identified and removed three unused C-ABI wrappers (`vp8_yv12_de_alloc_frame_buffer`, `vp8_yv12_realloc_frame_buffer`, `vp8_yv12_alloc_frame_buffer`), eliminating 3 unsafe keywords. (Completed!)
-    - **Remove obsolete `#[unsafe(no_mangle)]` from `arm_cpu_caps` in `src/vpx_ports/aarch64_cpudetect.rs`**: This function is only called internally by Rust modules (which import it as a standard Rust function via `use`), and is never called via FFI. Removing the attribute and `extern "C"` would eliminate 1 unsafe keyword globally.
+    - [x] **Remove obsolete `#[unsafe(no_mangle)]` from `arm_cpu_caps` in `src/vpx_ports/aarch64_cpudetect.rs`**: Removed the attribute and `extern "C"` to eliminate 1 unsafe keyword globally, as it is only called internally from Rust. (Completed!)
+    - **Clean up unused transpiled Rust files in `src/vp8/common/arm/`**: There are 14 `.rs` files in `src/vp8/common/arm/` (and subdirectories) that are not declared in `src/lib.rs` and thus not compiled. They contain many `unsafe` keywords that bloat the `unsafe` count. They should be audited and deleted if indeed redundant (since we compile the C versions directly via `build.rs`).
 

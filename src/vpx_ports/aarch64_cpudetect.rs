@@ -69,8 +69,7 @@ fn arm_get_cpu_caps() -> ::core::ffi::c_int {
     flags
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn arm_cpu_caps() -> ::core::ffi::c_int {
+pub fn arm_cpu_caps() -> ::core::ffi::c_int {
     let mut flags: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     if let Some(env_flags) = arm_cpu_env_flags() {
         flags = env_flags;
