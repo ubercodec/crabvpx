@@ -1050,17 +1050,16 @@ fn thread_decoding_proc(data: DECODETHREAD_DATA) {
             break;
         }
         let xd = &mut mbrd.mbd;
-        unsafe {
-            if setjmp(&raw mut xd.error_info.jmp as *mut ::core::ffi::c_int) != 0 {
-                xd.error_info.setjmp = 0;
-                pbi.mt_sync.h_event_end_decoding.as_ref().unwrap().signal();
-            } else {
-                xd.error_info.setjmp = 1;
-                let decoding_thread_count = pbi.decoding_thread_count;
-                let (common, mbc, mt_sync) = pbi.split_mt_mut();
-                mt_decode_mb_rows(common, mbc, mt_sync, xd, ithread + 1, decoding_thread_count);
-                xd.error_info.setjmp = 0;
-            }
+        let setjmp_val = unsafe { setjmp(&raw mut xd.error_info.jmp as *mut ::core::ffi::c_int) };
+        if setjmp_val != 0 {
+            xd.error_info.setjmp = 0;
+            pbi.mt_sync.h_event_end_decoding.as_ref().unwrap().signal();
+        } else {
+            xd.error_info.setjmp = 1;
+            let decoding_thread_count = pbi.decoding_thread_count;
+            let (common, mbc, mt_sync) = pbi.split_mt_mut();
+            mt_decode_mb_rows(common, mbc, mt_sync, xd, ithread + 1, decoding_thread_count);
+            xd.error_info.setjmp = 0;
         }
     }
 }

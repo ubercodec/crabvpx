@@ -1,8 +1,10 @@
 # VP8 Decoder Safety Hints
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
-
 ## Current Status (May 2026)
+* **Dead Unsafe Code Elimination & Safety Scope Minimization**:
+  - Identified and removed 15 unused unsafe methods from `yv12_buffer_config` in `src/vp8/common/types.rs` (e.g., `y_slice`, `y_slice_mut`, and their `_with_offset`/`_view` counterparts). These were dead code left over after the transition to their safe `_safe` counterparts. This reduced the remaining unsafe block count from 502 to 487.
+  - Shrunk the scope of the `unsafe` block in `thread_decoding_proc` inside `src/vp8/decoder/threading.rs` to only cover the FFI `setjmp` call. The rest of the function, including `split_mt_mut` and `mt_decode_mb_rows` calls, now executes safely.
 * **Safe Fragment Access & Threading Safety Scope Improvement Complete**:
   - Added a safe `get_slice` method to `FRAGMENT_DATA` in `src/vp8/common/types.rs` to encapsulate raw pointer access. Refactored `setup_token_decoder` and `vp8_decode_frame` in `src/vp8/decoder/decodeframe.rs` to use this safe method, completely removing two `unsafe` blocks. Resolved borrow checker issues by copying `pbi.fragments` to local variables, allowing safe disjoint borrowing of `pbi` elsewhere. Reduced unsafe count by 1.
   - Shrunk the giant `unsafe` block in `vp8mt_decode_mb_rows` in `src/vp8/decoder/threading.rs` to only cover the `setjmp` FFI call, making the rest of the function safe and using disjoint borrows.
