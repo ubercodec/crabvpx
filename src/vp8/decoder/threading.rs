@@ -70,12 +70,6 @@ unsafe extern "C" {
 
 unsafe extern "C" {
     fn setjmp(_: *mut ::core::ffi::c_int) -> ::core::ffi::c_int;
-    fn vpx_internal_error(
-        info: *mut vpx_internal_error_info,
-        error: vpx_codec_err_t,
-        fmt: *const ::core::ffi::c_char,
-        ...
-    );
     fn memcpy(
         __dst: *mut ::core::ffi::c_void,
         __src: *const ::core::ffi::c_void,
@@ -733,13 +727,10 @@ fn mt_decode_mb_rows(
                     vpx_atomic_store_release(cur_col, pc.mb_cols + nsync);
                     mb_row = (mb_row as u32).wrapping_add(decoding_thread_count.wrapping_add(1)) as i32;
                 }
-                unsafe {
-                    vpx_internal_error(
-                        &raw mut xd.error_info,
-                        VPX_CODEC_CORRUPT_FRAME,
-                        b"Corrupted reference frame\0" as *const u8 as *const ::core::ffi::c_char,
-                    );
-                }
+                xd.error_info.trigger(
+                    VPX_CODEC_CORRUPT_FRAME,
+                    "Corrupted reference frame",
+                );
             }
             
             if cur_ref_frame as ::core::ffi::c_int >= LAST_FRAME as ::core::ffi::c_int {
@@ -1166,10 +1157,9 @@ pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) {
                 0,
             ) != 0
             {
-                vpx_internal_error(
-                    &raw mut pbi.common.error,
+                pbi.common.error.trigger(
                     VPX_CODEC_MEM_ERROR,
-                    b"Failed to initialize semaphore\0" as *const u8 as *const ::core::ffi::c_char,
+                    "Failed to initialize semaphore",
                 );
             }
             
@@ -1225,10 +1215,9 @@ pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) {
                 if pbi.allocated_decoding_thread_count == 0 as ::core::ffi::c_int {
                     crate::thread_shim::vp8_semaphore_destroy(mach_task_self_ as task_t, pbi.mt_sync.h_event_end_decoding);
                 }
-                vpx_internal_error(
-                    &raw mut pbi.common.error,
+                pbi.common.error.trigger(
                     VPX_CODEC_MEM_ERROR,
-                    b"Failed to create threads\0" as *const u8 as *const ::core::ffi::c_char,
+                    "Failed to create threads",
                 );
             }
         }
