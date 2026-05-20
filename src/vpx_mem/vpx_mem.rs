@@ -1,13 +1,10 @@
-use std::alloc::{alloc, dealloc, Layout};
-use core::ptr::NonNull;
-
 pub type size_t = usize;
 
 pub const DEFAULT_ALIGNMENT: usize = 32;
 
 pub struct AlignedBox {
-    data_ptr: NonNull<u8>,
-    layout: Layout,
+    vec: Vec<u8>,
+    offset: usize,
     size: usize,
 }
 
@@ -21,30 +18,34 @@ impl AlignedBox {
             align = align.next_power_of_two();
         }
         
-        let layout = Layout::from_size_align(size, align).ok()?;
-        let raw_ptr = unsafe { alloc(layout) };
-        let data_ptr = NonNull::new(raw_ptr)?;
+        // Allocate extra space for alignment
+        let mut vec = Vec::new();
+        if vec.try_reserve(size + align).is_err() {
+            return None;
+        }
+        vec.resize(size + align, 0u8);
         
-        Some(Self { data_ptr, layout, size })
+        let raw_ptr = vec.as_ptr() as usize;
+        let aligned_ptr = (raw_ptr + align - 1) & !(align - 1);
+        let offset = aligned_ptr - raw_ptr;
+        
+        Some(Self { vec, offset, size })
     }
 
     pub fn as_ptr(&self) -> *mut u8 {
-        self.data_ptr.as_ptr()
+        let slice = self.as_slice();
+        if slice.is_empty() {
+            std::ptr::null_mut()
+        } else {
+            slice.as_ptr() as *mut u8
+        }
     }
 
     pub fn as_slice(&self) -> &[u8] {
-        unsafe { core::slice::from_raw_parts(self.data_ptr.as_ptr(), self.size) }
+        &self.vec[self.offset .. self.offset + self.size]
     }
 
     pub fn as_slice_mut(&mut self) -> &mut [u8] {
-        unsafe { core::slice::from_raw_parts_mut(self.data_ptr.as_ptr(), self.size) }
-    }
-}
-
-impl Drop for AlignedBox {
-    fn drop(&mut self) {
-        unsafe {
-            dealloc(self.data_ptr.as_ptr(), self.layout);
-        }
+        &mut self.vec[self.offset .. self.offset + self.size]
     }
 }

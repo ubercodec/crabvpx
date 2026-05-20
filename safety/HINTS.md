@@ -2,11 +2,20 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **100% Safe Aligned Box Allocation (vpx_mem.rs)**:
+  - Completely eliminated all residual raw pointer allocations and `unsafe` blocks in `src/vpx_mem/vpx_mem.rs`.
+  - Replaced the layout-based `alloc` and `dealloc` with a standard safe `Vec<u8>` allocation of size `size + align` and calculated the aligned offset in pure safe Rust.
+  - The `AlignedBox::as_slice()` and `as_slice_mut()` now return safe, bounds-checked slice views of the underlying `Vec` without FFI or pointer slicing.
+  - `AlignedBox::as_ptr()` safely returns the computed pointer of the aligned slice, maintaining 100% FFI compatibility.
+  - This made `vpx_mem.rs` **100% safe Rust** and successfully eliminated **4 unsafe blocks** globally, reducing the remaining unsafe count from 135 to 131.
+  - Verified 100% bit-identical correctness across all 1160 differential test frames.
+
 * **Safe & Simplified Aligned Box Allocation (vpx_mem.rs)**:
   - Refactored `AlignedBox` in `src/vpx_mem/vpx_mem.rs` to use standard Rust `Layout` allocation (`std::alloc::alloc` and `dealloc`) instead of manual C-style alignment arithmetic and `AllocHeader` prepending.
   - Completely eliminated unused `into_raw` and `from_raw` methods, reducing dead code and unsafe surfaces.
   - This simplified the memory model for aligned allocations and successfully eliminated **1 unsafe keyword/block** globally, reducing the remaining unsafe count from 136 to 135.
   - Verified 100% bit-identical correctness across all 1160 differential test frames.
+
 
 * **Safe Boolean Decoder Buffer & Offset-Based Tracking (dboolhuff.rs, types.rs, decodeframe.rs, threading.rs)**:
   - Refactored `BOOL_DECODER` (alias `vp8_reader`) in `src/vp8/common/types.rs` to completely eliminate the `user_buffer: *const [u8]` raw pointer.
