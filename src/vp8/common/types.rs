@@ -588,8 +588,14 @@ pub struct macroblockd {
     pub dequant_uv: [::core::ffi::c_short; 16],
     pub block: [BLOCKD; 25],
     pub fullpixel_mask: ::core::ffi::c_int,
-    pub pre: YV12_BUFFER_CONFIG,
-    pub dst: YV12_BUFFER_CONFIG,
+    pub dst_fb_idx: usize,
+    pub pre_fb_idx: usize,
+    pub dst_y_stride: ::core::ffi::c_int,
+    pub dst_uv_stride: ::core::ffi::c_int,
+    pub dst_border: ::core::ffi::c_int,
+    pub pre_y_stride: ::core::ffi::c_int,
+    pub pre_uv_stride: ::core::ffi::c_int,
+    pub pre_border: ::core::ffi::c_int,
     pub mode_info_idx: usize,
     pub mode_info_stride: ::core::ffi::c_int,
     pub frame_type: FRAME_TYPE,
@@ -635,8 +641,14 @@ impl Default for macroblockd {
             dequant_uv: [0; 16],
             block: [BLOCKD::default(); 25],
             fullpixel_mask: 0,
-            pre: YV12_BUFFER_CONFIG::default(),
-            dst: YV12_BUFFER_CONFIG::default(),
+            dst_fb_idx: 0,
+            pre_fb_idx: 0,
+            dst_y_stride: 0,
+            dst_uv_stride: 0,
+            dst_border: 0,
+            pre_y_stride: 0,
+            pre_uv_stride: 0,
+            pre_border: 0,
             mode_info_idx: 0,
             mode_info_stride: 0,
             frame_type: 0,
@@ -1088,6 +1100,20 @@ impl VP8Common {
     }
     pub fn above_context_slice_mut(&mut self) -> &mut [ENTROPY_CONTEXT_PLANES] {
         self.above_context.as_deref_mut().unwrap_or(&mut [])
+    }
+    pub fn get_ref_and_dst_fb(
+        &mut self,
+        ref_idx: usize,
+        dst_idx: usize,
+    ) -> (&YV12_BUFFER_CONFIG, &mut YV12_BUFFER_CONFIG) {
+        assert!(ref_idx != dst_idx);
+        if ref_idx < dst_idx {
+            let (left, right) = self.yv12_fb.split_at_mut(dst_idx);
+            (&left[ref_idx], &mut right[0])
+        } else {
+            let (left, right) = self.yv12_fb.split_at_mut(ref_idx);
+            (&right[0], &mut left[dst_idx])
+        }
     }
 }
 

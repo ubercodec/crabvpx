@@ -231,12 +231,21 @@ fn decode_macroblock(
 ) {
     let mut mode: MB_PREDICTION_MODE = DC_PRED;
     let mut i: ::core::ffi::c_int = 0;
-    if xd.mode_info(common.mip_slice()).mbmi.mb_skip_coeff != 0 {
-        let is_4x4 = xd.mode_info(common.mip_slice()).mbmi.is_4x4 != 0;
+    
+    let mut mi = *xd.mode_info(common.mip_slice());
+    
+    let mb_row = (-xd.mb_to_top_edge / 128) as usize;
+    let mb_col = (-xd.mb_to_left_edge / 128) as usize;
+    let recon_yoffset = mb_row * 16 * xd.dst_y_stride as usize + mb_col * 16;
+    let recon_uvoffset = mb_row * 8 * xd.dst_uv_stride as usize + mb_col * 8;
+    
+
+    if mi.mbmi.mb_skip_coeff != 0 {
+        let is_4x4 = mi.mbmi.is_4x4 != 0;
         vp8_reset_mb_tokens_context(above, left, is_4x4);
     } else if vp8dx_safe_bool_error(&safe_decoders[xd.current_bc_idx]) == 0 {
         let mut eobtotal: ::core::ffi::c_int = 0;
-        let is_4x4 = xd.mode_info(common.mip_slice()).mbmi.is_4x4 != 0;
+        let is_4x4 = mi.mbmi.is_4x4 != 0;
         let bc_idx = xd.current_bc_idx;
         let qcoeff = &mut xd.qcoeff;
         let eobs = &mut xd.eobs;
@@ -249,31 +258,31 @@ fn decode_macroblock(
             left,
             is_4x4,
         );
-        xd.mode_info_mut(common.mip_slice_mut()).mbmi.mb_skip_coeff =
-            (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
+        let skip_coeff = (eobtotal == 0 as ::core::ffi::c_int) as ::core::ffi::c_int as uint8_t;
+        common.mip_slice_mut()[xd.mode_info_idx].mbmi.mb_skip_coeff = skip_coeff;
+        mi.mbmi.mb_skip_coeff = skip_coeff;
     }
-    let mip = common.mip_slice();
-    mode = xd.mode_info(mip).mbmi.mode as MB_PREDICTION_MODE;
+    mode = mi.mbmi.mode as MB_PREDICTION_MODE;
 
     if xd.segmentation_enabled != 0 {
         vp8_mb_init_dequantizer(common, xd);
     }
-    if xd.mode_info(mip).mbmi.ref_frame as ::core::ffi::c_int
+    if mi.mbmi.ref_frame as ::core::ffi::c_int
         == INTRA_FRAME as ::core::ffi::c_int
     {
-        let uvmode = xd.mode_info(mip).mbmi.uv_mode as MB_PREDICTION_MODE;
+        let uvmode = mi.mbmi.uv_mode as MB_PREDICTION_MODE;
         let left_available = xd.left_available;
         let up_available = xd.up_available;
         let left_stride_uv = xd.recon_left_stride[1] as usize;
         let left_stride_y = xd.recon_left_stride[0] as usize;
 
-        let uv_stride = xd.dst.uv_stride as usize;
-        let uv_border = (xd.dst.border / 2) as usize;
-        let uv_buffer_offset = uv_border * uv_stride + uv_border;
-        let dst_stride = xd.dst.y_stride;
+        let uv_stride = xd.dst_uv_stride as usize;
+        let uv_border = (xd.dst_border / 2) as usize;
+        let uv_buffer_offset = uv_border * uv_stride + uv_border + recon_uvoffset;
+        let dst_stride = xd.dst_y_stride;
         let dst_stride_us = dst_stride as usize;
-        let border = xd.dst.border as usize;
-        let y_buffer_offset = border * dst_stride_us + border;
+        let border = xd.dst_border as usize;
+        let y_buffer_offset = border * dst_stride_us + border + recon_yoffset;
 
 
         let mut uabove = [0u8; 9];
@@ -282,7 +291,7 @@ fn decode_macroblock(
         let mut vleft = [0u8; 8];
 
         {
-            let (u_slice, v_slice) = xd.dst.uv_slices_mut_with_offset_safe(0);
+            let (u_slice, v_slice) = common.yv12_fb[xd.dst_fb_idx].uv_slices_mut_with_offset_safe(0);
             uabove.copy_from_slice(&u_slice[uv_buffer_offset - uv_stride - 1 .. uv_buffer_offset - uv_stride + 8]);
             vabove.copy_from_slice(&v_slice[uv_buffer_offset - uv_stride - 1 .. uv_buffer_offset - uv_stride + 8]);
 
@@ -309,7 +318,7 @@ fn decode_macroblock(
         }
 
         if mode as ::core::ffi::c_uint != B_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
-            let dst_y_slice = xd.dst.y_slice_mut_safe();
+            let dst_y_slice = common.yv12_fb[xd.dst_fb_idx].y_slice_mut_safe();
             
             let mut yabove = [0u8; 17];
             yabove.copy_from_slice(&dst_y_slice[y_buffer_offset - dst_stride_us - 1 .. y_buffer_offset - dst_stride_us + 16]);
@@ -332,13 +341,13 @@ fn decode_macroblock(
                 dst_stride_us,
             );
         } else {
-            if xd.mode_info(mip).mbmi.mb_skip_coeff != 0 {
+            if mi.mbmi.mb_skip_coeff != 0 {
                 xd.eobs.fill(0);
             }
-            intra_prediction_down_copy(xd, None);
+            let dst_y_slice = &mut common.yv12_fb[xd.dst_fb_idx].y_slice_mut_safe()[recon_yoffset..];
+            intra_prediction_down_copy(dst_stride_us, border, dst_y_slice, None);
             
             let b_modes = {
-                let mi = xd.mode_info(mip);
                 let mut modes = [0 as B_PREDICTION_MODE; 16];
                 for idx in 0..16 {
                     modes[idx] = mi.bmi[idx].mode();
@@ -346,7 +355,7 @@ fn decode_macroblock(
                 modes
             };
 
-            let dst_y_slice = xd.dst.y_slice_mut_safe();
+            let dst_y_slice = common.yv12_fb[xd.dst_fb_idx].y_slice_mut_safe();
             
             i = 0 as ::core::ffi::c_int;
             while i < 16 as ::core::ffi::c_int {
@@ -413,10 +422,13 @@ fn decode_macroblock(
             }
         }
     } else {
-        crate::vp8::common::reconinter::vp8_build_inter_predictors_mb(xd, mip);
+        let ref_idx = xd.pre_fb_idx;
+        let dst_idx = xd.dst_fb_idx;
+        let (pre_fb, dst_fb) = common.get_ref_and_dst_fb(ref_idx, dst_idx);
+        crate::vp8::common::reconinter::vp8_build_inter_predictors_mb(xd, &mi, dst_fb, pre_fb);
     }
 
-    if xd.mode_info(mip).mbmi.mb_skip_coeff == 0 {
+    if mi.mbmi.mb_skip_coeff == 0 {
         if mode as ::core::ffi::c_uint != B_PRED as ::core::ffi::c_int as ::core::ffi::c_uint {
             let dq_y: &[i16; 16] = if mode as ::core::ffi::c_uint != SPLITMV as ::core::ffi::c_int as ::core::ffi::c_uint {
                 if xd.eobs[24 as ::core::ffi::c_int as usize] as ::core::ffi::c_int
@@ -446,8 +458,9 @@ fn decode_macroblock(
                 &xd.dequant_y1
             };
  
-            let y_stride = xd.dst.y_stride;
-            let (dst_y_view, _, _) = xd.dst.views_mut();
+            let y_stride = xd.dst_y_stride;
+            let (dst_y_view_base, _, _) = common.yv12_fb[xd.dst_fb_idx].views_mut();
+            let dst_y_view = &mut dst_y_view_base[recon_yoffset..];
             let q_y: &mut [i16; 256] = (&mut xd.qcoeff[0..256]).try_into().unwrap();
             let dst_len = 15 * y_stride as usize + 16;
             let dst_slice = &mut dst_y_view[..dst_len];
@@ -456,8 +469,10 @@ fn decode_macroblock(
             vp8_dequant_idct_add_y_block_safe(q_y, dq_y, dst_slice, y_stride, eobs_y);
         }
  
-        let uv_stride = xd.dst.uv_stride;
-        let (_, dst_u_view, dst_v_view) = xd.dst.views_mut();
+        let uv_stride = xd.dst_uv_stride;
+        let (_, dst_u_view_base, dst_v_view_base) = common.yv12_fb[xd.dst_fb_idx].views_mut();
+        let dst_u_view = &mut dst_u_view_base[recon_uvoffset..];
+        let dst_v_view = &mut dst_v_view_base[recon_uvoffset..];
         let q_uv: &mut [i16; 128] = (&mut xd.qcoeff[256..384]).try_into().unwrap();
         let dst_u_len = 7 * uv_stride as usize + 8;
         let dst_u_slice = &mut dst_u_view[..dst_u_len];
@@ -698,8 +713,8 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
             * 16 as ::core::ffi::c_int)
             << 3 as ::core::ffi::c_int;
 
-        xd.recon_left_stride[0 as ::core::ffi::c_int as usize] = xd.dst.y_stride;
-        xd.recon_left_stride[1 as ::core::ffi::c_int as usize] = xd.dst.uv_stride;
+        xd.recon_left_stride[0 as ::core::ffi::c_int as usize] = xd.dst_y_stride;
+        xd.recon_left_stride[1 as ::core::ffi::c_int as usize] = xd.dst_uv_stride;
         setup_intra_recon_left(
             &mut pc.yv12_fb[new_fb_idx],
             mb_row,
@@ -711,19 +726,6 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
             xd.mb_to_right_edge = ((pc.mb_cols - 1 as ::core::ffi::c_int - mb_col)
                 * 16 as ::core::ffi::c_int)
                 << 3 as ::core::ffi::c_int;
-
-            let (y_ptr, u_ptr, v_ptr) = {
-                let new_fb = &mut pc.yv12_fb[new_fb_idx];
-                let (y_slice, u_slice, v_slice) = new_fb.views_mut();
-                (
-                    y_slice[recon_yoffset as usize..].as_mut_ptr(),
-                    u_slice[recon_uvoffset as usize..].as_mut_ptr(),
-                    v_slice[recon_uvoffset as usize..].as_mut_ptr(),
-                )
-            };
-            xd.dst.y_buffer = y_ptr;
-            xd.dst.u_buffer = u_ptr;
-            xd.dst.v_buffer = v_ptr;
 
             let ref_frame = xd.mode_info(pc.mip_slice()).mbmi.ref_frame;
             
@@ -737,38 +739,13 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
                     ALTREF_FRAME => pc.alt_fb_idx as usize,
                     _ => panic!("Invalid ref frame"),
                 };
-                let (pre_y, pre_u, pre_v, pre_alloc, pre_alloc_sz) = {
-                    let ref_fb = &pc.yv12_fb[fb_idx];
-                    let border = ref_fb.border as usize;
-                    let stride = ref_fb.y_stride as usize;
-                    let uv_border = border / 2;
-                    let uv_stride = ref_fb.uv_stride as usize;
-                    
-                    let y_slice = ref_fb.y_slice_safe();
-                    let u_slice = ref_fb.u_slice_safe();
-                    let v_slice = ref_fb.v_slice_safe();
-                    
-                    let y_offset = border * stride + border + recon_yoffset as usize;
-                    let u_offset = uv_border * uv_stride + uv_border + recon_uvoffset as usize;
-                    let v_offset = uv_border * uv_stride + uv_border + recon_uvoffset as usize;
-                    
-                    (
-                        y_slice[y_offset..].as_ptr() as *mut u8,
-                        u_slice[u_offset..].as_ptr() as *mut u8,
-                        v_slice[v_offset..].as_ptr() as *mut u8,
-                        ref_fb.buffer_alloc,
-                        ref_fb.buffer_alloc_sz,
-                    )
-                };
-                xd.pre.y_buffer = pre_y;
-                xd.pre.u_buffer = pre_u;
-                xd.pre.v_buffer = pre_v;
-                xd.pre.buffer_alloc = pre_alloc;
-                xd.pre.buffer_alloc_sz = pre_alloc_sz;
+                xd.pre_fb_idx = fb_idx;
+                let ref_fb = &pc.yv12_fb[fb_idx];
+                xd.pre_y_stride = ref_fb.y_stride;
+                xd.pre_uv_stride = ref_fb.uv_stride;
+                xd.pre_border = ref_fb.border;
             } else {
-                xd.pre.y_buffer = ::core::ptr::null_mut::<uint8_t>();
-                xd.pre.u_buffer = ::core::ptr::null_mut::<uint8_t>();
-                xd.pre.v_buffer = ::core::ptr::null_mut::<uint8_t>();
+                xd.pre_fb_idx = new_fb_idx;
             }
             xd.corrupted |= ref_fb_corrupted[ref_frame as usize];
             
@@ -1124,8 +1101,15 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> ::core::ffi::c_int {
     let mut prev_independent_partitions: ::core::ffi::c_int = pbi.independent_partitions;
     
     let new_fb_idx = pbi.common.new_fb_idx as usize;
-    pbi.mb.dst = pbi.common.yv12_fb[new_fb_idx];
-    pbi.mb.pre = pbi.common.yv12_fb[new_fb_idx];
+    pbi.mb.dst_fb_idx = new_fb_idx;
+    pbi.mb.pre_fb_idx = new_fb_idx;
+    let new_fb = &pbi.common.yv12_fb[new_fb_idx];
+    pbi.mb.dst_y_stride = new_fb.y_stride;
+    pbi.mb.dst_uv_stride = new_fb.uv_stride;
+    pbi.mb.dst_border = new_fb.border;
+    pbi.mb.pre_y_stride = new_fb.y_stride;
+    pbi.mb.pre_uv_stride = new_fb.uv_stride;
+    pbi.mb.pre_border = new_fb.border;
     pbi.common.yv12_fb[new_fb_idx].corrupted = 0 as ::core::ffi::c_int;
     pbi.mb.corrupted = 0 as ::core::ffi::c_int;
     

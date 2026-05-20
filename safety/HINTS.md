@@ -58,7 +58,14 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
   - Propagated the slice-based signatures down through `src/vp8/common/reconinter.rs` (`vp8_build_inter_predictors_mb`, `vp8_build_inter16x16_predictors_mb`, `build_inter4x4_predictors_mb`, and `build_4x4uvmvs`), `src/vp8/decoder/decodeframe.rs`, and `src/vp8/decoder/threading.rs`.
   - Resolved complex borrow checker issues in multithreaded contexts (`threading.rs`) by: 1) destructuring the slice variables mutably to satisfy Rust's disjoint borrowing rules (allowing simultaneous immutable borrow of `common.fc`), and 2) moving the immutable `lfi_n` reference scope to be strictly local inside the loop filter execution block to avoid overlapping borrows.
   - This successfully reduced the remaining unsafe block count from 506 to 502. Differential differential testing passes perfectly across all 1160 frames.
-
+* **Milestone 1 Complete (Structural Decoupling & Index-Based Referencing)**:
+  - Successfully decoupled `macroblockd` from `YV12_BUFFER_CONFIG` by replacing `pre` and `dst` struct fields with index-based referencing fields (`pre_fb_idx`, `dst_fb_idx`) and explicit stride/border metadata fields.
+  - Updated all top-level assignments in `vp8_dx_iface.rs`, `decodeframe.rs`, and `threading.rs` to initialize these indices and metadata.
+  - Refactored inter-prediction reconstruction functions in `reconinter.rs` to accept `dst_fb` and `pre_fb` references and pass `0` as the slice offset, letting the caller handle macroblock offsetting via the absolute index.
+  - Refactored `intra_prediction_down_copy` in `reconintra.rs` to accept slice and stride parameters directly, completely removing its dependency on `MACROBLOCKD`.
+  - Resolved complex borrow-checker conflicts in `decodeframe.rs` and `threading.rs` (arising from long-lived `mip` slices locking `common`) by copying the `MODE_INFO` struct early in `decode_macroblock` and using the local copied values for all prediction decisions.
+  - Corrected a critical offset mismatch bug where Y/UV reconstruction slices were writing to the top-left of the frame instead of the current macroblock because the base `views_mut()` were not offset by `recon_yoffset` / `recon_uvoffset`.
+  - Compilation and all 1160 differential test frames pass perfectly! Remaining unsafe count: 443.
 
 
 ## Architectural Quirks to Watch Out For

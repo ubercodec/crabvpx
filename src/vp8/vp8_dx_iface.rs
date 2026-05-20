@@ -1021,13 +1021,24 @@ unsafe extern "C" fn vp8_decode(
                         as *const ::core::ffi::c_char,
                 );
             }
-            (*xd).pre = (*pc_0).yv12_fb[(*pc_0).lst_fb_idx as usize];
-            (*xd).dst = (*pc_0).yv12_fb[(*pc_0).new_fb_idx as usize];
+            let lst_fb_idx = (*pc_0).lst_fb_idx as usize;
+            let new_fb_idx = (*pc_0).new_fb_idx as usize;
+            (*xd).pre_fb_idx = lst_fb_idx;
+            (*xd).dst_fb_idx = new_fb_idx;
+            (*xd).dst_y_stride = (*pc_0).yv12_fb[new_fb_idx].y_stride;
+            (*xd).dst_uv_stride = (*pc_0).yv12_fb[new_fb_idx].uv_stride;
+            (*xd).dst_border = (*pc_0).yv12_fb[new_fb_idx].border;
+            (*xd).pre_y_stride = (*pc_0).yv12_fb[lst_fb_idx].y_stride;
+            (*xd).pre_uv_stride = (*pc_0).yv12_fb[lst_fb_idx].uv_stride;
+            (*xd).pre_border = (*pc_0).yv12_fb[lst_fb_idx].border;
             i = 0 as ::core::ffi::c_int;
             while i < (*pbi_1).allocated_decoding_thread_count {
-                (*pbi_1).mb_row_di.as_mut().unwrap()[i as usize].mbd.dst =
-                    (*pc_0).yv12_fb[(*pc_0).new_fb_idx as usize];
-                vp8_build_block_doffsets(&mut (*pbi_1).mb_row_di.as_mut().unwrap()[i as usize].mbd);
+                let mbd = &mut (*pbi_1).mb_row_di.as_mut().unwrap()[i as usize].mbd;
+                mbd.dst_fb_idx = new_fb_idx;
+                mbd.dst_y_stride = (*pc_0).yv12_fb[new_fb_idx].y_stride;
+                mbd.dst_uv_stride = (*pc_0).yv12_fb[new_fb_idx].uv_stride;
+                mbd.dst_border = (*pc_0).yv12_fb[new_fb_idx].border;
+                vp8_build_block_doffsets(mbd);
                 i += 1;
             }
             vp8_build_block_doffsets(&mut (*pbi_1).mb);

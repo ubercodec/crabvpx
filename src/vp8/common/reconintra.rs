@@ -155,14 +155,11 @@ pub fn vp8_build_intra_predictors_mbuv_safe(
 pub extern "C" fn vp8_init_intra_predictors() {}
 
 pub fn intra_prediction_down_copy(
-    xd: &mut MACROBLOCKD,
+    dst_stride: usize,
+    border: usize,
+    y_slice: &mut [u8],
     above_y: Option<&[u8]>,
 ) {
-    let dst_stride = xd.dst.y_stride as usize;
-    let border = xd.dst.border as usize;
-
-    let y_slice = xd.dst.y_slice_mut_safe();
-
     let base_idx = (border - 1) * dst_stride + border + 16;
 
     let mut src_bytes = [0u8; 4];

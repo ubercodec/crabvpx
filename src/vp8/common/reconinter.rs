@@ -311,17 +311,19 @@ fn clamp_uvmv_to_umv_border(
 }
 pub fn vp8_build_inter16x16_predictors_mb(
     x: &mut MACROBLOCKD,
-    mip_base: &[MODE_INFO],
+    mi: &MODE_INFO,
+    dst_fb: &mut YV12_BUFFER_CONFIG,
+    pre_fb: &YV12_BUFFER_CONFIG,
 ) {
-    let dst_y_stride = x.dst.y_stride;
-    let dst_uv_stride = x.dst.uv_stride;
-    let pre_y_stride = x.pre.y_stride;
-    let pre_uv_stride = x.pre.uv_stride;
+    let dst_y_stride = x.dst_y_stride;
+    let dst_uv_stride = x.dst_uv_stride;
+    let pre_y_stride = x.pre_y_stride;
+    let pre_uv_stride = x.pre_uv_stride;
     
-    let border = x.dst.border as usize;
+    let border = x.dst_border as usize;
     let uv_border = border / 2;
 
-    let mbmi = x.mode_info(mip_base).mbmi;
+    let mbmi = mi.mbmi;
     let mut _16x16mv = mbmi.mv;
     let need_to_clamp_mvs = mbmi.need_to_clamp_mvs;
     
@@ -354,8 +356,8 @@ pub fn vp8_build_inter16x16_predictors_mb(
     let pre_recon_uvoffset = mb_row * 8 * pre_uv_stride as usize + mb_col * 8;
 
     // Reconstruct global Y slices
-    let mut dst_y_slice = x.dst.y_slice_mut_with_offset_safe(recon_yoffset);
-    let pre_y_slice = x.pre.y_slice_with_offset_safe(pre_recon_yoffset);
+    let mut dst_y_slice = dst_fb.y_slice_mut_safe();
+    let pre_y_slice = pre_fb.y_slice_safe();
 
     let dst_y_active_offset = border * dst_y_stride as usize + border + recon_yoffset;
     let pre_y_active_offset = border * pre_y_stride as usize + border + pre_recon_yoffset;
@@ -418,8 +420,8 @@ pub fn vp8_build_inter16x16_predictors_mb(
     }
 
     // Reconstruct global UV slices
-    let (mut dst_u_slice, mut dst_v_slice) = x.dst.uv_slices_mut_with_offset_safe(recon_uvoffset);
-    let (pre_u_slice, pre_v_slice) = x.pre.uv_slices_with_offset_safe(pre_recon_uvoffset);
+    let (mut dst_u_slice, mut dst_v_slice) = dst_fb.uv_slices_mut_with_offset_safe(0);
+    let (pre_u_slice, pre_v_slice) = pre_fb.uv_slices_with_offset_safe(0);
 
     let dst_uv_active_offset = uv_border * dst_uv_stride as usize + uv_border + recon_uvoffset;
     let pre_uv_active_offset = uv_border * pre_uv_stride as usize + uv_border + pre_recon_uvoffset;
@@ -464,16 +466,21 @@ pub fn vp8_build_inter16x16_predictors_mb(
         vp8_copy_mem8x8_safe(sub_pre_v, pre_uv_stride, sub_dst_v, dst_uv_stride);
     }
 }
-fn build_inter4x4_predictors_mb(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
-    let partitioning = x.mode_info(mip_base).mbmi.partitioning;
-    let need_to_clamp_mvs = x.mode_info(mip_base).mbmi.need_to_clamp_mvs;
+fn build_inter4x4_predictors_mb(
+    x: &mut MACROBLOCKD,
+    mi: &MODE_INFO,
+    dst_fb: &mut YV12_BUFFER_CONFIG,
+    pre_fb: &YV12_BUFFER_CONFIG,
+) {
+    let partitioning = mi.mbmi.partitioning;
+    let need_to_clamp_mvs = mi.mbmi.need_to_clamp_mvs;
     
-    let dst_y_stride = x.dst.y_stride;
-    let dst_uv_stride = x.dst.uv_stride;
-    let pre_y_stride = x.pre.y_stride;
-    let pre_uv_stride = x.pre.uv_stride;
+    let dst_y_stride = x.dst_y_stride;
+    let dst_uv_stride = x.dst_uv_stride;
+    let pre_y_stride = x.pre_y_stride;
+    let pre_uv_stride = x.pre_uv_stride;
     
-    let border = x.dst.border as usize;
+    let border = x.dst_border as usize;
     let uv_border = border / 2;
     
     // Reconstruct global offsets
@@ -487,7 +494,7 @@ fn build_inter4x4_predictors_mb(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
     let pre_recon_uvoffset = mb_row * 8 * pre_uv_stride as usize + mb_col * 8;
     
     {
-        let bmi = x.mode_info(mip_base).bmi;
+        let bmi = mi.bmi;
         if (partitioning as ::core::ffi::c_int) < 3 as ::core::ffi::c_int {
             x.block[0].bmi = bmi[0];
             x.block[2].bmi = bmi[2];
@@ -527,8 +534,8 @@ fn build_inter4x4_predictors_mb(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
     let subpixel_predict = x.subpixel_predict;
     
     // Reconstruct global Y slices
-    let mut dst_y_slice = x.dst.y_slice_mut_with_offset_safe(recon_yoffset);
-    let pre_y_slice = x.pre.y_slice_with_offset_safe(pre_recon_yoffset);
+    let mut dst_y_slice = dst_fb.y_slice_mut_safe();
+    let pre_y_slice = pre_fb.y_slice_safe();
     
     let dst_y_active_offset = border * dst_y_stride as usize + border + recon_yoffset;
     let pre_y_active_offset = border * pre_y_stride as usize + border + pre_recon_yoffset;
@@ -617,8 +624,8 @@ fn build_inter4x4_predictors_mb(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
     drop(dst_y_slice);
     
     // Reconstruct global U slices
-    let mut dst_u_slice = x.dst.u_slice_mut_with_offset_safe(recon_uvoffset);
-    let pre_u_slice = x.pre.u_slice_with_offset_safe(pre_recon_uvoffset);
+    let mut dst_u_slice = dst_fb.u_slice_mut_with_offset_safe(0);
+    let pre_u_slice = pre_fb.u_slice_with_offset_safe(0);
     
     let dst_uv_active_offset = uv_border * dst_uv_stride as usize + uv_border + recon_uvoffset;
     let pre_uv_active_offset = uv_border * pre_uv_stride as usize + uv_border + pre_recon_uvoffset;
@@ -665,8 +672,8 @@ fn build_inter4x4_predictors_mb(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
     drop(dst_u_slice);
     
     // Reconstruct global V slices
-    let mut dst_v_slice = x.dst.v_slice_mut_with_offset_safe(recon_uvoffset);
-    let pre_v_slice = x.pre.v_slice_with_offset_safe(pre_recon_uvoffset);
+    let mut dst_v_slice = dst_fb.v_slice_mut_with_offset_safe(0);
+    let pre_v_slice = pre_fb.v_slice_with_offset_safe(0);
     
     {
         for i in (20..24).step_by(2) {
@@ -708,7 +715,7 @@ fn build_inter4x4_predictors_mb(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
         }
     }
 }
-fn build_4x4uvmvs(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
+fn build_4x4uvmvs(x: &mut MACROBLOCKD, mi: &MODE_INFO) {
     let mut i: ::core::ffi::c_int = 0;
     let mut j: ::core::ffi::c_int = 0;
     i = 0 as ::core::ffi::c_int;
@@ -722,19 +729,19 @@ fn build_4x4uvmvs(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
             let mut voffset: ::core::ffi::c_int =
                 20 as ::core::ffi::c_int + i * 2 as ::core::ffi::c_int + j;
             let mut temp: ::core::ffi::c_int = 0;
-            temp = x.mode_info(mip_base).bmi[(yoffset + 0 as ::core::ffi::c_int) as usize]
+            temp = mi.bmi[(yoffset + 0 as ::core::ffi::c_int) as usize]
                 .mv()
                 .as_mv()
                 .row as ::core::ffi::c_int
-                + x.mode_info(mip_base).bmi[(yoffset + 1 as ::core::ffi::c_int) as usize]
+                + mi.bmi[(yoffset + 1 as ::core::ffi::c_int) as usize]
                     .mv()
                     .as_mv()
                     .row as ::core::ffi::c_int
-                + x.mode_info(mip_base).bmi[(yoffset + 4 as ::core::ffi::c_int) as usize]
+                + mi.bmi[(yoffset + 4 as ::core::ffi::c_int) as usize]
                     .mv()
                     .as_mv()
                     .row as ::core::ffi::c_int
-                + x.mode_info(mip_base).bmi[(yoffset + 5 as ::core::ffi::c_int) as usize]
+                + mi.bmi[(yoffset + 5 as ::core::ffi::c_int) as usize]
                     .mv()
                     .as_mv()
                     .row as ::core::ffi::c_int;
@@ -746,19 +753,19 @@ fn build_4x4uvmvs(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
                     * 8 as ::core::ffi::c_int;
             x.block[uoffset as usize].bmi.mv_mut().as_mv_mut().row =
                 (temp / 8 as ::core::ffi::c_int & x.fullpixel_mask) as ::core::ffi::c_short;
-            temp = x.mode_info(mip_base).bmi[(yoffset + 0 as ::core::ffi::c_int) as usize]
+            temp = mi.bmi[(yoffset + 0 as ::core::ffi::c_int) as usize]
                 .mv()
                 .as_mv()
                 .col as ::core::ffi::c_int
-                + x.mode_info(mip_base).bmi[(yoffset + 1 as ::core::ffi::c_int) as usize]
+                + mi.bmi[(yoffset + 1 as ::core::ffi::c_int) as usize]
                     .mv()
                     .as_mv()
                     .col as ::core::ffi::c_int
-                + x.mode_info(mip_base).bmi[(yoffset + 4 as ::core::ffi::c_int) as usize]
+                + mi.bmi[(yoffset + 4 as ::core::ffi::c_int) as usize]
                     .mv()
                     .as_mv()
                     .col as ::core::ffi::c_int
-                + x.mode_info(mip_base).bmi[(yoffset + 5 as ::core::ffi::c_int) as usize]
+                + mi.bmi[(yoffset + 5 as ::core::ffi::c_int) as usize]
                     .mv()
                     .as_mv()
                     .col as ::core::ffi::c_int;
@@ -770,7 +777,7 @@ fn build_4x4uvmvs(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
                     * 8 as ::core::ffi::c_int;
             x.block[uoffset as usize].bmi.mv_mut().as_mv_mut().col =
                 (temp / 8 as ::core::ffi::c_int & x.fullpixel_mask) as ::core::ffi::c_short;
-            if x.mode_info(mip_base).mbmi.need_to_clamp_mvs != 0 {
+            if mi.mbmi.need_to_clamp_mvs != 0 {
                 clamp_uvmv_to_umv_border(
                     x.block[uoffset as usize].bmi.mv_mut().as_mv_mut(),
                     x.mb_to_left_edge,
@@ -786,11 +793,16 @@ fn build_4x4uvmvs(x: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
         i += 1;
     }
 }
-pub fn vp8_build_inter_predictors_mb(xd: &mut MACROBLOCKD, mip_base: &[MODE_INFO]) {
-    if xd.mode_info(mip_base).mbmi.mode as ::core::ffi::c_int != SPLITMV as ::core::ffi::c_int {
-        vp8_build_inter16x16_predictors_mb(xd, mip_base);
+pub fn vp8_build_inter_predictors_mb(
+    xd: &mut MACROBLOCKD,
+    mi: &MODE_INFO,
+    dst_fb: &mut YV12_BUFFER_CONFIG,
+    pre_fb: &YV12_BUFFER_CONFIG,
+) {
+    if mi.mbmi.mode as ::core::ffi::c_int != SPLITMV as ::core::ffi::c_int {
+        vp8_build_inter16x16_predictors_mb(xd, mi, dst_fb, pre_fb);
     } else {
-        build_4x4uvmvs(xd, mip_base);
-        build_inter4x4_predictors_mb(xd, mip_base);
+        build_4x4uvmvs(xd, mi);
+        build_inter4x4_predictors_mb(xd, mi, dst_fb, pre_fb);
     };
 }
