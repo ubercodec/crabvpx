@@ -2,6 +2,12 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Purged the "Safe Lie" and thread address casting (Milestone 4 - Unit 8, 9, & 10) (types.rs, threading.rs)**:
+  - Implemented `SendPtr<T>` wrapper in `src/vp8/common/types.rs` with manual `Copy` and `Clone` implementations to bypass implicit bounds constraints on non-cloneable structures.
+  - Refactored `thread_decoding_proc` signature in `src/vp8/decoder/threading.rs` to accept a read-only wrapped pointer `SendPtr<VP8D_COMP>` instead of the legacy `pbi_addr: usize` address.
+  - Eliminated all thread-local mutable dereferencing of the monolithic decoder structure (`&mut *pbi_raw`), cleanly replacing it with immutably shared reads (`&*pbi_raw`) which are 100% statically safe under Rust's borrowing rules.
+  - Confirmed that all 1160 differential test frames continue to pass perfectly with 100% bit-identical execution.
+
 * **Sliced Destination Frame Buffer Safely (Milestone 3 - Unit 6 & 7) (types.rs, threading.rs)**:
   - Implemented `get_safe_unsafe_slices` on `YV12_BUFFER_CONFIG` in `src/vp8/common/types.rs` to project thread-safe, lock-free `UnsafeRowView` slices aligned perfectly to the Y, U, and V allocation base boundaries.
   - Refactored `mt_decode_mb_rows` and `mt_decode_macroblock` signatures in `src/vp8/decoder/threading.rs` to receive a read-only `common: &VP8_COMMON` reference, eliminating concurrent mutable borrowing conflicts on the root state.

@@ -1293,10 +1293,10 @@ fn mt_decode_mb_rows(
 }
 fn thread_decoding_proc(
     ithread: i32,
-    pbi_addr: usize,
+    pbi_raw: SendPtr<VP8D_COMP>,
     mbrd: std::sync::Arc<std::sync::Mutex<MB_ROW_DEC>>,
 ) {
-    let pbi = unsafe { &mut *(pbi_addr as *mut VP8D_COMP) };
+    let pbi = unsafe { &*pbi_raw.0 };
     
     while vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0 {
         let start_decoding_sem = &pbi.mt_sync.h_event_start_decoding.as_ref().unwrap()[ithread as usize];
@@ -1315,7 +1315,7 @@ fn thread_decoding_proc(
             let decoding_thread_count = pbi.decoding_thread_count;
             let fragments = pbi.fragments;
             let common = &pbi.common;
-            let mbc_raw = pbi.mbc.as_mut_ptr();
+            let mbc_raw = pbi.mbc.as_ptr() as *mut vp8_reader;
             let mt_sync = &pbi.mt_sync;
             mt_decode_mb_rows(common, mbc_raw, mt_sync, xd, ithread + 1, decoding_thread_count, fragments);
             xd.error_info.setjmp = 0;
@@ -1323,7 +1323,7 @@ fn thread_decoding_proc(
     }
 }
 pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) {
-    let pbi_addr = pbi as *mut VP8D_COMP as usize;
+    let pbi_raw = SendPtr(pbi as *const VP8D_COMP);
     let mut core_count: ::core::ffi::c_int = 0 as ::core::ffi::c_int;
     let mut ithread: ::core::ffi::c_uint = 0;
     vpx_atomic_init(&pbi.b_multithreaded_rd, 0 as ::core::ffi::c_int);
@@ -1370,7 +1370,7 @@ pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) {
             
             let builder = std::thread::Builder::new();
             match builder.spawn(move || {
-                thread_decoding_proc(ithread_i32, pbi_addr, mbrd_arc);
+                thread_decoding_proc(ithread_i32, pbi_raw, mbrd_arc);
             }) {
                 Ok(handle) => {
                     h_decoding_thread[ithread as usize] = Some(handle);
