@@ -319,7 +319,7 @@ fn filter_block2d_bil_second_pass_safe(
     }
 }
 
-fn filter_block2d_bil_safe(
+pub(crate) fn filter_block2d_bil_safe(
     src: &[u8],
     src_stride: usize,
     dst: &mut [u8],

@@ -140,6 +140,7 @@ pub fn safe_vp8_bilinear_predict16x16_neon(
         dst_offset,
         dst_stride as usize,
     );
+    #[cfg(target_arch = "aarch64")]
     unsafe {
         vp8_bilinear_predict16x16_neon(
             src.as_ptr().add(src_offset),
@@ -148,6 +149,27 @@ pub fn safe_vp8_bilinear_predict16x16_neon(
             yoffset,
             dst.as_mut_ptr().add(dst_offset),
             dst_stride,
+        );
+    }
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        let stride = src_stride as usize;
+        let dst_stride_usize = dst_stride as usize;
+        let h_filter = &crate::vp8::common::filter::vp8_bilinear_filters[xoffset as usize];
+        let v_filter = &crate::vp8::common::filter::vp8_bilinear_filters[yoffset as usize];
+        
+        let src_slice = &src[src_offset..];
+        let dst_slice = &mut dst[dst_offset..];
+        
+        crate::vp8::common::filter::filter_block2d_bil_safe(
+            src_slice,
+            stride,
+            dst_slice,
+            dst_stride_usize,
+            16,
+            16,
+            h_filter,
+            v_filter,
         );
     }
 }

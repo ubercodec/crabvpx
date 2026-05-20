@@ -27,10 +27,7 @@ unsafe extern "C" {
 
 }
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn vp8_bilinear_predict16x16_neon(src_ptr: *mut c_uchar, src_pixels_per_line: c_int, xoffset: c_int, yoffset: c_int, dst_ptr: *mut c_uchar, dst_pitch: c_int) {
-    vp8_bilinear_predict16x16_c(src_ptr, src_pixels_per_line, xoffset, yoffset, dst_ptr, dst_pitch);
-}
+
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vp8_bilinear_predict4x4_neon(src_ptr: *mut c_uchar, src_pixels_per_line: c_int, xoffset: c_int, yoffset: c_int, dst_ptr: *mut c_uchar, dst_pitch: c_int) {
