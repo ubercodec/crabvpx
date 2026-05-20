@@ -399,18 +399,17 @@ pub fn vp8_create_decoder_instances(
         None => return VPX_CODEC_ERROR as ::core::ffi::c_int,
     };
     pbi.max_threads = oxcf.max_threads;
-    unsafe {
-        if setjmp(&raw mut pbi.common.error.jmp as *mut ::core::ffi::c_int) != 0 {
-            pbi.common.error.setjmp = 0;
-            vp8_decoder_remove_threads(&mut pbi);
-            remove_decompressor(pbi);
-            fb.pbi = [::core::ptr::null_mut(); 32];
-            return VPX_CODEC_ERROR as ::core::ffi::c_int;
-        }
-        pbi.common.error.setjmp = 1;
-        vp8_decoder_create_threads(&mut pbi);
+    let setjmp_val = unsafe { setjmp(&raw mut pbi.common.error.jmp as *mut ::core::ffi::c_int) };
+    if setjmp_val != 0 {
         pbi.common.error.setjmp = 0;
+        vp8_decoder_remove_threads(&mut pbi);
+        remove_decompressor(pbi);
+        fb.pbi = [::core::ptr::null_mut(); 32];
+        return VPX_CODEC_ERROR as ::core::ffi::c_int;
     }
+    pbi.common.error.setjmp = 1;
+    vp8_decoder_create_threads(&mut pbi);
+    pbi.common.error.setjmp = 0;
     fb.pbi[0] = Box::into_raw(pbi);
     return VPX_CODEC_OK as ::core::ffi::c_int;
 }

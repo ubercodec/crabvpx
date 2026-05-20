@@ -2,6 +2,13 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Shrunk Unsafe Block in Decoder Instance Creation (onyxd_if.rs)**:
+  - Shrunk the scope of the `unsafe` block in `vp8_create_decoder_instances` in `src/vp8/decoder/onyxd_if.rs`.
+  - Previously, the entire block containing `setjmp` and `vp8_decoder_create_threads` was marked `unsafe`.
+  - Since `vp8_decoder_create_threads` was already refactored to be safe, the `unsafe` block now only encloses the FFI `setjmp` call.
+  - Verified that compilation and 100% bit-identical differential tests pass successfully.
+  - Unsafe block count remains stable at 123.
+
 * **Refactored Decoder Instance Creation to Defer Raw Pointer Conversion (onyxd_if.rs)**:
   - Refactored `vp8_create_decoder_instances` in `src/vp8/decoder/onyxd_if.rs` to hold and initialize the new decoder instance using safe native `Box<VP8D_COMP>` ownership.
   - Deferred the raw pointer conversion (`Box::into_raw`) until the very end of the function, after successful initialization and thread creation.
