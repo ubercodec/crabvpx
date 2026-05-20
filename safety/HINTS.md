@@ -2,6 +2,11 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Obsolete #[unsafe(no_mangle)] Removal in Entropy (entropy.rs)**:
+  - Removed 11 obsolete `#[unsafe(no_mangle)]` attributes from static tables, probability arrays, and trees in `src/vp8/common/entropy.rs`.
+  - Since CrabVPX is built as a Rust library and these tables are only accessed internally via standard Rust imports, these FFI export attributes were completely obsolete.
+  - This successfully eliminated **11 unsafe keywords** globally, reducing the remaining unsafe count from 373 to 362.
+  - Verified 100% bit-identical correctness across all 1160 test frames.
 * **Dead Code Elimination in blockd.rs**:
   - Audited `blockd.rs` and found C static tables `vp8_block2left` and `vp8_block2above` were completely unused in the decoder.
   - Removed these definitions from `src/vp8/common/blockd.rs` (emptying the file) and their extern declarations from `src/vp8/common/blockd.h`.
