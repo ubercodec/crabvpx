@@ -64,13 +64,6 @@ pub fn vp8_yv12_de_alloc_frame_buffer_safe(ybf: &mut YV12_BUFFER_CONFIG) {
     };
 }
 
-#[unsafe(no_mangle)]
-pub fn vp8_yv12_de_alloc_frame_buffer(
-    ybf: &mut YV12_BUFFER_CONFIG,
-) -> ::core::ffi::c_int {
-    vp8_yv12_de_alloc_frame_buffer_safe(ybf);
-    0 as ::core::ffi::c_int
-}
 
 pub fn vp8_yv12_realloc_frame_buffer_safe(
     ybf: &mut YV12_BUFFER_CONFIG,
@@ -133,18 +126,6 @@ pub fn vp8_yv12_realloc_frame_buffer_safe(
     Ok(())
 }
 
-#[unsafe(no_mangle)]
-pub fn vp8_yv12_realloc_frame_buffer(
-    ybf: &mut YV12_BUFFER_CONFIG,
-    width: ::core::ffi::c_int,
-    height: ::core::ffi::c_int,
-    border: ::core::ffi::c_int,
-) -> ::core::ffi::c_int {
-    match vp8_yv12_realloc_frame_buffer_safe(ybf, width, height, border) {
-        Ok(_) => 0,
-        Err(e) => e,
-    }
-}
 
 pub fn vp8_yv12_alloc_frame_buffer_safe(
     ybf: &mut YV12_BUFFER_CONFIG,
@@ -156,16 +137,4 @@ pub fn vp8_yv12_alloc_frame_buffer_safe(
     vp8_yv12_realloc_frame_buffer_safe(ybf, width, height, border)
 }
 
-#[unsafe(no_mangle)]
-pub fn vp8_yv12_alloc_frame_buffer(
-    ybf: &mut YV12_BUFFER_CONFIG,
-    width: ::core::ffi::c_int,
-    height: ::core::ffi::c_int,
-    border: ::core::ffi::c_int,
-) -> ::core::ffi::c_int {
-    match vp8_yv12_alloc_frame_buffer_safe(ybf, width, height, border) {
-        Ok(_) => 0,
-        Err(e) => e,
-    }
-}
 

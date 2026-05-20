@@ -2,6 +2,11 @@
 
 See remaining_refactoring_work_items.md for an overview of particular unsafe blocks.
 ## Current Status (May 2026)
+* **Removed Unused FFI wrappers in yv12config.rs**:
+  - Identified and removed three unused transpiled C-ABI FFI wrappers from `src/vpx_scale/generic/yv12config.rs`: `vp8_yv12_de_alloc_frame_buffer`, `vp8_yv12_realloc_frame_buffer`, and `vp8_yv12_alloc_frame_buffer`.
+  - These were dead code, as all internal Rust components (like `alloccommon.rs`) call the safe equivalents directly, and they are not referenced by the out-of-scope public C FFI interface `vp8_dx_iface.rs`.
+  - This successfully eliminated **3 `#[unsafe(no_mangle)]` attributes** (3 unsafe keywords) globally, reducing the remaining unsafe count from 150 to 147.
+  - Verified 100% bit-identical correctness across all 1160 test frames.
 * **Removal of Unused FFI Shim and Obsolete Attributes (thread_shim.rs, threading.rs)**:
   - Identified and completely removed the unused C-style `pthread_once` FFI shim and its associated static `ONCE_MAP` from `src/thread_shim.rs`, as it was completely unreferenced in the codebase.
   - Audited `src/vp8/decoder/threading.rs` and identified `vp8_decoder_create_threads` and `vp8mt_decode_mb_rows` as internal safe Rust functions that are only imported via `use` within the Rust codebase.
@@ -226,5 +231,6 @@ See remaining_refactoring_work_items.md for an overview of particular unsafe blo
    - [x] **Audit `loopfilter_filters.rs` for unused FFI wrappers**: Identified and removed 8 unused legacy C-ABI FFI wrappers, eliminating 16 unsafe keywords. (Completed!)
    - **Audit other FFI wrappers in `src/vp8/decoder/dboolhuff.rs`** (`vp8dx_start_decode` and `vp8dx_bool_decoder_fill`) to see if they can also be deprecated/removed or if they are required for external ABI linkage.
    - **Audit other dead tables in `src/vp8/common/entropy.rs`**: `vp8_coef_encodings` is confirmed completely unused in the decoder and ready to be removed.
-   - **Audit other common files for unused FFI wrappers**: Check `filter.rs`, `reconintra.rs`, `reconinter.rs` for unused `_c` wrappers that can be safely removed to reduce unsafe count.
+   - [x] **Audit `yv12config.rs` for unused FFI wrappers**: Identified and removed three unused C-ABI wrappers (`vp8_yv12_de_alloc_frame_buffer`, `vp8_yv12_realloc_frame_buffer`, `vp8_yv12_alloc_frame_buffer`), eliminating 3 unsafe keywords. (Completed!)
+    - **Remove obsolete `#[unsafe(no_mangle)]` from `arm_cpu_caps` in `src/vpx_ports/aarch64_cpudetect.rs`**: This function is only called internally by Rust modules (which import it as a standard Rust function via `use`), and is never called via FFI. Removing the attribute and `extern "C"` would eliminate 1 unsafe keyword globally.
 
