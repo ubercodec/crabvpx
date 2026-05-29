@@ -8,7 +8,6 @@ unsafe extern "Rust" {
         border: i32,
     ) -> i32;
     fn vp8_yv12_de_alloc_frame_buffer(ybf: *mut Yv12BufferConfig) -> i32;
-    fn vpx_calloc(num: usize, size: usize) -> *mut c_void;
     fn vpx_free(memblk: *mut c_void);
     fn vp8_init_mbmode_probs(x: *mut Vp8Common);
     fn vp8_default_bmode_probs(dest: *mut u8);
@@ -98,16 +97,10 @@ pub struct MbModeInfo {
     pub segment_id: u8,
 }
 
-pub const VPX_CR_FULL_RANGE: u32 = 1;
-pub const VPX_CR_STUDIO_RANGE: u32 = 0;
-pub const VPX_CS_SRGB: u32 = 7;
-pub const VPX_CS_RESERVED: u32 = 6;
-pub const VPX_CS_BT_2020: u32 = 5;
-pub const VPX_CS_SMPTE_240: u32 = 4;
-pub const VPX_CS_SMPTE_170: u32 = 3;
-pub const VPX_CS_BT_709: u32 = 2;
-pub const VPX_CS_BT_601: u32 = 1;
-pub const VPX_CS_UNKNOWN: u32 = 0;
+pub use crate::vpx::src::vpx_image::{
+    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
+    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
+};
 pub const SIMPLE_LOOPFILTER: u32 = 1;
 pub const NORMAL_LOOPFILTER: u32 = 0;
 #[derive(Copy, Clone)]

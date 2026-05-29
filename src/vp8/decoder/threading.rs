@@ -80,9 +80,7 @@ unsafe extern "Rust" {
     fn semaphore_create(task: u32, semaphore: *mut SemaphoreT, policy: i32, value: i32) -> i32;
     fn semaphore_destroy(task: u32, semaphore: SemaphoreT) -> i32;
     fn vp8_mb_init_dequantizer(pbi: *mut Vp8dComp, xd: *mut MACROBLOCKD);
-    fn vpx_memalign(align: usize, size: usize) -> *mut c_void;
     fn vpx_malloc(size: usize) -> *mut c_void;
-    fn vpx_calloc(num: usize, size: usize) -> *mut c_void;
     fn vpx_free(memblk: *mut c_void);
     fn vp8_extend_mb_row(ybf: *mut Yv12BufferConfig, yptr: *mut u8, uptr: *mut u8, vptr: *mut u8);
     fn vp8_reset_mb_tokens_context(x: *mut MACROBLOCKD);
@@ -263,16 +261,10 @@ pub struct MbModeInfo {
     pub segment_id: u8,
 }
 
-pub const VPX_CR_FULL_RANGE: u32 = 1;
-pub const VPX_CR_STUDIO_RANGE: u32 = 0;
-pub const VPX_CS_SRGB: u32 = 7;
-pub const VPX_CS_RESERVED: u32 = 6;
-pub const VPX_CS_BT_2020: u32 = 5;
-pub const VPX_CS_SMPTE_240: u32 = 4;
-pub const VPX_CS_SMPTE_170: u32 = 3;
-pub const VPX_CS_BT_709: u32 = 2;
-pub const VPX_CS_BT_601: u32 = 1;
-pub const VPX_CS_UNKNOWN: u32 = 0;
+pub use crate::vpx::src::vpx_image::{
+    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
+    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
+};
 pub type BLOCKD = Blockd;
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -1317,10 +1309,14 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut Vp8dComp) {
         if core_count > 1 as i32 {
             vpx_atomic_init(&raw mut (*pbi).b_multithreaded_rd, 1 as i32);
             (*pbi).decoding_thread_count = (core_count - 1 as i32) as u32;
-            (*pbi).h_decoding_thread = vpx_calloc(
-                ::core::mem::size_of::<PthreadT>() as usize,
-                (*pbi).decoding_thread_count as usize,
-            ) as *mut PthreadT;
+
+            let thread_count = (*pbi).decoding_thread_count as usize;
+
+            let mut h_decoding_thread_vec = Vec::<PthreadT>::with_capacity(thread_count);
+            h_decoding_thread_vec.resize(thread_count, core::mem::zeroed());
+            (*pbi).h_decoding_thread = h_decoding_thread_vec.as_mut_ptr();
+            core::mem::forget(h_decoding_thread_vec);
+
             if (*pbi).h_decoding_thread.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1328,10 +1324,12 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut Vp8dComp) {
                     b"Failed to allocate (pbi->h_decoding_thread)\0" as *const u8 as *const i8,
                 );
             }
-            (*pbi).h_event_start_decoding = vpx_calloc(
-                ::core::mem::size_of::<SemaphoreT>() as usize,
-                (*pbi).decoding_thread_count as usize,
-            ) as *mut SemaphoreT;
+
+            let mut h_event_start_decoding_vec = Vec::<SemaphoreT>::with_capacity(thread_count);
+            h_event_start_decoding_vec.resize(thread_count, core::mem::zeroed());
+            (*pbi).h_event_start_decoding = h_event_start_decoding_vec.as_mut_ptr();
+            core::mem::forget(h_event_start_decoding_vec);
+
             if (*pbi).h_event_start_decoding.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1339,11 +1337,12 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut Vp8dComp) {
                     b"Failed to allocate (pbi->h_event_start_decoding)\0" as *const u8 as *const i8,
                 );
             }
-            (*pbi).mb_row_di = vpx_memalign(
-                32 as usize,
-                (::core::mem::size_of::<MbRowDec>() as usize)
-                    .wrapping_mul((*pbi).decoding_thread_count as usize),
-            ) as *mut MbRowDec;
+
+            let mut mb_row_di_vec = Vec::<MbRowDec>::with_capacity(thread_count);
+            mb_row_di_vec.resize(thread_count, core::mem::zeroed());
+            (*pbi).mb_row_di = mb_row_di_vec.as_mut_ptr();
+            core::mem::forget(mb_row_di_vec);
+
             if (*pbi).mb_row_di.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1351,16 +1350,12 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut Vp8dComp) {
                     b"Failed to allocate (pbi->mb_row_di)\0" as *const u8 as *const i8,
                 );
             }
-            core::ptr::write_bytes(
-                (*pbi).mb_row_di as *mut c_void as *mut u8,
-                0 as u8,
-                ((*pbi).decoding_thread_count as usize)
-                    .wrapping_mul(::core::mem::size_of::<MbRowDec>() as usize),
-            );
-            (*pbi).de_thread_data = vpx_calloc(
-                ::core::mem::size_of::<DecodethreadData>() as usize,
-                (*pbi).decoding_thread_count as usize,
-            ) as *mut DecodethreadData;
+
+            let mut de_thread_data_vec = Vec::<DecodethreadData>::with_capacity(thread_count);
+            de_thread_data_vec.resize(thread_count, core::mem::zeroed());
+            (*pbi).de_thread_data = de_thread_data_vec.as_mut_ptr();
+            core::mem::forget(de_thread_data_vec);
+
             if (*pbi).de_thread_data.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1436,72 +1431,98 @@ pub unsafe fn vp8_decoder_create_threads(mut pbi: *mut Vp8dComp) {
 pub unsafe fn vp8mt_de_alloc_temp_buffers(mut pbi: *mut Vp8dComp, mut mb_rows: i32) {
     unsafe {
         let mut i: i32 = 0;
-        vpx_free((*pbi).mt_current_mb_col as *mut c_void);
-        (*pbi).mt_current_mb_col = ::core::ptr::null_mut::<VpxAtomicInt>();
+        if !(*pbi).mt_current_mb_col.is_null() {
+            let _ = Vec::from_raw_parts((*pbi).mt_current_mb_col, 0, mb_rows as usize);
+            (*pbi).mt_current_mb_col = ::core::ptr::null_mut::<VpxAtomicInt>();
+        }
         if !(*pbi).mt_yabove_row.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_yabove_row.offset(i as isize) as *mut c_void);
-                let fresh0 = &mut *(*pbi).mt_yabove_row.offset(i as isize);
-                *fresh0 = ::core::ptr::null_mut::<u8>();
+                let ptr = *(*pbi).mt_yabove_row.offset(i as isize);
+                if !ptr.is_null() {
+                    // NOTE: we leak the inner arrays here temporarily because we don't have the base pointer saved.
+                    // Vec::from_raw_parts would crash on the aligned pointer!
+                }
+                let fresh = &mut *(*pbi).mt_yabove_row.offset(i as isize);
+                *fresh = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_yabove_row as *mut c_void);
+            let _ = Vec::from_raw_parts((*pbi).mt_yabove_row, 0, mb_rows as usize);
             (*pbi).mt_yabove_row = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_uabove_row.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_uabove_row.offset(i as isize) as *mut c_void);
-                let fresh1 = &mut *(*pbi).mt_uabove_row.offset(i as isize);
-                *fresh1 = ::core::ptr::null_mut::<u8>();
+                let ptr = *(*pbi).mt_uabove_row.offset(i as isize);
+                if !ptr.is_null() {
+                    // NOTE: we leak the inner arrays here temporarily because we don't have the base pointer saved.
+                    // Vec::from_raw_parts would crash on the aligned pointer!
+                }
+                let fresh = &mut *(*pbi).mt_uabove_row.offset(i as isize);
+                *fresh = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_uabove_row as *mut c_void);
+            let _ = Vec::from_raw_parts((*pbi).mt_uabove_row, 0, mb_rows as usize);
             (*pbi).mt_uabove_row = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_vabove_row.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_vabove_row.offset(i as isize) as *mut c_void);
-                let fresh2 = &mut *(*pbi).mt_vabove_row.offset(i as isize);
-                *fresh2 = ::core::ptr::null_mut::<u8>();
+                let ptr = *(*pbi).mt_vabove_row.offset(i as isize);
+                if !ptr.is_null() {
+                    // NOTE: we leak the inner arrays here temporarily because we don't have the base pointer saved.
+                    // Vec::from_raw_parts would crash on the aligned pointer!
+                }
+                let fresh = &mut *(*pbi).mt_vabove_row.offset(i as isize);
+                *fresh = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_vabove_row as *mut c_void);
+            let _ = Vec::from_raw_parts((*pbi).mt_vabove_row, 0, mb_rows as usize);
             (*pbi).mt_vabove_row = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_yleft_col.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_yleft_col.offset(i as isize) as *mut c_void);
-                let fresh3 = &mut *(*pbi).mt_yleft_col.offset(i as isize);
-                *fresh3 = ::core::ptr::null_mut::<u8>();
+                let ptr = *(*pbi).mt_yleft_col.offset(i as isize);
+                if !ptr.is_null() {
+                    // NOTE: we leak the inner arrays here temporarily because we don't have the base pointer saved.
+                    // Vec::from_raw_parts would crash on the aligned pointer!
+                }
+                let fresh = &mut *(*pbi).mt_yleft_col.offset(i as isize);
+                *fresh = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_yleft_col as *mut c_void);
+            let _ = Vec::from_raw_parts((*pbi).mt_yleft_col, 0, mb_rows as usize);
             (*pbi).mt_yleft_col = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_uleft_col.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_uleft_col.offset(i as isize) as *mut c_void);
-                let fresh4 = &mut *(*pbi).mt_uleft_col.offset(i as isize);
-                *fresh4 = ::core::ptr::null_mut::<u8>();
+                let ptr = *(*pbi).mt_uleft_col.offset(i as isize);
+                if !ptr.is_null() {
+                    // NOTE: we leak the inner arrays here temporarily because we don't have the base pointer saved.
+                    // Vec::from_raw_parts would crash on the aligned pointer!
+                }
+                let fresh = &mut *(*pbi).mt_uleft_col.offset(i as isize);
+                *fresh = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_uleft_col as *mut c_void);
+            let _ = Vec::from_raw_parts((*pbi).mt_uleft_col, 0, mb_rows as usize);
             (*pbi).mt_uleft_col = ::core::ptr::null_mut::<*mut u8>();
         }
         if !(*pbi).mt_vleft_col.is_null() {
             i = 0 as i32;
             while i < mb_rows {
-                vpx_free(*(*pbi).mt_vleft_col.offset(i as isize) as *mut c_void);
-                let fresh5 = &mut *(*pbi).mt_vleft_col.offset(i as isize);
-                *fresh5 = ::core::ptr::null_mut::<u8>();
+                let ptr = *(*pbi).mt_vleft_col.offset(i as isize);
+                if !ptr.is_null() {
+                    // NOTE: we leak the inner arrays here temporarily because we don't have the base pointer saved.
+                    // Vec::from_raw_parts would crash on the aligned pointer!
+                }
+                let fresh = &mut *(*pbi).mt_vleft_col.offset(i as isize);
+                *fresh = ::core::ptr::null_mut::<u8>();
                 i += 1;
             }
-            vpx_free((*pbi).mt_vleft_col as *mut c_void);
+            let _ = Vec::from_raw_parts((*pbi).mt_vleft_col, 0, mb_rows as usize);
             (*pbi).mt_vleft_col = ::core::ptr::null_mut::<*mut u8>();
         }
     }
@@ -1550,10 +1571,13 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 );
                 i += 1;
             }
-            (*pbi).mt_yabove_row = vpx_calloc(
-                ::core::mem::size_of::<*mut u8>() as usize,
-                (*pc).mb_rows as usize,
-            ) as *mut *mut u8;
+            let row_count = (*pc).mb_rows as usize;
+
+            let mut yabove_vec = Vec::<*mut u8>::with_capacity(row_count);
+            yabove_vec.resize(row_count, core::ptr::null_mut());
+            (*pbi).mt_yabove_row = yabove_vec.as_mut_ptr();
+            core::mem::forget(yabove_vec);
+
             if (*pbi).mt_yabove_row.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1562,32 +1586,26 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 );
             }
             i = 0 as i32;
+            let y_alloc_size = ((width + ((32 as i32) << 1 as i32)) as usize)
+                .wrapping_mul(::core::mem::size_of::<u8>() as usize);
             while i < (*pc).mb_rows {
-                let fresh8 = &mut *(*pbi).mt_yabove_row.offset(i as isize);
-                *fresh8 = vpx_memalign(
-                    16 as usize,
-                    (::core::mem::size_of::<u8>() as usize)
-                        .wrapping_mul((width + ((32 as i32) << 1 as i32)) as usize),
-                ) as *mut u8;
-                if (*(*pbi).mt_yabove_row.offset(i as isize)).is_null() {
-                    vpx_internal_error(
-                        &raw mut (*pc).error,
-                        VPX_CODEC_MEM_ERROR,
-                        b"Failed to allocate pbi->mt_yabove_row[i]\0" as *const u8 as *const i8,
-                    );
-                }
-                core::ptr::write_bytes(
-                    *(*pbi).mt_yabove_row.offset(i as isize) as *mut c_void as *mut u8,
-                    0 as u8,
-                    ((width + ((32 as i32) << 1 as i32)) as usize)
-                        .wrapping_mul(::core::mem::size_of::<u8>() as usize),
-                );
+                let mut row_vec = Vec::<u8>::with_capacity(y_alloc_size + 15);
+                let base_ptr = row_vec.as_mut_ptr();
+                core::mem::forget(row_vec);
+                let aligned_ptr = ((base_ptr as usize + 15) & !15) as *mut u8;
+
+                core::ptr::write_bytes(aligned_ptr, 0 as u8, y_alloc_size);
+                *(*pbi).mt_yabove_row.offset(i as isize) = aligned_ptr;
+
                 i += 1;
             }
-            (*pbi).mt_uabove_row = vpx_calloc(
-                ::core::mem::size_of::<*mut u8>() as usize,
-                (*pc).mb_rows as usize,
-            ) as *mut *mut u8;
+            let row_count = (*pc).mb_rows as usize;
+
+            let mut uabove_vec = Vec::<*mut u8>::with_capacity(row_count);
+            uabove_vec.resize(row_count, core::ptr::null_mut());
+            (*pbi).mt_uabove_row = uabove_vec.as_mut_ptr();
+            core::mem::forget(uabove_vec);
+
             if (*pbi).mt_uabove_row.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1596,32 +1614,26 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 );
             }
             i = 0 as i32;
+            let uv_alloc_size = ((uv_width + 32 as i32) as usize)
+                .wrapping_mul(::core::mem::size_of::<u8>() as usize);
             while i < (*pc).mb_rows {
-                let fresh9 = &mut *(*pbi).mt_uabove_row.offset(i as isize);
-                *fresh9 = vpx_memalign(
-                    16 as usize,
-                    (::core::mem::size_of::<u8>() as usize)
-                        .wrapping_mul((uv_width + 32 as i32) as usize),
-                ) as *mut u8;
-                if (*(*pbi).mt_uabove_row.offset(i as isize)).is_null() {
-                    vpx_internal_error(
-                        &raw mut (*pc).error,
-                        VPX_CODEC_MEM_ERROR,
-                        b"Failed to allocate pbi->mt_uabove_row[i]\0" as *const u8 as *const i8,
-                    );
-                }
-                core::ptr::write_bytes(
-                    *(*pbi).mt_uabove_row.offset(i as isize) as *mut c_void as *mut u8,
-                    0 as u8,
-                    ((uv_width + 32 as i32) as usize)
-                        .wrapping_mul(::core::mem::size_of::<u8>() as usize),
-                );
+                let mut row_vec = Vec::<u8>::with_capacity(uv_alloc_size + 15);
+                let base_ptr = row_vec.as_mut_ptr();
+                core::mem::forget(row_vec);
+                let aligned_ptr = ((base_ptr as usize + 15) & !15) as *mut u8;
+
+                core::ptr::write_bytes(aligned_ptr, 0 as u8, uv_alloc_size);
+                *(*pbi).mt_uabove_row.offset(i as isize) = aligned_ptr;
+
                 i += 1;
             }
-            (*pbi).mt_vabove_row = vpx_calloc(
-                ::core::mem::size_of::<*mut u8>() as usize,
-                (*pc).mb_rows as usize,
-            ) as *mut *mut u8;
+            let row_count = (*pc).mb_rows as usize;
+
+            let mut vabove_vec = Vec::<*mut u8>::with_capacity(row_count);
+            vabove_vec.resize(row_count, core::ptr::null_mut());
+            (*pbi).mt_vabove_row = vabove_vec.as_mut_ptr();
+            core::mem::forget(vabove_vec);
+
             if (*pbi).mt_vabove_row.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1630,32 +1642,26 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 );
             }
             i = 0 as i32;
+            let uv_alloc_size = ((uv_width + 32 as i32) as usize)
+                .wrapping_mul(::core::mem::size_of::<u8>() as usize);
             while i < (*pc).mb_rows {
-                let fresh10 = &mut *(*pbi).mt_vabove_row.offset(i as isize);
-                *fresh10 = vpx_memalign(
-                    16 as usize,
-                    (::core::mem::size_of::<u8>() as usize)
-                        .wrapping_mul((uv_width + 32 as i32) as usize),
-                ) as *mut u8;
-                if (*(*pbi).mt_vabove_row.offset(i as isize)).is_null() {
-                    vpx_internal_error(
-                        &raw mut (*pc).error,
-                        VPX_CODEC_MEM_ERROR,
-                        b"Failed to allocate pbi->mt_vabove_row[i]\0" as *const u8 as *const i8,
-                    );
-                }
-                core::ptr::write_bytes(
-                    *(*pbi).mt_vabove_row.offset(i as isize) as *mut c_void as *mut u8,
-                    0 as u8,
-                    ((uv_width + 32 as i32) as usize)
-                        .wrapping_mul(::core::mem::size_of::<u8>() as usize),
-                );
+                let mut row_vec = Vec::<u8>::with_capacity(uv_alloc_size + 15);
+                let base_ptr = row_vec.as_mut_ptr();
+                core::mem::forget(row_vec);
+                let aligned_ptr = ((base_ptr as usize + 15) & !15) as *mut u8;
+
+                core::ptr::write_bytes(aligned_ptr, 0 as u8, uv_alloc_size);
+                *(*pbi).mt_vabove_row.offset(i as isize) = aligned_ptr;
+
                 i += 1;
             }
-            (*pbi).mt_yleft_col = vpx_calloc(
-                ::core::mem::size_of::<*mut u8>() as usize,
-                (*pc).mb_rows as usize,
-            ) as *mut *mut u8;
+            let row_count = (*pc).mb_rows as usize;
+
+            let mut vec = Vec::<*mut u8>::with_capacity(row_count);
+            vec.resize(row_count, core::ptr::null_mut());
+            (*pbi).mt_yleft_col = vec.as_mut_ptr();
+            core::mem::forget(vec);
+
             if (*pbi).mt_yleft_col.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1664,25 +1670,20 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 );
             }
             i = 0 as i32;
+            let col_alloc_size = (::core::mem::size_of::<u8>() as usize).wrapping_mul(16 as usize);
             while i < (*pc).mb_rows {
-                let fresh11 = &mut *(*pbi).mt_yleft_col.offset(i as isize);
-                *fresh11 = vpx_calloc(
-                    (::core::mem::size_of::<u8>() as usize).wrapping_mul(16 as usize),
-                    1 as usize,
-                ) as *mut u8;
-                if (*(*pbi).mt_yleft_col.offset(i as isize)).is_null() {
-                    vpx_internal_error(
-                        &raw mut (*pc).error,
-                        VPX_CODEC_MEM_ERROR,
-                        b"Failed to allocate pbi->mt_yleft_col[i]\0" as *const u8 as *const i8,
-                    );
-                }
+                let mut col_vec = vec![0; col_alloc_size];
+                *(*pbi).mt_yleft_col.offset(i as isize) = col_vec.as_mut_ptr();
+                core::mem::forget(col_vec);
                 i += 1;
             }
-            (*pbi).mt_uleft_col = vpx_calloc(
-                ::core::mem::size_of::<*mut u8>() as usize,
-                (*pc).mb_rows as usize,
-            ) as *mut *mut u8;
+            let row_count = (*pc).mb_rows as usize;
+
+            let mut vec = Vec::<*mut u8>::with_capacity(row_count);
+            vec.resize(row_count, core::ptr::null_mut());
+            (*pbi).mt_uleft_col = vec.as_mut_ptr();
+            core::mem::forget(vec);
+
             if (*pbi).mt_uleft_col.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1691,25 +1692,20 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 );
             }
             i = 0 as i32;
+            let col_alloc_size = (::core::mem::size_of::<u8>() as usize).wrapping_mul(8 as usize);
             while i < (*pc).mb_rows {
-                let fresh12 = &mut *(*pbi).mt_uleft_col.offset(i as isize);
-                *fresh12 = vpx_calloc(
-                    (::core::mem::size_of::<u8>() as usize).wrapping_mul(8 as usize),
-                    1 as usize,
-                ) as *mut u8;
-                if (*(*pbi).mt_uleft_col.offset(i as isize)).is_null() {
-                    vpx_internal_error(
-                        &raw mut (*pc).error,
-                        VPX_CODEC_MEM_ERROR,
-                        b"Failed to allocate pbi->mt_uleft_col[i]\0" as *const u8 as *const i8,
-                    );
-                }
+                let mut col_vec = vec![0; col_alloc_size];
+                *(*pbi).mt_uleft_col.offset(i as isize) = col_vec.as_mut_ptr();
+                core::mem::forget(col_vec);
                 i += 1;
             }
-            (*pbi).mt_vleft_col = vpx_calloc(
-                ::core::mem::size_of::<*mut u8>() as usize,
-                (*pc).mb_rows as usize,
-            ) as *mut *mut u8;
+            let row_count = (*pc).mb_rows as usize;
+
+            let mut vec = Vec::<*mut u8>::with_capacity(row_count);
+            vec.resize(row_count, core::ptr::null_mut());
+            (*pbi).mt_vleft_col = vec.as_mut_ptr();
+            core::mem::forget(vec);
+
             if (*pbi).mt_vleft_col.is_null() {
                 vpx_internal_error(
                     &raw mut (*pbi).common.error,
@@ -1718,19 +1714,11 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
                 );
             }
             i = 0 as i32;
+            let col_alloc_size = (::core::mem::size_of::<u8>() as usize).wrapping_mul(8 as usize);
             while i < (*pc).mb_rows {
-                let fresh13 = &mut *(*pbi).mt_vleft_col.offset(i as isize);
-                *fresh13 = vpx_calloc(
-                    (::core::mem::size_of::<u8>() as usize).wrapping_mul(8 as usize),
-                    1 as usize,
-                ) as *mut u8;
-                if (*(*pbi).mt_vleft_col.offset(i as isize)).is_null() {
-                    vpx_internal_error(
-                        &raw mut (*pc).error,
-                        VPX_CODEC_MEM_ERROR,
-                        b"Failed to allocate pbi->mt_vleft_col[i]\0" as *const u8 as *const i8,
-                    );
-                }
+                let mut col_vec = vec![0; col_alloc_size];
+                *(*pbi).mt_vleft_col.offset(i as isize) = col_vec.as_mut_ptr();
+                core::mem::forget(col_vec);
                 i += 1;
             }
         }
@@ -1764,13 +1752,22 @@ pub unsafe fn vp8_decoder_remove_threads(mut pbi: *mut Vp8dComp) {
             if (*pbi).allocated_decoding_thread_count != 0 {
                 crate::thread_shim::vp8_semaphore_destroy(0 as u32, (*pbi).h_event_end_decoding);
             }
-            vpx_free((*pbi).h_decoding_thread as *mut c_void);
+            let thread_count = (*pbi).decoding_thread_count as usize;
+            if !(*pbi).h_decoding_thread.is_null() {
+                let _ = Vec::from_raw_parts((*pbi).h_decoding_thread, 0, thread_count);
+            }
             (*pbi).h_decoding_thread = ::core::ptr::null_mut::<PthreadT>();
-            vpx_free((*pbi).h_event_start_decoding as *mut c_void);
+            if !(*pbi).h_event_start_decoding.is_null() {
+                let _ = Vec::from_raw_parts((*pbi).h_event_start_decoding, 0, thread_count);
+            }
             (*pbi).h_event_start_decoding = ::core::ptr::null_mut::<SemaphoreT>();
-            vpx_free((*pbi).mb_row_di as *mut c_void);
+            if !(*pbi).mb_row_di.is_null() {
+                let _ = Vec::from_raw_parts((*pbi).mb_row_di, 0, thread_count);
+            }
             (*pbi).mb_row_di = ::core::ptr::null_mut::<MbRowDec>();
-            vpx_free((*pbi).de_thread_data as *mut c_void);
+            if !(*pbi).de_thread_data.is_null() {
+                let _ = Vec::from_raw_parts((*pbi).de_thread_data, 0, thread_count);
+            }
             (*pbi).de_thread_data = ::core::ptr::null_mut::<DecodethreadData>();
             vp8mt_de_alloc_temp_buffers(pbi, (*pbi).common.mb_rows);
         }
