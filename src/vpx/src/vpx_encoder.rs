@@ -4,52 +4,13 @@ unsafe extern "Rust" {
     fn vpx_codec_destroy(ctx: *mut VpxCodecCtxT) -> u32;
 }
 pub type BuiltinVaList = *mut i8;
-pub const VPX_IMG_FMT_I44016: u32 = 2311;
-pub const VPX_IMG_FMT_I44416: u32 = 2310;
-pub const VPX_IMG_FMT_I42216: u32 = 2309;
-pub const VPX_IMG_FMT_I42016: u32 = 2306;
-pub const VPX_IMG_FMT_NV12: u32 = 265;
-pub const VPX_IMG_FMT_I440: u32 = 263;
-pub const VPX_IMG_FMT_I444: u32 = 262;
-pub const VPX_IMG_FMT_I422: u32 = 261;
-pub const VPX_IMG_FMT_I420: u32 = 258;
-pub const VPX_IMG_FMT_YV12: u32 = 769;
-pub const VPX_IMG_FMT_NONE: u32 = 0;
-pub const VPX_CS_SRGB: u32 = 7;
-pub const VPX_CS_RESERVED: u32 = 6;
-pub const VPX_CS_BT_2020: u32 = 5;
-pub const VPX_CS_SMPTE_240: u32 = 4;
-pub const VPX_CS_SMPTE_170: u32 = 3;
-pub const VPX_CS_BT_709: u32 = 2;
-pub const VPX_CS_BT_601: u32 = 1;
-pub const VPX_CS_UNKNOWN: u32 = 0;
-pub const VPX_CR_FULL_RANGE: u32 = 1;
-pub const VPX_CR_STUDIO_RANGE: u32 = 0;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct VpxImage {
-    pub fmt: u32,
-    pub cs: u32,
-    pub range: u32,
-    pub w: u32,
-    pub h: u32,
-    pub bit_depth: u32,
-    pub d_w: u32,
-    pub d_h: u32,
-    pub r_w: u32,
-    pub r_h: u32,
-    pub x_chroma_shift: u32,
-    pub y_chroma_shift: u32,
-    pub planes: [*mut u8; 4],
-    pub stride: [i32; 4],
-    pub bps: i32,
-    pub user_priv: *mut c_void,
-    pub img_data: *mut u8,
-    pub img_data_owner: i32,
-    pub self_allocd: bool,
-    pub fb_priv: *mut c_void,
-}
-pub type VpxImageT = VpxImage;
+pub use crate::vpx::src::vpx_image::{
+    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_2020, VPX_CS_BT_601, VPX_CS_BT_709,
+    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
+    VPX_IMG_FMT_I420, VPX_IMG_FMT_I42016, VPX_IMG_FMT_I422, VPX_IMG_FMT_I42216, VPX_IMG_FMT_I440,
+    VPX_IMG_FMT_I44016, VPX_IMG_FMT_I444, VPX_IMG_FMT_I44416, VPX_IMG_FMT_NONE, VPX_IMG_FMT_NV12,
+    VPX_IMG_FMT_YV12, VpxImage, VpxImageT,
+};
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct VpxImageRect {

@@ -16,16 +16,38 @@ pub const VPX_IMG_FMT_I422: u32 = 261;
 pub const VPX_IMG_FMT_I420: u32 = 258;
 pub const VPX_IMG_FMT_YV12: u32 = 769;
 pub const VPX_IMG_FMT_NONE: u32 = 0;
-pub const VPX_CS_SRGB: u32 = 7;
-pub const VPX_CS_RESERVED: u32 = 6;
-pub const VPX_CS_BT_2020: u32 = 5;
-pub const VPX_CS_SMPTE_240: u32 = 4;
-pub const VPX_CS_SMPTE_170: u32 = 3;
-pub const VPX_CS_BT_709: u32 = 2;
-pub const VPX_CS_BT_601: u32 = 1;
-pub const VPX_CS_UNKNOWN: u32 = 0;
-pub const VPX_CR_FULL_RANGE: u32 = 1;
-pub const VPX_CR_STUDIO_RANGE: u32 = 0;
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+#[repr(u32)]
+pub enum VpxColorSpace {
+    #[default]
+    Unknown = 0,
+    Bt601 = 1,
+    Bt709 = 2,
+    Smpte170 = 3,
+    Smpte240 = 4,
+    Bt2020 = 5,
+    Reserved = 6,
+    Srgb = 7,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+#[repr(u32)]
+pub enum VpxColorRange {
+    #[default]
+    Studio = 0,
+    Full = 1,
+}
+
+pub const VPX_CS_SRGB: u32 = VpxColorSpace::Srgb as u32;
+pub const VPX_CS_RESERVED: u32 = VpxColorSpace::Reserved as u32;
+pub const VPX_CS_BT_2020: u32 = VpxColorSpace::Bt2020 as u32;
+pub const VPX_CS_SMPTE_240: u32 = VpxColorSpace::Smpte240 as u32;
+pub const VPX_CS_SMPTE_170: u32 = VpxColorSpace::Smpte170 as u32;
+pub const VPX_CS_BT_709: u32 = VpxColorSpace::Bt709 as u32;
+pub const VPX_CS_BT_601: u32 = VpxColorSpace::Bt601 as u32;
+pub const VPX_CS_UNKNOWN: u32 = VpxColorSpace::Unknown as u32;
+pub const VPX_CR_FULL_RANGE: u32 = VpxColorRange::Full as u32;
+pub const VPX_CR_STUDIO_RANGE: u32 = VpxColorRange::Studio as u32;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct VpxImage {

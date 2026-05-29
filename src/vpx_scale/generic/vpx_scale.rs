@@ -49,16 +49,10 @@ unsafe extern "Rust" {
     );
 }
 
-pub const VPX_CR_FULL_RANGE: u32 = 1;
-pub const VPX_CR_STUDIO_RANGE: u32 = 0;
-pub const VPX_CS_SRGB: u32 = 7;
-pub const VPX_CS_RESERVED: u32 = 6;
-pub const VPX_CS_BT_2020: u32 = 5;
-pub const VPX_CS_SMPTE_240: u32 = 4;
-pub const VPX_CS_SMPTE_170: u32 = 3;
-pub const VPX_CS_BT_709: u32 = 2;
-pub const VPX_CS_BT_601: u32 = 1;
-pub const VPX_CS_UNKNOWN: u32 = 0;
+pub use crate::vpx::src::vpx_image::{
+    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_2020, VPX_CS_BT_601, VPX_CS_BT_709,
+    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
+};
 pub type Scale1D = Option<unsafe fn(*const u8, i32, u32, u32, *mut u8, i32, u32, u32) -> ()>;
 pub const __DARWIN_NULL: *mut c_void = ::core::ptr::null_mut::<c_void>();
 pub const NULL: *mut c_void = __DARWIN_NULL;

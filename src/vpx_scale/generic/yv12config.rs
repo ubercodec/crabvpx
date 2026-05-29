@@ -3,16 +3,10 @@ unsafe extern "Rust" {
     fn vpx_memalign(align: usize, size: usize) -> *mut c_void;
     fn vpx_free(memblk: *mut c_void);
 }
-pub const VPX_CS_SRGB: u32 = 7;
-pub const VPX_CS_RESERVED: u32 = 6;
-pub const VPX_CS_BT_2020: u32 = 5;
-pub const VPX_CS_SMPTE_240: u32 = 4;
-pub const VPX_CS_SMPTE_170: u32 = 3;
-pub const VPX_CS_BT_709: u32 = 2;
-pub const VPX_CS_BT_601: u32 = 1;
-pub const VPX_CS_UNKNOWN: u32 = 0;
-pub const VPX_CR_FULL_RANGE: u32 = 1;
-pub const VPX_CR_STUDIO_RANGE: u32 = 0;
+pub use crate::vpx::src::vpx_image::{
+    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_2020, VPX_CS_BT_601, VPX_CS_BT_709,
+    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
+};
 #[derive(Copy, Clone, Default)]
 #[repr(C)]
 pub struct Yv12BufferConfig {
@@ -42,12 +36,26 @@ pub struct Yv12BufferConfig {
     pub subsampling_x: i32,
     pub subsampling_y: i32,
     pub bit_depth: u32,
-    pub color_space: u32,
-    pub color_range: u32,
+    pub color_space: crate::vpx::src::vpx_image::VpxColorSpace,
+    pub color_range: crate::vpx::src::vpx_image::VpxColorRange,
     pub render_width: i32,
     pub render_height: i32,
     pub corrupted: i32,
     pub flags: i32,
+}
+
+impl Yv12BufferConfig {
+    /// Swaps the buffer pointers and allocation information with another configuration.
+    pub fn swap_buffers(&mut self, other: &mut Self) {
+        core::mem::swap(&mut self.buffer_alloc, &mut other.buffer_alloc);
+        core::mem::swap(&mut self.buffer_alloc_base, &mut other.buffer_alloc_base);
+        core::mem::swap(&mut self.buffer_alloc_cap, &mut other.buffer_alloc_cap);
+        core::mem::swap(&mut self.buffer_alloc_sz, &mut other.buffer_alloc_sz);
+        core::mem::swap(&mut self.y_buffer, &mut other.y_buffer);
+        core::mem::swap(&mut self.u_buffer, &mut other.u_buffer);
+        core::mem::swap(&mut self.v_buffer, &mut other.v_buffer);
+        core::mem::swap(&mut self.alpha_buffer, &mut other.alpha_buffer);
+    }
 }
 pub const __DARWIN_NULL: *mut c_void = ::core::ptr::null_mut::<c_void>();
 pub const NULL: *mut c_void = __DARWIN_NULL;
