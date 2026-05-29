@@ -9,7 +9,7 @@ pub struct Vp8TokenStruct {
 }
 pub type Vp8Token = Vp8TokenStruct;
 pub use crate::vpx::src::vpx_image::{
-    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_2020, VPX_CS_BT_601, VPX_CS_BT_709,
+    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
     VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
 };
 pub const VPX_CODEC_LIST_END: u32 = 9;

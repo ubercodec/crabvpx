@@ -262,7 +262,7 @@ pub struct MbModeInfo {
 }
 
 pub use crate::vpx::src::vpx_image::{
-    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_2020, VPX_CS_BT_601, VPX_CS_BT_709,
+    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
     VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
 };
 pub type BLOCKD = Blockd;
@@ -1672,8 +1672,7 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
             i = 0 as i32;
             let col_alloc_size = (::core::mem::size_of::<u8>() as usize).wrapping_mul(16 as usize);
             while i < (*pc).mb_rows {
-                let mut col_vec = Vec::<u8>::with_capacity(col_alloc_size);
-                col_vec.resize(col_alloc_size, 0);
+                let mut col_vec = vec![0; col_alloc_size];
                 *(*pbi).mt_yleft_col.offset(i as isize) = col_vec.as_mut_ptr();
                 core::mem::forget(col_vec);
                 i += 1;
@@ -1695,8 +1694,7 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
             i = 0 as i32;
             let col_alloc_size = (::core::mem::size_of::<u8>() as usize).wrapping_mul(8 as usize);
             while i < (*pc).mb_rows {
-                let mut col_vec = Vec::<u8>::with_capacity(col_alloc_size);
-                col_vec.resize(col_alloc_size, 0);
+                let mut col_vec = vec![0; col_alloc_size];
                 *(*pbi).mt_uleft_col.offset(i as isize) = col_vec.as_mut_ptr();
                 core::mem::forget(col_vec);
                 i += 1;
@@ -1718,8 +1716,7 @@ pub unsafe fn vp8mt_alloc_temp_buffers(
             i = 0 as i32;
             let col_alloc_size = (::core::mem::size_of::<u8>() as usize).wrapping_mul(8 as usize);
             while i < (*pc).mb_rows {
-                let mut col_vec = Vec::<u8>::with_capacity(col_alloc_size);
-                col_vec.resize(col_alloc_size, 0);
+                let mut col_vec = vec![0; col_alloc_size];
                 *(*pbi).mt_vleft_col.offset(i as isize) = col_vec.as_mut_ptr();
                 core::mem::forget(col_vec);
                 i += 1;

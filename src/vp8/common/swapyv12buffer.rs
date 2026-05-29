@@ -1,7 +1,7 @@
 use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
 
 pub use crate::vpx::src::vpx_image::{
-    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_2020, VPX_CS_BT_601, VPX_CS_BT_709,
+    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
     VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
 };
 
