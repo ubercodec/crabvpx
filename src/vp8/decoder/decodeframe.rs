@@ -631,10 +631,14 @@ unsafe fn vpx_atomic_load_acquire(mut atomic: *const VpxAtomicInt) -> i32 {
     }
 }
 #[inline]
-unsafe fn intra_prediction_down_copy(mut xd: *mut MACROBLOCKD, mut above_right_src: *mut u8) {
+unsafe fn intra_prediction_down_copy(xd_ptr: *mut MACROBLOCKD, mut above_right_src: *mut u8) {
+    if xd_ptr.is_null() {
+        return;
+    }
+    let xd = unsafe { &mut *xd_ptr };
     unsafe {
-        let mut dst_stride: i32 = (*xd).dst.y_stride;
-        let mut above_right_dst: *mut u8 = (*xd)
+        let mut dst_stride: i32 = xd.dst.y_stride;
+        let mut above_right_dst: *mut u8 = xd
             .dst
             .y_buffer
             .offset(-(dst_stride as isize))
@@ -696,41 +700,43 @@ pub unsafe fn vp8cx_init_de_quantizer(mut pbi: *mut Vp8dComp) {
     }
 }
 #[unsafe(no_mangle)]
-pub unsafe fn vp8_mb_init_dequantizer(mut pbi: *mut Vp8dComp, mut xd: *mut MACROBLOCKD) {
-    unsafe {
-        let mut i: i32 = 0;
-        let mut qindex: i32 = 0;
-        let mut mbmi: *mut MbModeInfo = &raw mut (*(*xd).mode_info_context).mbmi;
-        let pc: *mut Vp8Common = &raw mut (*pbi).common;
-        if (*xd).segmentation_enabled != 0 {
-            if (*xd).mb_segment_abs_delta as i32 == SEGMENT_ABSDATA {
-                qindex = (*xd).segment_feature_data[MB_LVL_ALT_Q as usize]
-                    [(*mbmi).segment_id as usize] as i32;
-            } else {
-                qindex = (*pc).base_qindex
-                    + (*xd).segment_feature_data[MB_LVL_ALT_Q as usize][(*mbmi).segment_id as usize]
-                        as i32;
-            }
-            qindex = if qindex >= 0 as i32 {
-                if qindex <= MAXQ { qindex } else { MAXQ }
-            } else {
-                0 as i32
-            };
+pub unsafe fn vp8_mb_init_dequantizer(pbi_ptr: *mut Vp8dComp, xd_ptr: *mut MACROBLOCKD) {
+    if pbi_ptr.is_null() || xd_ptr.is_null() {
+        return;
+    }
+    let pbi = unsafe { &mut *pbi_ptr };
+    let xd = unsafe { &mut *xd_ptr };
+    let mut i: i32 = 0;
+    let mut qindex: i32 = 0;
+    let mbmi = unsafe { &mut (*xd.mode_info_context).mbmi };
+    let pc = &mut pbi.common;
+    if xd.segmentation_enabled != 0 {
+        if xd.mb_segment_abs_delta as i32 == SEGMENT_ABSDATA {
+            qindex =
+                xd.segment_feature_data[MB_LVL_ALT_Q as usize][mbmi.segment_id as usize] as i32;
         } else {
-            qindex = (*pc).base_qindex;
+            qindex = pc.base_qindex
+                + xd.segment_feature_data[MB_LVL_ALT_Q as usize][mbmi.segment_id as usize] as i32;
         }
-        (*xd).dequant_y1_dc[0 as usize] = 1 as i16;
-        (*xd).dequant_y1[0 as usize] = (*pc).y1dequant[qindex as usize][0 as usize];
-        (*xd).dequant_y2[0 as usize] = (*pc).y2dequant[qindex as usize][0 as usize];
-        (*xd).dequant_uv[0 as usize] = (*pc).uvdequant[qindex as usize][0 as usize];
-        i = 1 as i32;
-        while i < 16 as i32 {
-            (*xd).dequant_y1[i as usize] = (*pc).y1dequant[qindex as usize][1 as usize];
-            (*xd).dequant_y1_dc[i as usize] = (*xd).dequant_y1[i as usize];
-            (*xd).dequant_y2[i as usize] = (*pc).y2dequant[qindex as usize][1 as usize];
-            (*xd).dequant_uv[i as usize] = (*pc).uvdequant[qindex as usize][1 as usize];
-            i += 1;
-        }
+        qindex = if qindex >= 0 as i32 {
+            if qindex <= MAXQ { qindex } else { MAXQ }
+        } else {
+            0 as i32
+        };
+    } else {
+        qindex = pc.base_qindex;
+    }
+    xd.dequant_y1_dc[0 as usize] = 1 as i16;
+    xd.dequant_y1[0 as usize] = pc.y1dequant[qindex as usize][0 as usize];
+    xd.dequant_y2[0 as usize] = pc.y2dequant[qindex as usize][0 as usize];
+    xd.dequant_uv[0 as usize] = pc.uvdequant[qindex as usize][0 as usize];
+    i = 1 as i32;
+    while i < 16 as i32 {
+        xd.dequant_y1[i as usize] = pc.y1dequant[qindex as usize][1 as usize];
+        xd.dequant_y1_dc[i as usize] = xd.dequant_y1[i as usize];
+        xd.dequant_y2[i as usize] = pc.y2dequant[qindex as usize][1 as usize];
+        xd.dequant_uv[i as usize] = pc.uvdequant[qindex as usize][1 as usize];
+        i += 1;
     }
 }
 unsafe fn decode_macroblock(mut pbi: *mut Vp8dComp, mut xd: *mut MACROBLOCKD, _mb_idx: u32) {
@@ -896,16 +902,20 @@ unsafe fn get_delta_q(mut bc: *mut Vp8Reader, mut prev: i32, mut q_update: *mut 
         ret_val
     }
 }
-unsafe fn yv12_extend_frame_top_c(mut ybf: *mut Yv12BufferConfig) {
+unsafe fn yv12_extend_frame_top_c(ybf_ptr: *mut Yv12BufferConfig) {
+    if ybf_ptr.is_null() {
+        return;
+    }
+    let ybf = unsafe { &mut *ybf_ptr };
     unsafe {
         let mut i: i32 = 0;
         let mut src_ptr1: *mut u8 = ::core::ptr::null_mut::<u8>();
         let mut dest_ptr1: *mut u8 = ::core::ptr::null_mut::<u8>();
         let mut border: u32 = 0;
         let mut plane_stride: i32 = 0;
-        border = (*ybf).border as u32;
-        plane_stride = (*ybf).y_stride;
-        src_ptr1 = (*ybf).y_buffer.offset(-(border as isize)) as *mut u8;
+        border = ybf.border as u32;
+        plane_stride = ybf.y_stride;
+        src_ptr1 = ybf.y_buffer.offset(-(border as isize)) as *mut u8;
         dest_ptr1 = src_ptr1.offset(-(border.wrapping_mul(plane_stride as u32) as isize));
         i = 0 as i32;
         while i < border as i32 {
@@ -917,9 +927,9 @@ unsafe fn yv12_extend_frame_top_c(mut ybf: *mut Yv12BufferConfig) {
             dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
             i += 1;
         }
-        plane_stride = (*ybf).uv_stride;
+        plane_stride = ybf.uv_stride;
         border = border.wrapping_div(2 as u32);
-        src_ptr1 = (*ybf).u_buffer.offset(-(border as isize)) as *mut u8;
+        src_ptr1 = ybf.u_buffer.offset(-(border as isize)) as *mut u8;
         dest_ptr1 = src_ptr1.offset(-(border.wrapping_mul(plane_stride as u32) as isize));
         i = 0 as i32;
         while i < border as i32 {
@@ -931,7 +941,7 @@ unsafe fn yv12_extend_frame_top_c(mut ybf: *mut Yv12BufferConfig) {
             dest_ptr1 = dest_ptr1.offset(plane_stride as isize);
             i += 1;
         }
-        src_ptr1 = (*ybf).v_buffer.offset(-(border as isize)) as *mut u8;
+        src_ptr1 = ybf.v_buffer.offset(-(border as isize)) as *mut u8;
         dest_ptr1 = src_ptr1.offset(-(border.wrapping_mul(plane_stride as u32) as isize));
         i = 0 as i32;
         while i < border as i32 {
@@ -1008,11 +1018,15 @@ unsafe fn yv12_extend_frame_bottom_c(mut ybf: *mut Yv12BufferConfig) {
     }
 }
 unsafe fn yv12_extend_frame_left_right_c(
-    mut ybf: *mut Yv12BufferConfig,
+    ybf_ptr: *mut Yv12BufferConfig,
     mut y_src: *mut u8,
     mut u_src: *mut u8,
     mut v_src: *mut u8,
 ) {
+    if ybf_ptr.is_null() {
+        return;
+    }
+    let ybf = unsafe { &mut *ybf_ptr };
     unsafe {
         let mut i: i32 = 0;
         let mut src_ptr1: *mut u8 = ::core::ptr::null_mut::<u8>();
@@ -1023,10 +1037,10 @@ unsafe fn yv12_extend_frame_left_right_c(
         let mut plane_stride: i32 = 0;
         let mut plane_height: i32 = 0;
         let mut plane_width: i32 = 0;
-        border = (*ybf).border as u32;
-        plane_stride = (*ybf).y_stride;
+        border = ybf.border as u32;
+        plane_stride = ybf.y_stride;
         plane_height = 16 as i32;
-        plane_width = (*ybf).y_width;
+        plane_width = ybf.y_width;
         src_ptr1 = y_src;
         src_ptr2 = src_ptr1.offset(plane_width as isize).offset(-(1 as isize));
         dest_ptr1 = src_ptr1.offset(-(border as isize));
@@ -1049,9 +1063,9 @@ unsafe fn yv12_extend_frame_left_right_c(
             dest_ptr2 = dest_ptr2.offset(plane_stride as isize);
             i += 1;
         }
-        plane_stride = (*ybf).uv_stride;
+        plane_stride = ybf.uv_stride;
         plane_height = 8 as i32;
-        plane_width = (*ybf).uv_width;
+        plane_width = ybf.uv_width;
         border = border.wrapping_div(2 as u32);
         src_ptr1 = u_src;
         src_ptr2 = src_ptr1.offset(plane_width as isize).offset(-(1 as isize));

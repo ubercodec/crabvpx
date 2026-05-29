@@ -521,52 +521,62 @@ unsafe fn vp8dx_bool_error(mut br: *mut BoolDecoder) -> i32 {
 }
 pub const SYNC_POLICY_FIFO: i32 = 0 as i32;
 #[inline]
-unsafe fn vpx_atomic_init(mut atomic: *mut VpxAtomicInt, mut value: i32) {
+fn vpx_atomic_init(atomic_ptr: *mut VpxAtomicInt, value: i32) {
+    if atomic_ptr.is_null() {
+        return;
+    }
+    let atomic = unsafe { &mut *atomic_ptr };
     unsafe {
-        ::core::ptr::write_volatile(&mut (*atomic).value as *mut i32, value);
+        ::core::ptr::write_volatile(&mut atomic.value as *mut i32, value);
     }
 }
 #[inline]
-unsafe fn vpx_atomic_store_release(mut atomic: *mut VpxAtomicInt, mut value: i32) {
+fn vpx_atomic_store_release(atomic_ptr: *mut VpxAtomicInt, value: i32) {
+    if atomic_ptr.is_null() {
+        return;
+    }
+    let atomic = unsafe { &mut *atomic_ptr };
     unsafe {
-        (*(&raw mut (*atomic).value as *const core::sync::atomic::AtomicI32))
+        (*(&raw mut atomic.value as *const core::sync::atomic::AtomicI32))
             .store(value, core::sync::atomic::Ordering::Release);
     }
 }
 #[inline]
-unsafe fn vpx_atomic_load_acquire(mut atomic: *const VpxAtomicInt) -> i32 {
+fn vpx_atomic_load_acquire(atomic_ptr: *const VpxAtomicInt) -> i32 {
+    if atomic_ptr.is_null() {
+        return 0;
+    }
+    let atomic = unsafe { &*atomic_ptr };
     unsafe {
-        (*(atomic as *const core::sync::atomic::AtomicI32))
+        (*(atomic as *const _ as *const core::sync::atomic::AtomicI32))
             .load(core::sync::atomic::Ordering::Acquire)
     }
 }
 #[inline]
-unsafe fn vp8_atomic_spin_wait(
-    mut mb_col: i32,
-    mut last_row_current_mb_col: *const VpxAtomicInt,
-    nsync: i32,
-) {
-    unsafe {
-        while mb_col > vpx_atomic_load_acquire(last_row_current_mb_col) - nsync {
-            std::thread::yield_now();
-        }
+fn vp8_atomic_spin_wait(mb_col: i32, last_row_current_mb_col: *const VpxAtomicInt, nsync: i32) {
+    while mb_col > vpx_atomic_load_acquire(last_row_current_mb_col) - nsync {
+        std::thread::yield_now();
     }
 }
 #[inline]
-unsafe fn intra_prediction_down_copy(mut xd: *mut MACROBLOCKD, mut above_right_src: *mut u8) {
+fn intra_prediction_down_copy(xd_ptr: *mut MACROBLOCKD, above_right_src: *mut u8) {
+    if xd_ptr.is_null() {
+        return;
+    }
+    let xd = unsafe { &mut *xd_ptr };
     unsafe {
-        let mut dst_stride: i32 = (*xd).dst.y_stride;
-        let mut above_right_dst: *mut u8 = (*xd)
+        let dst_stride: i32 = xd.dst.y_stride;
+        let above_right_dst: *mut u8 = xd
             .dst
             .y_buffer
             .offset(-(dst_stride as isize))
             .offset(16 as isize);
-        let mut src_ptr: *mut u32 = above_right_src as *mut u32;
-        let mut dst_ptr0: *mut u32 =
+        let src_ptr: *mut u32 = above_right_src as *mut u32;
+        let dst_ptr0: *mut u32 =
             above_right_dst.offset((4 as i32 * dst_stride) as isize) as *mut u32;
-        let mut dst_ptr1: *mut u32 =
+        let dst_ptr1: *mut u32 =
             above_right_dst.offset((8 as i32 * dst_stride) as isize) as *mut u32;
-        let mut dst_ptr2: *mut u32 =
+        let dst_ptr2: *mut u32 =
             above_right_dst.offset((12 as i32 * dst_stride) as isize) as *mut u32;
         *dst_ptr0 = *src_ptr;
         *dst_ptr1 = *src_ptr;
@@ -600,80 +610,58 @@ unsafe fn setup_intra_recon_left(
         }
     }
 }
-unsafe fn setup_decoding_thread_data(
-    mut pbi: *mut Vp8dComp,
-    mut xd: *mut MACROBLOCKD,
-    mut mbrd: *mut MbRowDec,
-    mut count: i32,
+fn setup_decoding_thread_data(
+    pbi_ptr: *mut Vp8dComp,
+    xd_ptr: *mut MACROBLOCKD,
+    mbrd_ptr: *mut MbRowDec,
+    count: i32,
 ) {
-    unsafe {
-        let pc: *mut Vp8Common = &raw mut (*pbi).common;
-        let mut i: i32 = 0;
-        i = 0 as i32;
-        while i < count {
-            let mut mbd: *mut MACROBLOCKD = &raw mut (*mbrd.offset(i as isize)).mbd;
-            (*mbd).subpixel_predict = (*xd).subpixel_predict;
-            (*mbd).subpixel_predict8x4 = (*xd).subpixel_predict8x4;
-            (*mbd).subpixel_predict8x8 = (*xd).subpixel_predict8x8;
-            (*mbd).subpixel_predict16x16 = (*xd).subpixel_predict16x16;
-            (*mbd).frame_type = (*pc).frame_type;
-            (*mbd).pre = (*xd).pre;
-            (*mbd).dst = (*xd).dst;
-            (*mbd).segmentation_enabled = (*xd).segmentation_enabled;
-            (*mbd).mb_segment_abs_delta = (*xd).mb_segment_abs_delta;
-            core::ptr::copy_nonoverlapping(
-                &raw mut (*xd).segment_feature_data as *mut [i8; 4] as *const c_void as *const u8,
-                &raw mut (*mbd).segment_feature_data as *mut [i8; 4] as *mut c_void as *mut u8,
-                ::core::mem::size_of::<[[i8; 4]; 2]>() as usize,
-            );
-            core::ptr::copy_nonoverlapping(
-                &raw mut (*xd).ref_lf_deltas as *mut i8 as *const c_void as *const u8,
-                &raw mut (*mbd).ref_lf_deltas as *mut i8 as *mut c_void as *mut u8,
-                ::core::mem::size_of::<[i8; 4]>() as usize,
-            );
-            core::ptr::copy_nonoverlapping(
-                &raw mut (*xd).mode_lf_deltas as *mut i8 as *const c_void as *const u8,
-                &raw mut (*mbd).mode_lf_deltas as *mut i8 as *mut c_void as *mut u8,
-                ::core::mem::size_of::<[i8; 4]>() as usize,
-            );
-            (*mbd).mode_ref_lf_delta_enabled = (*xd).mode_ref_lf_delta_enabled;
-            (*mbd).mode_ref_lf_delta_update = (*xd).mode_ref_lf_delta_update;
-            (*mbd).current_bc = (&raw mut (*pbi).mbc as *mut Vp8Reader).offset(0 as isize)
+    if pbi_ptr.is_null() || xd_ptr.is_null() || mbrd_ptr.is_null() {
+        return;
+    }
+    let pbi = unsafe { &mut *pbi_ptr };
+    let xd = unsafe { &mut *xd_ptr };
+    let pc = &mut pbi.common;
+    let mut i: i32 = 0;
+    while i < count {
+        let mbd = unsafe { &mut (*mbrd_ptr.offset(i as isize)).mbd };
+        mbd.subpixel_predict = xd.subpixel_predict;
+        mbd.subpixel_predict8x4 = xd.subpixel_predict8x4;
+        mbd.subpixel_predict8x8 = xd.subpixel_predict8x8;
+        mbd.subpixel_predict16x16 = xd.subpixel_predict16x16;
+        mbd.frame_type = pc.frame_type;
+        mbd.pre = xd.pre;
+        mbd.dst = xd.dst;
+        mbd.segmentation_enabled = xd.segmentation_enabled;
+        mbd.mb_segment_abs_delta = xd.mb_segment_abs_delta;
+        mbd.segment_feature_data = xd.segment_feature_data;
+        mbd.ref_lf_deltas = xd.ref_lf_deltas;
+        mbd.mode_lf_deltas = xd.mode_lf_deltas;
+        mbd.mode_ref_lf_delta_enabled = xd.mode_ref_lf_delta_enabled;
+        mbd.mode_ref_lf_delta_update = xd.mode_ref_lf_delta_update;
+        unsafe {
+            mbd.current_bc = (&raw mut pbi.mbc as *mut Vp8Reader).offset(0 as isize)
                 as *mut Vp8Reader as *mut c_void;
-            core::ptr::copy_nonoverlapping(
-                &raw mut (*xd).dequant_y1_dc as *mut i16 as *const c_void as *const u8,
-                &raw mut (*mbd).dequant_y1_dc as *mut i16 as *mut c_void as *mut u8,
-                ::core::mem::size_of::<[i16; 16]>() as usize,
-            );
-            core::ptr::copy_nonoverlapping(
-                &raw mut (*xd).dequant_y1 as *mut i16 as *const c_void as *const u8,
-                &raw mut (*mbd).dequant_y1 as *mut i16 as *mut c_void as *mut u8,
-                ::core::mem::size_of::<[i16; 16]>() as usize,
-            );
-            core::ptr::copy_nonoverlapping(
-                &raw mut (*xd).dequant_y2 as *mut i16 as *const c_void as *const u8,
-                &raw mut (*mbd).dequant_y2 as *mut i16 as *mut c_void as *mut u8,
-                ::core::mem::size_of::<[i16; 16]>() as usize,
-            );
-            core::ptr::copy_nonoverlapping(
-                &raw mut (*xd).dequant_uv as *mut i16 as *const c_void as *const u8,
-                &raw mut (*mbd).dequant_uv as *mut i16 as *mut c_void as *mut u8,
-                ::core::mem::size_of::<[i16; 16]>() as usize,
-            );
-            (*mbd).fullpixel_mask = !(0 as i32);
-            if (*pc).full_pixel {
-                (*mbd).fullpixel_mask = !(7 as i32);
-            }
-            i += 1;
         }
-        i = 0 as i32;
-        while i < (*pc).mb_rows {
+        mbd.dequant_y1_dc = xd.dequant_y1_dc;
+        mbd.dequant_y1 = xd.dequant_y1;
+        mbd.dequant_y2 = xd.dequant_y2;
+        mbd.dequant_uv = xd.dequant_uv;
+        mbd.fullpixel_mask = !(0 as i32);
+        if pc.full_pixel {
+            mbd.fullpixel_mask = !(7 as i32);
+        }
+        i += 1;
+    }
+    i = 0 as i32;
+    while i < pc.mb_rows {
+        unsafe {
             vpx_atomic_store_release(
-                (*pbi).mt_current_mb_col.offset(i as isize) as *mut VpxAtomicInt,
+                pbi.mt_current_mb_col.offset(i as isize) as *mut VpxAtomicInt,
                 -(1 as i32),
             );
-            i += 1;
         }
+        i += 1;
     }
 }
 unsafe fn mt_decode_macroblock(mut pbi: *mut Vp8dComp, mut xd: *mut MACROBLOCKD, _mb_idx: u32) {
