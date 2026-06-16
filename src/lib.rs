@@ -72,9 +72,6 @@ pub mod vpx_dsp {
 pub mod vpx_mem {
     pub mod vpx_mem;
 } // mod vpx_mem
-pub mod vpx_ports {
-    pub mod aarch64_cpudetect;
-} // mod vpx_ports
 pub mod vpx_scale {
     pub mod generic {
         // pub mod gen_scalers;
