@@ -387,7 +387,9 @@ fn mt_decode_macroblock(
                         if xd.eobs[i as usize] as ::core::ffi::c_int > 1 as ::core::ffi::c_int {
                             vp8_dequant_idct_add_safe(q_sub, dq_ref, dst_sub_slice, dst_stride);
                         } else {
-                            let input_dc = q_sub[0] * dq_ref[0];
+                            // See decodeframe.rs: wrap to match libvpx's
+                            // truncation to `short`, avoiding overflow panics.
+                            let input_dc = q_sub[0].wrapping_mul(dq_ref[0]);
                             
                             let mut pred = [0u8; 16];
                             for r in 0..4 {
