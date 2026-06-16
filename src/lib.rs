@@ -1,20 +1,10 @@
-#![allow(non_snake_case)]
+#![allow(warnings)]
 #![allow(dead_code)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(unused_assignments)]
 #![allow(unused_mut)]
-#![allow(clashing_extern_declarations)]
-#![allow(clippy::missing_safety_doc)]
-#![allow(clippy::precedence)]
-#![allow(clippy::if_same_then_else)]
-#![allow(clippy::module_inception)]
-#![allow(clippy::needless_return)]
-#![allow(clippy::unnecessary_cast)]
-#![allow(clippy::misrefactored_assign_op)]
-#![allow(clippy::unnecessary_unwrap)]
-#![allow(clippy::too_many_arguments)]
-#![allow(clippy::type_complexity)]
-#![feature(extern_types)]
 
 pub mod api;
 pub mod thread_shim;
@@ -44,9 +34,10 @@ pub mod vp8 {
         pub mod rtcd;
         pub mod setupintrarecon;
         pub mod swapyv12buffer;
-        pub mod tables;
         pub mod treecoder;
+        pub mod types;
         pub mod vp8_loopfilter;
+        pub mod safe_predict;
     } // mod common
     pub mod decoder {
         pub mod dboolhuff;
@@ -60,20 +51,22 @@ pub mod vp8 {
 } // mod vp8
 pub mod vpx {
     pub mod src {
-        pub mod vpx_codec;
-        pub mod vpx_decoder;
-        pub mod vpx_encoder;
-        pub mod vpx_image;
+        // pub mod vpx_codec;
+        // pub mod vpx_decoder;
+        // pub mod vpx_encoder;
+        // pub mod vpx_image;
     } // mod src
 } // mod vpx
 pub mod vpx_config;
 pub mod vpx_dsp {
-    pub mod bitreader;
-    pub mod bitreader_buffer;
+    pub mod arm {
+        // pub mod intrapred_neon;
+    } // mod arm
+    // pub mod bitreader;
+    // pub mod bitreader_buffer;
     pub mod intrapred;
-    pub mod prob;
-    pub mod skin_detection;
-    pub mod tables;
+    // pub mod prob;
+    // pub mod skin_detection;
     pub mod vpx_dsp_rtcd;
 } // mod vpx_dsp
 pub mod vpx_mem {
@@ -81,13 +74,15 @@ pub mod vpx_mem {
 } // mod vpx_mem
 pub mod vpx_scale {
     pub mod generic {
-        pub mod gen_scalers;
-        pub mod vpx_scale;
+        // pub mod gen_scalers;
+        // pub mod vpx_scale;
         pub mod yv12config;
         pub mod yv12extend;
     } // mod generic
     pub mod vpx_scale_rtcd;
 } // mod vpx_scale
-pub mod vpx_util {
-    pub mod vpx_write_yuv_frame;
-} // mod vpx_util
+// pub mod vpx_util {
+//     pub mod vpx_write_yuv_frame;
+// } // mod vpx_util
+
+

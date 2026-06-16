@@ -1,28 +1,26 @@
 # CrabVPX
 
 Lifting and shifting `libvpx` (specifically VP8 decoding) to Rust using `c2rust`.
+We successfully transpiled the C code, including ARM NEON intrinsics, yielding a **pure-Rust hardware-accelerated decoder** (on Apple Silicon). The project has been upgraded to the **Rust 2024 edition**.
 
-## Project Status
+## Project Status Checklist
 
-- **Transpilation Complete**: The VP8 decoder has been successfully transpiled to Rust using `c2rust`.
-- **Rust 2024**: Codebase upgraded to the Rust 2024 edition and builds cleanly.
-- **Cross-Platform**: Compiles and runs on Linux, macOS, and Windows.
-- **Differential Testing**: We use a custom test harness to run side-by-side differential tests against the original C `libvpx` to ensure 100% bit-for-bit correctness across hundreds of test frames.
-- **CI/CD**: GitHub Actions are set up for cross-platform builds, testing, and strict formatting/linting checks.
+### Phase 1: Preparation & Configuration
+- [x] Clone upstream `libvpx` repository.
+- [x] Configure `libvpx` build strictly for VP8 decoding (e.g., `--disable-vp9`, `--disable-vp8-encoder`).
+- [x] Generate `compile_commands.json` using `bear`.
 
-## Development
+### Phase 2: Transpilation (The Lift)
+- [x] Run `c2rust transpile` on the compilation database.
+- [x] Initialize `crabvpx` Cargo project.
+- [x] Integrate generated `.rs` files into the Cargo structure.
 
-The project uses `just` as a command runner. You can run this command without any arguments to see
-the full list of supported commands. The most important commands include:
+### Phase 3: Hardware Intrinsics & Compilation (The Shift)
+- [x] Verify transpiled NEON intrinsics compile purely in Rust using `std::arch::aarch64`.
+- [x] Fix transpilation edge cases (atomics, `c_variadic`, types).
+- [x] Achieve clean `cargo check` on Rust 2021.
 
-- **`just build`**: Builds the Rust workspace.
-- **`just test`**: Runs the Rust test suite.
-- **`just lint`**: Runs `cargo fmt` and `cargo clippy` with strict warnings.
-- **`just compare`**: Runs the differential test suite (Rust decoder vs C Oracle).
-- **`just bench`**: Runs performance benchmarks.
-
-## Next Steps
-
-- **Incremental Refactoring to Safe Rust APIs**: Begin converting the generated
-  `unsafe` C-style bindings into idiomatic and safe Rust wrappers (see
-  `docs/refactor_plan.md`).
+### Phase 4: Stabilization & Upgrade
+- [x] Port/integrate tests (harness) to verify decoding correctness against 35 IVF vectors.
+- [x] Upgrade codebase to Rust 2024 using `cargo fix --edition`.
+- [ ] Implement Phase 5: Incremental Refactoring to Safe Rust APIs (see `docs/refactor_plan.md`).

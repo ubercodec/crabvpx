@@ -1,163 +1,113 @@
-use std::ffi::c_void;
-unsafe extern "Rust" {
-    fn vpx_memalign(align: usize, size: usize) -> *mut c_void;
-    fn vpx_free(memblk: *mut c_void);
-}
-pub use crate::vpx::src::vpx_image::{
-    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
-    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
-};
-#[derive(Copy, Clone, Default)]
-#[repr(C)]
-pub struct Yv12BufferConfig {
-    pub y_width: i32,
-    pub y_height: i32,
-    pub y_crop_width: i32,
-    pub y_crop_height: i32,
-    pub y_stride: i32,
-    pub uv_width: i32,
-    pub uv_height: i32,
-    pub uv_crop_width: i32,
-    pub uv_crop_height: i32,
-    pub uv_stride: i32,
-    pub alpha_width: i32,
-    pub alpha_height: i32,
-    pub alpha_stride: i32,
-    pub y_buffer: *mut u8,
-    pub u_buffer: *mut u8,
-    pub v_buffer: *mut u8,
-    pub alpha_buffer: *mut u8,
-    pub buffer_alloc: *mut u8,
-    pub buffer_alloc_sz: usize,
-    pub buffer_alloc_base: *mut u8,
-    pub buffer_alloc_cap: usize,
-    pub border: i32,
-    pub frame_size: usize,
-    pub subsampling_x: i32,
-    pub subsampling_y: i32,
-    pub bit_depth: u32,
-    pub color_space: crate::vpx::src::vpx_image::VpxColorSpace,
-    pub color_range: crate::vpx::src::vpx_image::VpxColorRange,
-    pub render_width: i32,
-    pub render_height: i32,
-    pub corrupted: i32,
-    pub flags: i32,
+pub use crate::vp8::common::types::*;
+use crate::vpx_mem::vpx_mem::AlignedBox;
+pub type uint8_t = u8;
+
+pub type __darwin_size_t = usize;
+pub type vpx_color_space = ::core::ffi::c_uint;
+pub const VPX_CS_SRGB: vpx_color_space = 7;
+pub const VPX_CS_RESERVED: vpx_color_space = 6;
+pub const VPX_CS_BT_2020: vpx_color_space = 5;
+pub const VPX_CS_SMPTE_240: vpx_color_space = 4;
+pub const VPX_CS_SMPTE_170: vpx_color_space = 3;
+pub const VPX_CS_BT_709: vpx_color_space = 2;
+pub const VPX_CS_BT_601: vpx_color_space = 1;
+pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
+pub type vpx_color_space_t = vpx_color_space;
+pub type vpx_color_range = ::core::ffi::c_uint;
+pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
+pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
+pub type vpx_color_range_t = vpx_color_range;
+pub type size_t = __darwin_size_t;
+
+
+
+pub const __DARWIN_NULL: *mut ::core::ffi::c_void = ::core::ptr::null_mut::<::core::ffi::c_void>();
+pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
+pub fn vp8_yv12_de_alloc_frame_buffer_safe(
+    ybf: &mut YV12_BUFFER_CONFIG,
+    alloc: &mut Option<AlignedBox>,
+) {
+    *alloc = None;
+    *ybf = YV12_BUFFER_CONFIG::default();
 }
 
-impl Yv12BufferConfig {
-    /// Swaps the buffer pointers and allocation information with another configuration.
-    pub fn swap_buffers(&mut self, other: &mut Self) {
-        core::mem::swap(&mut self.buffer_alloc, &mut other.buffer_alloc);
-        core::mem::swap(&mut self.buffer_alloc_base, &mut other.buffer_alloc_base);
-        core::mem::swap(&mut self.buffer_alloc_cap, &mut other.buffer_alloc_cap);
-        core::mem::swap(&mut self.buffer_alloc_sz, &mut other.buffer_alloc_sz);
-        core::mem::swap(&mut self.y_buffer, &mut other.y_buffer);
-        core::mem::swap(&mut self.u_buffer, &mut other.u_buffer);
-        core::mem::swap(&mut self.v_buffer, &mut other.v_buffer);
-        core::mem::swap(&mut self.alpha_buffer, &mut other.alpha_buffer);
-    }
-}
-pub const __DARWIN_NULL: *mut c_void = ::core::ptr::null_mut::<c_void>();
-pub const NULL: *mut c_void = __DARWIN_NULL;
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_yv12_de_alloc_frame_buffer(mut ybf: *mut Yv12BufferConfig) -> i32 {
-    unsafe {
-        if !ybf.is_null() {
-            if (*ybf).buffer_alloc_sz > 0 as usize && !(*ybf).buffer_alloc_base.is_null() {
-                let _ = Vec::from_raw_parts((*ybf).buffer_alloc_base, 0, (*ybf).buffer_alloc_cap);
+
+
+pub fn vp8_yv12_realloc_frame_buffer_safe(
+    ybf: &mut YV12_BUFFER_CONFIG,
+    width: i32,
+    height: i32,
+    border: i32,
+    alloc: &mut Option<AlignedBox>,
+) -> Result<(), i32> {
+    let aligned_width = (width + 15) & !15;
+    let aligned_height = (height + 15) & !15;
+    let y_stride = (aligned_width + 2 * border + 31) & !31;
+    let yplane_size = (aligned_height + 2 * border) * y_stride;
+    let uv_width = aligned_width >> 1;
+    let uv_height = aligned_height >> 1;
+    let uv_stride = y_stride >> 1;
+    let uvplane_size = (uv_height + border) * uv_stride;
+    let frame_size = (yplane_size + 2 * uvplane_size) as usize;
+
+    if alloc.is_none() {
+        let aligned_box = match AlignedBox::new(32, frame_size) {
+            Some(b) => b,
+            None => {
+                ybf.buffer_alloc_sz = 0;
+                return Err(-1);
             }
-            *ybf = Default::default();
-        } else {
-            return -(1 as i32);
-        }
-        0 as i32
+        };
+        ybf.buffer_alloc = aligned_box.as_ptr();
+        ybf.buffer_alloc_sz = frame_size;
+        *alloc = Some(aligned_box);
     }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_yv12_realloc_frame_buffer(
-    mut ybf: *mut Yv12BufferConfig,
-    mut width: i32,
-    mut height: i32,
-    mut border: i32,
-) -> i32 {
-    unsafe {
-        if !ybf.is_null() {
-            let mut aligned_width: i32 = (width + 15 as i32) & !(15 as i32);
-            let mut aligned_height: i32 = (height + 15 as i32) & !(15 as i32);
-            let mut y_stride: i32 = (aligned_width + 2 as i32 * border + 31 as i32) & !(31 as i32);
-            let mut yplane_size: i32 = (aligned_height + 2 as i32 * border) * y_stride;
-            let mut uv_width: i32 = aligned_width >> 1 as i32;
-            let mut uv_height: i32 = aligned_height >> 1 as i32;
-            let mut uv_stride: i32 = y_stride >> 1 as i32;
-            let mut uvplane_size: i32 = (uv_height + border) * uv_stride;
-            let frame_size: usize = (yplane_size + 2 as i32 * uvplane_size) as usize;
-            if (*ybf).buffer_alloc.is_null() {
-                let alloc_size = frame_size + 31;
-                let mut vec = Vec::<u8>::with_capacity(alloc_size);
-                let base_ptr = vec.as_mut_ptr();
-                let cap = vec.capacity();
-                core::mem::forget(vec);
-                let aligned_ptr = ((base_ptr as usize + 31) & !31) as *mut u8;
-                (*ybf).buffer_alloc = aligned_ptr;
-                (*ybf).buffer_alloc_base = base_ptr;
-                (*ybf).buffer_alloc_cap = cap;
-                (*ybf).buffer_alloc_sz = frame_size;
-            }
-            if (*ybf).buffer_alloc_sz < frame_size {
-                return -(1 as i32);
-            }
-            if border & 0x1f as i32 != 0 {
-                return -(3 as i32);
-            }
-            (*ybf).y_crop_width = width;
-            (*ybf).y_crop_height = height;
-            (*ybf).y_width = aligned_width;
-            (*ybf).y_height = aligned_height;
-            (*ybf).y_stride = y_stride;
-            (*ybf).uv_crop_width = (width + 1 as i32) / 2 as i32;
-            (*ybf).uv_crop_height = (height + 1 as i32) / 2 as i32;
-            (*ybf).uv_width = uv_width;
-            (*ybf).uv_height = uv_height;
-            (*ybf).uv_stride = uv_stride;
-            (*ybf).alpha_width = 0 as i32;
-            (*ybf).alpha_height = 0 as i32;
-            (*ybf).alpha_stride = 0 as i32;
-            (*ybf).border = border;
-            (*ybf).frame_size = frame_size;
-            (*ybf).y_buffer = (*ybf)
-                .buffer_alloc
-                .offset((border * y_stride) as isize)
-                .offset(border as isize);
-            (*ybf).u_buffer = (*ybf)
-                .buffer_alloc
-                .offset(yplane_size as isize)
-                .offset((border / 2 as i32 * uv_stride) as isize)
-                .offset((border / 2 as i32) as isize);
-            (*ybf).v_buffer = (*ybf)
-                .buffer_alloc
-                .offset(yplane_size as isize)
-                .offset(uvplane_size as isize)
-                .offset((border / 2 as i32 * uv_stride) as isize)
-                .offset((border / 2 as i32) as isize);
-            (*ybf).alpha_buffer = ::core::ptr::null_mut::<u8>();
-            (*ybf).corrupted = 0 as i32;
-            return 0 as i32;
-        }
-        -(2 as i32)
+
+    if ybf.buffer_alloc_sz < frame_size {
+        return Err(-1);
     }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_yv12_alloc_frame_buffer(
-    mut ybf: *mut Yv12BufferConfig,
-    mut width: i32,
-    mut height: i32,
-    mut border: i32,
-) -> i32 {
-    unsafe {
-        if !ybf.is_null() {
-            vp8_yv12_de_alloc_frame_buffer(ybf);
-            return vp8_yv12_realloc_frame_buffer(ybf, width, height, border);
-        }
-        -(2 as i32)
+    if border & 0x1f != 0 {
+        return Err(-3);
     }
+
+    ybf.y_crop_width = width;
+    ybf.y_crop_height = height;
+    ybf.y_width = aligned_width;
+    ybf.y_height = aligned_height;
+    ybf.y_stride = y_stride;
+    ybf.uv_crop_width = (width + 1) / 2;
+    ybf.uv_crop_height = (height + 1) / 2;
+    ybf.uv_width = uv_width;
+    ybf.uv_height = uv_height;
+    ybf.uv_stride = uv_stride;
+    ybf.alpha_width = 0;
+    ybf.alpha_height = 0;
+    ybf.alpha_stride = 0;
+    ybf.border = border;
+    ybf.frame_size = frame_size;
+
+    let base = ybf.buffer_alloc as usize;
+    ybf.y_buffer = (base + (border * y_stride + border) as usize) as *mut u8;
+    ybf.u_buffer = (base + yplane_size as usize + ((border / 2) * uv_stride + border / 2) as usize) as *mut u8;
+    ybf.v_buffer = (base + yplane_size as usize + uvplane_size as usize + ((border / 2) * uv_stride + border / 2) as usize) as *mut u8;
+    ybf.alpha_buffer = core::ptr::null_mut();
+    ybf.corrupted = 0;
+
+    Ok(())
 }
+
+
+
+pub fn vp8_yv12_alloc_frame_buffer_safe(
+    ybf: &mut YV12_BUFFER_CONFIG,
+    width: i32,
+    height: i32,
+    border: i32,
+    alloc: &mut Option<AlignedBox>,
+) -> Result<(), i32> {
+    vp8_yv12_de_alloc_frame_buffer_safe(ybf, alloc);
+    vp8_yv12_realloc_frame_buffer_safe(ybf, width, height, border, alloc)
+}
+
+
+

@@ -1,4 +1,5 @@
 /target
+/libvpx-test-data
 harness/target
 /out
-test_data/
+.jetskicli

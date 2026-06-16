@@ -1,24 +1,79 @@
-use crate::vp8::vp8_dx_iface::vpx_codec_vp8_dx;
-use crate::vpx::src::vpx_codec::vpx_codec_destroy;
-use crate::vpx::src::vpx_decoder::{
-    VPX_CODEC_OK, VPX_DECODER_ABI_VERSION, VpxCodecCtxT, VpxCodecIterT, vpx_codec_dec_init_ver,
-    vpx_codec_decode, vpx_codec_get_frame,
-};
+use crate::vp8::vp8_dx_iface::{Vp8DecoderInstance, YV12_BUFFER_CONFIG};
 
-/// A representation of a decoded video frame's metadata and hash.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Frame {
-    pub md5: String,
-    pub width: u32,
-    pub height: u32,
-    pub bit_depth: u32,
+/// A safe wrapper around the decoded image planes.
+pub struct Image<'a> {
+    d_w: u32,
+    d_h: u32,
+    y_plane: &'a [u8],
+    u_plane: &'a [u8],
+    v_plane: &'a [u8],
+    alpha_plane: Option<&'a [u8]>,
+    bit_depth: u32,
+    strides: [usize; 4],
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Plane {
+    Y,
+    U,
+    V,
+    Alpha,
+}
+
+impl<'a> Image<'a> {
+    /// Get the displayed width of the image.
+    pub fn width(&self) -> u32 {
+        self.d_w
+    }
+
+    /// Get the displayed height of the image.
+    pub fn height(&self) -> u32 {
+        self.d_h
+    }
+
+    /// Safely access a specific plane slice.
+    pub fn plane(&self, plane: Plane) -> Option<&'a [u8]> {
+        match plane {
+            Plane::Y => Some(self.y_plane),
+            Plane::U => Some(self.u_plane),
+            Plane::V => Some(self.v_plane),
+            Plane::Alpha => self.alpha_plane,
+        }
+    }
+
+    /// Get the bit depth of the image.
+    pub fn bit_depth(&self) -> u32 {
+        self.bit_depth
+    }
+
+    /// Compute the MD5 hash of the image planes (matching Oracle behavior).
+    pub fn md5(&self) -> String {
+        let mut context = md5::Context::new();
+
+        for (plane_idx, plane_type) in [(0, Plane::Y), (1, Plane::U), (2, Plane::V)] {
+            if let Some(plane_data) = self.plane(plane_type) {
+                let stride = self.strides[plane_idx];
+                let w = if plane_idx == 0 { self.d_w as usize } else { ((self.d_w + 1) >> 1) as usize };
+                let h = if plane_idx == 0 { self.d_h as usize } else { ((self.d_h + 1) >> 1) as usize };
+
+                for row in 0..h {
+                    let start = row * stride;
+                    let end = start + w;
+                    if end <= plane_data.len() {
+                        context.consume(&plane_data[start..end]);
+                    }
+                }
+            }
+        }
+        format!("{:x}", context.compute())
+    }
 }
 
 /// A generic Video Decoder trait that can be implemented by different codecs
 /// (e.g., VP8, VP9, AV1, H264).
 pub trait Decoder {
     /// The decoded frame representation.
-    type Frame;
+    type Frame<'a> where Self: 'a;
     /// The error representation.
     type Error;
 
@@ -29,21 +84,17 @@ pub trait Decoder {
     fn decode(&mut self, payload: &[u8]) -> Result<(), Self::Error>;
 
     /// Retrieve the next available decoded frame.
-    fn get_frame(&mut self) -> Result<Option<Self::Frame>, Self::Error>;
+    fn get_frame<'a>(&'a mut self) -> Result<Option<Self::Frame<'a>>, Self::Error>;
 }
 
-/// A safe wrapper around the unsafe VP8 `VpxCodecCtxT` decoder lifecycle.
+/// A safe wrapper around the unsafe VP8 `Vp8DecoderInstance` decoder lifecycle.
 pub struct Vp8Decoder {
-    ctx: VpxCodecCtxT,
-    initialized: bool,
+    instance: Option<Vp8DecoderInstance>,
 }
 
 impl Vp8Decoder {
     pub fn new() -> Self {
-        Self {
-            ctx: unsafe { core::mem::zeroed() },
-            initialized: false,
-        }
+        Self { instance: None }
     }
 }
 
@@ -53,105 +104,53 @@ impl Default for Vp8Decoder {
     }
 }
 
-impl Drop for Vp8Decoder {
-    fn drop(&mut self) {
-        if self.initialized {
-            // Safely destroy the underlying C context to prevent memory leaks.
-            unsafe {
-                vpx_codec_destroy(
-                    &raw mut self.ctx as *mut _ as *mut crate::vpx::src::vpx_codec::VpxCodecCtxT,
-                );
-            }
-        }
-    }
-}
-
 impl Decoder for Vp8Decoder {
-    type Frame = Frame;
+    type Frame<'a> = Image<'a>;
     type Error = String;
 
     fn init(&mut self) -> Result<(), Self::Error> {
-        let res = unsafe {
-            vpx_codec_dec_init_ver(
-                &raw mut self.ctx,
-                vpx_codec_vp8_dx() as *const _,
-                core::ptr::null(),
-                0,
-                VPX_DECODER_ABI_VERSION,
-            )
-        };
-        if res == VPX_CODEC_OK {
-            self.initialized = true;
-            Ok(())
-        } else {
-            Err(format!("vpx_codec_dec_init_ver failed: {}", res))
-        }
+        let threads = std::env::var("CRABVPX_THREADS")
+            .ok()
+            .and_then(|s| s.parse::<u32>().ok())
+            .unwrap_or(1);
+        self.instance = Some(Vp8DecoderInstance::new(threads)?);
+        Ok(())
     }
 
     fn decode(&mut self, payload: &[u8]) -> Result<(), Self::Error> {
-        if !self.initialized {
-            return Err("Decoder not initialized".to_string());
-        }
-
-        let res = unsafe {
-            vpx_codec_decode(
-                &raw mut self.ctx,
-                payload.as_ptr(),
-                payload.len() as u32,
-                core::ptr::null_mut(),
-                0,
-            )
-        };
-
-        if res == VPX_CODEC_OK {
-            Ok(())
-        } else {
-            Err(format!("vpx_codec_decode failed: {}", res))
-        }
+        let inst = self
+            .instance
+            .as_mut()
+            .ok_or_else(|| "Decoder not initialized".to_string())?;
+        inst.decode(payload)
     }
 
-    fn get_frame(&mut self) -> Result<Option<Self::Frame>, Self::Error> {
-        if !self.initialized {
-            return Err("Decoder not initialized".to_string());
-        }
+    fn get_frame<'a>(&'a mut self) -> Result<Option<Self::Frame<'a>>, Self::Error> {
+        let inst = self
+            .instance
+            .as_mut()
+            .ok_or_else(|| "Decoder not initialized".to_string())?;
+        if let Some((cfg, width, height)) = inst.get_frame() {
+            let (y_plane, u_plane, v_plane) = cfg.views();
+            let alpha_plane = None;
 
-        let mut iter: VpxCodecIterT = core::ptr::null();
-        let img = unsafe { vpx_codec_get_frame(&raw mut self.ctx, &raw mut iter) };
-
-        if img.is_null() {
-            Ok(None)
-        } else {
-            let img = unsafe { &*img };
-            let mut context = md5::Context::new();
-
-            // Y, U, V planes
-            for plane in 0..3 {
-                let data = img.planes[plane];
-                let stride = img.stride[plane] as usize;
-                let w = if plane == 0 {
-                    img.d_w
-                } else {
-                    (img.d_w + 1) >> 1
-                };
-                let h = if plane == 0 {
-                    img.d_h
-                } else {
-                    (img.d_h + 1) >> 1
-                };
-
-                for row in 0..h {
-                    let row_ptr = unsafe { data.add(row as usize * stride) };
-                    let row_data = unsafe { core::slice::from_raw_parts(row_ptr, w as usize) };
-                    context.consume(row_data);
-                }
-            }
-
-            Ok(Some(Frame {
-                md5: format!("{:x}", context.compute()),
-                width: img.d_w,
-                height: img.d_h,
-                bit_depth: img.bit_depth,
+            Ok(Some(Image {
+                d_w: width as u32,
+                d_h: height as u32,
+                y_plane,
+                u_plane,
+                v_plane,
+                alpha_plane,
+                bit_depth: if cfg.bit_depth == 0 { 8 } else { cfg.bit_depth },
+                strides: [
+                    cfg.y_stride as usize,
+                    cfg.uv_stride as usize,
+                    cfg.uv_stride as usize,
+                    cfg.alpha_stride as usize,
+                ],
             }))
+        } else {
+            Ok(None)
         }
     }
 }

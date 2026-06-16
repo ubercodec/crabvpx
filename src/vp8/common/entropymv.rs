@@ -1,39 +1,97 @@
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MvContext {
-    pub prob: [u8; 19],
-}
-#[unsafe(no_mangle)]
-pub static vp8_mv_update_probs: [MvContext; 2] = [
-    MvContext {
+pub use crate::vp8::common::types::{mv_context, vp8_prob, MV_CONTEXT};
+pub const vp8_mv_update_probs: [MV_CONTEXT; 2] = [
+    mv_context {
         prob: [
-            237 as u8, 246 as u8, 253 as u8, 253 as u8, 254 as u8, 254 as u8, 254 as u8, 254 as u8,
-            254 as u8, 254 as u8, 254 as u8, 254 as u8, 254 as u8, 254 as u8, 250 as u8, 250 as u8,
-            252 as u8, 254 as u8, 254 as u8,
+            237 as ::core::ffi::c_int as vp8_prob,
+            246 as ::core::ffi::c_int as vp8_prob,
+            253 as ::core::ffi::c_int as vp8_prob,
+            253 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            250 as ::core::ffi::c_int as vp8_prob,
+            250 as ::core::ffi::c_int as vp8_prob,
+            252 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
         ],
     },
-    MvContext {
+    mv_context {
         prob: [
-            231 as u8, 243 as u8, 245 as u8, 253 as u8, 254 as u8, 254 as u8, 254 as u8, 254 as u8,
-            254 as u8, 254 as u8, 254 as u8, 254 as u8, 254 as u8, 254 as u8, 251 as u8, 251 as u8,
-            254 as u8, 254 as u8, 254 as u8,
+            231 as ::core::ffi::c_int as vp8_prob,
+            243 as ::core::ffi::c_int as vp8_prob,
+            245 as ::core::ffi::c_int as vp8_prob,
+            253 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            251 as ::core::ffi::c_int as vp8_prob,
+            251 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
         ],
     },
 ];
-#[unsafe(no_mangle)]
-pub static vp8_default_mv_context: [MvContext; 2] = [
-    MvContext {
+pub static vp8_default_mv_context: [MV_CONTEXT; 2] = [
+    mv_context {
         prob: [
-            162 as u8, 128 as u8, 225 as u8, 146 as u8, 172 as u8, 147 as u8, 214 as u8, 39 as u8,
-            156 as u8, 128 as u8, 129 as u8, 132 as u8, 75 as u8, 145 as u8, 178 as u8, 206 as u8,
-            239 as u8, 254 as u8, 254 as u8,
+            162 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            225 as ::core::ffi::c_int as vp8_prob,
+            146 as ::core::ffi::c_int as vp8_prob,
+            172 as ::core::ffi::c_int as vp8_prob,
+            147 as ::core::ffi::c_int as vp8_prob,
+            214 as ::core::ffi::c_int as vp8_prob,
+            39 as ::core::ffi::c_int as vp8_prob,
+            156 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            129 as ::core::ffi::c_int as vp8_prob,
+            132 as ::core::ffi::c_int as vp8_prob,
+            75 as ::core::ffi::c_int as vp8_prob,
+            145 as ::core::ffi::c_int as vp8_prob,
+            178 as ::core::ffi::c_int as vp8_prob,
+            206 as ::core::ffi::c_int as vp8_prob,
+            239 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
         ],
     },
-    MvContext {
+    mv_context {
         prob: [
-            164 as u8, 128 as u8, 204 as u8, 170 as u8, 119 as u8, 235 as u8, 140 as u8, 230 as u8,
-            228 as u8, 128 as u8, 130 as u8, 130 as u8, 74 as u8, 148 as u8, 180 as u8, 203 as u8,
-            236 as u8, 254 as u8, 254 as u8,
+            164 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            204 as ::core::ffi::c_int as vp8_prob,
+            170 as ::core::ffi::c_int as vp8_prob,
+            119 as ::core::ffi::c_int as vp8_prob,
+            235 as ::core::ffi::c_int as vp8_prob,
+            140 as ::core::ffi::c_int as vp8_prob,
+            230 as ::core::ffi::c_int as vp8_prob,
+            228 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            130 as ::core::ffi::c_int as vp8_prob,
+            130 as ::core::ffi::c_int as vp8_prob,
+            74 as ::core::ffi::c_int as vp8_prob,
+            148 as ::core::ffi::c_int as vp8_prob,
+            180 as ::core::ffi::c_int as vp8_prob,
+            203 as ::core::ffi::c_int as vp8_prob,
+            236 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
+            254 as ::core::ffi::c_int as vp8_prob,
         ],
     },
 ];

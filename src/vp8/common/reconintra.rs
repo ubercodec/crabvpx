@@ -1,325 +1,180 @@
-use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
-use std::ffi::c_void;
-unsafe extern "Rust" {
-    fn vpx_dc_128_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_dc_128_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_dc_left_predictor_16x16_c(
-        dst: *mut u8,
-        stride: isize,
-        above: *const u8,
-        left: *const u8,
-    );
-    fn vpx_dc_left_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_dc_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_dc_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_dc_top_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_dc_top_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_h_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_h_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_tm_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_tm_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_v_predictor_16x16_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn vpx_v_predictor_8x8_c(dst: *mut u8, stride: isize, above: *const u8, left: *const u8);
-    fn pthread_once(_: *mut PthreadOnceT, _: Option<unsafe fn() -> ()>) -> i32;
-    fn vp8_init_intra4x4_predictors_internal();
+
+pub type __darwin_ptrdiff_t = isize;
+pub type __darwin_size_t = usize;
+pub type ptrdiff_t = __darwin_ptrdiff_t;
+pub type size_t = __darwin_size_t;
+pub type uint8_t = u8;
+pub type uint32_t = u32;
+pub use crate::vp8::common::types::*;
+
+pub type vpx_color_range_t = vpx_color_range;
+pub type vpx_color_range = ::core::ffi::c_uint;
+pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
+pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
+pub type vpx_color_space_t = vpx_color_space;
+pub type vpx_color_space = ::core::ffi::c_uint;
+pub const VPX_CS_SRGB: vpx_color_space = 7;
+pub const VPX_CS_RESERVED: vpx_color_space = 6;
+pub const VPX_CS_BT_2020: vpx_color_space = 5;
+pub const VPX_CS_SMPTE_240: vpx_color_space = 4;
+pub const VPX_CS_SMPTE_170: vpx_color_space = 3;
+pub const VPX_CS_BT_709: vpx_color_space = 2;
+pub const VPX_CS_BT_601: vpx_color_space = 1;
+pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
+
+
+pub fn vp8_build_intra_predictors_mby_safe(
+    mode: MB_PREDICTION_MODE,
+    left_available: i32,
+    up_available: i32,
+    yabove: &[u8; 17],
+    yleft: &[u8; 16],
+    ypred_slice: &mut [u8],
+    y_stride: usize,
+) {
+    match mode {
+        V_PRED => {
+            crate::vpx_dsp::intrapred::vpx_v_predictor_16x16_safe(
+                ypred_slice,
+                y_stride,
+                &yabove[1..],
+            );
+        }
+        H_PRED => {
+            crate::vpx_dsp::intrapred::vpx_h_predictor_16x16_safe(
+                ypred_slice,
+                y_stride,
+                yleft,
+            );
+        }
+        TM_PRED => {
+            crate::vpx_dsp::intrapred::vpx_tm_predictor_16x16_safe(
+                ypred_slice,
+                y_stride,
+                &yabove[1..17],
+                yleft,
+                yabove[0],
+            );
+        }
+        _ => {
+            debug_assert_eq!(mode, DC_PRED);
+            match (left_available != 0, up_available != 0) {
+                (false, false) => {
+                    crate::vpx_dsp::intrapred::vpx_dc_128_predictor_16x16_safe(ypred_slice, y_stride);
+                }
+                (false, true) => {
+                    crate::vpx_dsp::intrapred::vpx_dc_top_predictor_16x16_safe(ypred_slice, y_stride, &yabove[1..]);
+                }
+                (true, false) => {
+                    crate::vpx_dsp::intrapred::vpx_dc_left_predictor_16x16_safe(ypred_slice, y_stride, yleft);
+                }
+                (true, true) => {
+                    crate::vpx_dsp::intrapred::vpx_dc_predictor_16x16_safe(ypred_slice, y_stride, &yabove[1..], yleft);
+                }
+            }
+        }
+    }
 }
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct OpaquePthreadOnceT {
-    pub __sig: i64,
-    pub __opaque: [i8; 8],
+pub fn vp8_build_intra_predictors_mbuv_safe(
+    uvmode: MB_PREDICTION_MODE,
+    left_available: i32,
+    up_available: i32,
+    uabove: &[u8; 9],
+    vabove: &[u8; 9],
+    uleft: &[u8; 8],
+    vleft: &[u8; 8],
+    upred_slice: &mut [u8],
+    vpred_slice: &mut [u8],
+    uv_stride: usize,
+) {
+    match uvmode {
+        V_PRED => {
+            crate::vpx_dsp::intrapred::vpx_v_predictor_8x8_safe(
+                upred_slice,
+                uv_stride,
+                &uabove[1..],
+            );
+            crate::vpx_dsp::intrapred::vpx_v_predictor_8x8_safe(
+                vpred_slice,
+                uv_stride,
+                &vabove[1..],
+            );
+        }
+        H_PRED => {
+            crate::vpx_dsp::intrapred::vpx_h_predictor_8x8_safe(
+                upred_slice,
+                uv_stride,
+                uleft,
+            );
+            crate::vpx_dsp::intrapred::vpx_h_predictor_8x8_safe(
+                vpred_slice,
+                uv_stride,
+                vleft,
+            );
+        }
+        TM_PRED => {
+            crate::vpx_dsp::intrapred::vpx_tm_predictor_8x8_safe(
+                upred_slice,
+                uv_stride,
+                &uabove[1..9],
+                uleft,
+                uabove[0],
+            );
+            crate::vpx_dsp::intrapred::vpx_tm_predictor_8x8_safe(
+                vpred_slice,
+                uv_stride,
+                &vabove[1..9],
+                vleft,
+                vabove[0],
+            );
+        }
+        _ => {
+            debug_assert_eq!(uvmode, DC_PRED);
+            match (left_available != 0, up_available != 0) {
+                (false, false) => {
+                    crate::vpx_dsp::intrapred::vpx_dc_128_predictor_8x8_safe(upred_slice, uv_stride);
+                    crate::vpx_dsp::intrapred::vpx_dc_128_predictor_8x8_safe(vpred_slice, uv_stride);
+                }
+                (false, true) => {
+                    crate::vpx_dsp::intrapred::vpx_dc_top_predictor_8x8_safe(upred_slice, uv_stride, &uabove[1..]);
+                    crate::vpx_dsp::intrapred::vpx_dc_top_predictor_8x8_safe(vpred_slice, uv_stride, &vabove[1..]);
+                }
+                (true, false) => {
+                    crate::vpx_dsp::intrapred::vpx_dc_left_predictor_8x8_safe(upred_slice, uv_stride, uleft);
+                    crate::vpx_dsp::intrapred::vpx_dc_left_predictor_8x8_safe(vpred_slice, uv_stride, vleft);
+                }
+                (true, true) => {
+                    crate::vpx_dsp::intrapred::vpx_dc_predictor_8x8_safe(upred_slice, uv_stride, &uabove[1..], uleft);
+                    crate::vpx_dsp::intrapred::vpx_dc_predictor_8x8_safe(vpred_slice, uv_stride, &vabove[1..], vleft);
+                }
+            }
+        }
+    }
 }
-pub type DarwinPthreadOnceT = OpaquePthreadOnceT;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Blockd {
-    pub qcoeff: *mut i16,
-    pub dqcoeff: *mut i16,
-    pub predictor: *mut u8,
-    pub dequant: *mut i16,
-    pub offset: i32,
-    pub eob: *mut i8,
-    pub bmi: BModeInfo,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union BModeInfo {
-    pub as_mode: u32,
-    pub mv: IntMv,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union IntMv {
-    pub as_int: u32,
-    pub as_mv: MV,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MV {
-    pub row: i16,
-    pub col: i16,
-}
-pub const B_MODE_COUNT: u32 = 14;
-pub const NEW4X4: u32 = 13;
-pub const ZERO4X4: u32 = 12;
-pub const ABOVE4X4: u32 = 11;
-pub const LEFT4X4: u32 = 10;
-pub const B_HU_PRED: u32 = 9;
-pub const B_HD_PRED: u32 = 8;
-pub const B_VL_PRED: u32 = 7;
-pub const B_VR_PRED: u32 = 6;
-pub const B_RD_PRED: u32 = 5;
-pub const B_LD_PRED: u32 = 4;
-pub const B_HE_PRED: u32 = 3;
-pub const B_VE_PRED: u32 = 2;
-pub const B_TM_PRED: u32 = 1;
-pub const B_DC_PRED: u32 = 0;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Macroblockd {
-    pub predictor: [u8; 384],
-    pub qcoeff: [i16; 400],
-    pub dqcoeff: [i16; 400],
-    pub eobs: [i8; 25],
-    pub dequant_y1: [i16; 16],
-    pub dequant_y1_dc: [i16; 16],
-    pub dequant_y2: [i16; 16],
-    pub dequant_uv: [i16; 16],
-    pub block: [BLOCKD; 25],
-    pub fullpixel_mask: i32,
-    pub pre: Yv12BufferConfig,
-    pub dst: Yv12BufferConfig,
-    pub mode_info_context: *mut ModeInfo,
-    pub mode_info_stride: i32,
-    pub frame_type: u32,
-    pub up_available: bool,
-    pub left_available: bool,
-    pub recon_above: [*mut u8; 3],
-    pub recon_left: [*mut u8; 3],
-    pub recon_left_stride: [i32; 2],
-    pub above_context: *mut EntropyContextPlanes,
-    pub left_context: *mut EntropyContextPlanes,
-    pub segmentation_enabled: u8,
-    pub update_mb_segmentation_map: u8,
-    pub update_mb_segmentation_data: u8,
-    pub mb_segment_abs_delta: u8,
-    pub mb_segment_tree_probs: [u8; 3],
-    pub segment_feature_data: [[i8; 4]; 2],
-    pub mode_ref_lf_delta_enabled: u8,
-    pub mode_ref_lf_delta_update: u8,
-    pub last_ref_lf_deltas: [i8; 4],
-    pub ref_lf_deltas: [i8; 4],
-    pub last_mode_lf_deltas: [i8; 4],
-    pub mode_lf_deltas: [i8; 4],
-    pub mb_to_left_edge: i32,
-    pub mb_to_right_edge: i32,
-    pub mb_to_top_edge: i32,
-    pub mb_to_bottom_edge: i32,
-    pub subpixel_predict: Vp8SubpixFnT,
-    pub subpixel_predict8x4: Vp8SubpixFnT,
-    pub subpixel_predict8x8: Vp8SubpixFnT,
-    pub subpixel_predict16x16: Vp8SubpixFnT,
-    pub current_bc: *mut c_void,
-    pub corrupted: i32,
-    pub error_info: VpxInternalErrorInfo,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct VpxInternalErrorInfo {
-    pub error_code: u32,
-    pub has_detail: bool,
-    pub detail: [i8; 80],
-    pub setjmp: bool,
-    pub jmp: JmpBuf,
-}
-pub type JmpBuf = [i32; 48];
-pub const VPX_CODEC_LIST_END: u32 = 9;
-pub const VPX_CODEC_INVALID_PARAM: u32 = 8;
-pub const VPX_CODEC_CORRUPT_FRAME: u32 = 7;
-pub const VPX_CODEC_UNSUP_FEATURE: u32 = 6;
-pub const VPX_CODEC_UNSUP_BITSTREAM: u32 = 5;
-pub const VPX_CODEC_INCAPABLE: u32 = 4;
-pub const VPX_CODEC_ABI_MISMATCH: u32 = 3;
-pub const VPX_CODEC_MEM_ERROR: u32 = 2;
-pub const VPX_CODEC_ERROR: u32 = 1;
-pub const VPX_CODEC_OK: u32 = 0;
-pub type Vp8SubpixFnT = Option<unsafe fn(*mut u8, i32, i32, i32, *mut u8, i32) -> ()>;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct EntropyContextPlanes {
-    pub y1: [i8; 4],
-    pub u: [i8; 2],
-    pub v: [i8; 2],
-    pub y2: i8,
-}
-pub const INTER_FRAME: u32 = 1;
-pub const KEY_FRAME: u32 = 0;
-pub type ModeInfo = Modeinfo;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Modeinfo {
-    pub mbmi: MbModeInfo,
-    pub bmi: [BModeInfo; 16],
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MbModeInfo {
-    pub mode: u8,
-    pub uv_mode: u8,
-    pub ref_frame: u8,
-    pub is_4x4: u8,
-    pub mv: IntMv,
-    pub partitioning: u8,
-    pub mb_skip_coeff: u8,
-    pub need_to_clamp_mvs: u8,
-    pub segment_id: u8,
+pub fn vp8_init_intra_predictors() {}
+
+pub fn intra_prediction_down_copy(
+    dst_stride: usize,
+    border: usize,
+    y_slice: &mut [u8],
+    above_y: Option<&[u8]>,
+) {
+    let base_idx = (border - 1) * dst_stride + border + 16;
+
+    let mut src_bytes = [0u8; 4];
+    if let Some(ay) = above_y {
+        // ay contains columns -1 to 22. Column 16 is at index 17.
+        src_bytes.copy_from_slice(&ay[17..21]);
+    } else {
+        src_bytes.copy_from_slice(&y_slice[base_idx..base_idx + 4]);
+    }
+
+    let idx0 = base_idx + 4 * dst_stride;
+    let idx1 = base_idx + 8 * dst_stride;
+    let idx2 = base_idx + 12 * dst_stride;
+
+    y_slice[idx0..idx0 + 4].copy_from_slice(&src_bytes);
+    y_slice[idx1..idx1 + 4].copy_from_slice(&src_bytes);
+    y_slice[idx2..idx2 + 4].copy_from_slice(&src_bytes);
 }
 
-pub use crate::vpx::src::vpx_image::{
-    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
-    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
-};
-pub type BLOCKD = Blockd;
-pub type PthreadOnceT = *mut c_void;
-pub const MB_MODE_COUNT: u32 = 10;
-pub const SPLITMV: u32 = 9;
-pub const NEWMV: u32 = 8;
-pub const ZEROMV: u32 = 7;
-pub const NEARMV: u32 = 6;
-pub const NEARESTMV: u32 = 5;
-pub const B_PRED: u32 = 4;
-pub const TM_PRED: u32 = 3;
-pub const H_PRED: u32 = 2;
-pub const V_PRED: u32 = 1;
-pub const DC_PRED: u32 = 0;
-pub type MACROBLOCKD = Macroblockd;
-pub type IntraPredFn = Option<unsafe fn(*mut u8, isize, *const u8, *const u8) -> ()>;
-pub const SIZE_16: C2RustUnnamed = 0;
-pub const SIZE_8: C2RustUnnamed = 1;
-#[allow(non_camel_case_types)]
-pub type C2RustUnnamed = u32;
-pub const NUM_SIZES: C2RustUnnamed = 2;
-pub const _PTHREAD_ONCE_SIG_init: i32 = 0x30b1bcba as i32;
-unsafe fn once(mut func: Option<unsafe fn() -> ()>) {
-    unsafe {
-        static INIT: std::sync::Once = std::sync::Once::new();
-        if let Some(f) = func {
-            INIT.call_once(|| f());
-        }
-    }
-}
-static pred: [[IntraPredFn; 2]; 4] = [
-    [None, None],
-    [Some(vpx_v_predictor_16x16_c), Some(vpx_v_predictor_8x8_c)],
-    [Some(vpx_h_predictor_16x16_c), Some(vpx_h_predictor_8x8_c)],
-    [Some(vpx_tm_predictor_16x16_c), Some(vpx_tm_predictor_8x8_c)],
-];
-static dc_pred: [[[IntraPredFn; 2]; 2]; 2] = [
-    [
-        [
-            Some(vpx_dc_128_predictor_16x16_c),
-            Some(vpx_dc_128_predictor_8x8_c),
-        ],
-        [
-            Some(vpx_dc_top_predictor_16x16_c),
-            Some(vpx_dc_top_predictor_8x8_c),
-        ],
-    ],
-    [
-        [
-            Some(vpx_dc_left_predictor_16x16_c),
-            Some(vpx_dc_left_predictor_8x8_c),
-        ],
-        [Some(vpx_dc_predictor_16x16_c), Some(vpx_dc_predictor_8x8_c)],
-    ],
-];
-unsafe fn vp8_init_intra_predictors_internal() {
-    unsafe {
-        vp8_init_intra4x4_predictors_internal();
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_build_intra_predictors_mby_s(
-    mut x: *mut MACROBLOCKD,
-    mut yabove_row: *mut u8,
-    mut yleft: *mut u8,
-    mut left_stride: i32,
-    mut ypred_ptr: *mut u8,
-    mut y_stride: i32,
-) {
-    unsafe {
-        let mut mode: u32 = (*(*x).mode_info_context).mbmi.mode as u32;
-        let mut yleft_col: [u8; 16] = [0; 16];
-        let mut i: i32 = 0;
-        let mut fn_0: IntraPredFn = None;
-        i = 0 as i32;
-        while i < 16 as i32 {
-            yleft_col[i as usize] = *yleft.offset((i * left_stride) as isize) as u8;
-            i += 1;
-        }
-        if mode as u32 == DC_PRED as u32 {
-            fn_0 =
-                dc_pred[(*x).left_available as usize][(*x).up_available as usize][SIZE_16 as usize];
-        } else {
-            fn_0 = pred[mode as usize][SIZE_16 as usize];
-        }
-        fn_0.expect("non-null function pointer")(
-            ypred_ptr as *mut u8,
-            y_stride as isize,
-            yabove_row,
-            &raw mut yleft_col as *mut u8,
-        );
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_build_intra_predictors_mbuv_s(
-    mut x: *mut MACROBLOCKD,
-    mut uabove_row: *mut u8,
-    mut vabove_row: *mut u8,
-    mut uleft: *mut u8,
-    mut vleft: *mut u8,
-    mut left_stride: i32,
-    mut upred_ptr: *mut u8,
-    mut vpred_ptr: *mut u8,
-    mut pred_stride: i32,
-) {
-    unsafe {
-        let mut uvmode: u32 = (*(*x).mode_info_context).mbmi.uv_mode as u32;
-        let mut uleft_col: [u8; 8] = [0; 8];
-        let mut vleft_col: [u8; 8] = [0; 8];
-        let mut i: i32 = 0;
-        let mut fn_0: IntraPredFn = None;
-        i = 0 as i32;
-        while i < 8 as i32 {
-            uleft_col[i as usize] = *uleft.offset((i * left_stride) as isize);
-            vleft_col[i as usize] = *vleft.offset((i * left_stride) as isize);
-            i += 1;
-        }
-        if uvmode as u32 == DC_PRED as u32 {
-            fn_0 =
-                dc_pred[(*x).left_available as usize][(*x).up_available as usize][SIZE_8 as usize];
-        } else {
-            fn_0 = pred[uvmode as usize][SIZE_8 as usize];
-        }
-        fn_0.expect("non-null function pointer")(
-            upred_ptr as *mut u8,
-            pred_stride as isize,
-            uabove_row,
-            &raw mut uleft_col as *mut u8,
-        );
-        fn_0.expect("non-null function pointer")(
-            vpred_ptr as *mut u8,
-            pred_stride as isize,
-            vabove_row,
-            &raw mut vleft_col as *mut u8,
-        );
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_init_intra_predictors() {
-    unsafe {
-        once(Some(
-            vp8_init_intra_predictors_internal as unsafe fn() -> (),
-        ));
-    }
-}

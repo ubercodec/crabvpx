@@ -1,919 +1,1641 @@
-use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
-use std::ffi::c_void;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union BModeInfo {
-    pub as_mode: u32,
-    pub mv: IntMv,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union IntMv {
-    pub as_int: u32,
-    pub as_mv: MV,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MV {
-    pub row: i16,
-    pub col: i16,
-}
-pub use crate::vp8::common::tables::{
-    ABOVE4X4, B_DC_PRED, B_HD_PRED, B_HE_PRED, B_HU_PRED, B_LD_PRED, B_MODE_COUNT, B_PRED,
-    B_RD_PRED, B_TM_PRED, B_VE_PRED, B_VL_PRED, B_VR_PRED, DC_PRED, H_PRED, LEFT4X4, NEARESTMV,
-    NEARMV, NEW4X4, NEWMV, SPLITMV, TM_PRED, V_PRED, ZERO4X4, ZEROMV,
-};
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct VpxInternalErrorInfo {
-    pub error_code: u32,
-    pub has_detail: bool,
-    pub detail: [i8; 80],
-    pub setjmp: bool,
-    pub jmp: JmpBuf,
-}
-pub type JmpBuf = [i32; 48];
-pub const VPX_CODEC_LIST_END: u32 = 9;
-pub const VPX_CODEC_INVALID_PARAM: u32 = 8;
-pub const VPX_CODEC_CORRUPT_FRAME: u32 = 7;
-pub const VPX_CODEC_UNSUP_FEATURE: u32 = 6;
-pub const VPX_CODEC_UNSUP_BITSTREAM: u32 = 5;
-pub const VPX_CODEC_INCAPABLE: u32 = 4;
-pub const VPX_CODEC_ABI_MISMATCH: u32 = 3;
-pub const VPX_CODEC_MEM_ERROR: u32 = 2;
-pub const VPX_CODEC_ERROR: u32 = 1;
-pub const VPX_CODEC_OK: u32 = 0;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct EntropyContextPlanes {
-    pub y1: [i8; 4],
-    pub u: [i8; 2],
-    pub v: [i8; 2],
-    pub y2: i8,
-}
-pub const INTER_FRAME: u32 = 1;
-pub const KEY_FRAME: u32 = 0;
-pub type ModeInfo = Modeinfo;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Modeinfo {
-    pub mbmi: MbModeInfo,
-    pub bmi: [BModeInfo; 16],
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MbModeInfo {
-    pub mode: u8,
-    pub uv_mode: u8,
-    pub ref_frame: u8,
-    pub is_4x4: u8,
-    pub mv: IntMv,
-    pub partitioning: u8,
-    pub mb_skip_coeff: u8,
-    pub need_to_clamp_mvs: u8,
-    pub segment_id: u8,
-}
 
-pub use crate::vpx::src::vpx_image::{
-    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
-    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
-};
-pub const SIMPLE_LOOPFILTER: u32 = 1;
-pub const NORMAL_LOOPFILTER: u32 = 0;
+pub use crate::vp8::common::types::*;
+pub type uint32_t = u32;
+
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct LoopFilterInfoN {
-    pub mblim: [[u8; 16]; 64],
-    pub blim: [[u8; 16]; 64],
-    pub lim: [[u8; 16]; 64],
-    pub hev_thr: [[u8; 16]; 4],
-    pub lvl: [[[u8; 4]; 4]; 4],
-    pub hev_thr_lut: [[u8; 64]; 2],
-    pub mode_lf_lut: [u8; 10],
+pub struct vpx_internal_error_info {
+    pub error_code: vpx_codec_err_t,
+    pub has_detail: ::core::ffi::c_int,
+    pub detail: [::core::ffi::c_char; 80],
+    pub setjmp: ::core::ffi::c_int,
+    pub jmp: jmp_buf,
 }
+pub type jmp_buf = [::core::ffi::c_int; 48];
+pub type vpx_codec_err_t = ::core::ffi::c_uint;
+pub const VPX_CODEC_LIST_END: vpx_codec_err_t = 9;
+pub const VPX_CODEC_INVALID_PARAM: vpx_codec_err_t = 8;
+pub const VPX_CODEC_CORRUPT_FRAME: vpx_codec_err_t = 7;
+pub const VPX_CODEC_UNSUP_FEATURE: vpx_codec_err_t = 6;
+pub const VPX_CODEC_UNSUP_BITSTREAM: vpx_codec_err_t = 5;
+pub const VPX_CODEC_INCAPABLE: vpx_codec_err_t = 4;
+pub const VPX_CODEC_ABI_MISMATCH: vpx_codec_err_t = 3;
+pub const VPX_CODEC_MEM_ERROR: vpx_codec_err_t = 2;
+pub const VPX_CODEC_ERROR: vpx_codec_err_t = 1;
+pub const VPX_CODEC_OK: vpx_codec_err_t = 0;
+
+
+pub type FRAME_TYPE = ::core::ffi::c_uint;
+pub const INTER_FRAME: FRAME_TYPE = 1;
+pub const KEY_FRAME: FRAME_TYPE = 0;
+
+pub type uint8_t = u8;
+pub type vpx_color_range_t = vpx_color_range;
+pub type vpx_color_range = ::core::ffi::c_uint;
+pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
+pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
+pub type vpx_color_space_t = vpx_color_space;
+pub type vpx_color_space = ::core::ffi::c_uint;
+pub const VPX_CS_SRGB: vpx_color_space = 7;
+pub const VPX_CS_RESERVED: vpx_color_space = 6;
+pub const VPX_CS_BT_2020: vpx_color_space = 5;
+pub const VPX_CS_SMPTE_240: vpx_color_space = 4;
+pub const VPX_CS_SMPTE_170: vpx_color_space = 3;
+pub const VPX_CS_BT_709: vpx_color_space = 2;
+pub const VPX_CS_BT_601: vpx_color_space = 1;
+pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
+pub type size_t = __darwin_size_t;
+pub type __darwin_size_t = usize;
+pub type vp8_tree_index = ::core::ffi::c_schar;
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct VP8Common {
-    pub error: VpxInternalErrorInfo,
-    pub y1dequant: [[i16; 2]; 128],
-    pub y2dequant: [[i16; 2]; 128],
-    pub uvdequant: [[i16; 2]; 128],
-    pub width: i32,
-    pub height: i32,
-    pub horiz_scale: i32,
-    pub vert_scale: i32,
-    pub clamp_type: u32,
-    pub frame_to_show: *mut Yv12BufferConfig,
-    pub yv12_fb: [Yv12BufferConfig; 4],
-    pub fb_idx_ref_cnt: [i32; 4],
-    pub new_fb_idx: i32,
-    pub lst_fb_idx: i32,
-    pub gld_fb_idx: i32,
-    pub alt_fb_idx: i32,
-    pub temp_scale_frame: Yv12BufferConfig,
-    pub last_frame_type: u32,
-    pub frame_type: u32,
-    pub show_frame: i32,
-    pub frame_flags: i32,
-    pub mbs: i32,
-    pub mb_rows: i32,
-    pub mb_cols: i32,
-    pub mode_info_stride: i32,
-    pub mb_no_coeff_skip: bool,
-    pub no_lpf: bool,
-    pub use_bilinear_mc_filter: bool,
-    pub full_pixel: bool,
-    pub base_qindex: i32,
-    pub y1dc_delta_q: i32,
-    pub y2dc_delta_q: i32,
-    pub y2ac_delta_q: i32,
-    pub uvdc_delta_q: i32,
-    pub uvac_delta_q: i32,
-    pub mip: *mut ModeInfo,
-    pub mi: *mut ModeInfo,
-    pub show_frame_mi: *mut ModeInfo,
-    pub filter_type: u32,
-    pub lf_info: LoopFilterInfoN,
-    pub filter_level: i32,
-    pub last_sharpness_level: i32,
-    pub sharpness_level: i32,
-    pub refresh_last_frame: i32,
-    pub refresh_golden_frame: i32,
-    pub refresh_alt_ref_frame: i32,
-    pub copy_buffer_to_gf: i32,
-    pub copy_buffer_to_arf: i32,
-    pub refresh_entropy_probs: bool,
-    pub ref_frame_sign_bias: [i32; 4],
-    pub above_context: *mut EntropyContextPlanes,
-    pub left_context: EntropyContextPlanes,
-    pub lfc: FrameContext,
-    pub fc: FrameContext,
-    pub current_video_frame: u32,
-    pub version: i32,
-    pub multi_token_partition: u32,
-    pub processor_core_count: i32,
+pub struct vp8_token_struct {
+    pub value: ::core::ffi::c_int,
+    pub Len: ::core::ffi::c_int,
 }
-pub const EIGHT_PARTITION: u32 = 3;
-pub const FOUR_PARTITION: u32 = 2;
-pub const TWO_PARTITION: u32 = 1;
-pub const ONE_PARTITION: u32 = 0;
-pub type FrameContext = FrameContexts;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct FrameContexts {
-    pub bmode_prob: [u8; 9],
-    pub ymode_prob: [u8; 4],
-    pub uv_mode_prob: [u8; 3],
-    pub sub_mv_ref_prob: [u8; 3],
-    pub coef_probs: [[[[u8; 11]; 3]; 8]; 4],
-    pub mvc: [MvContext; 2],
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MvContext {
-    pub prob: [u8; 19],
-}
-pub const RECON_CLAMP_NOTREQUIRED: u32 = 1;
-pub const RECON_CLAMP_REQUIRED: u32 = 0;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Vp8TokenStruct {
-    pub value: i32,
-    pub len: i32,
-}
-#[allow(non_camel_case_types)]
-pub type C2RustUnnamed = i32;
-pub use crate::vp8::common::tables::MB_MODE_COUNT;
-pub type Vp8Common = VP8Common;
-#[allow(non_camel_case_types)]
-pub type C2RustUnnamed_0 = u32;
+pub type C2RustUnnamed = ::core::ffi::c_uint;
+pub const MB_MODE_COUNT: C2RustUnnamed = 10;
+pub const SPLITMV: C2RustUnnamed = 9;
+pub const NEWMV: C2RustUnnamed = 8;
+pub const ZEROMV: C2RustUnnamed = 7;
+pub const NEARMV: C2RustUnnamed = 6;
+pub const NEARESTMV: C2RustUnnamed = 5;
+pub const B_PRED: C2RustUnnamed = 4;
+pub const TM_PRED: C2RustUnnamed = 3;
+pub const H_PRED: C2RustUnnamed = 2;
+pub const V_PRED: C2RustUnnamed = 1;
+pub const DC_PRED: C2RustUnnamed = 0;
+pub type C2RustUnnamed_0 = ::core::ffi::c_uint;
 pub const SUBMVREF_LEFT_ABOVE_ZED: C2RustUnnamed_0 = 4;
 pub const SUBMVREF_LEFT_ABOVE_SAME: C2RustUnnamed_0 = 3;
 pub const SUBMVREF_ABOVE_ZED: C2RustUnnamed_0 = 2;
 pub const SUBMVREF_LEFT_ZED: C2RustUnnamed_0 = 1;
 pub const SUBMVREF_NORMAL: C2RustUnnamed_0 = 0;
-pub type Vp8Mbsplit = [i32; 16];
-#[unsafe(no_mangle)]
-pub static vp8_bmode_encodings: [Vp8TokenStruct; 10] = [
-    Vp8TokenStruct {
-        value: 0 as i32,
-        len: 1 as i32,
+pub type vp8_mbsplit = [::core::ffi::c_int; 16];
+pub static vp8_bmode_encodings: [vp8_token_struct; 10] = [
+    vp8_token_struct {
+        value: 0 as ::core::ffi::c_int,
+        Len: 1 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 2 as i32,
-        len: 2 as i32,
+    vp8_token_struct {
+        value: 2 as ::core::ffi::c_int,
+        Len: 2 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 6 as i32,
-        len: 3 as i32,
+    vp8_token_struct {
+        value: 6 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 28 as i32,
-        len: 5 as i32,
+    vp8_token_struct {
+        value: 28 as ::core::ffi::c_int,
+        Len: 5 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 30 as i32,
-        len: 5 as i32,
+    vp8_token_struct {
+        value: 30 as ::core::ffi::c_int,
+        Len: 5 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 58 as i32,
-        len: 6 as i32,
+    vp8_token_struct {
+        value: 58 as ::core::ffi::c_int,
+        Len: 6 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 59 as i32,
-        len: 6 as i32,
+    vp8_token_struct {
+        value: 59 as ::core::ffi::c_int,
+        Len: 6 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 62 as i32,
-        len: 6 as i32,
+    vp8_token_struct {
+        value: 62 as ::core::ffi::c_int,
+        Len: 6 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 126 as i32,
-        len: 7 as i32,
+    vp8_token_struct {
+        value: 126 as ::core::ffi::c_int,
+        Len: 7 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 127 as i32,
-        len: 7 as i32,
-    },
-];
-#[unsafe(no_mangle)]
-pub static vp8_ymode_encodings: [Vp8TokenStruct; 5] = [
-    Vp8TokenStruct {
-        value: 0 as i32,
-        len: 1 as i32,
-    },
-    Vp8TokenStruct {
-        value: 4 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 5 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 6 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 7 as i32,
-        len: 3 as i32,
+    vp8_token_struct {
+        value: 127 as ::core::ffi::c_int,
+        Len: 7 as ::core::ffi::c_int,
     },
 ];
-#[unsafe(no_mangle)]
-pub static vp8_kf_ymode_encodings: [Vp8TokenStruct; 5] = [
-    Vp8TokenStruct {
-        value: 4 as i32,
-        len: 3 as i32,
+pub static vp8_ymode_encodings: [vp8_token_struct; 5] = [
+    vp8_token_struct {
+        value: 0 as ::core::ffi::c_int,
+        Len: 1 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 5 as i32,
-        len: 3 as i32,
+    vp8_token_struct {
+        value: 4 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 6 as i32,
-        len: 3 as i32,
+    vp8_token_struct {
+        value: 5 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 7 as i32,
-        len: 3 as i32,
+    vp8_token_struct {
+        value: 6 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 0 as i32,
-        len: 1 as i32,
-    },
-];
-#[unsafe(no_mangle)]
-pub static vp8_uv_mode_encodings: [Vp8TokenStruct; 4] = [
-    Vp8TokenStruct {
-        value: 0 as i32,
-        len: 1 as i32,
-    },
-    Vp8TokenStruct {
-        value: 2 as i32,
-        len: 2 as i32,
-    },
-    Vp8TokenStruct {
-        value: 6 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 7 as i32,
-        len: 3 as i32,
+    vp8_token_struct {
+        value: 7 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
 ];
-#[unsafe(no_mangle)]
-pub static vp8_mbsplit_encodings: [Vp8TokenStruct; 4] = [
-    Vp8TokenStruct {
-        value: 6 as i32,
-        len: 3 as i32,
+pub static vp8_kf_ymode_encodings: [vp8_token_struct; 5] = [
+    vp8_token_struct {
+        value: 4 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 7 as i32,
-        len: 3 as i32,
+    vp8_token_struct {
+        value: 5 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 2 as i32,
-        len: 2 as i32,
+    vp8_token_struct {
+        value: 6 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 0 as i32,
-        len: 1 as i32,
+    vp8_token_struct {
+        value: 7 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
-];
-#[unsafe(no_mangle)]
-pub static vp8_mv_ref_encoding_array: [Vp8TokenStruct; 5] = [
-    Vp8TokenStruct {
-        value: 2 as i32,
-        len: 2 as i32,
-    },
-    Vp8TokenStruct {
-        value: 6 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 0 as i32,
-        len: 1 as i32,
-    },
-    Vp8TokenStruct {
-        value: 14 as i32,
-        len: 4 as i32,
-    },
-    Vp8TokenStruct {
-        value: 15 as i32,
-        len: 4 as i32,
+    vp8_token_struct {
+        value: 0 as ::core::ffi::c_int,
+        Len: 1 as ::core::ffi::c_int,
     },
 ];
-#[unsafe(no_mangle)]
-pub static vp8_sub_mv_ref_encoding_array: [Vp8TokenStruct; 4] = [
-    Vp8TokenStruct {
-        value: 0 as i32,
-        len: 1 as i32,
+pub static vp8_uv_mode_encodings: [vp8_token_struct; 4] = [
+    vp8_token_struct {
+        value: 0 as ::core::ffi::c_int,
+        Len: 1 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 2 as i32,
-        len: 2 as i32,
+    vp8_token_struct {
+        value: 2 as ::core::ffi::c_int,
+        Len: 2 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 6 as i32,
-        len: 3 as i32,
+    vp8_token_struct {
+        value: 6 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
-    Vp8TokenStruct {
-        value: 7 as i32,
-        len: 3 as i32,
-    },
-];
-#[unsafe(no_mangle)]
-pub static vp8_small_mvencodings: [Vp8TokenStruct; 8] = [
-    Vp8TokenStruct {
-        value: 0 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 1 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 2 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 3 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 4 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 5 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 6 as i32,
-        len: 3 as i32,
-    },
-    Vp8TokenStruct {
-        value: 7 as i32,
-        len: 3 as i32,
+    vp8_token_struct {
+        value: 7 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
     },
 ];
-#[unsafe(no_mangle)]
-pub static vp8_ymode_prob: [u8; 4] = [112 as u8, 86 as u8, 140 as u8, 37 as u8];
-#[unsafe(no_mangle)]
-pub static vp8_kf_ymode_prob: [u8; 4] = [145 as u8, 156 as u8, 163 as u8, 128 as u8];
-#[unsafe(no_mangle)]
-pub static vp8_uv_mode_prob: [u8; 3] = [162 as u8, 101 as u8, 204 as u8];
-#[unsafe(no_mangle)]
-pub static vp8_kf_uv_mode_prob: [u8; 3] = [142 as u8, 114 as u8, 183 as u8];
-#[unsafe(no_mangle)]
-pub static vp8_bmode_prob: [u8; 9] = [
-    120 as u8, 90 as u8, 79 as u8, 133 as u8, 87 as u8, 85 as u8, 80 as u8, 111 as u8, 151 as u8,
+pub static vp8_mbsplit_encodings: [vp8_token_struct; 4] = [
+    vp8_token_struct {
+        value: 6 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 7 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 2 as ::core::ffi::c_int,
+        Len: 2 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 0 as ::core::ffi::c_int,
+        Len: 1 as ::core::ffi::c_int,
+    },
 ];
-#[unsafe(no_mangle)]
-pub static vp8_kf_bmode_prob: [[[u8; 9]; 10]; 10] = [
+pub static vp8_mv_ref_encoding_array: [vp8_token_struct; 5] = [
+    vp8_token_struct {
+        value: 2 as ::core::ffi::c_int,
+        Len: 2 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 6 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 0 as ::core::ffi::c_int,
+        Len: 1 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 14 as ::core::ffi::c_int,
+        Len: 4 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 15 as ::core::ffi::c_int,
+        Len: 4 as ::core::ffi::c_int,
+    },
+];
+pub static vp8_sub_mv_ref_encoding_array: [vp8_token_struct; 4] = [
+    vp8_token_struct {
+        value: 0 as ::core::ffi::c_int,
+        Len: 1 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 2 as ::core::ffi::c_int,
+        Len: 2 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 6 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 7 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+];
+pub static vp8_small_mvencodings: [vp8_token_struct; 8] = [
+    vp8_token_struct {
+        value: 0 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 1 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 2 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 3 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 4 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 5 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 6 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+    vp8_token_struct {
+        value: 7 as ::core::ffi::c_int,
+        Len: 3 as ::core::ffi::c_int,
+    },
+];
+pub static vp8_ymode_prob: [vp8_prob; 4] = [
+    112 as ::core::ffi::c_int as vp8_prob,
+    86 as ::core::ffi::c_int as vp8_prob,
+    140 as ::core::ffi::c_int as vp8_prob,
+    37 as ::core::ffi::c_int as vp8_prob,
+];
+pub static vp8_kf_ymode_prob: [vp8_prob; 4] = [
+    145 as ::core::ffi::c_int as vp8_prob,
+    156 as ::core::ffi::c_int as vp8_prob,
+    163 as ::core::ffi::c_int as vp8_prob,
+    128 as ::core::ffi::c_int as vp8_prob,
+];
+pub static vp8_uv_mode_prob: [vp8_prob; 3] = [
+    162 as ::core::ffi::c_int as vp8_prob,
+    101 as ::core::ffi::c_int as vp8_prob,
+    204 as ::core::ffi::c_int as vp8_prob,
+];
+pub static vp8_kf_uv_mode_prob: [vp8_prob; 3] = [
+    142 as ::core::ffi::c_int as vp8_prob,
+    114 as ::core::ffi::c_int as vp8_prob,
+    183 as ::core::ffi::c_int as vp8_prob,
+];
+pub static vp8_bmode_prob: [vp8_prob; 9] = [
+    120 as ::core::ffi::c_int as vp8_prob,
+    90 as ::core::ffi::c_int as vp8_prob,
+    79 as ::core::ffi::c_int as vp8_prob,
+    133 as ::core::ffi::c_int as vp8_prob,
+    87 as ::core::ffi::c_int as vp8_prob,
+    85 as ::core::ffi::c_int as vp8_prob,
+    80 as ::core::ffi::c_int as vp8_prob,
+    111 as ::core::ffi::c_int as vp8_prob,
+    151 as ::core::ffi::c_int as vp8_prob,
+];
+pub static vp8_kf_bmode_prob: [[[vp8_prob; 9]; 10]; 10] = [
     [
         [
-            231 as u8, 120 as u8, 48 as u8, 89 as u8, 115 as u8, 113 as u8, 120 as u8, 152 as u8,
-            112 as u8,
+            231 as ::core::ffi::c_int as vp8_prob,
+            120 as ::core::ffi::c_int as vp8_prob,
+            48 as ::core::ffi::c_int as vp8_prob,
+            89 as ::core::ffi::c_int as vp8_prob,
+            115 as ::core::ffi::c_int as vp8_prob,
+            113 as ::core::ffi::c_int as vp8_prob,
+            120 as ::core::ffi::c_int as vp8_prob,
+            152 as ::core::ffi::c_int as vp8_prob,
+            112 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            152 as u8, 179 as u8, 64 as u8, 126 as u8, 170 as u8, 118 as u8, 46 as u8, 70 as u8,
-            95 as u8,
+            152 as ::core::ffi::c_int as vp8_prob,
+            179 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+            126 as ::core::ffi::c_int as vp8_prob,
+            170 as ::core::ffi::c_int as vp8_prob,
+            118 as ::core::ffi::c_int as vp8_prob,
+            46 as ::core::ffi::c_int as vp8_prob,
+            70 as ::core::ffi::c_int as vp8_prob,
+            95 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            175 as u8, 69 as u8, 143 as u8, 80 as u8, 85 as u8, 82 as u8, 72 as u8, 155 as u8,
-            103 as u8,
+            175 as ::core::ffi::c_int as vp8_prob,
+            69 as ::core::ffi::c_int as vp8_prob,
+            143 as ::core::ffi::c_int as vp8_prob,
+            80 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            82 as ::core::ffi::c_int as vp8_prob,
+            72 as ::core::ffi::c_int as vp8_prob,
+            155 as ::core::ffi::c_int as vp8_prob,
+            103 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            56 as u8, 58 as u8, 10 as u8, 171 as u8, 218 as u8, 189 as u8, 17 as u8, 13 as u8,
-            152 as u8,
+            56 as ::core::ffi::c_int as vp8_prob,
+            58 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+            218 as ::core::ffi::c_int as vp8_prob,
+            189 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            13 as ::core::ffi::c_int as vp8_prob,
+            152 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            144 as u8, 71 as u8, 10 as u8, 38 as u8, 171 as u8, 213 as u8, 144 as u8, 34 as u8,
-            26 as u8,
+            144 as ::core::ffi::c_int as vp8_prob,
+            71 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            38 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+            213 as ::core::ffi::c_int as vp8_prob,
+            144 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            114 as u8, 26 as u8, 17 as u8, 163 as u8, 44 as u8, 195 as u8, 21 as u8, 10 as u8,
-            173 as u8,
+            114 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            163 as ::core::ffi::c_int as vp8_prob,
+            44 as ::core::ffi::c_int as vp8_prob,
+            195 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            173 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            121 as u8, 24 as u8, 80 as u8, 195 as u8, 26 as u8, 62 as u8, 44 as u8, 64 as u8,
-            85 as u8,
+            121 as ::core::ffi::c_int as vp8_prob,
+            24 as ::core::ffi::c_int as vp8_prob,
+            80 as ::core::ffi::c_int as vp8_prob,
+            195 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            62 as ::core::ffi::c_int as vp8_prob,
+            44 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            170 as u8, 46 as u8, 55 as u8, 19 as u8, 136 as u8, 160 as u8, 33 as u8, 206 as u8,
-            71 as u8,
+            170 as ::core::ffi::c_int as vp8_prob,
+            46 as ::core::ffi::c_int as vp8_prob,
+            55 as ::core::ffi::c_int as vp8_prob,
+            19 as ::core::ffi::c_int as vp8_prob,
+            136 as ::core::ffi::c_int as vp8_prob,
+            160 as ::core::ffi::c_int as vp8_prob,
+            33 as ::core::ffi::c_int as vp8_prob,
+            206 as ::core::ffi::c_int as vp8_prob,
+            71 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            63 as u8, 20 as u8, 8 as u8, 114 as u8, 114 as u8, 208 as u8, 12 as u8, 9 as u8,
-            226 as u8,
+            63 as ::core::ffi::c_int as vp8_prob,
+            20 as ::core::ffi::c_int as vp8_prob,
+            8 as ::core::ffi::c_int as vp8_prob,
+            114 as ::core::ffi::c_int as vp8_prob,
+            114 as ::core::ffi::c_int as vp8_prob,
+            208 as ::core::ffi::c_int as vp8_prob,
+            12 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            226 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            81 as u8, 40 as u8, 11 as u8, 96 as u8, 182 as u8, 84 as u8, 29 as u8, 16 as u8,
-            36 as u8,
+            81 as ::core::ffi::c_int as vp8_prob,
+            40 as ::core::ffi::c_int as vp8_prob,
+            11 as ::core::ffi::c_int as vp8_prob,
+            96 as ::core::ffi::c_int as vp8_prob,
+            182 as ::core::ffi::c_int as vp8_prob,
+            84 as ::core::ffi::c_int as vp8_prob,
+            29 as ::core::ffi::c_int as vp8_prob,
+            16 as ::core::ffi::c_int as vp8_prob,
+            36 as ::core::ffi::c_int as vp8_prob,
         ],
     ],
     [
         [
-            134 as u8, 183 as u8, 89 as u8, 137 as u8, 98 as u8, 101 as u8, 106 as u8, 165 as u8,
-            148 as u8,
+            134 as ::core::ffi::c_int as vp8_prob,
+            183 as ::core::ffi::c_int as vp8_prob,
+            89 as ::core::ffi::c_int as vp8_prob,
+            137 as ::core::ffi::c_int as vp8_prob,
+            98 as ::core::ffi::c_int as vp8_prob,
+            101 as ::core::ffi::c_int as vp8_prob,
+            106 as ::core::ffi::c_int as vp8_prob,
+            165 as ::core::ffi::c_int as vp8_prob,
+            148 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            72 as u8, 187 as u8, 100 as u8, 130 as u8, 157 as u8, 111 as u8, 32 as u8, 75 as u8,
-            80 as u8,
+            72 as ::core::ffi::c_int as vp8_prob,
+            187 as ::core::ffi::c_int as vp8_prob,
+            100 as ::core::ffi::c_int as vp8_prob,
+            130 as ::core::ffi::c_int as vp8_prob,
+            157 as ::core::ffi::c_int as vp8_prob,
+            111 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+            75 as ::core::ffi::c_int as vp8_prob,
+            80 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            66 as u8, 102 as u8, 167 as u8, 99 as u8, 74 as u8, 62 as u8, 40 as u8, 234 as u8,
-            128 as u8,
+            66 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            167 as ::core::ffi::c_int as vp8_prob,
+            99 as ::core::ffi::c_int as vp8_prob,
+            74 as ::core::ffi::c_int as vp8_prob,
+            62 as ::core::ffi::c_int as vp8_prob,
+            40 as ::core::ffi::c_int as vp8_prob,
+            234 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            41 as u8, 53 as u8, 9 as u8, 178 as u8, 241 as u8, 141 as u8, 26 as u8, 8 as u8,
-            107 as u8,
+            41 as ::core::ffi::c_int as vp8_prob,
+            53 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            178 as ::core::ffi::c_int as vp8_prob,
+            241 as ::core::ffi::c_int as vp8_prob,
+            141 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            8 as ::core::ffi::c_int as vp8_prob,
+            107 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            104 as u8, 79 as u8, 12 as u8, 27 as u8, 217 as u8, 255 as u8, 87 as u8, 17 as u8,
-            7 as u8,
+            104 as ::core::ffi::c_int as vp8_prob,
+            79 as ::core::ffi::c_int as vp8_prob,
+            12 as ::core::ffi::c_int as vp8_prob,
+            27 as ::core::ffi::c_int as vp8_prob,
+            217 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            87 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            7 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            74 as u8, 43 as u8, 26 as u8, 146 as u8, 73 as u8, 166 as u8, 49 as u8, 23 as u8,
-            157 as u8,
+            74 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            146 as ::core::ffi::c_int as vp8_prob,
+            73 as ::core::ffi::c_int as vp8_prob,
+            166 as ::core::ffi::c_int as vp8_prob,
+            49 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
+            157 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            65 as u8, 38 as u8, 105 as u8, 160 as u8, 51 as u8, 52 as u8, 31 as u8, 115 as u8,
-            128 as u8,
+            65 as ::core::ffi::c_int as vp8_prob,
+            38 as ::core::ffi::c_int as vp8_prob,
+            105 as ::core::ffi::c_int as vp8_prob,
+            160 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+            52 as ::core::ffi::c_int as vp8_prob,
+            31 as ::core::ffi::c_int as vp8_prob,
+            115 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            87 as u8, 68 as u8, 71 as u8, 44 as u8, 114 as u8, 51 as u8, 15 as u8, 186 as u8,
-            23 as u8,
+            87 as ::core::ffi::c_int as vp8_prob,
+            68 as ::core::ffi::c_int as vp8_prob,
+            71 as ::core::ffi::c_int as vp8_prob,
+            44 as ::core::ffi::c_int as vp8_prob,
+            114 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+            15 as ::core::ffi::c_int as vp8_prob,
+            186 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            47 as u8, 41 as u8, 14 as u8, 110 as u8, 182 as u8, 183 as u8, 21 as u8, 17 as u8,
-            194 as u8,
+            47 as ::core::ffi::c_int as vp8_prob,
+            41 as ::core::ffi::c_int as vp8_prob,
+            14 as ::core::ffi::c_int as vp8_prob,
+            110 as ::core::ffi::c_int as vp8_prob,
+            182 as ::core::ffi::c_int as vp8_prob,
+            183 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            194 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            66 as u8, 45 as u8, 25 as u8, 102 as u8, 197 as u8, 189 as u8, 23 as u8, 18 as u8,
-            22 as u8,
-        ],
-    ],
-    [
-        [
-            88 as u8, 88 as u8, 147 as u8, 150 as u8, 42 as u8, 46 as u8, 45 as u8, 196 as u8,
-            205 as u8,
-        ],
-        [
-            43 as u8, 97 as u8, 183 as u8, 117 as u8, 85 as u8, 38 as u8, 35 as u8, 179 as u8,
-            61 as u8,
-        ],
-        [
-            39 as u8, 53 as u8, 200 as u8, 87 as u8, 26 as u8, 21 as u8, 43 as u8, 232 as u8,
-            171 as u8,
-        ],
-        [
-            56 as u8, 34 as u8, 51 as u8, 104 as u8, 114 as u8, 102 as u8, 29 as u8, 93 as u8,
-            77 as u8,
-        ],
-        [
-            107 as u8, 54 as u8, 32 as u8, 26 as u8, 51 as u8, 1 as u8, 81 as u8, 43 as u8,
-            31 as u8,
-        ],
-        [
-            39 as u8, 28 as u8, 85 as u8, 171 as u8, 58 as u8, 165 as u8, 90 as u8, 98 as u8,
-            64 as u8,
-        ],
-        [
-            34 as u8, 22 as u8, 116 as u8, 206 as u8, 23 as u8, 34 as u8, 43 as u8, 166 as u8,
-            73 as u8,
-        ],
-        [
-            68 as u8, 25 as u8, 106 as u8, 22 as u8, 64 as u8, 171 as u8, 36 as u8, 225 as u8,
-            114 as u8,
-        ],
-        [
-            34 as u8, 19 as u8, 21 as u8, 102 as u8, 132 as u8, 188 as u8, 16 as u8, 76 as u8,
-            124 as u8,
-        ],
-        [
-            62 as u8, 18 as u8, 78 as u8, 95 as u8, 85 as u8, 57 as u8, 50 as u8, 48 as u8,
-            51 as u8,
-        ],
-    ],
-    [
-        [
-            193 as u8, 101 as u8, 35 as u8, 159 as u8, 215 as u8, 111 as u8, 89 as u8, 46 as u8,
-            111 as u8,
-        ],
-        [
-            60 as u8, 148 as u8, 31 as u8, 172 as u8, 219 as u8, 228 as u8, 21 as u8, 18 as u8,
-            111 as u8,
-        ],
-        [
-            112 as u8, 113 as u8, 77 as u8, 85 as u8, 179 as u8, 255 as u8, 38 as u8, 120 as u8,
-            114 as u8,
-        ],
-        [
-            40 as u8, 42 as u8, 1 as u8, 196 as u8, 245 as u8, 209 as u8, 10 as u8, 25 as u8,
-            109 as u8,
-        ],
-        [
-            100 as u8, 80 as u8, 8 as u8, 43 as u8, 154 as u8, 1 as u8, 51 as u8, 26 as u8,
-            71 as u8,
-        ],
-        [
-            88 as u8, 43 as u8, 29 as u8, 140 as u8, 166 as u8, 213 as u8, 37 as u8, 43 as u8,
-            154 as u8,
-        ],
-        [
-            61 as u8, 63 as u8, 30 as u8, 155 as u8, 67 as u8, 45 as u8, 68 as u8, 1 as u8,
-            209 as u8,
-        ],
-        [
-            142 as u8, 78 as u8, 78 as u8, 16 as u8, 255 as u8, 128 as u8, 34 as u8, 197 as u8,
-            171 as u8,
-        ],
-        [
-            41 as u8, 40 as u8, 5 as u8, 102 as u8, 211 as u8, 183 as u8, 4 as u8, 1 as u8,
-            221 as u8,
-        ],
-        [
-            51 as u8, 50 as u8, 17 as u8, 168 as u8, 209 as u8, 192 as u8, 23 as u8, 25 as u8,
-            82 as u8,
+            66 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
+            25 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            197 as ::core::ffi::c_int as vp8_prob,
+            189 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
+            18 as ::core::ffi::c_int as vp8_prob,
+            22 as ::core::ffi::c_int as vp8_prob,
         ],
     ],
     [
         [
-            125 as u8, 98 as u8, 42 as u8, 88 as u8, 104 as u8, 85 as u8, 117 as u8, 175 as u8,
-            82 as u8,
+            88 as ::core::ffi::c_int as vp8_prob,
+            88 as ::core::ffi::c_int as vp8_prob,
+            147 as ::core::ffi::c_int as vp8_prob,
+            150 as ::core::ffi::c_int as vp8_prob,
+            42 as ::core::ffi::c_int as vp8_prob,
+            46 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
+            196 as ::core::ffi::c_int as vp8_prob,
+            205 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            95 as u8, 84 as u8, 53 as u8, 89 as u8, 128 as u8, 100 as u8, 113 as u8, 101 as u8,
-            45 as u8,
+            43 as ::core::ffi::c_int as vp8_prob,
+            97 as ::core::ffi::c_int as vp8_prob,
+            183 as ::core::ffi::c_int as vp8_prob,
+            117 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            38 as ::core::ffi::c_int as vp8_prob,
+            35 as ::core::ffi::c_int as vp8_prob,
+            179 as ::core::ffi::c_int as vp8_prob,
+            61 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            75 as u8, 79 as u8, 123 as u8, 47 as u8, 51 as u8, 128 as u8, 81 as u8, 171 as u8,
-            1 as u8,
+            39 as ::core::ffi::c_int as vp8_prob,
+            53 as ::core::ffi::c_int as vp8_prob,
+            200 as ::core::ffi::c_int as vp8_prob,
+            87 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            232 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            57 as u8, 17 as u8, 5 as u8, 71 as u8, 102 as u8, 57 as u8, 53 as u8, 41 as u8,
-            49 as u8,
+            56 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+            104 as ::core::ffi::c_int as vp8_prob,
+            114 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            29 as ::core::ffi::c_int as vp8_prob,
+            93 as ::core::ffi::c_int as vp8_prob,
+            77 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            115 as u8, 21 as u8, 2 as u8, 10 as u8, 102 as u8, 255 as u8, 166 as u8, 23 as u8,
-            6 as u8,
+            107 as ::core::ffi::c_int as vp8_prob,
+            54 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            81 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            31 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            38 as u8, 33 as u8, 13 as u8, 121 as u8, 57 as u8, 73 as u8, 26 as u8, 1 as u8,
-            85 as u8,
+            39 as ::core::ffi::c_int as vp8_prob,
+            28 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+            58 as ::core::ffi::c_int as vp8_prob,
+            165 as ::core::ffi::c_int as vp8_prob,
+            90 as ::core::ffi::c_int as vp8_prob,
+            98 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            41 as u8, 10 as u8, 67 as u8, 138 as u8, 77 as u8, 110 as u8, 90 as u8, 47 as u8,
-            114 as u8,
+            34 as ::core::ffi::c_int as vp8_prob,
+            22 as ::core::ffi::c_int as vp8_prob,
+            116 as ::core::ffi::c_int as vp8_prob,
+            206 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            166 as ::core::ffi::c_int as vp8_prob,
+            73 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            101 as u8, 29 as u8, 16 as u8, 10 as u8, 85 as u8, 128 as u8, 101 as u8, 196 as u8,
-            26 as u8,
+            68 as ::core::ffi::c_int as vp8_prob,
+            25 as ::core::ffi::c_int as vp8_prob,
+            106 as ::core::ffi::c_int as vp8_prob,
+            22 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+            36 as ::core::ffi::c_int as vp8_prob,
+            225 as ::core::ffi::c_int as vp8_prob,
+            114 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            57 as u8, 18 as u8, 10 as u8, 102 as u8, 102 as u8, 213 as u8, 34 as u8, 20 as u8,
-            43 as u8,
+            34 as ::core::ffi::c_int as vp8_prob,
+            19 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            132 as ::core::ffi::c_int as vp8_prob,
+            188 as ::core::ffi::c_int as vp8_prob,
+            16 as ::core::ffi::c_int as vp8_prob,
+            76 as ::core::ffi::c_int as vp8_prob,
+            124 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            117 as u8, 20 as u8, 15 as u8, 36 as u8, 163 as u8, 128 as u8, 68 as u8, 1 as u8,
-            26 as u8,
-        ],
-    ],
-    [
-        [
-            138 as u8, 31 as u8, 36 as u8, 171 as u8, 27 as u8, 166 as u8, 38 as u8, 44 as u8,
-            229 as u8,
-        ],
-        [
-            67 as u8, 87 as u8, 58 as u8, 169 as u8, 82 as u8, 115 as u8, 26 as u8, 59 as u8,
-            179 as u8,
-        ],
-        [
-            63 as u8, 59 as u8, 90 as u8, 180 as u8, 59 as u8, 166 as u8, 93 as u8, 73 as u8,
-            154 as u8,
-        ],
-        [
-            40 as u8, 40 as u8, 21 as u8, 116 as u8, 143 as u8, 209 as u8, 34 as u8, 39 as u8,
-            175 as u8,
-        ],
-        [
-            57 as u8, 46 as u8, 22 as u8, 24 as u8, 128 as u8, 1 as u8, 54 as u8, 17 as u8,
-            37 as u8,
-        ],
-        [
-            47 as u8, 15 as u8, 16 as u8, 183 as u8, 34 as u8, 223 as u8, 49 as u8, 45 as u8,
-            183 as u8,
-        ],
-        [
-            46 as u8, 17 as u8, 33 as u8, 183 as u8, 6 as u8, 98 as u8, 15 as u8, 32 as u8,
-            183 as u8,
-        ],
-        [
-            65 as u8, 32 as u8, 73 as u8, 115 as u8, 28 as u8, 128 as u8, 23 as u8, 128 as u8,
-            205 as u8,
-        ],
-        [
-            40 as u8, 3 as u8, 9 as u8, 115 as u8, 51 as u8, 192 as u8, 18 as u8, 6 as u8,
-            223 as u8,
-        ],
-        [
-            87 as u8, 37 as u8, 9 as u8, 115 as u8, 59 as u8, 77 as u8, 64 as u8, 21 as u8,
-            47 as u8,
-        ],
-    ],
-    [
-        [
-            104 as u8, 55 as u8, 44 as u8, 218 as u8, 9 as u8, 54 as u8, 53 as u8, 130 as u8,
-            226 as u8,
-        ],
-        [
-            64 as u8, 90 as u8, 70 as u8, 205 as u8, 40 as u8, 41 as u8, 23 as u8, 26 as u8,
-            57 as u8,
-        ],
-        [
-            54 as u8, 57 as u8, 112 as u8, 184 as u8, 5 as u8, 41 as u8, 38 as u8, 166 as u8,
-            213 as u8,
-        ],
-        [
-            30 as u8, 34 as u8, 26 as u8, 133 as u8, 152 as u8, 116 as u8, 10 as u8, 32 as u8,
-            134 as u8,
-        ],
-        [
-            75 as u8, 32 as u8, 12 as u8, 51 as u8, 192 as u8, 255 as u8, 160 as u8, 43 as u8,
-            51 as u8,
-        ],
-        [
-            39 as u8, 19 as u8, 53 as u8, 221 as u8, 26 as u8, 114 as u8, 32 as u8, 73 as u8,
-            255 as u8,
-        ],
-        [
-            31 as u8, 9 as u8, 65 as u8, 234 as u8, 2 as u8, 15 as u8, 1 as u8, 118 as u8, 73 as u8,
-        ],
-        [
-            88 as u8, 31 as u8, 35 as u8, 67 as u8, 102 as u8, 85 as u8, 55 as u8, 186 as u8,
-            85 as u8,
-        ],
-        [
-            56 as u8, 21 as u8, 23 as u8, 111 as u8, 59 as u8, 205 as u8, 45 as u8, 37 as u8,
-            192 as u8,
-        ],
-        [
-            55 as u8, 38 as u8, 70 as u8, 124 as u8, 73 as u8, 102 as u8, 1 as u8, 34 as u8,
-            98 as u8,
+            62 as ::core::ffi::c_int as vp8_prob,
+            18 as ::core::ffi::c_int as vp8_prob,
+            78 as ::core::ffi::c_int as vp8_prob,
+            95 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            57 as ::core::ffi::c_int as vp8_prob,
+            50 as ::core::ffi::c_int as vp8_prob,
+            48 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
         ],
     ],
     [
         [
-            102 as u8, 61 as u8, 71 as u8, 37 as u8, 34 as u8, 53 as u8, 31 as u8, 243 as u8,
-            192 as u8,
+            193 as ::core::ffi::c_int as vp8_prob,
+            101 as ::core::ffi::c_int as vp8_prob,
+            35 as ::core::ffi::c_int as vp8_prob,
+            159 as ::core::ffi::c_int as vp8_prob,
+            215 as ::core::ffi::c_int as vp8_prob,
+            111 as ::core::ffi::c_int as vp8_prob,
+            89 as ::core::ffi::c_int as vp8_prob,
+            46 as ::core::ffi::c_int as vp8_prob,
+            111 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            69 as u8, 60 as u8, 71 as u8, 38 as u8, 73 as u8, 119 as u8, 28 as u8, 222 as u8,
-            37 as u8,
+            60 as ::core::ffi::c_int as vp8_prob,
+            148 as ::core::ffi::c_int as vp8_prob,
+            31 as ::core::ffi::c_int as vp8_prob,
+            172 as ::core::ffi::c_int as vp8_prob,
+            219 as ::core::ffi::c_int as vp8_prob,
+            228 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            18 as ::core::ffi::c_int as vp8_prob,
+            111 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            68 as u8, 45 as u8, 128 as u8, 34 as u8, 1 as u8, 47 as u8, 11 as u8, 245 as u8,
-            171 as u8,
+            112 as ::core::ffi::c_int as vp8_prob,
+            113 as ::core::ffi::c_int as vp8_prob,
+            77 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            179 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            38 as ::core::ffi::c_int as vp8_prob,
+            120 as ::core::ffi::c_int as vp8_prob,
+            114 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            62 as u8, 17 as u8, 19 as u8, 70 as u8, 146 as u8, 85 as u8, 55 as u8, 62 as u8,
-            70 as u8,
+            40 as ::core::ffi::c_int as vp8_prob,
+            42 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            196 as ::core::ffi::c_int as vp8_prob,
+            245 as ::core::ffi::c_int as vp8_prob,
+            209 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            25 as ::core::ffi::c_int as vp8_prob,
+            109 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            75 as u8, 15 as u8, 9 as u8, 9 as u8, 64 as u8, 255 as u8, 184 as u8, 119 as u8,
-            16 as u8,
+            100 as ::core::ffi::c_int as vp8_prob,
+            80 as ::core::ffi::c_int as vp8_prob,
+            8 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            154 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            71 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            37 as u8, 43 as u8, 37 as u8, 154 as u8, 100 as u8, 163 as u8, 85 as u8, 160 as u8,
-            1 as u8,
+            88 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            29 as ::core::ffi::c_int as vp8_prob,
+            140 as ::core::ffi::c_int as vp8_prob,
+            166 as ::core::ffi::c_int as vp8_prob,
+            213 as ::core::ffi::c_int as vp8_prob,
+            37 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            154 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            63 as u8, 9 as u8, 92 as u8, 136 as u8, 28 as u8, 64 as u8, 32 as u8, 201 as u8,
-            85 as u8,
+            61 as ::core::ffi::c_int as vp8_prob,
+            63 as ::core::ffi::c_int as vp8_prob,
+            30 as ::core::ffi::c_int as vp8_prob,
+            155 as ::core::ffi::c_int as vp8_prob,
+            67 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
+            68 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            209 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            86 as u8, 6 as u8, 28 as u8, 5 as u8, 64 as u8, 255 as u8, 25 as u8, 248 as u8, 1 as u8,
+            142 as ::core::ffi::c_int as vp8_prob,
+            78 as ::core::ffi::c_int as vp8_prob,
+            78 as ::core::ffi::c_int as vp8_prob,
+            16 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            197 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            56 as u8, 8 as u8, 17 as u8, 132 as u8, 137 as u8, 255 as u8, 55 as u8, 116 as u8,
-            128 as u8,
+            41 as ::core::ffi::c_int as vp8_prob,
+            40 as ::core::ffi::c_int as vp8_prob,
+            5 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            211 as ::core::ffi::c_int as vp8_prob,
+            183 as ::core::ffi::c_int as vp8_prob,
+            4 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            221 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            58 as u8, 15 as u8, 20 as u8, 82 as u8, 135 as u8, 57 as u8, 26 as u8, 121 as u8,
-            40 as u8,
+            51 as ::core::ffi::c_int as vp8_prob,
+            50 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            168 as ::core::ffi::c_int as vp8_prob,
+            209 as ::core::ffi::c_int as vp8_prob,
+            192 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
+            25 as ::core::ffi::c_int as vp8_prob,
+            82 as ::core::ffi::c_int as vp8_prob,
         ],
     ],
     [
         [
-            164 as u8, 50 as u8, 31 as u8, 137 as u8, 154 as u8, 133 as u8, 25 as u8, 35 as u8,
-            218 as u8,
+            125 as ::core::ffi::c_int as vp8_prob,
+            98 as ::core::ffi::c_int as vp8_prob,
+            42 as ::core::ffi::c_int as vp8_prob,
+            88 as ::core::ffi::c_int as vp8_prob,
+            104 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            117 as ::core::ffi::c_int as vp8_prob,
+            175 as ::core::ffi::c_int as vp8_prob,
+            82 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            51 as u8, 103 as u8, 44 as u8, 131 as u8, 131 as u8, 123 as u8, 31 as u8, 6 as u8,
-            158 as u8,
+            95 as ::core::ffi::c_int as vp8_prob,
+            84 as ::core::ffi::c_int as vp8_prob,
+            53 as ::core::ffi::c_int as vp8_prob,
+            89 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            100 as ::core::ffi::c_int as vp8_prob,
+            113 as ::core::ffi::c_int as vp8_prob,
+            101 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            86 as u8, 40 as u8, 64 as u8, 135 as u8, 148 as u8, 224 as u8, 45 as u8, 183 as u8,
-            128 as u8,
+            75 as ::core::ffi::c_int as vp8_prob,
+            79 as ::core::ffi::c_int as vp8_prob,
+            123 as ::core::ffi::c_int as vp8_prob,
+            47 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            81 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            22 as u8, 26 as u8, 17 as u8, 131 as u8, 240 as u8, 154 as u8, 14 as u8, 1 as u8,
-            209 as u8,
+            57 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            5 as ::core::ffi::c_int as vp8_prob,
+            71 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            57 as ::core::ffi::c_int as vp8_prob,
+            53 as ::core::ffi::c_int as vp8_prob,
+            41 as ::core::ffi::c_int as vp8_prob,
+            49 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            83 as u8, 12 as u8, 13 as u8, 54 as u8, 192 as u8, 255 as u8, 68 as u8, 47 as u8,
-            28 as u8,
+            115 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            2 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            166 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
+            6 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            45 as u8, 16 as u8, 21 as u8, 91 as u8, 64 as u8, 222 as u8, 7 as u8, 1 as u8,
-            197 as u8,
+            38 as ::core::ffi::c_int as vp8_prob,
+            33 as ::core::ffi::c_int as vp8_prob,
+            13 as ::core::ffi::c_int as vp8_prob,
+            121 as ::core::ffi::c_int as vp8_prob,
+            57 as ::core::ffi::c_int as vp8_prob,
+            73 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            56 as u8, 21 as u8, 39 as u8, 155 as u8, 60 as u8, 138 as u8, 23 as u8, 102 as u8,
-            213 as u8,
+            41 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            67 as ::core::ffi::c_int as vp8_prob,
+            138 as ::core::ffi::c_int as vp8_prob,
+            77 as ::core::ffi::c_int as vp8_prob,
+            110 as ::core::ffi::c_int as vp8_prob,
+            90 as ::core::ffi::c_int as vp8_prob,
+            47 as ::core::ffi::c_int as vp8_prob,
+            114 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            85 as u8, 26 as u8, 85 as u8, 85 as u8, 128 as u8, 128 as u8, 32 as u8, 146 as u8,
-            171 as u8,
+            101 as ::core::ffi::c_int as vp8_prob,
+            29 as ::core::ffi::c_int as vp8_prob,
+            16 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            101 as ::core::ffi::c_int as vp8_prob,
+            196 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            18 as u8, 11 as u8, 7 as u8, 63 as u8, 144 as u8, 171 as u8, 4 as u8, 4 as u8,
-            246 as u8,
+            57 as ::core::ffi::c_int as vp8_prob,
+            18 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            213 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            20 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            35 as u8, 27 as u8, 10 as u8, 146 as u8, 174 as u8, 171 as u8, 12 as u8, 26 as u8,
-            128 as u8,
+            117 as ::core::ffi::c_int as vp8_prob,
+            20 as ::core::ffi::c_int as vp8_prob,
+            15 as ::core::ffi::c_int as vp8_prob,
+            36 as ::core::ffi::c_int as vp8_prob,
+            163 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            68 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
         ],
     ],
     [
         [
-            190 as u8, 80 as u8, 35 as u8, 99 as u8, 180 as u8, 80 as u8, 126 as u8, 54 as u8,
-            45 as u8,
+            138 as ::core::ffi::c_int as vp8_prob,
+            31 as ::core::ffi::c_int as vp8_prob,
+            36 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+            27 as ::core::ffi::c_int as vp8_prob,
+            166 as ::core::ffi::c_int as vp8_prob,
+            38 as ::core::ffi::c_int as vp8_prob,
+            44 as ::core::ffi::c_int as vp8_prob,
+            229 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            85 as u8, 126 as u8, 47 as u8, 87 as u8, 176 as u8, 51 as u8, 41 as u8, 20 as u8,
-            32 as u8,
+            67 as ::core::ffi::c_int as vp8_prob,
+            87 as ::core::ffi::c_int as vp8_prob,
+            58 as ::core::ffi::c_int as vp8_prob,
+            169 as ::core::ffi::c_int as vp8_prob,
+            82 as ::core::ffi::c_int as vp8_prob,
+            115 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            59 as ::core::ffi::c_int as vp8_prob,
+            179 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            101 as u8, 75 as u8, 128 as u8, 139 as u8, 118 as u8, 146 as u8, 116 as u8, 128 as u8,
-            85 as u8,
+            63 as ::core::ffi::c_int as vp8_prob,
+            59 as ::core::ffi::c_int as vp8_prob,
+            90 as ::core::ffi::c_int as vp8_prob,
+            180 as ::core::ffi::c_int as vp8_prob,
+            59 as ::core::ffi::c_int as vp8_prob,
+            166 as ::core::ffi::c_int as vp8_prob,
+            93 as ::core::ffi::c_int as vp8_prob,
+            73 as ::core::ffi::c_int as vp8_prob,
+            154 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            56 as u8, 41 as u8, 15 as u8, 176 as u8, 236 as u8, 85 as u8, 37 as u8, 9 as u8,
-            62 as u8,
+            40 as ::core::ffi::c_int as vp8_prob,
+            40 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            116 as ::core::ffi::c_int as vp8_prob,
+            143 as ::core::ffi::c_int as vp8_prob,
+            209 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            39 as ::core::ffi::c_int as vp8_prob,
+            175 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            146 as u8, 36 as u8, 19 as u8, 30 as u8, 171 as u8, 255 as u8, 97 as u8, 27 as u8,
-            20 as u8,
+            57 as ::core::ffi::c_int as vp8_prob,
+            46 as ::core::ffi::c_int as vp8_prob,
+            22 as ::core::ffi::c_int as vp8_prob,
+            24 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            54 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            37 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            71 as u8, 30 as u8, 17 as u8, 119 as u8, 118 as u8, 255 as u8, 17 as u8, 18 as u8,
-            138 as u8,
+            47 as ::core::ffi::c_int as vp8_prob,
+            15 as ::core::ffi::c_int as vp8_prob,
+            16 as ::core::ffi::c_int as vp8_prob,
+            183 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            223 as ::core::ffi::c_int as vp8_prob,
+            49 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
+            183 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            101 as u8, 38 as u8, 60 as u8, 138 as u8, 55 as u8, 70 as u8, 43 as u8, 26 as u8,
-            142 as u8,
+            46 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            33 as ::core::ffi::c_int as vp8_prob,
+            183 as ::core::ffi::c_int as vp8_prob,
+            6 as ::core::ffi::c_int as vp8_prob,
+            98 as ::core::ffi::c_int as vp8_prob,
+            15 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+            183 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            138 as u8, 45 as u8, 61 as u8, 62 as u8, 219 as u8, 1 as u8, 81 as u8, 188 as u8,
-            64 as u8,
+            65 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+            73 as ::core::ffi::c_int as vp8_prob,
+            115 as ::core::ffi::c_int as vp8_prob,
+            28 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            205 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            32 as u8, 41 as u8, 20 as u8, 117 as u8, 151 as u8, 142 as u8, 20 as u8, 21 as u8,
-            163 as u8,
+            40 as ::core::ffi::c_int as vp8_prob,
+            3 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            115 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+            192 as ::core::ffi::c_int as vp8_prob,
+            18 as ::core::ffi::c_int as vp8_prob,
+            6 as ::core::ffi::c_int as vp8_prob,
+            223 as ::core::ffi::c_int as vp8_prob,
         ],
         [
-            112 as u8, 19 as u8, 12 as u8, 61 as u8, 195 as u8, 128 as u8, 48 as u8, 4 as u8,
-            24 as u8,
+            87 as ::core::ffi::c_int as vp8_prob,
+            37 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            115 as ::core::ffi::c_int as vp8_prob,
+            59 as ::core::ffi::c_int as vp8_prob,
+            77 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            47 as ::core::ffi::c_int as vp8_prob,
+        ],
+    ],
+    [
+        [
+            104 as ::core::ffi::c_int as vp8_prob,
+            55 as ::core::ffi::c_int as vp8_prob,
+            44 as ::core::ffi::c_int as vp8_prob,
+            218 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            54 as ::core::ffi::c_int as vp8_prob,
+            53 as ::core::ffi::c_int as vp8_prob,
+            130 as ::core::ffi::c_int as vp8_prob,
+            226 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            64 as ::core::ffi::c_int as vp8_prob,
+            90 as ::core::ffi::c_int as vp8_prob,
+            70 as ::core::ffi::c_int as vp8_prob,
+            205 as ::core::ffi::c_int as vp8_prob,
+            40 as ::core::ffi::c_int as vp8_prob,
+            41 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            57 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            54 as ::core::ffi::c_int as vp8_prob,
+            57 as ::core::ffi::c_int as vp8_prob,
+            112 as ::core::ffi::c_int as vp8_prob,
+            184 as ::core::ffi::c_int as vp8_prob,
+            5 as ::core::ffi::c_int as vp8_prob,
+            41 as ::core::ffi::c_int as vp8_prob,
+            38 as ::core::ffi::c_int as vp8_prob,
+            166 as ::core::ffi::c_int as vp8_prob,
+            213 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            30 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            133 as ::core::ffi::c_int as vp8_prob,
+            152 as ::core::ffi::c_int as vp8_prob,
+            116 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+            134 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            75 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+            12 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+            192 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            160 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            39 as ::core::ffi::c_int as vp8_prob,
+            19 as ::core::ffi::c_int as vp8_prob,
+            53 as ::core::ffi::c_int as vp8_prob,
+            221 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            114 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+            73 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            31 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            65 as ::core::ffi::c_int as vp8_prob,
+            234 as ::core::ffi::c_int as vp8_prob,
+            2 as ::core::ffi::c_int as vp8_prob,
+            15 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            118 as ::core::ffi::c_int as vp8_prob,
+            73 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            88 as ::core::ffi::c_int as vp8_prob,
+            31 as ::core::ffi::c_int as vp8_prob,
+            35 as ::core::ffi::c_int as vp8_prob,
+            67 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            55 as ::core::ffi::c_int as vp8_prob,
+            186 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            56 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
+            111 as ::core::ffi::c_int as vp8_prob,
+            59 as ::core::ffi::c_int as vp8_prob,
+            205 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
+            37 as ::core::ffi::c_int as vp8_prob,
+            192 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            55 as ::core::ffi::c_int as vp8_prob,
+            38 as ::core::ffi::c_int as vp8_prob,
+            70 as ::core::ffi::c_int as vp8_prob,
+            124 as ::core::ffi::c_int as vp8_prob,
+            73 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            98 as ::core::ffi::c_int as vp8_prob,
+        ],
+    ],
+    [
+        [
+            102 as ::core::ffi::c_int as vp8_prob,
+            61 as ::core::ffi::c_int as vp8_prob,
+            71 as ::core::ffi::c_int as vp8_prob,
+            37 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            53 as ::core::ffi::c_int as vp8_prob,
+            31 as ::core::ffi::c_int as vp8_prob,
+            243 as ::core::ffi::c_int as vp8_prob,
+            192 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            69 as ::core::ffi::c_int as vp8_prob,
+            60 as ::core::ffi::c_int as vp8_prob,
+            71 as ::core::ffi::c_int as vp8_prob,
+            38 as ::core::ffi::c_int as vp8_prob,
+            73 as ::core::ffi::c_int as vp8_prob,
+            119 as ::core::ffi::c_int as vp8_prob,
+            28 as ::core::ffi::c_int as vp8_prob,
+            222 as ::core::ffi::c_int as vp8_prob,
+            37 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            68 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            34 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            47 as ::core::ffi::c_int as vp8_prob,
+            11 as ::core::ffi::c_int as vp8_prob,
+            245 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            62 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            19 as ::core::ffi::c_int as vp8_prob,
+            70 as ::core::ffi::c_int as vp8_prob,
+            146 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            55 as ::core::ffi::c_int as vp8_prob,
+            62 as ::core::ffi::c_int as vp8_prob,
+            70 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            75 as ::core::ffi::c_int as vp8_prob,
+            15 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            184 as ::core::ffi::c_int as vp8_prob,
+            119 as ::core::ffi::c_int as vp8_prob,
+            16 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            37 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            37 as ::core::ffi::c_int as vp8_prob,
+            154 as ::core::ffi::c_int as vp8_prob,
+            100 as ::core::ffi::c_int as vp8_prob,
+            163 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            160 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            63 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            92 as ::core::ffi::c_int as vp8_prob,
+            136 as ::core::ffi::c_int as vp8_prob,
+            28 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+            201 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            86 as ::core::ffi::c_int as vp8_prob,
+            6 as ::core::ffi::c_int as vp8_prob,
+            28 as ::core::ffi::c_int as vp8_prob,
+            5 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            25 as ::core::ffi::c_int as vp8_prob,
+            248 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            56 as ::core::ffi::c_int as vp8_prob,
+            8 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            132 as ::core::ffi::c_int as vp8_prob,
+            137 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            55 as ::core::ffi::c_int as vp8_prob,
+            116 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            58 as ::core::ffi::c_int as vp8_prob,
+            15 as ::core::ffi::c_int as vp8_prob,
+            20 as ::core::ffi::c_int as vp8_prob,
+            82 as ::core::ffi::c_int as vp8_prob,
+            135 as ::core::ffi::c_int as vp8_prob,
+            57 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            121 as ::core::ffi::c_int as vp8_prob,
+            40 as ::core::ffi::c_int as vp8_prob,
+        ],
+    ],
+    [
+        [
+            164 as ::core::ffi::c_int as vp8_prob,
+            50 as ::core::ffi::c_int as vp8_prob,
+            31 as ::core::ffi::c_int as vp8_prob,
+            137 as ::core::ffi::c_int as vp8_prob,
+            154 as ::core::ffi::c_int as vp8_prob,
+            133 as ::core::ffi::c_int as vp8_prob,
+            25 as ::core::ffi::c_int as vp8_prob,
+            35 as ::core::ffi::c_int as vp8_prob,
+            218 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            51 as ::core::ffi::c_int as vp8_prob,
+            103 as ::core::ffi::c_int as vp8_prob,
+            44 as ::core::ffi::c_int as vp8_prob,
+            131 as ::core::ffi::c_int as vp8_prob,
+            131 as ::core::ffi::c_int as vp8_prob,
+            123 as ::core::ffi::c_int as vp8_prob,
+            31 as ::core::ffi::c_int as vp8_prob,
+            6 as ::core::ffi::c_int as vp8_prob,
+            158 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            86 as ::core::ffi::c_int as vp8_prob,
+            40 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+            135 as ::core::ffi::c_int as vp8_prob,
+            148 as ::core::ffi::c_int as vp8_prob,
+            224 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
+            183 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            22 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            131 as ::core::ffi::c_int as vp8_prob,
+            240 as ::core::ffi::c_int as vp8_prob,
+            154 as ::core::ffi::c_int as vp8_prob,
+            14 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            209 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            83 as ::core::ffi::c_int as vp8_prob,
+            12 as ::core::ffi::c_int as vp8_prob,
+            13 as ::core::ffi::c_int as vp8_prob,
+            54 as ::core::ffi::c_int as vp8_prob,
+            192 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            68 as ::core::ffi::c_int as vp8_prob,
+            47 as ::core::ffi::c_int as vp8_prob,
+            28 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            45 as ::core::ffi::c_int as vp8_prob,
+            16 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            91 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+            222 as ::core::ffi::c_int as vp8_prob,
+            7 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            197 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            56 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            39 as ::core::ffi::c_int as vp8_prob,
+            155 as ::core::ffi::c_int as vp8_prob,
+            60 as ::core::ffi::c_int as vp8_prob,
+            138 as ::core::ffi::c_int as vp8_prob,
+            23 as ::core::ffi::c_int as vp8_prob,
+            102 as ::core::ffi::c_int as vp8_prob,
+            213 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            85 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+            146 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            18 as ::core::ffi::c_int as vp8_prob,
+            11 as ::core::ffi::c_int as vp8_prob,
+            7 as ::core::ffi::c_int as vp8_prob,
+            63 as ::core::ffi::c_int as vp8_prob,
+            144 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+            4 as ::core::ffi::c_int as vp8_prob,
+            4 as ::core::ffi::c_int as vp8_prob,
+            246 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            35 as ::core::ffi::c_int as vp8_prob,
+            27 as ::core::ffi::c_int as vp8_prob,
+            10 as ::core::ffi::c_int as vp8_prob,
+            146 as ::core::ffi::c_int as vp8_prob,
+            174 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+            12 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+        ],
+    ],
+    [
+        [
+            190 as ::core::ffi::c_int as vp8_prob,
+            80 as ::core::ffi::c_int as vp8_prob,
+            35 as ::core::ffi::c_int as vp8_prob,
+            99 as ::core::ffi::c_int as vp8_prob,
+            180 as ::core::ffi::c_int as vp8_prob,
+            80 as ::core::ffi::c_int as vp8_prob,
+            126 as ::core::ffi::c_int as vp8_prob,
+            54 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            85 as ::core::ffi::c_int as vp8_prob,
+            126 as ::core::ffi::c_int as vp8_prob,
+            47 as ::core::ffi::c_int as vp8_prob,
+            87 as ::core::ffi::c_int as vp8_prob,
+            176 as ::core::ffi::c_int as vp8_prob,
+            51 as ::core::ffi::c_int as vp8_prob,
+            41 as ::core::ffi::c_int as vp8_prob,
+            20 as ::core::ffi::c_int as vp8_prob,
+            32 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            101 as ::core::ffi::c_int as vp8_prob,
+            75 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            139 as ::core::ffi::c_int as vp8_prob,
+            118 as ::core::ffi::c_int as vp8_prob,
+            146 as ::core::ffi::c_int as vp8_prob,
+            116 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            56 as ::core::ffi::c_int as vp8_prob,
+            41 as ::core::ffi::c_int as vp8_prob,
+            15 as ::core::ffi::c_int as vp8_prob,
+            176 as ::core::ffi::c_int as vp8_prob,
+            236 as ::core::ffi::c_int as vp8_prob,
+            85 as ::core::ffi::c_int as vp8_prob,
+            37 as ::core::ffi::c_int as vp8_prob,
+            9 as ::core::ffi::c_int as vp8_prob,
+            62 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            146 as ::core::ffi::c_int as vp8_prob,
+            36 as ::core::ffi::c_int as vp8_prob,
+            19 as ::core::ffi::c_int as vp8_prob,
+            30 as ::core::ffi::c_int as vp8_prob,
+            171 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            97 as ::core::ffi::c_int as vp8_prob,
+            27 as ::core::ffi::c_int as vp8_prob,
+            20 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            71 as ::core::ffi::c_int as vp8_prob,
+            30 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            119 as ::core::ffi::c_int as vp8_prob,
+            118 as ::core::ffi::c_int as vp8_prob,
+            255 as ::core::ffi::c_int as vp8_prob,
+            17 as ::core::ffi::c_int as vp8_prob,
+            18 as ::core::ffi::c_int as vp8_prob,
+            138 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            101 as ::core::ffi::c_int as vp8_prob,
+            38 as ::core::ffi::c_int as vp8_prob,
+            60 as ::core::ffi::c_int as vp8_prob,
+            138 as ::core::ffi::c_int as vp8_prob,
+            55 as ::core::ffi::c_int as vp8_prob,
+            70 as ::core::ffi::c_int as vp8_prob,
+            43 as ::core::ffi::c_int as vp8_prob,
+            26 as ::core::ffi::c_int as vp8_prob,
+            142 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            138 as ::core::ffi::c_int as vp8_prob,
+            45 as ::core::ffi::c_int as vp8_prob,
+            61 as ::core::ffi::c_int as vp8_prob,
+            62 as ::core::ffi::c_int as vp8_prob,
+            219 as ::core::ffi::c_int as vp8_prob,
+            1 as ::core::ffi::c_int as vp8_prob,
+            81 as ::core::ffi::c_int as vp8_prob,
+            188 as ::core::ffi::c_int as vp8_prob,
+            64 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            32 as ::core::ffi::c_int as vp8_prob,
+            41 as ::core::ffi::c_int as vp8_prob,
+            20 as ::core::ffi::c_int as vp8_prob,
+            117 as ::core::ffi::c_int as vp8_prob,
+            151 as ::core::ffi::c_int as vp8_prob,
+            142 as ::core::ffi::c_int as vp8_prob,
+            20 as ::core::ffi::c_int as vp8_prob,
+            21 as ::core::ffi::c_int as vp8_prob,
+            163 as ::core::ffi::c_int as vp8_prob,
+        ],
+        [
+            112 as ::core::ffi::c_int as vp8_prob,
+            19 as ::core::ffi::c_int as vp8_prob,
+            12 as ::core::ffi::c_int as vp8_prob,
+            61 as ::core::ffi::c_int as vp8_prob,
+            195 as ::core::ffi::c_int as vp8_prob,
+            128 as ::core::ffi::c_int as vp8_prob,
+            48 as ::core::ffi::c_int as vp8_prob,
+            4 as ::core::ffi::c_int as vp8_prob,
+            24 as ::core::ffi::c_int as vp8_prob,
         ],
     ],
 ];
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_mv_cont(mut l: *const IntMv, mut a: *const IntMv) -> i32 {
-    unsafe {
-        let mut lez: i32 = ((*l).as_int == 0 as u32) as i32;
-        let mut aez: i32 = ((*a).as_int == 0 as u32) as i32;
-        let mut lea: i32 = ((*l).as_int == (*a).as_int) as i32;
-        if lea != 0 && lez != 0 {
-            return SUBMVREF_LEFT_ABOVE_ZED as i32;
-        }
-        if lea != 0 {
-            return SUBMVREF_LEFT_ABOVE_SAME as i32;
-        }
-        if aez != 0 {
-            return SUBMVREF_ABOVE_ZED as i32;
-        }
-        if lez != 0 {
-            return SUBMVREF_LEFT_ZED as i32;
-        }
-        SUBMVREF_NORMAL as i32
-    }
+
+static sub_mv_ref_prob: [vp8_prob; 3] = [
+    180 as ::core::ffi::c_int as vp8_prob,
+    162 as ::core::ffi::c_int as vp8_prob,
+    25 as ::core::ffi::c_int as vp8_prob,
+];
+pub static vp8_sub_mv_ref_prob2: [[vp8_prob; 3]; 5] = [
+    [
+        147 as ::core::ffi::c_int as vp8_prob,
+        136 as ::core::ffi::c_int as vp8_prob,
+        18 as ::core::ffi::c_int as vp8_prob,
+    ],
+    [
+        106 as ::core::ffi::c_int as vp8_prob,
+        145 as ::core::ffi::c_int as vp8_prob,
+        1 as ::core::ffi::c_int as vp8_prob,
+    ],
+    [
+        179 as ::core::ffi::c_int as vp8_prob,
+        121 as ::core::ffi::c_int as vp8_prob,
+        1 as ::core::ffi::c_int as vp8_prob,
+    ],
+    [
+        223 as ::core::ffi::c_int as vp8_prob,
+        1 as ::core::ffi::c_int as vp8_prob,
+        34 as ::core::ffi::c_int as vp8_prob,
+    ],
+    [
+        208 as ::core::ffi::c_int as vp8_prob,
+        1 as ::core::ffi::c_int as vp8_prob,
+        1 as ::core::ffi::c_int as vp8_prob,
+    ],
+];
+pub static vp8_mbsplits: [vp8_mbsplit; 4] = [
+    [
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+    ],
+    [
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+    ],
+    [
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        0 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        2 as ::core::ffi::c_int,
+        2 as ::core::ffi::c_int,
+        3 as ::core::ffi::c_int,
+        3 as ::core::ffi::c_int,
+        2 as ::core::ffi::c_int,
+        2 as ::core::ffi::c_int,
+        3 as ::core::ffi::c_int,
+        3 as ::core::ffi::c_int,
+    ],
+    [
+        0 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        2 as ::core::ffi::c_int,
+        3 as ::core::ffi::c_int,
+        4 as ::core::ffi::c_int,
+        5 as ::core::ffi::c_int,
+        6 as ::core::ffi::c_int,
+        7 as ::core::ffi::c_int,
+        8 as ::core::ffi::c_int,
+        9 as ::core::ffi::c_int,
+        10 as ::core::ffi::c_int,
+        11 as ::core::ffi::c_int,
+        12 as ::core::ffi::c_int,
+        13 as ::core::ffi::c_int,
+        14 as ::core::ffi::c_int,
+        15 as ::core::ffi::c_int,
+    ],
+];
+pub static vp8_mbsplit_count: [::core::ffi::c_int; 4] = [
+    2 as ::core::ffi::c_int,
+    2 as ::core::ffi::c_int,
+    4 as ::core::ffi::c_int,
+    16 as ::core::ffi::c_int,
+];
+pub static vp8_mbsplit_probs: [vp8_prob; 3] = [
+    110 as ::core::ffi::c_int as vp8_prob,
+    111 as ::core::ffi::c_int as vp8_prob,
+    150 as ::core::ffi::c_int as vp8_prob,
+];
+pub static vp8_bmode_tree: [vp8_tree_index; 18] = [
+    -(B_DC_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    2 as ::core::ffi::c_int as vp8_tree_index,
+    -(B_TM_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    4 as ::core::ffi::c_int as vp8_tree_index,
+    -(B_VE_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    6 as ::core::ffi::c_int as vp8_tree_index,
+    8 as ::core::ffi::c_int as vp8_tree_index,
+    12 as ::core::ffi::c_int as vp8_tree_index,
+    -(B_HE_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    10 as ::core::ffi::c_int as vp8_tree_index,
+    -(B_RD_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(B_VR_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(B_LD_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    14 as ::core::ffi::c_int as vp8_tree_index,
+    -(B_VL_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    16 as ::core::ffi::c_int as vp8_tree_index,
+    -(B_HD_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(B_HU_PRED as ::core::ffi::c_int) as vp8_tree_index,
+];
+pub static vp8_ymode_tree: [vp8_tree_index; 8] = [
+    -(DC_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    2 as ::core::ffi::c_int as vp8_tree_index,
+    4 as ::core::ffi::c_int as vp8_tree_index,
+    6 as ::core::ffi::c_int as vp8_tree_index,
+    -(V_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(H_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(TM_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(B_PRED as ::core::ffi::c_int) as vp8_tree_index,
+];
+pub static vp8_kf_ymode_tree: [vp8_tree_index; 8] = [
+    -(B_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    2 as ::core::ffi::c_int as vp8_tree_index,
+    4 as ::core::ffi::c_int as vp8_tree_index,
+    6 as ::core::ffi::c_int as vp8_tree_index,
+    -(DC_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(V_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(H_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(TM_PRED as ::core::ffi::c_int) as vp8_tree_index,
+];
+pub static vp8_uv_mode_tree: [vp8_tree_index; 6] = [
+    -(DC_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    2 as ::core::ffi::c_int as vp8_tree_index,
+    -(V_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    4 as ::core::ffi::c_int as vp8_tree_index,
+    -(H_PRED as ::core::ffi::c_int) as vp8_tree_index,
+    -(TM_PRED as ::core::ffi::c_int) as vp8_tree_index,
+];
+pub static vp8_mbsplit_tree: [vp8_tree_index; 6] = [
+    -(3 as ::core::ffi::c_int) as vp8_tree_index,
+    2 as ::core::ffi::c_int as vp8_tree_index,
+    -(2 as ::core::ffi::c_int) as vp8_tree_index,
+    4 as ::core::ffi::c_int as vp8_tree_index,
+    -(0 as ::core::ffi::c_int) as vp8_tree_index,
+    -(1 as ::core::ffi::c_int) as vp8_tree_index,
+];
+pub static vp8_mv_ref_tree: [vp8_tree_index; 8] = [
+    -(ZEROMV as ::core::ffi::c_int) as vp8_tree_index,
+    2 as ::core::ffi::c_int as vp8_tree_index,
+    -(NEARESTMV as ::core::ffi::c_int) as vp8_tree_index,
+    4 as ::core::ffi::c_int as vp8_tree_index,
+    -(NEARMV as ::core::ffi::c_int) as vp8_tree_index,
+    6 as ::core::ffi::c_int as vp8_tree_index,
+    -(NEWMV as ::core::ffi::c_int) as vp8_tree_index,
+    -(SPLITMV as ::core::ffi::c_int) as vp8_tree_index,
+];
+pub static vp8_sub_mv_ref_tree: [vp8_tree_index; 6] = [
+    -(LEFT4X4 as ::core::ffi::c_int) as vp8_tree_index,
+    2 as ::core::ffi::c_int as vp8_tree_index,
+    -(ABOVE4X4 as ::core::ffi::c_int) as vp8_tree_index,
+    4 as ::core::ffi::c_int as vp8_tree_index,
+    -(ZERO4X4 as ::core::ffi::c_int) as vp8_tree_index,
+    -(NEW4X4 as ::core::ffi::c_int) as vp8_tree_index,
+];
+pub static vp8_small_mvtree: [vp8_tree_index; 14] = [
+    2 as ::core::ffi::c_int as vp8_tree_index,
+    8 as ::core::ffi::c_int as vp8_tree_index,
+    4 as ::core::ffi::c_int as vp8_tree_index,
+    6 as ::core::ffi::c_int as vp8_tree_index,
+    -(0 as ::core::ffi::c_int) as vp8_tree_index,
+    -(1 as ::core::ffi::c_int) as vp8_tree_index,
+    -(2 as ::core::ffi::c_int) as vp8_tree_index,
+    -(3 as ::core::ffi::c_int) as vp8_tree_index,
+    10 as ::core::ffi::c_int as vp8_tree_index,
+    12 as ::core::ffi::c_int as vp8_tree_index,
+    -(4 as ::core::ffi::c_int) as vp8_tree_index,
+    -(5 as ::core::ffi::c_int) as vp8_tree_index,
+    -(6 as ::core::ffi::c_int) as vp8_tree_index,
+    -(7 as ::core::ffi::c_int) as vp8_tree_index,
+];
+pub fn vp8_init_mbmode_probs(x: &mut VP8_COMMON) {
+    x.fc.ymode_prob.copy_from_slice(&vp8_ymode_prob);
+    x.fc.uv_mode_prob.copy_from_slice(&vp8_uv_mode_prob);
+    x.fc.sub_mv_ref_prob.copy_from_slice(&sub_mv_ref_prob);
 }
-static sub_mv_ref_prob: [u8; 3] = [180 as u8, 162 as u8, 25 as u8];
-#[unsafe(no_mangle)]
-pub static vp8_sub_mv_ref_prob2: [[u8; 3]; 5] = [
-    [147 as u8, 136 as u8, 18 as u8],
-    [106 as u8, 145 as u8, 1 as u8],
-    [179 as u8, 121 as u8, 1 as u8],
-    [223 as u8, 1 as u8, 34 as u8],
-    [208 as u8, 1 as u8, 1 as u8],
-];
-#[unsafe(no_mangle)]
-pub static vp8_mbsplits: [Vp8Mbsplit; 4] = [
-    [
-        0 as i32, 0 as i32, 0 as i32, 0 as i32, 0 as i32, 0 as i32, 0 as i32, 0 as i32, 1 as i32,
-        1 as i32, 1 as i32, 1 as i32, 1 as i32, 1 as i32, 1 as i32, 1 as i32,
-    ],
-    [
-        0 as i32, 0 as i32, 1 as i32, 1 as i32, 0 as i32, 0 as i32, 1 as i32, 1 as i32, 0 as i32,
-        0 as i32, 1 as i32, 1 as i32, 0 as i32, 0 as i32, 1 as i32, 1 as i32,
-    ],
-    [
-        0 as i32, 0 as i32, 1 as i32, 1 as i32, 0 as i32, 0 as i32, 1 as i32, 1 as i32, 2 as i32,
-        2 as i32, 3 as i32, 3 as i32, 2 as i32, 2 as i32, 3 as i32, 3 as i32,
-    ],
-    [
-        0 as i32, 1 as i32, 2 as i32, 3 as i32, 4 as i32, 5 as i32, 6 as i32, 7 as i32, 8 as i32,
-        9 as i32, 10 as i32, 11 as i32, 12 as i32, 13 as i32, 14 as i32, 15 as i32,
-    ],
-];
-#[unsafe(no_mangle)]
-pub static vp8_mbsplit_count: [i32; 4] = [2 as i32, 2 as i32, 4 as i32, 16 as i32];
-#[unsafe(no_mangle)]
-pub static vp8_mbsplit_probs: [u8; 3] = [110 as u8, 111 as u8, 150 as u8];
-pub use crate::vp8::common::tables::{
-    vp8_bmode_tree, vp8_kf_ymode_tree, vp8_mbsplit_tree, vp8_mv_ref_tree, vp8_small_mvtree,
-    vp8_sub_mv_ref_tree, vp8_uv_mode_tree, vp8_ymode_tree,
-};
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_init_mbmode_probs(mut x: *mut Vp8Common) {
-    unsafe {
-        core::ptr::copy_nonoverlapping(
-            &raw const vp8_ymode_prob as *const u8 as *const c_void as *const u8,
-            &raw mut (*x).fc.ymode_prob as *mut u8 as *mut c_void as *mut u8,
-            ::core::mem::size_of::<[u8; 4]>() as usize,
-        );
-        core::ptr::copy_nonoverlapping(
-            &raw const vp8_uv_mode_prob as *const u8 as *const c_void as *const u8,
-            &raw mut (*x).fc.uv_mode_prob as *mut u8 as *mut c_void as *mut u8,
-            ::core::mem::size_of::<[u8; 3]>() as usize,
-        );
-        core::ptr::copy_nonoverlapping(
-            &raw const sub_mv_ref_prob as *const u8 as *const c_void as *const u8,
-            &raw mut (*x).fc.sub_mv_ref_prob as *mut u8 as *mut c_void as *mut u8,
-            ::core::mem::size_of::<[u8; 3]>() as usize,
-        );
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_default_bmode_probs(mut dest: *mut u8) {
-    unsafe {
-        core::ptr::copy_nonoverlapping(
-            &raw const vp8_bmode_prob as *const u8 as *const c_void as *const u8,
-            dest as *mut c_void as *mut u8,
-            ::core::mem::size_of::<[u8; 9]>() as usize,
-        );
-    }
+pub fn vp8_default_bmode_probs(dest: &mut [vp8_prob; 9]) {
+    dest.copy_from_slice(&vp8_bmode_prob);
 }

@@ -1,534 +1,364 @@
-pub const VP8_FILTER_WEIGHT: i32 = 128 as i32;
-pub const VP8_FILTER_SHIFT: i32 = 7 as i32;
-#[unsafe(no_mangle)]
-pub static vp8_bilinear_filters: [[i16; 2]; 8] = [
-    [128 as i16, 0 as i16],
-    [112 as i16, 16 as i16],
-    [96 as i16, 32 as i16],
-    [80 as i16, 48 as i16],
-    [64 as i16, 64 as i16],
-    [48 as i16, 80 as i16],
-    [32 as i16, 96 as i16],
-    [16 as i16, 112 as i16],
-];
-#[unsafe(no_mangle)]
-pub static vp8_sub_pel_filters: [[i16; 6]; 8] = [
-    [0 as i16, 0 as i16, 128 as i16, 0 as i16, 0 as i16, 0 as i16],
+pub const VP8_FILTER_WEIGHT: ::core::ffi::c_int = 128 as ::core::ffi::c_int;
+pub const VP8_FILTER_SHIFT: ::core::ffi::c_int = 7 as ::core::ffi::c_int;
+
+pub static vp8_bilinear_filters: [[::core::ffi::c_short; 2]; 8] = [
     [
-        0 as i16,
-        -(6 as i32) as i16,
-        123 as i16,
-        12 as i16,
-        -(1 as i32) as i16,
-        0 as i16,
+        128 as ::core::ffi::c_int as ::core::ffi::c_short,
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
     ],
     [
-        2 as i16,
-        -(11 as i32) as i16,
-        108 as i16,
-        36 as i16,
-        -(8 as i32) as i16,
-        1 as i16,
+        112 as ::core::ffi::c_int as ::core::ffi::c_short,
+        16 as ::core::ffi::c_int as ::core::ffi::c_short,
     ],
     [
-        0 as i16,
-        -(9 as i32) as i16,
-        93 as i16,
-        50 as i16,
-        -(6 as i32) as i16,
-        0 as i16,
+        96 as ::core::ffi::c_int as ::core::ffi::c_short,
+        32 as ::core::ffi::c_int as ::core::ffi::c_short,
     ],
     [
-        3 as i16,
-        -(16 as i32) as i16,
-        77 as i16,
-        77 as i16,
-        -(16 as i32) as i16,
-        3 as i16,
+        80 as ::core::ffi::c_int as ::core::ffi::c_short,
+        48 as ::core::ffi::c_int as ::core::ffi::c_short,
     ],
     [
-        0 as i16,
-        -(6 as i32) as i16,
-        50 as i16,
-        93 as i16,
-        -(9 as i32) as i16,
-        0 as i16,
+        64 as ::core::ffi::c_int as ::core::ffi::c_short,
+        64 as ::core::ffi::c_int as ::core::ffi::c_short,
     ],
     [
-        1 as i16,
-        -(8 as i32) as i16,
-        36 as i16,
-        108 as i16,
-        -(11 as i32) as i16,
-        2 as i16,
+        48 as ::core::ffi::c_int as ::core::ffi::c_short,
+        80 as ::core::ffi::c_int as ::core::ffi::c_short,
     ],
     [
-        0 as i16,
-        -(1 as i32) as i16,
-        12 as i16,
-        123 as i16,
-        -(6 as i32) as i16,
-        0 as i16,
+        32 as ::core::ffi::c_int as ::core::ffi::c_short,
+        96 as ::core::ffi::c_int as ::core::ffi::c_short,
+    ],
+    [
+        16 as ::core::ffi::c_int as ::core::ffi::c_short,
+        112 as ::core::ffi::c_int as ::core::ffi::c_short,
     ],
 ];
-unsafe fn filter_block2d_first_pass(
-    mut src_ptr: *mut u8,
-    mut output_ptr: *mut i32,
-    mut src_pixels_per_line: u32,
-    mut pixel_step: u32,
-    mut output_height: u32,
-    mut output_width: u32,
-    mut vp8_filter: *const i16,
+
+pub static vp8_sub_pel_filters: [[::core::ffi::c_short; 6]; 8] = [
+    [
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+        128 as ::core::ffi::c_int as ::core::ffi::c_short,
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+    ],
+    [
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(6 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        123 as ::core::ffi::c_int as ::core::ffi::c_short,
+        12 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(1 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+    ],
+    [
+        2 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(11 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        108 as ::core::ffi::c_int as ::core::ffi::c_short,
+        36 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(8 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        1 as ::core::ffi::c_int as ::core::ffi::c_short,
+    ],
+    [
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(9 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        93 as ::core::ffi::c_int as ::core::ffi::c_short,
+        50 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(6 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+    ],
+    [
+        3 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(16 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        77 as ::core::ffi::c_int as ::core::ffi::c_short,
+        77 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(16 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        3 as ::core::ffi::c_int as ::core::ffi::c_short,
+    ],
+    [
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(6 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        50 as ::core::ffi::c_int as ::core::ffi::c_short,
+        93 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(9 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+    ],
+    [
+        1 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(8 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        36 as ::core::ffi::c_int as ::core::ffi::c_short,
+        108 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(11 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        2 as ::core::ffi::c_int as ::core::ffi::c_short,
+    ],
+    [
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(1 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        12 as ::core::ffi::c_int as ::core::ffi::c_short,
+        123 as ::core::ffi::c_int as ::core::ffi::c_short,
+        -(6 as ::core::ffi::c_int) as ::core::ffi::c_short,
+        0 as ::core::ffi::c_int as ::core::ffi::c_short,
+    ],
+];
+
+
+fn filter_block2d_first_pass_safe(
+    src: &[u8],
+    src_stride: usize,
+    output_height: usize,
+    output_width: usize,
+    vp8_filter: &[i16; 6],
+    output: &mut [i32],
 ) {
-    unsafe {
-        let mut i: u32 = 0;
-        let mut j: u32 = 0;
-        let mut temp: i32 = 0;
-        i = 0 as u32;
-        while i < output_height {
-            j = 0 as u32;
-            while j < output_width {
-                temp = *src_ptr.offset((-(2 as i32) * pixel_step as i32) as isize) as i32
-                    * *vp8_filter.offset(0 as isize) as i32
-                    + *src_ptr.offset((-(1 as i32) * pixel_step as i32) as isize) as i32
-                        * *vp8_filter.offset(1 as isize) as i32
-                    + *src_ptr.offset(0 as isize) as i32 * *vp8_filter.offset(2 as isize) as i32
-                    + *src_ptr.offset(pixel_step as isize) as i32
-                        * *vp8_filter.offset(3 as isize) as i32
-                    + *src_ptr.offset((2 as u32).wrapping_mul(pixel_step) as isize) as i32
-                        * *vp8_filter.offset(4 as isize) as i32
-                    + *src_ptr.offset((3 as u32).wrapping_mul(pixel_step) as isize) as i32
-                        * *vp8_filter.offset(5 as isize) as i32
-                    + (VP8_FILTER_WEIGHT >> 1 as i32);
-                temp >>= VP8_FILTER_SHIFT;
-                if temp < 0 as i32 {
-                    temp = 0 as i32;
-                } else if temp > 255 as i32 {
-                    temp = 255 as i32;
-                }
-                *output_ptr.offset(j as isize) = temp;
-                src_ptr = src_ptr.offset(1);
-                j = j.wrapping_add(1);
-            }
-            src_ptr = src_ptr.offset(src_pixels_per_line.wrapping_sub(output_width) as isize);
-            output_ptr = output_ptr.offset(output_width as isize);
-            i = i.wrapping_add(1);
+    let f0 = vp8_filter[0] as i32;
+    let f1 = vp8_filter[1] as i32;
+    let f2 = vp8_filter[2] as i32;
+    let f3 = vp8_filter[3] as i32;
+    let f4 = vp8_filter[4] as i32;
+    let f5 = vp8_filter[5] as i32;
+    let half_weight = VP8_FILTER_WEIGHT >> 1;
+
+    let req_src = (output_height.saturating_sub(1)) * src_stride + output_width + 5;
+    let req_out = output_height * output_width;
+    if src.len() < req_src || output.len() < req_out {
+        return;
+    }
+    let src = &src[..req_src];
+    let output = &mut output[..req_out];
+
+    for i in 0..output_height {
+        let src_row = &src[i * src_stride..i * src_stride + output_width + 5];
+        let out_row = &mut output[i * output_width..(i + 1) * output_width];
+        for (out, window) in out_row.iter_mut().zip(src_row.windows(6)) {
+            let mut temp = window[0] as i32 * f0
+                + window[1] as i32 * f1
+                + window[2] as i32 * f2
+                + window[3] as i32 * f3
+                + window[4] as i32 * f4
+                + window[5] as i32 * f5
+                + half_weight;
+
+            temp >>= VP8_FILTER_SHIFT;
+            *out = temp.clamp(0, 255);
         }
     }
 }
-unsafe fn filter_block2d_second_pass(
-    mut src_ptr: *mut i32,
-    mut output_ptr: *mut u8,
-    mut output_pitch: i32,
-    mut src_pixels_per_line: u32,
-    mut pixel_step: u32,
-    mut output_height: u32,
-    mut output_width: u32,
-    mut vp8_filter: *const i16,
+
+fn filter_block2d_second_pass_safe(
+    src: &[i32],
+    src_stride: usize,
+    dst: &mut [u8],
+    dst_pitch: usize,
+    output_height: usize,
+    output_width: usize,
+    vp8_filter: &[i16; 6],
 ) {
-    unsafe {
-        let mut i: u32 = 0;
-        let mut j: u32 = 0;
-        let mut temp: i32 = 0;
-        i = 0 as u32;
-        while i < output_height {
-            j = 0 as u32;
-            while j < output_width {
-                temp = *src_ptr.offset((-(2 as i32) * pixel_step as i32) as isize)
-                    * *vp8_filter.offset(0 as isize) as i32
-                    + *src_ptr.offset((-(1 as i32) * pixel_step as i32) as isize)
-                        * *vp8_filter.offset(1 as isize) as i32
-                    + *src_ptr.offset(0 as isize) * *vp8_filter.offset(2 as isize) as i32
-                    + *src_ptr.offset(pixel_step as isize) * *vp8_filter.offset(3 as isize) as i32
-                    + *src_ptr.offset((2 as u32).wrapping_mul(pixel_step) as isize)
-                        * *vp8_filter.offset(4 as isize) as i32
-                    + *src_ptr.offset((3 as u32).wrapping_mul(pixel_step) as isize)
-                        * *vp8_filter.offset(5 as isize) as i32
-                    + (VP8_FILTER_WEIGHT >> 1 as i32);
-                temp >>= VP8_FILTER_SHIFT;
-                if temp < 0 as i32 {
-                    temp = 0 as i32;
-                } else if temp > 255 as i32 {
-                    temp = 255 as i32;
-                }
-                *output_ptr.offset(j as isize) = temp as u8;
-                src_ptr = src_ptr.offset(1);
-                j = j.wrapping_add(1);
-            }
-            src_ptr = src_ptr.offset(src_pixels_per_line.wrapping_sub(output_width) as isize);
-            output_ptr = output_ptr.offset(output_pitch as isize);
-            i = i.wrapping_add(1);
+    let f0 = vp8_filter[0] as i32;
+    let f1 = vp8_filter[1] as i32;
+    let f2 = vp8_filter[2] as i32;
+    let f3 = vp8_filter[3] as i32;
+    let f4 = vp8_filter[4] as i32;
+    let f5 = vp8_filter[5] as i32;
+    let half_weight = VP8_FILTER_WEIGHT >> 1;
+
+    let req_src = (output_height + 5) * src_stride;
+    let req_dst = (output_height.saturating_sub(1)) * dst_pitch + output_width;
+    if src.len() < req_src || dst.len() < req_dst {
+        return;
+    }
+    let src = &src[..req_src];
+    let dst = &mut dst[..req_dst];
+
+    for i in 0..output_height {
+        let r0 = &src[(i + 0) * src_stride..(i + 0) * src_stride + output_width];
+        let r1 = &src[(i + 1) * src_stride..(i + 1) * src_stride + output_width];
+        let r2 = &src[(i + 2) * src_stride..(i + 2) * src_stride + output_width];
+        let r3 = &src[(i + 3) * src_stride..(i + 3) * src_stride + output_width];
+        let r4 = &src[(i + 4) * src_stride..(i + 4) * src_stride + output_width];
+        let r5 = &src[(i + 5) * src_stride..(i + 5) * src_stride + output_width];
+        let dst_row = &mut dst[i * dst_pitch..i * dst_pitch + output_width];
+
+        for ((((((dst_pix, &p0), &p1), &p2), &p3), &p4), &p5) in dst_row
+            .iter_mut()
+            .zip(r0.iter())
+            .zip(r1.iter())
+            .zip(r2.iter())
+            .zip(r3.iter())
+            .zip(r4.iter())
+            .zip(r5.iter())
+        {
+            let mut temp = p0 * f0
+                + p1 * f1
+                + p2 * f2
+                + p3 * f3
+                + p4 * f4
+                + p5 * f5
+                + half_weight;
+
+            temp >>= VP8_FILTER_SHIFT;
+            *dst_pix = temp.clamp(0, 255) as u8;
         }
     }
 }
-unsafe fn filter_block2d(
-    mut src_ptr: *mut u8,
-    mut output_ptr: *mut u8,
-    mut src_pixels_per_line: u32,
-    mut output_pitch: i32,
-    mut hfilter: *const i16,
-    mut vfilter: *const i16,
+
+fn filter_block2d_safe(
+    src: &[u8],
+    src_stride: usize,
+    dst: &mut [u8],
+    dst_pitch: usize,
+    h_filter: &[i16; 6],
+    v_filter: &[i16; 6],
 ) {
-    unsafe {
-        let mut fdata: [i32; 36] = [0; 36];
-        filter_block2d_first_pass(
-            src_ptr.offset(-((2 as u32).wrapping_mul(src_pixels_per_line) as isize)),
-            &raw mut fdata as *mut i32,
-            src_pixels_per_line,
-            1 as u32,
-            9 as u32,
-            4 as u32,
-            hfilter,
-        );
-        filter_block2d_second_pass(
-            (&raw mut fdata as *mut i32).offset(8 as isize),
-            output_ptr,
-            output_pitch,
-            4 as u32,
-            4 as u32,
-            4 as u32,
-            4 as u32,
-            vfilter,
-        );
-    }
+    let mut f_data = [0i32; 36]; // 4x9
+    filter_block2d_first_pass_safe(
+        src,
+        src_stride,
+        9,
+        4,
+        h_filter,
+        &mut f_data,
+    );
+    filter_block2d_second_pass_safe(
+        &f_data,
+        4,
+        dst,
+        dst_pitch,
+        4,
+        4,
+        v_filter,
+    );
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_sixtap_predict4x4_c(
-    mut src_ptr: *mut u8,
-    mut src_pixels_per_line: i32,
-    mut xoffset: i32,
-    mut yoffset: i32,
-    mut dst_ptr: *mut u8,
-    mut dst_pitch: i32,
+
+fn filter_block2d_bil_first_pass_safe(
+    src: &[u8],
+    src_stride: usize,
+    dst: &mut [u16],
+    dst_width: usize,
+    height: usize,
+    width: usize,
+    vp8_filter: &[i16; 2],
 ) {
-    unsafe {
-        let mut hfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut vfilter: *const i16 = ::core::ptr::null::<i16>();
-        hfilter = &raw const *(&raw const vp8_sub_pel_filters as *const [i16; 6])
-            .offset(xoffset as isize) as *const i16;
-        vfilter = &raw const *(&raw const vp8_sub_pel_filters as *const [i16; 6])
-            .offset(yoffset as isize) as *const i16;
-        filter_block2d(
-            src_ptr,
-            dst_ptr,
-            src_pixels_per_line as u32,
-            dst_pitch,
-            hfilter,
-            vfilter,
-        );
+    let f0 = vp8_filter[0] as i32;
+    let f1 = vp8_filter[1] as i32;
+    let half_weight = VP8_FILTER_WEIGHT / 2;
+
+    let req_src = (height.saturating_sub(1)) * src_stride + width + 1;
+    let req_dst = height * dst_width;
+    if src.len() < req_src || dst.len() < req_dst {
+        return;
     }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_sixtap_predict8x8_c(
-    mut src_ptr: *mut u8,
-    mut src_pixels_per_line: i32,
-    mut xoffset: i32,
-    mut yoffset: i32,
-    mut dst_ptr: *mut u8,
-    mut dst_pitch: i32,
-) {
-    unsafe {
-        let mut hfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut vfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut fdata: [i32; 208] = [0; 208];
-        hfilter = &raw const *(&raw const vp8_sub_pel_filters as *const [i16; 6])
-            .offset(xoffset as isize) as *const i16;
-        vfilter = &raw const *(&raw const vp8_sub_pel_filters as *const [i16; 6])
-            .offset(yoffset as isize) as *const i16;
-        filter_block2d_first_pass(
-            src_ptr.offset(-((2 as i32 * src_pixels_per_line) as isize)),
-            &raw mut fdata as *mut i32,
-            src_pixels_per_line as u32,
-            1 as u32,
-            13 as u32,
-            8 as u32,
-            hfilter,
-        );
-        filter_block2d_second_pass(
-            (&raw mut fdata as *mut i32).offset(16 as isize),
-            dst_ptr,
-            dst_pitch,
-            8 as u32,
-            8 as u32,
-            8 as u32,
-            8 as u32,
-            vfilter,
-        );
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_sixtap_predict8x4_c(
-    mut src_ptr: *mut u8,
-    mut src_pixels_per_line: i32,
-    mut xoffset: i32,
-    mut yoffset: i32,
-    mut dst_ptr: *mut u8,
-    mut dst_pitch: i32,
-) {
-    unsafe {
-        let mut hfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut vfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut fdata: [i32; 208] = [0; 208];
-        hfilter = &raw const *(&raw const vp8_sub_pel_filters as *const [i16; 6])
-            .offset(xoffset as isize) as *const i16;
-        vfilter = &raw const *(&raw const vp8_sub_pel_filters as *const [i16; 6])
-            .offset(yoffset as isize) as *const i16;
-        filter_block2d_first_pass(
-            src_ptr.offset(-((2 as i32 * src_pixels_per_line) as isize)),
-            &raw mut fdata as *mut i32,
-            src_pixels_per_line as u32,
-            1 as u32,
-            9 as u32,
-            8 as u32,
-            hfilter,
-        );
-        filter_block2d_second_pass(
-            (&raw mut fdata as *mut i32).offset(16 as isize),
-            dst_ptr,
-            dst_pitch,
-            8 as u32,
-            8 as u32,
-            4 as u32,
-            8 as u32,
-            vfilter,
-        );
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_sixtap_predict16x16_c(
-    mut src_ptr: *mut u8,
-    mut src_pixels_per_line: i32,
-    mut xoffset: i32,
-    mut yoffset: i32,
-    mut dst_ptr: *mut u8,
-    mut dst_pitch: i32,
-) {
-    unsafe {
-        let mut hfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut vfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut fdata: [i32; 504] = [0; 504];
-        hfilter = &raw const *(&raw const vp8_sub_pel_filters as *const [i16; 6])
-            .offset(xoffset as isize) as *const i16;
-        vfilter = &raw const *(&raw const vp8_sub_pel_filters as *const [i16; 6])
-            .offset(yoffset as isize) as *const i16;
-        filter_block2d_first_pass(
-            src_ptr.offset(-((2 as i32 * src_pixels_per_line) as isize)),
-            &raw mut fdata as *mut i32,
-            src_pixels_per_line as u32,
-            1 as u32,
-            21 as u32,
-            16 as u32,
-            hfilter,
-        );
-        filter_block2d_second_pass(
-            (&raw mut fdata as *mut i32).offset(32 as isize),
-            dst_ptr,
-            dst_pitch,
-            16 as u32,
-            16 as u32,
-            16 as u32,
-            16 as u32,
-            vfilter,
-        );
-    }
-}
-unsafe fn filter_block2d_bil_first_pass(
-    mut src_ptr: *mut u8,
-    mut dst_ptr: *mut u16,
-    mut src_stride: u32,
-    mut height: u32,
-    mut width: u32,
-    mut vp8_filter: *const i16,
-) {
-    unsafe {
-        let mut i: u32 = 0;
-        let mut j: u32 = 0;
-        i = 0 as u32;
-        while i < height {
-            j = 0 as u32;
-            while j < width {
-                *dst_ptr.offset(j as isize) = ((*src_ptr.offset(0 as isize) as i32
-                    * *vp8_filter.offset(0 as isize) as i32
-                    + *src_ptr.offset(1 as isize) as i32 * *vp8_filter.offset(1 as isize) as i32
-                    + VP8_FILTER_WEIGHT / 2 as i32)
-                    >> VP8_FILTER_SHIFT) as u16;
-                src_ptr = src_ptr.offset(1);
-                j = j.wrapping_add(1);
-            }
-            src_ptr = src_ptr.offset(src_stride.wrapping_sub(width) as isize);
-            dst_ptr = dst_ptr.offset(width as isize);
-            i = i.wrapping_add(1);
+    let src = &src[..req_src];
+    let dst = &mut dst[..req_dst];
+
+    for i in 0..height {
+        let src_row = &src[i * src_stride..i * src_stride + width + 1];
+        let dst_row = &mut dst[i * dst_width..(i + 1) * dst_width];
+        for (out, window) in dst_row.iter_mut().zip(src_row.windows(2)) {
+            let temp = window[0] as i32 * f0 + window[1] as i32 * f1 + half_weight;
+            *out = (temp >> VP8_FILTER_SHIFT) as u16;
         }
     }
 }
-unsafe fn filter_block2d_bil_second_pass(
-    mut src_ptr: *mut u16,
-    mut dst_ptr: *mut u8,
-    mut dst_pitch: i32,
-    mut height: u32,
-    mut width: u32,
-    mut vp8_filter: *const i16,
+
+fn filter_block2d_bil_second_pass_safe(
+    src: &[u16],
+    src_stride: usize,
+    dst: &mut [u8],
+    dst_pitch: usize,
+    height: usize,
+    width: usize,
+    vp8_filter: &[i16; 2],
 ) {
-    unsafe {
-        let mut i: u32 = 0;
-        let mut j: u32 = 0;
-        let mut temp: i32 = 0;
-        i = 0 as u32;
-        while i < height {
-            j = 0 as u32;
-            while j < width {
-                temp = *src_ptr.offset(0 as isize) as i32 * *vp8_filter.offset(0 as isize) as i32
-                    + *src_ptr.offset(width as isize) as i32
-                        * *vp8_filter.offset(1 as isize) as i32
-                    + VP8_FILTER_WEIGHT / 2 as i32;
-                *dst_ptr.offset(j as isize) = (temp >> VP8_FILTER_SHIFT) as u8;
-                src_ptr = src_ptr.offset(1);
-                j = j.wrapping_add(1);
-            }
-            dst_ptr = dst_ptr.offset(dst_pitch as isize);
-            i = i.wrapping_add(1);
+    let f0 = vp8_filter[0] as i32;
+    let f1 = vp8_filter[1] as i32;
+    let half_weight = VP8_FILTER_WEIGHT / 2;
+
+    let req_src = (height + 1) * src_stride;
+    let req_dst = (height.saturating_sub(1)) * dst_pitch + width;
+    if src.len() < req_src || dst.len() < req_dst {
+        return;
+    }
+    let src = &src[..req_src];
+    let dst = &mut dst[..req_dst];
+
+    for i in 0..height {
+        let r0 = &src[i * src_stride..i * src_stride + width];
+        let r1 = &src[(i + 1) * src_stride..(i + 1) * src_stride + width];
+        let dst_row = &mut dst[i * dst_pitch..i * dst_pitch + width];
+
+        for ((dst_pix, &p0), &p1) in dst_row.iter_mut().zip(r0.iter()).zip(r1.iter()) {
+            let temp = p0 as i32 * f0 + p1 as i32 * f1 + half_weight;
+            *dst_pix = (temp >> VP8_FILTER_SHIFT) as u8;
         }
     }
 }
-unsafe fn filter_block2d_bil(
-    mut src_ptr: *mut u8,
-    mut dst_ptr: *mut u8,
-    mut src_pitch: u32,
-    mut dst_pitch: u32,
-    mut hfilter: *const i16,
-    mut vfilter: *const i16,
-    mut width: i32,
-    mut height: i32,
+
+pub(crate) fn filter_block2d_bil_safe(
+    src: &[u8],
+    src_stride: usize,
+    dst: &mut [u8],
+    dst_pitch: usize,
+    width: usize,
+    height: usize,
+    h_filter: &[i16; 2],
+    v_filter: &[i16; 2],
 ) {
-    unsafe {
-        let mut fdata: [u16; 272] = [0; 272];
-        filter_block2d_bil_first_pass(
-            src_ptr,
-            &raw mut fdata as *mut u16,
-            src_pitch,
-            (height + 1 as i32) as u32,
-            width as u32,
-            hfilter,
-        );
-        filter_block2d_bil_second_pass(
-            &raw mut fdata as *mut u16,
-            dst_ptr,
-            dst_pitch as i32,
-            height as u32,
-            width as u32,
-            vfilter,
-        );
-    }
+    let mut f_data = [0u16; 272];
+    let f_data_width = width;
+
+    filter_block2d_bil_first_pass_safe(
+        src,
+        src_stride,
+        &mut f_data,
+        f_data_width,
+        height + 1,
+        width,
+        h_filter,
+    );
+
+    filter_block2d_bil_second_pass_safe(
+        &f_data,
+        f_data_width,
+        dst,
+        dst_pitch,
+        height,
+        width,
+        v_filter,
+    );
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_bilinear_predict4x4_c(
-    mut src_ptr: *mut u8,
-    mut src_pixels_per_line: i32,
-    mut xoffset: i32,
-    mut yoffset: i32,
-    mut dst_ptr: *mut u8,
-    mut dst_pitch: i32,
+
+pub(crate) fn filter_block2d_sixtap_safe(
+    src: &[u8],
+    src_stride: usize,
+    dst: &mut [u8],
+    dst_pitch: usize,
+    width: usize,
+    height: usize,
+    h_filter: &[i16; 6],
+    v_filter: &[i16; 6],
 ) {
-    unsafe {
-        let mut hfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut vfilter: *const i16 = ::core::ptr::null::<i16>();
-        hfilter = &raw const *(&raw const vp8_bilinear_filters as *const [i16; 2])
-            .offset(xoffset as isize) as *const i16;
-        vfilter = &raw const *(&raw const vp8_bilinear_filters as *const [i16; 2])
-            .offset(yoffset as isize) as *const i16;
-        filter_block2d_bil(
-            src_ptr,
-            dst_ptr,
-            src_pixels_per_line as u32,
-            dst_pitch as u32,
-            hfilter,
-            vfilter,
-            4 as i32,
-            4 as i32,
-        );
-    }
+    let mut f_data = [0i32; 336];
+    let f_data_len = (height + 5) * width;
+    let f_data_slice = &mut f_data[..f_data_len];
+
+    filter_block2d_first_pass_safe(
+        src,
+        src_stride,
+        height + 5,
+        width,
+        h_filter,
+        f_data_slice,
+    );
+    filter_block2d_second_pass_safe(
+        f_data_slice,
+        width,
+        dst,
+        dst_pitch,
+        height,
+        width,
+        v_filter,
+    );
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_bilinear_predict8x8_c(
-    mut src_ptr: *mut u8,
-    mut src_pixels_per_line: i32,
-    mut xoffset: i32,
-    mut yoffset: i32,
-    mut dst_ptr: *mut u8,
-    mut dst_pitch: i32,
-) {
-    unsafe {
-        let mut hfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut vfilter: *const i16 = ::core::ptr::null::<i16>();
-        hfilter = &raw const *(&raw const vp8_bilinear_filters as *const [i16; 2])
-            .offset(xoffset as isize) as *const i16;
-        vfilter = &raw const *(&raw const vp8_bilinear_filters as *const [i16; 2])
-            .offset(yoffset as isize) as *const i16;
-        filter_block2d_bil(
-            src_ptr,
-            dst_ptr,
-            src_pixels_per_line as u32,
-            dst_pitch as u32,
-            hfilter,
-            vfilter,
-            8 as i32,
-            8 as i32,
-        );
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_bilinear_predict8x4_c(
-    mut src_ptr: *mut u8,
-    mut src_pixels_per_line: i32,
-    mut xoffset: i32,
-    mut yoffset: i32,
-    mut dst_ptr: *mut u8,
-    mut dst_pitch: i32,
-) {
-    unsafe {
-        let mut hfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut vfilter: *const i16 = ::core::ptr::null::<i16>();
-        hfilter = &raw const *(&raw const vp8_bilinear_filters as *const [i16; 2])
-            .offset(xoffset as isize) as *const i16;
-        vfilter = &raw const *(&raw const vp8_bilinear_filters as *const [i16; 2])
-            .offset(yoffset as isize) as *const i16;
-        filter_block2d_bil(
-            src_ptr,
-            dst_ptr,
-            src_pixels_per_line as u32,
-            dst_pitch as u32,
-            hfilter,
-            vfilter,
-            8 as i32,
-            4 as i32,
-        );
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_bilinear_predict16x16_c(
-    mut src_ptr: *mut u8,
-    mut src_pixels_per_line: i32,
-    mut xoffset: i32,
-    mut yoffset: i32,
-    mut dst_ptr: *mut u8,
-    mut dst_pitch: i32,
-) {
-    unsafe {
-        let mut hfilter: *const i16 = ::core::ptr::null::<i16>();
-        let mut vfilter: *const i16 = ::core::ptr::null::<i16>();
-        hfilter = &raw const *(&raw const vp8_bilinear_filters as *const [i16; 2])
-            .offset(xoffset as isize) as *const i16;
-        vfilter = &raw const *(&raw const vp8_bilinear_filters as *const [i16; 2])
-            .offset(yoffset as isize) as *const i16;
-        filter_block2d_bil(
-            src_ptr,
-            dst_ptr,
-            src_pixels_per_line as u32,
-            dst_pitch as u32,
-            hfilter,
-            vfilter,
-            16 as i32,
-            16 as i32,
-        );
-    }
-}
+

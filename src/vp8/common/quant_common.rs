@@ -1,113 +1,346 @@
-static dc_qlookup: [i32; 128] = [
-    4 as i32, 5 as i32, 6 as i32, 7 as i32, 8 as i32, 9 as i32, 10 as i32, 10 as i32, 11 as i32,
-    12 as i32, 13 as i32, 14 as i32, 15 as i32, 16 as i32, 17 as i32, 17 as i32, 18 as i32,
-    19 as i32, 20 as i32, 20 as i32, 21 as i32, 21 as i32, 22 as i32, 22 as i32, 23 as i32,
-    23 as i32, 24 as i32, 25 as i32, 25 as i32, 26 as i32, 27 as i32, 28 as i32, 29 as i32,
-    30 as i32, 31 as i32, 32 as i32, 33 as i32, 34 as i32, 35 as i32, 36 as i32, 37 as i32,
-    37 as i32, 38 as i32, 39 as i32, 40 as i32, 41 as i32, 42 as i32, 43 as i32, 44 as i32,
-    45 as i32, 46 as i32, 46 as i32, 47 as i32, 48 as i32, 49 as i32, 50 as i32, 51 as i32,
-    52 as i32, 53 as i32, 54 as i32, 55 as i32, 56 as i32, 57 as i32, 58 as i32, 59 as i32,
-    60 as i32, 61 as i32, 62 as i32, 63 as i32, 64 as i32, 65 as i32, 66 as i32, 67 as i32,
-    68 as i32, 69 as i32, 70 as i32, 71 as i32, 72 as i32, 73 as i32, 74 as i32, 75 as i32,
-    76 as i32, 76 as i32, 77 as i32, 78 as i32, 79 as i32, 80 as i32, 81 as i32, 82 as i32,
-    83 as i32, 84 as i32, 85 as i32, 86 as i32, 87 as i32, 88 as i32, 89 as i32, 91 as i32,
-    93 as i32, 95 as i32, 96 as i32, 98 as i32, 100 as i32, 101 as i32, 102 as i32, 104 as i32,
-    106 as i32, 108 as i32, 110 as i32, 112 as i32, 114 as i32, 116 as i32, 118 as i32, 122 as i32,
-    124 as i32, 126 as i32, 128 as i32, 130 as i32, 132 as i32, 134 as i32, 136 as i32, 138 as i32,
-    140 as i32, 143 as i32, 145 as i32, 148 as i32, 151 as i32, 154 as i32, 157 as i32,
+static dc_qlookup: [::core::ffi::c_int; 128] = [
+    4 as ::core::ffi::c_int,
+    5 as ::core::ffi::c_int,
+    6 as ::core::ffi::c_int,
+    7 as ::core::ffi::c_int,
+    8 as ::core::ffi::c_int,
+    9 as ::core::ffi::c_int,
+    10 as ::core::ffi::c_int,
+    10 as ::core::ffi::c_int,
+    11 as ::core::ffi::c_int,
+    12 as ::core::ffi::c_int,
+    13 as ::core::ffi::c_int,
+    14 as ::core::ffi::c_int,
+    15 as ::core::ffi::c_int,
+    16 as ::core::ffi::c_int,
+    17 as ::core::ffi::c_int,
+    17 as ::core::ffi::c_int,
+    18 as ::core::ffi::c_int,
+    19 as ::core::ffi::c_int,
+    20 as ::core::ffi::c_int,
+    20 as ::core::ffi::c_int,
+    21 as ::core::ffi::c_int,
+    21 as ::core::ffi::c_int,
+    22 as ::core::ffi::c_int,
+    22 as ::core::ffi::c_int,
+    23 as ::core::ffi::c_int,
+    23 as ::core::ffi::c_int,
+    24 as ::core::ffi::c_int,
+    25 as ::core::ffi::c_int,
+    25 as ::core::ffi::c_int,
+    26 as ::core::ffi::c_int,
+    27 as ::core::ffi::c_int,
+    28 as ::core::ffi::c_int,
+    29 as ::core::ffi::c_int,
+    30 as ::core::ffi::c_int,
+    31 as ::core::ffi::c_int,
+    32 as ::core::ffi::c_int,
+    33 as ::core::ffi::c_int,
+    34 as ::core::ffi::c_int,
+    35 as ::core::ffi::c_int,
+    36 as ::core::ffi::c_int,
+    37 as ::core::ffi::c_int,
+    37 as ::core::ffi::c_int,
+    38 as ::core::ffi::c_int,
+    39 as ::core::ffi::c_int,
+    40 as ::core::ffi::c_int,
+    41 as ::core::ffi::c_int,
+    42 as ::core::ffi::c_int,
+    43 as ::core::ffi::c_int,
+    44 as ::core::ffi::c_int,
+    45 as ::core::ffi::c_int,
+    46 as ::core::ffi::c_int,
+    46 as ::core::ffi::c_int,
+    47 as ::core::ffi::c_int,
+    48 as ::core::ffi::c_int,
+    49 as ::core::ffi::c_int,
+    50 as ::core::ffi::c_int,
+    51 as ::core::ffi::c_int,
+    52 as ::core::ffi::c_int,
+    53 as ::core::ffi::c_int,
+    54 as ::core::ffi::c_int,
+    55 as ::core::ffi::c_int,
+    56 as ::core::ffi::c_int,
+    57 as ::core::ffi::c_int,
+    58 as ::core::ffi::c_int,
+    59 as ::core::ffi::c_int,
+    60 as ::core::ffi::c_int,
+    61 as ::core::ffi::c_int,
+    62 as ::core::ffi::c_int,
+    63 as ::core::ffi::c_int,
+    64 as ::core::ffi::c_int,
+    65 as ::core::ffi::c_int,
+    66 as ::core::ffi::c_int,
+    67 as ::core::ffi::c_int,
+    68 as ::core::ffi::c_int,
+    69 as ::core::ffi::c_int,
+    70 as ::core::ffi::c_int,
+    71 as ::core::ffi::c_int,
+    72 as ::core::ffi::c_int,
+    73 as ::core::ffi::c_int,
+    74 as ::core::ffi::c_int,
+    75 as ::core::ffi::c_int,
+    76 as ::core::ffi::c_int,
+    76 as ::core::ffi::c_int,
+    77 as ::core::ffi::c_int,
+    78 as ::core::ffi::c_int,
+    79 as ::core::ffi::c_int,
+    80 as ::core::ffi::c_int,
+    81 as ::core::ffi::c_int,
+    82 as ::core::ffi::c_int,
+    83 as ::core::ffi::c_int,
+    84 as ::core::ffi::c_int,
+    85 as ::core::ffi::c_int,
+    86 as ::core::ffi::c_int,
+    87 as ::core::ffi::c_int,
+    88 as ::core::ffi::c_int,
+    89 as ::core::ffi::c_int,
+    91 as ::core::ffi::c_int,
+    93 as ::core::ffi::c_int,
+    95 as ::core::ffi::c_int,
+    96 as ::core::ffi::c_int,
+    98 as ::core::ffi::c_int,
+    100 as ::core::ffi::c_int,
+    101 as ::core::ffi::c_int,
+    102 as ::core::ffi::c_int,
+    104 as ::core::ffi::c_int,
+    106 as ::core::ffi::c_int,
+    108 as ::core::ffi::c_int,
+    110 as ::core::ffi::c_int,
+    112 as ::core::ffi::c_int,
+    114 as ::core::ffi::c_int,
+    116 as ::core::ffi::c_int,
+    118 as ::core::ffi::c_int,
+    122 as ::core::ffi::c_int,
+    124 as ::core::ffi::c_int,
+    126 as ::core::ffi::c_int,
+    128 as ::core::ffi::c_int,
+    130 as ::core::ffi::c_int,
+    132 as ::core::ffi::c_int,
+    134 as ::core::ffi::c_int,
+    136 as ::core::ffi::c_int,
+    138 as ::core::ffi::c_int,
+    140 as ::core::ffi::c_int,
+    143 as ::core::ffi::c_int,
+    145 as ::core::ffi::c_int,
+    148 as ::core::ffi::c_int,
+    151 as ::core::ffi::c_int,
+    154 as ::core::ffi::c_int,
+    157 as ::core::ffi::c_int,
 ];
-static ac_qlookup: [i32; 128] = [
-    4 as i32, 5 as i32, 6 as i32, 7 as i32, 8 as i32, 9 as i32, 10 as i32, 11 as i32, 12 as i32,
-    13 as i32, 14 as i32, 15 as i32, 16 as i32, 17 as i32, 18 as i32, 19 as i32, 20 as i32,
-    21 as i32, 22 as i32, 23 as i32, 24 as i32, 25 as i32, 26 as i32, 27 as i32, 28 as i32,
-    29 as i32, 30 as i32, 31 as i32, 32 as i32, 33 as i32, 34 as i32, 35 as i32, 36 as i32,
-    37 as i32, 38 as i32, 39 as i32, 40 as i32, 41 as i32, 42 as i32, 43 as i32, 44 as i32,
-    45 as i32, 46 as i32, 47 as i32, 48 as i32, 49 as i32, 50 as i32, 51 as i32, 52 as i32,
-    53 as i32, 54 as i32, 55 as i32, 56 as i32, 57 as i32, 58 as i32, 60 as i32, 62 as i32,
-    64 as i32, 66 as i32, 68 as i32, 70 as i32, 72 as i32, 74 as i32, 76 as i32, 78 as i32,
-    80 as i32, 82 as i32, 84 as i32, 86 as i32, 88 as i32, 90 as i32, 92 as i32, 94 as i32,
-    96 as i32, 98 as i32, 100 as i32, 102 as i32, 104 as i32, 106 as i32, 108 as i32, 110 as i32,
-    112 as i32, 114 as i32, 116 as i32, 119 as i32, 122 as i32, 125 as i32, 128 as i32, 131 as i32,
-    134 as i32, 137 as i32, 140 as i32, 143 as i32, 146 as i32, 149 as i32, 152 as i32, 155 as i32,
-    158 as i32, 161 as i32, 164 as i32, 167 as i32, 170 as i32, 173 as i32, 177 as i32, 181 as i32,
-    185 as i32, 189 as i32, 193 as i32, 197 as i32, 201 as i32, 205 as i32, 209 as i32, 213 as i32,
-    217 as i32, 221 as i32, 225 as i32, 229 as i32, 234 as i32, 239 as i32, 245 as i32, 249 as i32,
-    254 as i32, 259 as i32, 264 as i32, 269 as i32, 274 as i32, 279 as i32, 284 as i32,
+static ac_qlookup: [::core::ffi::c_int; 128] = [
+    4 as ::core::ffi::c_int,
+    5 as ::core::ffi::c_int,
+    6 as ::core::ffi::c_int,
+    7 as ::core::ffi::c_int,
+    8 as ::core::ffi::c_int,
+    9 as ::core::ffi::c_int,
+    10 as ::core::ffi::c_int,
+    11 as ::core::ffi::c_int,
+    12 as ::core::ffi::c_int,
+    13 as ::core::ffi::c_int,
+    14 as ::core::ffi::c_int,
+    15 as ::core::ffi::c_int,
+    16 as ::core::ffi::c_int,
+    17 as ::core::ffi::c_int,
+    18 as ::core::ffi::c_int,
+    19 as ::core::ffi::c_int,
+    20 as ::core::ffi::c_int,
+    21 as ::core::ffi::c_int,
+    22 as ::core::ffi::c_int,
+    23 as ::core::ffi::c_int,
+    24 as ::core::ffi::c_int,
+    25 as ::core::ffi::c_int,
+    26 as ::core::ffi::c_int,
+    27 as ::core::ffi::c_int,
+    28 as ::core::ffi::c_int,
+    29 as ::core::ffi::c_int,
+    30 as ::core::ffi::c_int,
+    31 as ::core::ffi::c_int,
+    32 as ::core::ffi::c_int,
+    33 as ::core::ffi::c_int,
+    34 as ::core::ffi::c_int,
+    35 as ::core::ffi::c_int,
+    36 as ::core::ffi::c_int,
+    37 as ::core::ffi::c_int,
+    38 as ::core::ffi::c_int,
+    39 as ::core::ffi::c_int,
+    40 as ::core::ffi::c_int,
+    41 as ::core::ffi::c_int,
+    42 as ::core::ffi::c_int,
+    43 as ::core::ffi::c_int,
+    44 as ::core::ffi::c_int,
+    45 as ::core::ffi::c_int,
+    46 as ::core::ffi::c_int,
+    47 as ::core::ffi::c_int,
+    48 as ::core::ffi::c_int,
+    49 as ::core::ffi::c_int,
+    50 as ::core::ffi::c_int,
+    51 as ::core::ffi::c_int,
+    52 as ::core::ffi::c_int,
+    53 as ::core::ffi::c_int,
+    54 as ::core::ffi::c_int,
+    55 as ::core::ffi::c_int,
+    56 as ::core::ffi::c_int,
+    57 as ::core::ffi::c_int,
+    58 as ::core::ffi::c_int,
+    60 as ::core::ffi::c_int,
+    62 as ::core::ffi::c_int,
+    64 as ::core::ffi::c_int,
+    66 as ::core::ffi::c_int,
+    68 as ::core::ffi::c_int,
+    70 as ::core::ffi::c_int,
+    72 as ::core::ffi::c_int,
+    74 as ::core::ffi::c_int,
+    76 as ::core::ffi::c_int,
+    78 as ::core::ffi::c_int,
+    80 as ::core::ffi::c_int,
+    82 as ::core::ffi::c_int,
+    84 as ::core::ffi::c_int,
+    86 as ::core::ffi::c_int,
+    88 as ::core::ffi::c_int,
+    90 as ::core::ffi::c_int,
+    92 as ::core::ffi::c_int,
+    94 as ::core::ffi::c_int,
+    96 as ::core::ffi::c_int,
+    98 as ::core::ffi::c_int,
+    100 as ::core::ffi::c_int,
+    102 as ::core::ffi::c_int,
+    104 as ::core::ffi::c_int,
+    106 as ::core::ffi::c_int,
+    108 as ::core::ffi::c_int,
+    110 as ::core::ffi::c_int,
+    112 as ::core::ffi::c_int,
+    114 as ::core::ffi::c_int,
+    116 as ::core::ffi::c_int,
+    119 as ::core::ffi::c_int,
+    122 as ::core::ffi::c_int,
+    125 as ::core::ffi::c_int,
+    128 as ::core::ffi::c_int,
+    131 as ::core::ffi::c_int,
+    134 as ::core::ffi::c_int,
+    137 as ::core::ffi::c_int,
+    140 as ::core::ffi::c_int,
+    143 as ::core::ffi::c_int,
+    146 as ::core::ffi::c_int,
+    149 as ::core::ffi::c_int,
+    152 as ::core::ffi::c_int,
+    155 as ::core::ffi::c_int,
+    158 as ::core::ffi::c_int,
+    161 as ::core::ffi::c_int,
+    164 as ::core::ffi::c_int,
+    167 as ::core::ffi::c_int,
+    170 as ::core::ffi::c_int,
+    173 as ::core::ffi::c_int,
+    177 as ::core::ffi::c_int,
+    181 as ::core::ffi::c_int,
+    185 as ::core::ffi::c_int,
+    189 as ::core::ffi::c_int,
+    193 as ::core::ffi::c_int,
+    197 as ::core::ffi::c_int,
+    201 as ::core::ffi::c_int,
+    205 as ::core::ffi::c_int,
+    209 as ::core::ffi::c_int,
+    213 as ::core::ffi::c_int,
+    217 as ::core::ffi::c_int,
+    221 as ::core::ffi::c_int,
+    225 as ::core::ffi::c_int,
+    229 as ::core::ffi::c_int,
+    234 as ::core::ffi::c_int,
+    239 as ::core::ffi::c_int,
+    245 as ::core::ffi::c_int,
+    249 as ::core::ffi::c_int,
+    254 as ::core::ffi::c_int,
+    259 as ::core::ffi::c_int,
+    264 as ::core::ffi::c_int,
+    269 as ::core::ffi::c_int,
+    274 as ::core::ffi::c_int,
+    279 as ::core::ffi::c_int,
+    284 as ::core::ffi::c_int,
 ];
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_dc_quant(mut qindex: i32, mut delta: i32) -> i32 {
-    let mut retval: i32 = 0;
-    qindex += delta;
-    if qindex > 127 as i32 {
-        qindex = 127 as i32;
-    } else if qindex < 0 as i32 {
-        qindex = 0 as i32;
+pub fn vp8_dc_quant(
+    mut QIndex: ::core::ffi::c_int,
+    mut Delta: ::core::ffi::c_int,
+) -> ::core::ffi::c_int {
+    let mut retval: ::core::ffi::c_int = 0;
+    QIndex = QIndex + Delta;
+    if QIndex > 127 as ::core::ffi::c_int {
+        QIndex = 127 as ::core::ffi::c_int;
+    } else if QIndex < 0 as ::core::ffi::c_int {
+        QIndex = 0 as ::core::ffi::c_int;
     }
-    retval = dc_qlookup[qindex as usize];
-    retval
+    retval = dc_qlookup[QIndex as usize];
+    return retval;
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_dc2quant(mut qindex: i32, mut delta: i32) -> i32 {
-    let mut retval: i32 = 0;
-    qindex += delta;
-    if qindex > 127 as i32 {
-        qindex = 127 as i32;
-    } else if qindex < 0 as i32 {
-        qindex = 0 as i32;
+pub fn vp8_dc2quant(
+    mut QIndex: ::core::ffi::c_int,
+    mut Delta: ::core::ffi::c_int,
+) -> ::core::ffi::c_int {
+    let mut retval: ::core::ffi::c_int = 0;
+    QIndex = QIndex + Delta;
+    if QIndex > 127 as ::core::ffi::c_int {
+        QIndex = 127 as ::core::ffi::c_int;
+    } else if QIndex < 0 as ::core::ffi::c_int {
+        QIndex = 0 as ::core::ffi::c_int;
     }
-    retval = dc_qlookup[qindex as usize] * 2 as i32;
-    retval
+    retval = dc_qlookup[QIndex as usize] * 2 as ::core::ffi::c_int;
+    return retval;
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_dc_uv_quant(mut qindex: i32, mut delta: i32) -> i32 {
-    let mut retval: i32 = 0;
-    qindex += delta;
-    if qindex > 127 as i32 {
-        qindex = 127 as i32;
-    } else if qindex < 0 as i32 {
-        qindex = 0 as i32;
+pub fn vp8_dc_uv_quant(
+    mut QIndex: ::core::ffi::c_int,
+    mut Delta: ::core::ffi::c_int,
+) -> ::core::ffi::c_int {
+    let mut retval: ::core::ffi::c_int = 0;
+    QIndex = QIndex + Delta;
+    if QIndex > 127 as ::core::ffi::c_int {
+        QIndex = 127 as ::core::ffi::c_int;
+    } else if QIndex < 0 as ::core::ffi::c_int {
+        QIndex = 0 as ::core::ffi::c_int;
     }
-    retval = dc_qlookup[qindex as usize];
-    if retval > 132 as i32 {
-        retval = 132 as i32;
+    retval = dc_qlookup[QIndex as usize];
+    if retval > 132 as ::core::ffi::c_int {
+        retval = 132 as ::core::ffi::c_int;
     }
-    retval
+    return retval;
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_ac_yquant(mut qindex: i32) -> i32 {
-    let mut retval: i32 = 0;
-    if qindex > 127 as i32 {
-        qindex = 127 as i32;
-    } else if qindex < 0 as i32 {
-        qindex = 0 as i32;
+pub fn vp8_ac_yquant(mut QIndex: ::core::ffi::c_int) -> ::core::ffi::c_int {
+    let mut retval: ::core::ffi::c_int = 0;
+    if QIndex > 127 as ::core::ffi::c_int {
+        QIndex = 127 as ::core::ffi::c_int;
+    } else if QIndex < 0 as ::core::ffi::c_int {
+        QIndex = 0 as ::core::ffi::c_int;
     }
-    retval = ac_qlookup[qindex as usize];
-    retval
+    retval = ac_qlookup[QIndex as usize];
+    return retval;
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_ac2quant(mut qindex: i32, mut delta: i32) -> i32 {
-    let mut retval: i32 = 0;
-    qindex += delta;
-    if qindex > 127 as i32 {
-        qindex = 127 as i32;
-    } else if qindex < 0 as i32 {
-        qindex = 0 as i32;
+pub fn vp8_ac2quant(
+    mut QIndex: ::core::ffi::c_int,
+    mut Delta: ::core::ffi::c_int,
+) -> ::core::ffi::c_int {
+    let mut retval: ::core::ffi::c_int = 0;
+    QIndex = QIndex + Delta;
+    if QIndex > 127 as ::core::ffi::c_int {
+        QIndex = 127 as ::core::ffi::c_int;
+    } else if QIndex < 0 as ::core::ffi::c_int {
+        QIndex = 0 as ::core::ffi::c_int;
     }
-    retval = (ac_qlookup[qindex as usize] * 101581 as i32) >> 16 as i32;
-    if retval < 8 as i32 {
-        retval = 8 as i32;
+    retval = ac_qlookup[QIndex as usize] * 101581 as ::core::ffi::c_int >> 16 as ::core::ffi::c_int;
+    if retval < 8 as ::core::ffi::c_int {
+        retval = 8 as ::core::ffi::c_int;
     }
-    retval
+    return retval;
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_ac_uv_quant(mut qindex: i32, mut delta: i32) -> i32 {
-    let mut retval: i32 = 0;
-    qindex += delta;
-    if qindex > 127 as i32 {
-        qindex = 127 as i32;
-    } else if qindex < 0 as i32 {
-        qindex = 0 as i32;
+pub fn vp8_ac_uv_quant(
+    mut QIndex: ::core::ffi::c_int,
+    mut Delta: ::core::ffi::c_int,
+) -> ::core::ffi::c_int {
+    let mut retval: ::core::ffi::c_int = 0;
+    QIndex = QIndex + Delta;
+    if QIndex > 127 as ::core::ffi::c_int {
+        QIndex = 127 as ::core::ffi::c_int;
+    } else if QIndex < 0 as ::core::ffi::c_int {
+        QIndex = 0 as ::core::ffi::c_int;
     }
-    retval = ac_qlookup[qindex as usize];
-    retval
+    retval = ac_qlookup[QIndex as usize];
+    return retval;
 }

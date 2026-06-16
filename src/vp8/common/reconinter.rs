@@ -1,157 +1,23 @@
-use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
-use std::ffi::c_void;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Blockd {
-    pub qcoeff: *mut i16,
-    pub dqcoeff: *mut i16,
-    pub predictor: *mut u8,
-    pub dequant: *mut i16,
-    pub offset: i32,
-    pub eob: *mut i8,
-    pub bmi: BModeInfo,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union BModeInfo {
-    pub as_mode: u32,
-    pub mv: IntMv,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub union IntMv {
-    pub as_int: u32,
-    pub as_mv: MV,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MV {
-    pub row: i16,
-    pub col: i16,
-}
-pub const B_MODE_COUNT: u32 = 14;
-pub const NEW4X4: u32 = 13;
-pub const ZERO4X4: u32 = 12;
-pub const ABOVE4X4: u32 = 11;
-pub const LEFT4X4: u32 = 10;
-pub const B_HU_PRED: u32 = 9;
-pub const B_HD_PRED: u32 = 8;
-pub const B_VL_PRED: u32 = 7;
-pub const B_VR_PRED: u32 = 6;
-pub const B_RD_PRED: u32 = 5;
-pub const B_LD_PRED: u32 = 4;
-pub const B_HE_PRED: u32 = 3;
-pub const B_VE_PRED: u32 = 2;
-pub const B_TM_PRED: u32 = 1;
-pub const B_DC_PRED: u32 = 0;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Macroblockd {
-    pub predictor: [u8; 384],
-    pub qcoeff: [i16; 400],
-    pub dqcoeff: [i16; 400],
-    pub eobs: [i8; 25],
-    pub dequant_y1: [i16; 16],
-    pub dequant_y1_dc: [i16; 16],
-    pub dequant_y2: [i16; 16],
-    pub dequant_uv: [i16; 16],
-    pub block: [BLOCKD; 25],
-    pub fullpixel_mask: i32,
-    pub pre: Yv12BufferConfig,
-    pub dst: Yv12BufferConfig,
-    pub mode_info_context: *mut ModeInfo,
-    pub mode_info_stride: i32,
-    pub frame_type: u32,
-    pub up_available: bool,
-    pub left_available: bool,
-    pub recon_above: [*mut u8; 3],
-    pub recon_left: [*mut u8; 3],
-    pub recon_left_stride: [i32; 2],
-    pub above_context: *mut EntropyContextPlanes,
-    pub left_context: *mut EntropyContextPlanes,
-    pub segmentation_enabled: u8,
-    pub update_mb_segmentation_map: u8,
-    pub update_mb_segmentation_data: u8,
-    pub mb_segment_abs_delta: u8,
-    pub mb_segment_tree_probs: [u8; 3],
-    pub segment_feature_data: [[i8; 4]; 2],
-    pub mode_ref_lf_delta_enabled: u8,
-    pub mode_ref_lf_delta_update: u8,
-    pub last_ref_lf_deltas: [i8; 4],
-    pub ref_lf_deltas: [i8; 4],
-    pub last_mode_lf_deltas: [i8; 4],
-    pub mode_lf_deltas: [i8; 4],
-    pub mb_to_left_edge: i32,
-    pub mb_to_right_edge: i32,
-    pub mb_to_top_edge: i32,
-    pub mb_to_bottom_edge: i32,
-    pub subpixel_predict: Vp8SubpixFnT,
-    pub subpixel_predict8x4: Vp8SubpixFnT,
-    pub subpixel_predict8x8: Vp8SubpixFnT,
-    pub subpixel_predict16x16: Vp8SubpixFnT,
-    pub current_bc: *mut c_void,
-    pub corrupted: i32,
-    pub error_info: VpxInternalErrorInfo,
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct VpxInternalErrorInfo {
-    pub error_code: u32,
-    pub has_detail: bool,
-    pub detail: [i8; 80],
-    pub setjmp: bool,
-    pub jmp: JmpBuf,
-}
-pub type JmpBuf = [i32; 48];
-pub const VPX_CODEC_LIST_END: u32 = 9;
-pub const VPX_CODEC_INVALID_PARAM: u32 = 8;
-pub const VPX_CODEC_CORRUPT_FRAME: u32 = 7;
-pub const VPX_CODEC_UNSUP_FEATURE: u32 = 6;
-pub const VPX_CODEC_UNSUP_BITSTREAM: u32 = 5;
-pub const VPX_CODEC_INCAPABLE: u32 = 4;
-pub const VPX_CODEC_ABI_MISMATCH: u32 = 3;
-pub const VPX_CODEC_MEM_ERROR: u32 = 2;
-pub const VPX_CODEC_ERROR: u32 = 1;
-pub const VPX_CODEC_OK: u32 = 0;
-pub type Vp8SubpixFnT = Option<unsafe fn(*mut u8, i32, i32, i32, *mut u8, i32) -> ()>;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct EntropyContextPlanes {
-    pub y1: [i8; 4],
-    pub u: [i8; 2],
-    pub v: [i8; 2],
-    pub y2: i8,
-}
-pub const INTER_FRAME: u32 = 1;
-pub const KEY_FRAME: u32 = 0;
-pub type ModeInfo = Modeinfo;
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct Modeinfo {
-    pub mbmi: MbModeInfo,
-    pub bmi: [BModeInfo; 16],
-}
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct MbModeInfo {
-    pub mode: u8,
-    pub uv_mode: u8,
-    pub ref_frame: u8,
-    pub is_4x4: u8,
-    pub mv: IntMv,
-    pub partitioning: u8,
-    pub mb_skip_coeff: u8,
-    pub need_to_clamp_mvs: u8,
-    pub segment_id: u8,
-}
 
-pub use crate::vpx::src::vpx_image::{
-    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
-    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
-};
-pub type BLOCKD = Blockd;
-#[allow(non_camel_case_types)]
-pub type C2RustUnnamed = u32;
+pub use crate::vp8::common::types::*;
+pub type uint32_t = u32;
+
+pub type uint8_t = u8;
+pub type vpx_color_range_t = vpx_color_range;
+pub type vpx_color_range = ::core::ffi::c_uint;
+pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
+pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
+pub type vpx_color_space_t = vpx_color_space;
+pub type vpx_color_space = ::core::ffi::c_uint;
+pub const VPX_CS_SRGB: vpx_color_space = 7;
+pub const VPX_CS_RESERVED: vpx_color_space = 6;
+pub const VPX_CS_BT_2020: vpx_color_space = 5;
+pub const VPX_CS_SMPTE_240: vpx_color_space = 4;
+pub const VPX_CS_SMPTE_170: vpx_color_space = 3;
+pub const VPX_CS_BT_709: vpx_color_space = 2;
+pub const VPX_CS_BT_601: vpx_color_space = 1;
+pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
+pub type C2RustUnnamed = ::core::ffi::c_uint;
 pub const MB_MODE_COUNT: C2RustUnnamed = 10;
 pub const SPLITMV: C2RustUnnamed = 9;
 pub const NEWMV: C2RustUnnamed = 8;
@@ -163,849 +29,768 @@ pub const TM_PRED: C2RustUnnamed = 3;
 pub const H_PRED: C2RustUnnamed = 2;
 pub const V_PRED: C2RustUnnamed = 1;
 pub const DC_PRED: C2RustUnnamed = 0;
-pub type MACROBLOCKD = Macroblockd;
-pub const CHAR_BIT: i32 = 8 as i32;
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_copy_mem16x16_c(
-    mut src: *mut u8,
-    mut src_stride: i32,
-    mut dst: *mut u8,
-    mut dst_stride: i32,
+pub const CHAR_BIT: ::core::ffi::c_int = 8 as ::core::ffi::c_int;
+pub fn vp8_copy_mem16x16_safe(
+    src: &[u8],
+    src_stride: i32,
+    dst: &mut [u8],
+    dst_stride: i32,
 ) {
-    unsafe {
-        let mut r: i32 = 0;
-        r = 0 as i32;
-        while r < 16 as i32 {
-            core::ptr::copy_nonoverlapping(
-                src as *const c_void as *const u8,
-                dst as *mut c_void as *mut u8,
-                16 as usize,
-            );
-            src = src.offset(src_stride as isize);
-            dst = dst.offset(dst_stride as isize);
-            r += 1;
+    let src_stride = src_stride as usize;
+    let dst_stride = dst_stride as usize;
+    for r in 0..16 {
+        let src_idx = r * src_stride;
+        let dst_idx = r * dst_stride;
+        dst[dst_idx..dst_idx + 16].copy_from_slice(&src[src_idx..src_idx + 16]);
+    }
+}
+
+pub fn vp8_copy_mem8x8_safe(
+    src: &[u8],
+    src_stride: i32,
+    dst: &mut [u8],
+    dst_stride: i32,
+) {
+    let src_stride = src_stride as usize;
+    let dst_stride = dst_stride as usize;
+    for r in 0..8 {
+        let src_idx = r * src_stride;
+        let dst_idx = r * dst_stride;
+        dst[dst_idx..dst_idx + 8].copy_from_slice(&src[src_idx..src_idx + 8]);
+    }
+}
+
+pub fn vp8_copy_mem8x4_safe(
+    src: &[u8],
+    src_stride: i32,
+    dst: &mut [u8],
+    dst_stride: i32,
+) {
+    let src_stride = src_stride as usize;
+    let dst_stride = dst_stride as usize;
+    for r in 0..4 {
+        let src_idx = r * src_stride;
+        let dst_idx = r * dst_stride;
+        dst[dst_idx..dst_idx + 8].copy_from_slice(&src[src_idx..src_idx + 8]);
+    }
+}
+
+
+fn call_subpixel_predict(
+    sppf: vp8_subpix_fn_t,
+    src: &[u8],
+    src_offset: usize,
+    src_stride: i32,
+    xoffset: i32,
+    yoffset: i32,
+    dst: &mut [u8],
+    dst_offset: usize,
+    dst_stride: i32,
+) {
+    if let Some(f) = sppf {
+        f(
+            src,
+            src_offset,
+            src_stride,
+            xoffset,
+            yoffset,
+            dst,
+            dst_offset,
+            dst_stride,
+        );
+    }
+}
+
+fn build_inter_predictors4b_safe(
+    sppf: vp8_subpix_fn_t,
+    d: &BLOCKD,
+    dst_slice: &mut [u8],
+    dst_offset: usize,
+    dst_stride: ::core::ffi::c_int,
+    pre_slice: &[u8],
+    pre_offset: usize,
+    pre_stride: ::core::ffi::c_int,
+) {
+    let mv = d.bmi.mv().as_mv();
+    let row = mv.row as i32;
+    let col = mv.col as i32;
+    
+    let pre_stride_u = pre_stride as usize;
+    let dst_stride_u = dst_stride as usize;
+    
+    let mv_row_offset = (row >> 3) * pre_stride;
+    let mv_col_offset = col >> 3;
+    
+    let pre_idx = (pre_offset as i32 + d.offset + mv_row_offset + mv_col_offset) as usize;
+    let dst_idx = dst_offset;
+    
+    if row & 7 != 0 || col & 7 != 0 {
+        call_subpixel_predict(
+            sppf,
+            pre_slice,
+            pre_idx,
+            pre_stride,
+            col & 7,
+            row & 7,
+            dst_slice,
+            dst_idx,
+            dst_stride,
+        );
+    } else {
+        let pre_len = 7 * pre_stride_u + 8;
+        let dst_len = 7 * dst_stride_u + 8;
+        
+        let sub_pre = &pre_slice[pre_idx .. pre_idx + pre_len];
+        let sub_dst = &mut dst_slice[dst_idx .. dst_idx + dst_len];
+        
+        vp8_copy_mem8x8_safe(sub_pre, pre_stride, sub_dst, dst_stride);
+    }
+}
+
+fn build_inter_predictors2b_safe(
+    sppf: vp8_subpix_fn_t,
+    d: &BLOCKD,
+    dst_slice: &mut [u8],
+    dst_offset: usize,
+    dst_stride: ::core::ffi::c_int,
+    pre_slice: &[u8],
+    pre_offset: usize,
+    pre_stride: ::core::ffi::c_int,
+) {
+    let mv = d.bmi.mv().as_mv();
+    let row = mv.row as i32;
+    let col = mv.col as i32;
+    
+    let pre_stride_u = pre_stride as usize;
+    let dst_stride_u = dst_stride as usize;
+    
+    let mv_row_offset = (row >> 3) * pre_stride;
+    let mv_col_offset = col >> 3;
+    
+    let pre_idx = (pre_offset as i32 + d.offset + mv_row_offset + mv_col_offset) as usize;
+    let dst_idx = dst_offset;
+    
+    if row & 7 != 0 || col & 7 != 0 {
+        call_subpixel_predict(
+            sppf,
+            pre_slice,
+            pre_idx,
+            pre_stride,
+            col & 7,
+            row & 7,
+            dst_slice,
+            dst_idx,
+            dst_stride,
+        );
+    } else {
+        let pre_len = 3 * pre_stride_u + 8;
+        let dst_len = 3 * dst_stride_u + 8;
+        
+        let sub_pre = &pre_slice[pre_idx .. pre_idx + pre_len];
+        let sub_dst = &mut dst_slice[dst_idx .. dst_idx + dst_len];
+        
+        vp8_copy_mem8x4_safe(sub_pre, pre_stride, sub_dst, dst_stride);
+    }
+}
+
+fn build_inter_predictors_b_safe(
+    sppf: vp8_subpix_fn_t,
+    d: &BLOCKD,
+    dst_slice: &mut [u8],
+    dst_offset: usize,
+    dst_stride: ::core::ffi::c_int,
+    pre_slice: &[u8],
+    pre_offset: usize,
+    pre_stride: ::core::ffi::c_int,
+) {
+    let mv = d.bmi.mv().as_mv();
+    let row = mv.row as i32;
+    let col = mv.col as i32;
+    
+    let pre_stride_u = pre_stride as usize;
+    let dst_stride_u = dst_stride as usize;
+    
+    let mv_row_offset = (row >> 3) * pre_stride;
+    let mv_col_offset = col >> 3;
+    
+    let pre_idx = (pre_offset as i32 + d.offset + mv_row_offset + mv_col_offset) as usize;
+    let dst_idx = dst_offset;
+    
+    if row & 7 != 0 || col & 7 != 0 {
+        call_subpixel_predict(
+            sppf,
+            pre_slice,
+            pre_idx,
+            pre_stride,
+            col & 7,
+            row & 7,
+            dst_slice,
+            dst_idx,
+            dst_stride,
+        );
+    } else {
+        for r in 0..4 {
+            let s_idx = pre_idx + r * pre_stride_u;
+            let d_idx = dst_idx + r * dst_stride_u;
+            dst_slice[d_idx .. d_idx + 4].copy_from_slice(&pre_slice[s_idx .. s_idx + 4]);
         }
     }
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_copy_mem8x8_c(
-    mut src: *mut u8,
-    mut src_stride: i32,
-    mut dst: *mut u8,
-    mut dst_stride: i32,
+fn clamp_mv_to_umv_border(
+    mv: &mut MV,
+    mb_to_left_edge: ::core::ffi::c_int,
+    mb_to_right_edge: ::core::ffi::c_int,
+    mb_to_top_edge: ::core::ffi::c_int,
+    mb_to_bottom_edge: ::core::ffi::c_int,
 ) {
-    unsafe {
-        let mut r: i32 = 0;
-        r = 0 as i32;
-        while r < 8 as i32 {
-            core::ptr::copy_nonoverlapping(
-                src as *const c_void as *const u8,
-                dst as *mut c_void as *mut u8,
-                8 as usize,
-            );
-            src = src.offset(src_stride as isize);
-            dst = dst.offset(dst_stride as isize);
-            r += 1;
-        }
+    if (mv.col as ::core::ffi::c_int)
+        < mb_to_left_edge - ((19 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+    {
+        mv.col = (mb_to_left_edge
+            - ((16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int))
+            as ::core::ffi::c_short;
+    } else if mv.col as ::core::ffi::c_int
+        > mb_to_right_edge + ((18 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+    {
+        mv.col = (mb_to_right_edge
+            + ((16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int))
+            as ::core::ffi::c_short;
+    }
+    if (mv.row as ::core::ffi::c_int)
+        < mb_to_top_edge - ((19 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+    {
+        mv.row = (mb_to_top_edge - ((16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int))
+            as ::core::ffi::c_short;
+    } else if mv.row as ::core::ffi::c_int
+        > mb_to_bottom_edge + ((18 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+    {
+        mv.row = (mb_to_bottom_edge
+            + ((16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int))
+            as ::core::ffi::c_short;
     }
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_copy_mem8x4_c(
-    mut src: *mut u8,
-    mut src_stride: i32,
-    mut dst: *mut u8,
-    mut dst_stride: i32,
+fn clamp_uvmv_to_umv_border(
+    mv: &mut MV,
+    mb_to_left_edge: ::core::ffi::c_int,
+    mb_to_right_edge: ::core::ffi::c_int,
+    mb_to_top_edge: ::core::ffi::c_int,
+    mb_to_bottom_edge: ::core::ffi::c_int,
 ) {
-    unsafe {
-        let mut r: i32 = 0;
-        r = 0 as i32;
-        while r < 4 as i32 {
-            core::ptr::copy_nonoverlapping(
-                src as *const c_void as *const u8,
-                dst as *mut c_void as *mut u8,
-                8 as usize,
-            );
-            src = src.offset(src_stride as isize);
-            dst = dst.offset(dst_stride as isize);
-            r += 1;
-        }
-    }
+    mv.col = (if (2 as ::core::ffi::c_int * mv.col as ::core::ffi::c_int)
+        < mb_to_left_edge - ((19 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+    {
+        mb_to_left_edge - ((16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+            >> 1 as ::core::ffi::c_int
+    } else {
+        mv.col as ::core::ffi::c_int
+    }) as ::core::ffi::c_short;
+    mv.col = (if 2 as ::core::ffi::c_int * mv.col as ::core::ffi::c_int
+        > mb_to_right_edge + ((18 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+    {
+        mb_to_right_edge + ((16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+            >> 1 as ::core::ffi::c_int
+    } else {
+        mv.col as ::core::ffi::c_int
+    }) as ::core::ffi::c_short;
+    mv.row = (if (2 as ::core::ffi::c_int * mv.row as ::core::ffi::c_int)
+        < mb_to_top_edge - ((19 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+    {
+        mb_to_top_edge - ((16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+            >> 1 as ::core::ffi::c_int
+    } else {
+        mv.row as ::core::ffi::c_int
+    }) as ::core::ffi::c_short;
+    mv.row = (if 2 as ::core::ffi::c_int * mv.row as ::core::ffi::c_int
+        > mb_to_bottom_edge + ((18 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+    {
+        mb_to_bottom_edge + ((16 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+            >> 1 as ::core::ffi::c_int
+    } else {
+        mv.row as ::core::ffi::c_int
+    }) as ::core::ffi::c_short;
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_build_inter_predictors_b(
-    mut d: *mut BLOCKD,
-    mut pitch: i32,
-    mut base_pre: *mut u8,
-    mut pre_stride: i32,
-    mut sppf: Vp8SubpixFnT,
+pub fn vp8_build_inter16x16_predictors_mb(
+    x: &mut MACROBLOCKD,
+    mi: &MODE_INFO,
+    mut dst_y_slice: &mut [u8],
+    mut dst_u_slice: &mut [u8],
+    mut dst_v_slice: &mut [u8],
+    pre_y_slice: &[u8],
+    pre_u_slice: &[u8],
+    pre_v_slice: &[u8],
 ) {
-    unsafe {
-        let mut r: i32 = 0;
-        let mut pred_ptr: *mut u8 = (*d).predictor;
-        let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        ptr = base_pre
-            .offset((*d).offset as isize)
-            .offset((((*d).bmi.mv.as_mv.row as i32 >> 3 as i32) * pre_stride) as isize)
-            .offset(((*d).bmi.mv.as_mv.col as i32 >> 3 as i32) as isize);
-        if (*d).bmi.mv.as_mv.row as i32 & 7 as i32 != 0
-            || (*d).bmi.mv.as_mv.col as i32 & 7 as i32 != 0
-        {
-            sppf.expect("non-null function pointer")(
-                ptr,
-                pre_stride,
-                (*d).bmi.mv.as_mv.col as i32 & 7 as i32,
-                (*d).bmi.mv.as_mv.row as i32 & 7 as i32,
-                pred_ptr,
-                pitch,
-            );
-        } else {
-            r = 0 as i32;
-            while r < 4 as i32 {
-                *pred_ptr.offset(0 as isize) = *ptr.offset(0 as isize);
-                *pred_ptr.offset(1 as isize) = *ptr.offset(1 as isize);
-                *pred_ptr.offset(2 as isize) = *ptr.offset(2 as isize);
-                *pred_ptr.offset(3 as isize) = *ptr.offset(3 as isize);
-                pred_ptr = pred_ptr.offset(pitch as isize);
-                ptr = ptr.offset(pre_stride as isize);
-                r += 1;
-            }
-        };
+    let dst_y_stride = x.dst_y_stride;
+    let dst_uv_stride = x.dst_uv_stride;
+    let pre_y_stride = x.pre_y_stride;
+    let pre_uv_stride = x.pre_uv_stride;
+    
+    let border = x.dst_border as usize;
+    let uv_border = border / 2;
+
+    let mbmi = mi.mbmi;
+    let mut _16x16mv = mbmi.mv;
+    let need_to_clamp_mvs = mbmi.need_to_clamp_mvs;
+    
+    let mb_to_left_edge = x.mb_to_left_edge;
+    let mb_to_right_edge = x.mb_to_right_edge;
+    let mb_to_top_edge = x.mb_to_top_edge;
+    let mb_to_bottom_edge = x.mb_to_bottom_edge;
+    
+    let subpixel_predict16x16 = x.subpixel_predict16x16;
+    let subpixel_predict8x8 = x.subpixel_predict8x8;
+    let fullpixel_mask = x.fullpixel_mask;
+
+    if need_to_clamp_mvs != 0 {
+        clamp_mv_to_umv_border(
+            _16x16mv.as_mv_mut(),
+            mb_to_left_edge,
+            mb_to_right_edge,
+            mb_to_top_edge,
+            mb_to_bottom_edge,
+        );
     }
-}
-unsafe fn build_inter_predictors4b(
-    mut x: *mut MACROBLOCKD,
-    mut d: *mut BLOCKD,
-    mut dst: *mut u8,
-    mut dst_stride: i32,
-    mut base_pre: *mut u8,
-    mut pre_stride: i32,
-) {
-    unsafe {
-        let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        ptr = base_pre
-            .offset((*d).offset as isize)
-            .offset((((*d).bmi.mv.as_mv.row as i32 >> 3 as i32) * pre_stride) as isize)
-            .offset(((*d).bmi.mv.as_mv.col as i32 >> 3 as i32) as isize);
-        if (*d).bmi.mv.as_mv.row as i32 & 7 as i32 != 0
-            || (*d).bmi.mv.as_mv.col as i32 & 7 as i32 != 0
-        {
-            (*x).subpixel_predict8x8.expect("non-null function pointer")(
-                ptr,
-                pre_stride,
-                (*d).bmi.mv.as_mv.col as i32 & 7 as i32,
-                (*d).bmi.mv.as_mv.row as i32 & 7 as i32,
-                dst,
-                dst_stride,
-            );
-        } else {
-            vp8_copy_mem8x8_c(ptr, pre_stride, dst, dst_stride);
-        };
+
+    let mb_row = (-x.mb_to_top_edge / 128) as usize;
+    let mb_col = (-x.mb_to_left_edge / 128) as usize;
+    
+    let recon_yoffset = mb_row * 16 * dst_y_stride as usize + mb_col * 16;
+    let recon_uvoffset = mb_row * 8 * dst_uv_stride as usize + mb_col * 8;
+    
+    let pre_recon_yoffset = mb_row * 16 * pre_y_stride as usize + mb_col * 16;
+    let pre_recon_uvoffset = mb_row * 8 * pre_uv_stride as usize + mb_col * 8;
+
+    let dst_y_active_offset = border * dst_y_stride as usize + border + recon_yoffset;
+    let pre_y_active_offset = border * pre_y_stride as usize + border + pre_recon_yoffset;
+
+    let mv_row_offset = (_16x16mv.as_mv().row as i32 >> 3) * pre_y_stride;
+    let mv_col_offset = _16x16mv.as_mv().col as i32 >> 3;
+    let pre_y_offset = (pre_y_active_offset as i32 + mv_row_offset + mv_col_offset) as usize;
+
+    if _16x16mv.as_int() & 0x70007 as uint32_t != 0 {
+        call_subpixel_predict(
+            subpixel_predict16x16,
+            &pre_y_slice,
+            pre_y_offset,
+            pre_y_stride,
+            _16x16mv.as_mv().col as ::core::ffi::c_int & 7,
+            _16x16mv.as_mv().row as ::core::ffi::c_int & 7,
+            &mut dst_y_slice,
+            dst_y_active_offset,
+            dst_y_stride,
+        );
+    } else {
+        let pre_len = 15 * pre_y_stride as usize + 16;
+        let dst_len = 15 * dst_y_stride as usize + 16;
+        let sub_pre = &pre_y_slice[pre_y_offset .. pre_y_offset + pre_len];
+        let sub_dst = &mut dst_y_slice[dst_y_active_offset .. dst_y_active_offset + dst_len];
+        vp8_copy_mem16x16_safe(sub_pre, pre_y_stride, sub_dst, dst_y_stride);
     }
-}
-unsafe fn build_inter_predictors2b(
-    mut x: *mut MACROBLOCKD,
-    mut d: *mut BLOCKD,
-    mut dst: *mut u8,
-    mut dst_stride: i32,
-    mut base_pre: *mut u8,
-    mut pre_stride: i32,
-) {
-    unsafe {
-        let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        ptr = base_pre
-            .offset((*d).offset as isize)
-            .offset((((*d).bmi.mv.as_mv.row as i32 >> 3 as i32) * pre_stride) as isize)
-            .offset(((*d).bmi.mv.as_mv.col as i32 >> 3 as i32) as isize);
-        if (*d).bmi.mv.as_mv.row as i32 & 7 as i32 != 0
-            || (*d).bmi.mv.as_mv.col as i32 & 7 as i32 != 0
-        {
-            (*x).subpixel_predict8x4.expect("non-null function pointer")(
-                ptr,
-                pre_stride,
-                (*d).bmi.mv.as_mv.col as i32 & 7 as i32,
-                (*d).bmi.mv.as_mv.row as i32 & 7 as i32,
-                dst,
-                dst_stride,
-            );
-        } else {
-            vp8_copy_mem8x4_c(ptr, pre_stride, dst, dst_stride);
-        };
-    }
-}
-unsafe fn build_inter_predictors_b(
-    mut d: *mut BLOCKD,
-    mut dst: *mut u8,
-    mut dst_stride: i32,
-    mut base_pre: *mut u8,
-    mut pre_stride: i32,
-    mut sppf: Vp8SubpixFnT,
-) {
-    unsafe {
-        let mut r: i32 = 0;
-        let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        ptr = base_pre
-            .offset((*d).offset as isize)
-            .offset((((*d).bmi.mv.as_mv.row as i32 >> 3 as i32) * pre_stride) as isize)
-            .offset(((*d).bmi.mv.as_mv.col as i32 >> 3 as i32) as isize);
-        if (*d).bmi.mv.as_mv.row as i32 & 7 as i32 != 0
-            || (*d).bmi.mv.as_mv.col as i32 & 7 as i32 != 0
-        {
-            sppf.expect("non-null function pointer")(
-                ptr,
-                pre_stride,
-                (*d).bmi.mv.as_mv.col as i32 & 7 as i32,
-                (*d).bmi.mv.as_mv.row as i32 & 7 as i32,
-                dst,
-                dst_stride,
-            );
-        } else {
-            r = 0 as i32;
-            while r < 4 as i32 {
-                *dst.offset(0 as isize) = *ptr.offset(0 as isize);
-                *dst.offset(1 as isize) = *ptr.offset(1 as isize);
-                *dst.offset(2 as isize) = *ptr.offset(2 as isize);
-                *dst.offset(3 as isize) = *ptr.offset(3 as isize);
-                dst = dst.offset(dst_stride as isize);
-                ptr = ptr.offset(pre_stride as isize);
-                r += 1;
-            }
-        };
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_build_inter16x16_predictors_mbuv(mut x: *mut MACROBLOCKD) {
-    unsafe {
-        let mut uptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        let mut vptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        let mut upred_ptr: *mut u8 =
-            (&raw mut (*x).predictor as *mut u8).offset(256 as isize) as *mut u8;
-        let mut vpred_ptr: *mut u8 =
-            (&raw mut (*x).predictor as *mut u8).offset(320 as isize) as *mut u8;
-        let mut mv_row: i32 = (*(*x).mode_info_context).mbmi.mv.as_mv.row as i32;
-        let mut mv_col: i32 = (*(*x).mode_info_context).mbmi.mv.as_mv.col as i32;
-        let mut offset: i32 = 0;
-        let mut pre_stride: i32 = (*x).pre.uv_stride;
-        mv_row += 1 as i32
-            | mv_row
-                >> (::core::mem::size_of::<i32>() as usize)
+
+    _16x16mv.as_mv_mut().row = (_16x16mv.as_mv().row as ::core::ffi::c_int
+        + (1 as ::core::ffi::c_int
+            | _16x16mv.as_mv().row as ::core::ffi::c_int
+                >> (::core::mem::size_of::<::core::ffi::c_int>() as usize)
                     .wrapping_mul(CHAR_BIT as usize)
-                    .wrapping_sub(1_usize);
-        mv_col += 1 as i32
-            | mv_col
-                >> (::core::mem::size_of::<i32>() as usize)
+                    .wrapping_sub(1 as usize))) as ::core::ffi::c_short;
+    _16x16mv.as_mv_mut().col = (_16x16mv.as_mv().col as ::core::ffi::c_int
+        + (1 as ::core::ffi::c_int
+            | _16x16mv.as_mv().col as ::core::ffi::c_int
+                >> (::core::mem::size_of::<::core::ffi::c_int>() as usize)
                     .wrapping_mul(CHAR_BIT as usize)
-                    .wrapping_sub(1_usize);
-        mv_row /= 2 as i32;
-        mv_col /= 2 as i32;
-        mv_row &= (*x).fullpixel_mask;
-        mv_col &= (*x).fullpixel_mask;
-        offset = (mv_row >> 3 as i32) * pre_stride + (mv_col >> 3 as i32);
-        uptr = (*x).pre.u_buffer.offset(offset as isize) as *mut u8;
-        vptr = (*x).pre.v_buffer.offset(offset as isize) as *mut u8;
-        if (mv_row | mv_col) & 7 as i32 != 0 {
-            (*x).subpixel_predict8x8.expect("non-null function pointer")(
-                uptr,
-                pre_stride,
-                mv_col & 7 as i32,
-                mv_row & 7 as i32,
-                upred_ptr,
-                8 as i32,
-            );
-            (*x).subpixel_predict8x8.expect("non-null function pointer")(
-                vptr,
-                pre_stride,
-                mv_col & 7 as i32,
-                mv_row & 7 as i32,
-                vpred_ptr,
-                8 as i32,
-            );
-        } else {
-            vp8_copy_mem8x8_c(uptr, pre_stride, upred_ptr, 8 as i32);
-            vp8_copy_mem8x8_c(vptr, pre_stride, vpred_ptr, 8 as i32);
-        };
+                    .wrapping_sub(1 as usize))) as ::core::ffi::c_short;
+    _16x16mv.as_mv_mut().row = (_16x16mv.as_mv().row as ::core::ffi::c_int / 2 as ::core::ffi::c_int)
+        as ::core::ffi::c_short;
+    _16x16mv.as_mv_mut().col = (_16x16mv.as_mv().col as ::core::ffi::c_int / 2 as ::core::ffi::c_int)
+        as ::core::ffi::c_short;
+    _16x16mv.as_mv_mut().row =
+        (_16x16mv.as_mv().row as ::core::ffi::c_int & fullpixel_mask) as ::core::ffi::c_short;
+    _16x16mv.as_mv_mut().col =
+        (_16x16mv.as_mv().col as ::core::ffi::c_int & fullpixel_mask) as ::core::ffi::c_short;
+
+    if (2 as ::core::ffi::c_int * _16x16mv.as_mv().col as ::core::ffi::c_int)
+        < mb_to_left_edge - ((19 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+        || 2 as ::core::ffi::c_int * _16x16mv.as_mv().col as ::core::ffi::c_int
+            > mb_to_right_edge + ((18 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+        || (2 as ::core::ffi::c_int * _16x16mv.as_mv().row as ::core::ffi::c_int)
+            < mb_to_top_edge - ((19 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+        || 2 as ::core::ffi::c_int * _16x16mv.as_mv().row as ::core::ffi::c_int
+            > mb_to_bottom_edge + ((18 as ::core::ffi::c_int) << 3 as ::core::ffi::c_int)
+    {
+        return;
+    }
+
+    let dst_uv_active_offset = uv_border * dst_uv_stride as usize + uv_border + recon_uvoffset;
+    let pre_uv_active_offset = uv_border * pre_uv_stride as usize + uv_border + pre_recon_uvoffset;
+
+    let uv_row_offset = (_16x16mv.as_mv().row as i32 >> 3) * pre_uv_stride;
+    let uv_col_offset = _16x16mv.as_mv().col as i32 >> 3;
+    let pre_uv_offset = (pre_uv_active_offset as i32 + uv_row_offset + uv_col_offset) as usize;
+
+    if _16x16mv.as_int() & 0x70007 as uint32_t != 0 {
+        call_subpixel_predict(
+            subpixel_predict8x8,
+            &pre_u_slice,
+            pre_uv_offset,
+            pre_uv_stride,
+            _16x16mv.as_mv().col as ::core::ffi::c_int & 7,
+            _16x16mv.as_mv().row as ::core::ffi::c_int & 7,
+            &mut dst_u_slice,
+            dst_uv_active_offset,
+            dst_uv_stride,
+        );
+        call_subpixel_predict(
+            subpixel_predict8x8,
+            &pre_v_slice,
+            pre_uv_offset,
+            pre_uv_stride,
+            _16x16mv.as_mv().col as ::core::ffi::c_int & 7,
+            _16x16mv.as_mv().row as ::core::ffi::c_int & 7,
+            &mut dst_v_slice,
+            dst_uv_active_offset,
+            dst_uv_stride,
+        );
+    } else {
+        let pre_len = 7 * pre_uv_stride as usize + 8;
+        let dst_len = 7 * dst_uv_stride as usize + 8;
+        
+        let sub_pre_u = &pre_u_slice[pre_uv_offset .. pre_uv_offset + pre_len];
+        let sub_dst_u = &mut dst_u_slice[dst_uv_active_offset .. dst_uv_active_offset + dst_len];
+        vp8_copy_mem8x8_safe(sub_pre_u, pre_uv_stride, sub_dst_u, dst_uv_stride);
+        
+        let sub_pre_v = &pre_v_slice[pre_uv_offset .. pre_uv_offset + pre_len];
+        let sub_dst_v = &mut dst_v_slice[dst_uv_active_offset .. dst_uv_active_offset + dst_len];
+        vp8_copy_mem8x8_safe(sub_pre_v, pre_uv_stride, sub_dst_v, dst_uv_stride);
     }
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_build_inter4x4_predictors_mbuv(mut x: *mut MACROBLOCKD) {
-    unsafe {
-        let mut i: i32 = 0;
-        let mut j: i32 = 0;
-        let mut pre_stride: i32 = (*x).pre.uv_stride;
-        let mut base_pre: *mut u8 = ::core::ptr::null_mut::<u8>();
-        i = 0 as i32;
-        while i < 2 as i32 {
-            j = 0 as i32;
-            while j < 2 as i32 {
-                let mut yoffset: i32 = i * 8 as i32 + j * 2 as i32;
-                let mut uoffset: i32 = 16 as i32 + i * 2 as i32 + j;
-                let mut voffset: i32 = 20 as i32 + i * 2 as i32 + j;
-                let mut temp: i32 = 0;
-                temp = (*x).block[yoffset as usize].bmi.mv.as_mv.row as i32
-                    + (*x).block[(yoffset + 1 as i32) as usize].bmi.mv.as_mv.row as i32
-                    + (*x).block[(yoffset + 4 as i32) as usize].bmi.mv.as_mv.row as i32
-                    + (*x).block[(yoffset + 5 as i32) as usize].bmi.mv.as_mv.row as i32;
-                temp += 4 as i32
-                    + (temp
-                        >> (::core::mem::size_of::<i32>() as usize)
-                            .wrapping_mul(CHAR_BIT as usize)
-                            .wrapping_sub(1_usize))
-                        * 8 as i32;
-                (*x).block[uoffset as usize].bmi.mv.as_mv.row =
-                    ((temp / 8 as i32) & (*x).fullpixel_mask) as i16;
-                temp = (*x).block[yoffset as usize].bmi.mv.as_mv.col as i32
-                    + (*x).block[(yoffset + 1 as i32) as usize].bmi.mv.as_mv.col as i32
-                    + (*x).block[(yoffset + 4 as i32) as usize].bmi.mv.as_mv.col as i32
-                    + (*x).block[(yoffset + 5 as i32) as usize].bmi.mv.as_mv.col as i32;
-                temp += 4 as i32
-                    + (temp
-                        >> (::core::mem::size_of::<i32>() as usize)
-                            .wrapping_mul(CHAR_BIT as usize)
-                            .wrapping_sub(1_usize))
-                        * 8 as i32;
-                (*x).block[uoffset as usize].bmi.mv.as_mv.col =
-                    ((temp / 8 as i32) & (*x).fullpixel_mask) as i16;
-                (*x).block[voffset as usize].bmi.mv.as_int =
-                    (*x).block[uoffset as usize].bmi.mv.as_int;
-                j += 1;
+fn build_inter4x4_predictors_mb(
+    x: &mut MACROBLOCKD,
+    mi: &MODE_INFO,
+    mut dst_y_slice: &mut [u8],
+    mut dst_u_slice: &mut [u8],
+    mut dst_v_slice: &mut [u8],
+    pre_y_slice: &[u8],
+    pre_u_slice: &[u8],
+    pre_v_slice: &[u8],
+) {
+    let partitioning = mi.mbmi.partitioning;
+    let need_to_clamp_mvs = mi.mbmi.need_to_clamp_mvs;
+    
+    let dst_y_stride = x.dst_y_stride;
+    let dst_uv_stride = x.dst_uv_stride;
+    let pre_y_stride = x.pre_y_stride;
+    let pre_uv_stride = x.pre_uv_stride;
+    
+    let border = x.dst_border as usize;
+    let uv_border = border / 2;
+    
+    // Reconstruct global offsets
+    let mb_row = (-x.mb_to_top_edge / 128) as usize;
+    let mb_col = (-x.mb_to_left_edge / 128) as usize;
+    
+    let recon_yoffset = mb_row * 16 * dst_y_stride as usize + mb_col * 16;
+    let recon_uvoffset = mb_row * 8 * dst_uv_stride as usize + mb_col * 8;
+    
+    let pre_recon_yoffset = mb_row * 16 * pre_y_stride as usize + mb_col * 16;
+    let pre_recon_uvoffset = mb_row * 8 * pre_uv_stride as usize + mb_col * 8;
+    
+    {
+        let bmi = mi.bmi;
+        if (partitioning as ::core::ffi::c_int) < 3 as ::core::ffi::c_int {
+            x.block[0].bmi = bmi[0];
+            x.block[2].bmi = bmi[2];
+            x.block[8].bmi = bmi[8];
+            x.block[10].bmi = bmi[10];
+            
+            if need_to_clamp_mvs != 0 {
+                let mb_to_left_edge = x.mb_to_left_edge;
+                let mb_to_right_edge = x.mb_to_right_edge;
+                let mb_to_top_edge = x.mb_to_top_edge;
+                let mb_to_bottom_edge = x.mb_to_bottom_edge;
+                
+                clamp_mv_to_umv_border(x.block[0].bmi.mv_mut().as_mv_mut(), mb_to_left_edge, mb_to_right_edge, mb_to_top_edge, mb_to_bottom_edge);
+                clamp_mv_to_umv_border(x.block[2].bmi.mv_mut().as_mv_mut(), mb_to_left_edge, mb_to_right_edge, mb_to_top_edge, mb_to_bottom_edge);
+                clamp_mv_to_umv_border(x.block[8].bmi.mv_mut().as_mv_mut(), mb_to_left_edge, mb_to_right_edge, mb_to_top_edge, mb_to_bottom_edge);
+                clamp_mv_to_umv_border(x.block[10].bmi.mv_mut().as_mv_mut(), mb_to_left_edge, mb_to_right_edge, mb_to_top_edge, mb_to_bottom_edge);
             }
-            i += 1;
+        } else {
+            for i in (0..16).step_by(2) {
+                x.block[i].bmi = bmi[i];
+                x.block[i+1].bmi = bmi[i+1];
+                if need_to_clamp_mvs != 0 {
+                    let mb_to_left_edge = x.mb_to_left_edge;
+                    let mb_to_right_edge = x.mb_to_right_edge;
+                    let mb_to_top_edge = x.mb_to_top_edge;
+                    let mb_to_bottom_edge = x.mb_to_bottom_edge;
+                    
+                    clamp_mv_to_umv_border(x.block[i].bmi.mv_mut().as_mv_mut(), mb_to_left_edge, mb_to_right_edge, mb_to_top_edge, mb_to_bottom_edge);
+                    clamp_mv_to_umv_border(x.block[i+1].bmi.mv_mut().as_mv_mut(), mb_to_left_edge, mb_to_right_edge, mb_to_top_edge, mb_to_bottom_edge);
+                }
+            }
         }
-        base_pre = (*x).pre.u_buffer as *mut u8;
-        i = 16 as i32;
-        while i < 20 as i32 {
-            let mut d0: *mut BLOCKD =
-                (&raw mut (*x).block as *mut BLOCKD).offset(i as isize) as *mut BLOCKD;
-            let mut d1: *mut BLOCKD =
-                (&raw mut (*x).block as *mut BLOCKD).offset((i + 1 as i32) as isize) as *mut BLOCKD;
-            if (*d0).bmi.mv.as_int == (*d1).bmi.mv.as_int {
-                build_inter_predictors2b(x, d0, (*d0).predictor, 8 as i32, base_pre, pre_stride);
-            } else {
-                vp8_build_inter_predictors_b(
+    }
+    
+    let subpixel_predict8x8 = x.subpixel_predict8x8;
+    let subpixel_predict8x4 = x.subpixel_predict8x4;
+    let subpixel_predict = x.subpixel_predict;
+    
+    let dst_y_active_offset = border * dst_y_stride as usize + border + recon_yoffset;
+    let pre_y_active_offset = border * pre_y_stride as usize + border + pre_recon_yoffset;
+    
+    if (partitioning as ::core::ffi::c_int) < 3 as ::core::ffi::c_int {
+        build_inter_predictors4b_safe(
+            subpixel_predict8x8,
+            &x.block[0],
+            &mut dst_y_slice,
+            dst_y_active_offset + x.block[0].offset as usize,
+            dst_y_stride,
+            &pre_y_slice,
+            pre_y_active_offset,
+            pre_y_stride,
+        );
+        build_inter_predictors4b_safe(
+            subpixel_predict8x8,
+            &x.block[2],
+            &mut dst_y_slice,
+            dst_y_active_offset + x.block[2].offset as usize,
+            dst_y_stride,
+            &pre_y_slice,
+            pre_y_active_offset,
+            pre_y_stride,
+        );
+        build_inter_predictors4b_safe(
+            subpixel_predict8x8,
+            &x.block[8],
+            &mut dst_y_slice,
+            dst_y_active_offset + x.block[8].offset as usize,
+            dst_y_stride,
+            &pre_y_slice,
+            pre_y_active_offset,
+            pre_y_stride,
+        );
+        build_inter_predictors4b_safe(
+            subpixel_predict8x8,
+            &x.block[10],
+            &mut dst_y_slice,
+            dst_y_active_offset + x.block[10].offset as usize,
+            dst_y_stride,
+            &pre_y_slice,
+            pre_y_active_offset,
+            pre_y_stride,
+        );
+    } else {
+        for i in (0..16).step_by(2) {
+            let d0 = &x.block[i];
+            let d1 = &x.block[i+1];
+            if d0.bmi.mv().as_int() == d1.bmi.mv().as_int() {
+                build_inter_predictors2b_safe(
+                    subpixel_predict8x4,
                     d0,
-                    8 as i32,
-                    base_pre,
-                    pre_stride,
-                    (*x).subpixel_predict,
+                    &mut dst_y_slice,
+                    dst_y_active_offset + d0.offset as usize,
+                    dst_y_stride,
+                    &pre_y_slice,
+                    pre_y_active_offset,
+                    pre_y_stride,
                 );
-                vp8_build_inter_predictors_b(
+            } else {
+                build_inter_predictors_b_safe(
+                    subpixel_predict,
+                    d0,
+                    &mut dst_y_slice,
+                    dst_y_active_offset + d0.offset as usize,
+                    dst_y_stride,
+                    &pre_y_slice,
+                    pre_y_active_offset,
+                    pre_y_stride,
+                );
+                build_inter_predictors_b_safe(
+                    subpixel_predict,
                     d1,
-                    8 as i32,
-                    base_pre,
-                    pre_stride,
-                    (*x).subpixel_predict,
+                    &mut dst_y_slice,
+                    dst_y_active_offset + d1.offset as usize,
+                    dst_y_stride,
+                    &pre_y_slice,
+                    pre_y_active_offset,
+                    pre_y_stride,
                 );
             }
-            i += 2 as i32;
         }
-        base_pre = (*x).pre.v_buffer as *mut u8;
-        i = 20 as i32;
-        while i < 24 as i32 {
-            let mut d0_0: *mut BLOCKD =
-                (&raw mut (*x).block as *mut BLOCKD).offset(i as isize) as *mut BLOCKD;
-            let mut d1_0: *mut BLOCKD =
-                (&raw mut (*x).block as *mut BLOCKD).offset((i + 1 as i32) as isize) as *mut BLOCKD;
-            if (*d0_0).bmi.mv.as_int == (*d1_0).bmi.mv.as_int {
-                build_inter_predictors2b(
-                    x,
-                    d0_0,
-                    (*d0_0).predictor,
-                    8 as i32,
-                    base_pre,
-                    pre_stride,
+    }
+    
+    let dst_uv_active_offset = uv_border * dst_uv_stride as usize + uv_border + recon_uvoffset;
+    let pre_uv_active_offset = uv_border * pre_uv_stride as usize + uv_border + pre_recon_uvoffset;
+    
+    {
+        for i in (16..20).step_by(2) {
+            let d0 = &x.block[i];
+            let d1 = &x.block[i+1];
+            if d0.bmi.mv().as_int() == d1.bmi.mv().as_int() {
+                build_inter_predictors2b_safe(
+                    subpixel_predict8x4,
+                    d0,
+                    &mut dst_u_slice,
+                    dst_uv_active_offset + d0.offset as usize,
+                    dst_uv_stride,
+                    &pre_u_slice,
+                    pre_uv_active_offset,
+                    pre_uv_stride,
                 );
             } else {
-                vp8_build_inter_predictors_b(
-                    d0_0,
-                    8 as i32,
-                    base_pre,
-                    pre_stride,
-                    (*x).subpixel_predict,
+                build_inter_predictors_b_safe(
+                    subpixel_predict,
+                    d0,
+                    &mut dst_u_slice,
+                    dst_uv_active_offset + d0.offset as usize,
+                    dst_uv_stride,
+                    &pre_u_slice,
+                    pre_uv_active_offset,
+                    pre_uv_stride,
                 );
-                vp8_build_inter_predictors_b(
-                    d1_0,
-                    8 as i32,
-                    base_pre,
-                    pre_stride,
-                    (*x).subpixel_predict,
+                build_inter_predictors_b_safe(
+                    subpixel_predict,
+                    d1,
+                    &mut dst_u_slice,
+                    dst_uv_active_offset + d1.offset as usize,
+                    dst_uv_stride,
+                    &pre_u_slice,
+                    pre_uv_active_offset,
+                    pre_uv_stride,
                 );
             }
-            i += 2 as i32;
+        }
+    }
+    {
+        for i in (20..24).step_by(2) {
+            let d0 = &x.block[i];
+            let d1 = &x.block[i+1];
+            if d0.bmi.mv().as_int() == d1.bmi.mv().as_int() {
+                build_inter_predictors2b_safe(
+                    subpixel_predict8x4,
+                    d0,
+                    &mut dst_v_slice,
+                    dst_uv_active_offset + d0.offset as usize,
+                    dst_uv_stride,
+                    &pre_v_slice,
+                    pre_uv_active_offset,
+                    pre_uv_stride,
+                );
+            } else {
+                build_inter_predictors_b_safe(
+                    subpixel_predict,
+                    d0,
+                    &mut dst_v_slice,
+                    dst_uv_active_offset + d0.offset as usize,
+                    dst_uv_stride,
+                    &pre_v_slice,
+                    pre_uv_active_offset,
+                    pre_uv_stride,
+                );
+                build_inter_predictors_b_safe(
+                    subpixel_predict,
+                    d1,
+                    &mut dst_v_slice,
+                    dst_uv_active_offset + d1.offset as usize,
+                    dst_uv_stride,
+                    &pre_v_slice,
+                    pre_uv_active_offset,
+                    pre_uv_stride,
+                );
+            }
         }
     }
 }
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_build_inter16x16_predictors_mby(
-    mut x: *mut MACROBLOCKD,
-    mut dst_y: *mut u8,
-    mut dst_ystride: i32,
-) {
-    unsafe {
-        let mut ptr_base: *mut u8 = ::core::ptr::null_mut::<u8>();
-        let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        let mut mv_row: i32 = (*(*x).mode_info_context).mbmi.mv.as_mv.row as i32;
-        let mut mv_col: i32 = (*(*x).mode_info_context).mbmi.mv.as_mv.col as i32;
-        let mut pre_stride: i32 = (*x).pre.y_stride;
-        ptr_base = (*x).pre.y_buffer as *mut u8;
-        ptr = ptr_base
-            .offset(((mv_row >> 3 as i32) * pre_stride) as isize)
-            .offset((mv_col >> 3 as i32) as isize);
-        if (mv_row | mv_col) & 7 as i32 != 0 {
-            (*x).subpixel_predict16x16
-                .expect("non-null function pointer")(
-                ptr,
-                pre_stride,
-                mv_col & 7 as i32,
-                mv_row & 7 as i32,
-                dst_y,
-                dst_ystride,
-            );
-        } else {
-            vp8_copy_mem16x16_c(ptr, pre_stride, dst_y, dst_ystride);
-        };
-    }
-}
-unsafe fn clamp_mv_to_umv_border(mut mv: *mut MV, mut xd: *const MACROBLOCKD) {
-    unsafe {
-        if ((*mv).col as i32) < (*xd).mb_to_left_edge - ((19 as i32) << 3 as i32) {
-            (*mv).col = ((*xd).mb_to_left_edge - ((16 as i32) << 3 as i32)) as i16;
-        } else if (*mv).col as i32 > (*xd).mb_to_right_edge + ((18 as i32) << 3 as i32) {
-            (*mv).col = ((*xd).mb_to_right_edge + ((16 as i32) << 3 as i32)) as i16;
-        }
-        if ((*mv).row as i32) < (*xd).mb_to_top_edge - ((19 as i32) << 3 as i32) {
-            (*mv).row = ((*xd).mb_to_top_edge - ((16 as i32) << 3 as i32)) as i16;
-        } else if (*mv).row as i32 > (*xd).mb_to_bottom_edge + ((18 as i32) << 3 as i32) {
-            (*mv).row = ((*xd).mb_to_bottom_edge + ((16 as i32) << 3 as i32)) as i16;
-        }
-    }
-}
-unsafe fn clamp_uvmv_to_umv_border(mut mv: *mut MV, mut xd: *const MACROBLOCKD) {
-    unsafe {
-        (*mv).col =
-            (if (2 as i32 * (*mv).col as i32) < (*xd).mb_to_left_edge - ((19 as i32) << 3 as i32) {
-                ((*xd).mb_to_left_edge - ((16 as i32) << 3 as i32)) >> 1 as i32
-            } else {
-                (*mv).col as i32
-            }) as i16;
-        (*mv).col =
-            (if 2 as i32 * (*mv).col as i32 > (*xd).mb_to_right_edge + ((18 as i32) << 3 as i32) {
-                ((*xd).mb_to_right_edge + ((16 as i32) << 3 as i32)) >> 1 as i32
-            } else {
-                (*mv).col as i32
-            }) as i16;
-        (*mv).row =
-            (if (2 as i32 * (*mv).row as i32) < (*xd).mb_to_top_edge - ((19 as i32) << 3 as i32) {
-                ((*xd).mb_to_top_edge - ((16 as i32) << 3 as i32)) >> 1 as i32
-            } else {
-                (*mv).row as i32
-            }) as i16;
-        (*mv).row =
-            (if 2 as i32 * (*mv).row as i32 > (*xd).mb_to_bottom_edge + ((18 as i32) << 3 as i32) {
-                ((*xd).mb_to_bottom_edge + ((16 as i32) << 3 as i32)) >> 1 as i32
-            } else {
-                (*mv).row as i32
-            }) as i16;
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_build_inter16x16_predictors_mb(
-    mut x: *mut MACROBLOCKD,
-    mut dst_y: *mut u8,
-    mut dst_u: *mut u8,
-    mut dst_v: *mut u8,
-    mut dst_ystride: i32,
-    mut dst_uvstride: i32,
-) {
-    unsafe {
-        let mut offset: i32 = 0;
-        let mut ptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        let mut uptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        let mut vptr: *mut u8 = ::core::ptr::null_mut::<u8>();
-        let mut _16x16mv: IntMv = IntMv { as_int: 0 };
-        let mut ptr_base: *mut u8 = (*x).pre.y_buffer as *mut u8;
-        let mut pre_stride: i32 = (*x).pre.y_stride;
-        _16x16mv.as_int = (*(*x).mode_info_context).mbmi.mv.as_int;
-        if (*(*x).mode_info_context).mbmi.need_to_clamp_mvs != 0 {
-            clamp_mv_to_umv_border(&raw mut _16x16mv.as_mv, x);
-        }
-        ptr = ptr_base
-            .offset(((_16x16mv.as_mv.row as i32 >> 3 as i32) * pre_stride) as isize)
-            .offset((_16x16mv.as_mv.col as i32 >> 3 as i32) as isize);
-        if _16x16mv.as_int & 0x70007 as u32 != 0 {
-            (*x).subpixel_predict16x16
-                .expect("non-null function pointer")(
-                ptr,
-                pre_stride,
-                _16x16mv.as_mv.col as i32 & 7 as i32,
-                _16x16mv.as_mv.row as i32 & 7 as i32,
-                dst_y,
-                dst_ystride,
-            );
-        } else {
-            vp8_copy_mem16x16_c(ptr, pre_stride, dst_y, dst_ystride);
-        }
-        _16x16mv.as_mv.row = (_16x16mv.as_mv.row as i32
-            + (1 as i32
-                | _16x16mv.as_mv.row as i32
-                    >> (::core::mem::size_of::<i32>() as usize)
+fn build_4x4uvmvs(x: &mut MACROBLOCKD, mi: &MODE_INFO) {
+    let mut i: ::core::ffi::c_int = 0;
+    let mut j: ::core::ffi::c_int = 0;
+    i = 0 as ::core::ffi::c_int;
+    while i < 2 as ::core::ffi::c_int {
+        j = 0 as ::core::ffi::c_int;
+        while j < 2 as ::core::ffi::c_int {
+            let mut yoffset: ::core::ffi::c_int =
+                i * 8 as ::core::ffi::c_int + j * 2 as ::core::ffi::c_int;
+            let mut uoffset: ::core::ffi::c_int =
+                16 as ::core::ffi::c_int + i * 2 as ::core::ffi::c_int + j;
+            let mut voffset: ::core::ffi::c_int =
+                20 as ::core::ffi::c_int + i * 2 as ::core::ffi::c_int + j;
+            let mut temp: ::core::ffi::c_int = 0;
+            temp = mi.bmi[(yoffset + 0 as ::core::ffi::c_int) as usize]
+                .mv()
+                .as_mv()
+                .row as ::core::ffi::c_int
+                + mi.bmi[(yoffset + 1 as ::core::ffi::c_int) as usize]
+                    .mv()
+                    .as_mv()
+                    .row as ::core::ffi::c_int
+                + mi.bmi[(yoffset + 4 as ::core::ffi::c_int) as usize]
+                    .mv()
+                    .as_mv()
+                    .row as ::core::ffi::c_int
+                + mi.bmi[(yoffset + 5 as ::core::ffi::c_int) as usize]
+                    .mv()
+                    .as_mv()
+                    .row as ::core::ffi::c_int;
+            temp += 4 as ::core::ffi::c_int
+                + (temp
+                    >> (::core::mem::size_of::<::core::ffi::c_int>() as usize)
                         .wrapping_mul(CHAR_BIT as usize)
-                        .wrapping_sub(1_usize))) as i16;
-        _16x16mv.as_mv.col = (_16x16mv.as_mv.col as i32
-            + (1 as i32
-                | _16x16mv.as_mv.col as i32
-                    >> (::core::mem::size_of::<i32>() as usize)
+                        .wrapping_sub(1 as usize))
+                    * 8 as ::core::ffi::c_int;
+            x.block[uoffset as usize].bmi.mv_mut().as_mv_mut().row =
+                (temp / 8 as ::core::ffi::c_int & x.fullpixel_mask) as ::core::ffi::c_short;
+            temp = mi.bmi[(yoffset + 0 as ::core::ffi::c_int) as usize]
+                .mv()
+                .as_mv()
+                .col as ::core::ffi::c_int
+                + mi.bmi[(yoffset + 1 as ::core::ffi::c_int) as usize]
+                    .mv()
+                    .as_mv()
+                    .col as ::core::ffi::c_int
+                + mi.bmi[(yoffset + 4 as ::core::ffi::c_int) as usize]
+                    .mv()
+                    .as_mv()
+                    .col as ::core::ffi::c_int
+                + mi.bmi[(yoffset + 5 as ::core::ffi::c_int) as usize]
+                    .mv()
+                    .as_mv()
+                    .col as ::core::ffi::c_int;
+            temp += 4 as ::core::ffi::c_int
+                + (temp
+                    >> (::core::mem::size_of::<::core::ffi::c_int>() as usize)
                         .wrapping_mul(CHAR_BIT as usize)
-                        .wrapping_sub(1_usize))) as i16;
-        _16x16mv.as_mv.row = (_16x16mv.as_mv.row as i32 / 2 as i32) as i16;
-        _16x16mv.as_mv.col = (_16x16mv.as_mv.col as i32 / 2 as i32) as i16;
-        _16x16mv.as_mv.row = (_16x16mv.as_mv.row as i32 & (*x).fullpixel_mask) as i16;
-        _16x16mv.as_mv.col = (_16x16mv.as_mv.col as i32 & (*x).fullpixel_mask) as i16;
-        if (2 as i32 * _16x16mv.as_mv.col as i32) < (*x).mb_to_left_edge - ((19 as i32) << 3 as i32)
-            || 2 as i32 * _16x16mv.as_mv.col as i32
-                > (*x).mb_to_right_edge + ((18 as i32) << 3 as i32)
-            || (2 as i32 * _16x16mv.as_mv.row as i32)
-                < (*x).mb_to_top_edge - ((19 as i32) << 3 as i32)
-            || 2 as i32 * _16x16mv.as_mv.row as i32
-                > (*x).mb_to_bottom_edge + ((18 as i32) << 3 as i32)
-        {
-            return;
+                        .wrapping_sub(1 as usize))
+                    * 8 as ::core::ffi::c_int;
+            x.block[uoffset as usize].bmi.mv_mut().as_mv_mut().col =
+                (temp / 8 as ::core::ffi::c_int & x.fullpixel_mask) as ::core::ffi::c_short;
+            if mi.mbmi.need_to_clamp_mvs != 0 {
+                clamp_uvmv_to_umv_border(
+                    x.block[uoffset as usize].bmi.mv_mut().as_mv_mut(),
+                    x.mb_to_left_edge,
+                    x.mb_to_right_edge,
+                    x.mb_to_top_edge,
+                    x.mb_to_bottom_edge,
+                );
+            }
+            let u_mv = x.block[uoffset as usize].bmi.mv();
+            *x.block[voffset as usize].bmi.mv_mut() = u_mv;
+            j += 1;
         }
-        pre_stride >>= 1 as i32;
-        offset = (_16x16mv.as_mv.row as i32 >> 3 as i32) * pre_stride
-            + (_16x16mv.as_mv.col as i32 >> 3 as i32);
-        uptr = (*x).pre.u_buffer.offset(offset as isize) as *mut u8;
-        vptr = (*x).pre.v_buffer.offset(offset as isize) as *mut u8;
-        if _16x16mv.as_int & 0x70007 as u32 != 0 {
-            (*x).subpixel_predict8x8.expect("non-null function pointer")(
-                uptr,
-                pre_stride,
-                _16x16mv.as_mv.col as i32 & 7 as i32,
-                _16x16mv.as_mv.row as i32 & 7 as i32,
-                dst_u,
-                dst_uvstride,
-            );
-            (*x).subpixel_predict8x8.expect("non-null function pointer")(
-                vptr,
-                pre_stride,
-                _16x16mv.as_mv.col as i32 & 7 as i32,
-                _16x16mv.as_mv.row as i32 & 7 as i32,
-                dst_v,
-                dst_uvstride,
-            );
-        } else {
-            vp8_copy_mem8x8_c(uptr, pre_stride, dst_u, dst_uvstride);
-            vp8_copy_mem8x8_c(vptr, pre_stride, dst_v, dst_uvstride);
-        };
+        i += 1;
     }
 }
-unsafe fn build_inter4x4_predictors_mb(mut x: *mut MACROBLOCKD) {
-    unsafe {
-        let mut i: i32 = 0;
-        let mut base_dst: *mut u8 = (*x).dst.y_buffer as *mut u8;
-        let mut base_pre: *mut u8 = (*x).pre.y_buffer as *mut u8;
-        if ((*(*x).mode_info_context).mbmi.partitioning as i32) < 3 as i32 {
-            let mut b: *mut BLOCKD = ::core::ptr::null_mut::<BLOCKD>();
-            let mut dst_stride: i32 = (*x).dst.y_stride;
-            (*x).block[0 as usize].bmi = (*(*x).mode_info_context).bmi[0 as usize];
-            (*x).block[2 as usize].bmi = (*(*x).mode_info_context).bmi[2 as usize];
-            (*x).block[8 as usize].bmi = (*(*x).mode_info_context).bmi[8 as usize];
-            (*x).block[10 as usize].bmi = (*(*x).mode_info_context).bmi[10 as usize];
-            if (*(*x).mode_info_context).mbmi.need_to_clamp_mvs != 0 {
-                clamp_mv_to_umv_border(
-                    &raw mut (*(&raw mut (*x).block as *mut BLOCKD).offset(0 as isize))
-                        .bmi
-                        .mv
-                        .as_mv,
-                    x,
-                );
-                clamp_mv_to_umv_border(
-                    &raw mut (*(&raw mut (*x).block as *mut BLOCKD).offset(2 as isize))
-                        .bmi
-                        .mv
-                        .as_mv,
-                    x,
-                );
-                clamp_mv_to_umv_border(
-                    &raw mut (*(&raw mut (*x).block as *mut BLOCKD).offset(8 as isize))
-                        .bmi
-                        .mv
-                        .as_mv,
-                    x,
-                );
-                clamp_mv_to_umv_border(
-                    &raw mut (*(&raw mut (*x).block as *mut BLOCKD).offset(10 as isize))
-                        .bmi
-                        .mv
-                        .as_mv,
-                    x,
-                );
-            }
-            b = (&raw mut (*x).block as *mut BLOCKD).offset(0 as isize) as *mut BLOCKD;
-            build_inter_predictors4b(
-                x,
-                b,
-                base_dst.offset((*b).offset as isize),
-                dst_stride,
-                base_pre,
-                dst_stride,
-            );
-            b = (&raw mut (*x).block as *mut BLOCKD).offset(2 as isize) as *mut BLOCKD;
-            build_inter_predictors4b(
-                x,
-                b,
-                base_dst.offset((*b).offset as isize),
-                dst_stride,
-                base_pre,
-                dst_stride,
-            );
-            b = (&raw mut (*x).block as *mut BLOCKD).offset(8 as isize) as *mut BLOCKD;
-            build_inter_predictors4b(
-                x,
-                b,
-                base_dst.offset((*b).offset as isize),
-                dst_stride,
-                base_pre,
-                dst_stride,
-            );
-            b = (&raw mut (*x).block as *mut BLOCKD).offset(10 as isize) as *mut BLOCKD;
-            build_inter_predictors4b(
-                x,
-                b,
-                base_dst.offset((*b).offset as isize),
-                dst_stride,
-                base_pre,
-                dst_stride,
-            );
-        } else {
-            i = 0 as i32;
-            while i < 16 as i32 {
-                let mut d0: *mut BLOCKD =
-                    (&raw mut (*x).block as *mut BLOCKD).offset(i as isize) as *mut BLOCKD;
-                let mut d1: *mut BLOCKD = (&raw mut (*x).block as *mut BLOCKD)
-                    .offset((i + 1 as i32) as isize)
-                    as *mut BLOCKD;
-                let mut dst_stride_0: i32 = (*x).dst.y_stride;
-                (*x).block[(i + 0 as i32) as usize].bmi =
-                    (*(*x).mode_info_context).bmi[(i + 0 as i32) as usize];
-                (*x).block[(i + 1 as i32) as usize].bmi =
-                    (*(*x).mode_info_context).bmi[(i + 1 as i32) as usize];
-                if (*(*x).mode_info_context).mbmi.need_to_clamp_mvs != 0 {
-                    clamp_mv_to_umv_border(
-                        &raw mut (*(&raw mut (*x).block as *mut BLOCKD)
-                            .offset((i + 0 as i32) as isize))
-                        .bmi
-                        .mv
-                        .as_mv,
-                        x,
-                    );
-                    clamp_mv_to_umv_border(
-                        &raw mut (*(&raw mut (*x).block as *mut BLOCKD)
-                            .offset((i + 1 as i32) as isize))
-                        .bmi
-                        .mv
-                        .as_mv,
-                        x,
-                    );
-                }
-                if (*d0).bmi.mv.as_int == (*d1).bmi.mv.as_int {
-                    build_inter_predictors2b(
-                        x,
-                        d0,
-                        base_dst.offset((*d0).offset as isize),
-                        dst_stride_0,
-                        base_pre,
-                        dst_stride_0,
-                    );
-                } else {
-                    build_inter_predictors_b(
-                        d0,
-                        base_dst.offset((*d0).offset as isize),
-                        dst_stride_0,
-                        base_pre,
-                        dst_stride_0,
-                        (*x).subpixel_predict,
-                    );
-                    build_inter_predictors_b(
-                        d1,
-                        base_dst.offset((*d1).offset as isize),
-                        dst_stride_0,
-                        base_pre,
-                        dst_stride_0,
-                        (*x).subpixel_predict,
-                    );
-                }
-                i += 2 as i32;
-            }
-        }
-        base_dst = (*x).dst.u_buffer as *mut u8;
-        base_pre = (*x).pre.u_buffer as *mut u8;
-        i = 16 as i32;
-        while i < 20 as i32 {
-            let mut d0_0: *mut BLOCKD =
-                (&raw mut (*x).block as *mut BLOCKD).offset(i as isize) as *mut BLOCKD;
-            let mut d1_0: *mut BLOCKD =
-                (&raw mut (*x).block as *mut BLOCKD).offset((i + 1 as i32) as isize) as *mut BLOCKD;
-            let mut dst_stride_1: i32 = (*x).dst.uv_stride;
-            if (*d0_0).bmi.mv.as_int == (*d1_0).bmi.mv.as_int {
-                build_inter_predictors2b(
-                    x,
-                    d0_0,
-                    base_dst.offset((*d0_0).offset as isize),
-                    dst_stride_1,
-                    base_pre,
-                    dst_stride_1,
-                );
-            } else {
-                build_inter_predictors_b(
-                    d0_0,
-                    base_dst.offset((*d0_0).offset as isize),
-                    dst_stride_1,
-                    base_pre,
-                    dst_stride_1,
-                    (*x).subpixel_predict,
-                );
-                build_inter_predictors_b(
-                    d1_0,
-                    base_dst.offset((*d1_0).offset as isize),
-                    dst_stride_1,
-                    base_pre,
-                    dst_stride_1,
-                    (*x).subpixel_predict,
-                );
-            }
-            i += 2 as i32;
-        }
-        base_dst = (*x).dst.v_buffer as *mut u8;
-        base_pre = (*x).pre.v_buffer as *mut u8;
-        i = 20 as i32;
-        while i < 24 as i32 {
-            let mut d0_1: *mut BLOCKD =
-                (&raw mut (*x).block as *mut BLOCKD).offset(i as isize) as *mut BLOCKD;
-            let mut d1_1: *mut BLOCKD =
-                (&raw mut (*x).block as *mut BLOCKD).offset((i + 1 as i32) as isize) as *mut BLOCKD;
-            let mut dst_stride_2: i32 = (*x).dst.uv_stride;
-            if (*d0_1).bmi.mv.as_int == (*d1_1).bmi.mv.as_int {
-                build_inter_predictors2b(
-                    x,
-                    d0_1,
-                    base_dst.offset((*d0_1).offset as isize),
-                    dst_stride_2,
-                    base_pre,
-                    dst_stride_2,
-                );
-            } else {
-                build_inter_predictors_b(
-                    d0_1,
-                    base_dst.offset((*d0_1).offset as isize),
-                    dst_stride_2,
-                    base_pre,
-                    dst_stride_2,
-                    (*x).subpixel_predict,
-                );
-                build_inter_predictors_b(
-                    d1_1,
-                    base_dst.offset((*d1_1).offset as isize),
-                    dst_stride_2,
-                    base_pre,
-                    dst_stride_2,
-                    (*x).subpixel_predict,
-                );
-            }
-            i += 2 as i32;
-        }
-    }
-}
-unsafe fn build_4x4uvmvs(mut x: *mut MACROBLOCKD) {
-    unsafe {
-        let mut i: i32 = 0;
-        let mut j: i32 = 0;
-        i = 0 as i32;
-        while i < 2 as i32 {
-            j = 0 as i32;
-            while j < 2 as i32 {
-                let mut yoffset: i32 = i * 8 as i32 + j * 2 as i32;
-                let mut uoffset: i32 = 16 as i32 + i * 2 as i32 + j;
-                let mut voffset: i32 = 20 as i32 + i * 2 as i32 + j;
-                let mut temp: i32 = 0;
-                temp = (*(*x).mode_info_context).bmi[(yoffset + 0 as i32) as usize]
-                    .mv
-                    .as_mv
-                    .row as i32
-                    + (*(*x).mode_info_context).bmi[(yoffset + 1 as i32) as usize]
-                        .mv
-                        .as_mv
-                        .row as i32
-                    + (*(*x).mode_info_context).bmi[(yoffset + 4 as i32) as usize]
-                        .mv
-                        .as_mv
-                        .row as i32
-                    + (*(*x).mode_info_context).bmi[(yoffset + 5 as i32) as usize]
-                        .mv
-                        .as_mv
-                        .row as i32;
-                temp += 4 as i32
-                    + (temp
-                        >> (::core::mem::size_of::<i32>() as usize)
-                            .wrapping_mul(CHAR_BIT as usize)
-                            .wrapping_sub(1_usize))
-                        * 8 as i32;
-                (*x).block[uoffset as usize].bmi.mv.as_mv.row =
-                    ((temp / 8 as i32) & (*x).fullpixel_mask) as i16;
-                temp = (*(*x).mode_info_context).bmi[(yoffset + 0 as i32) as usize]
-                    .mv
-                    .as_mv
-                    .col as i32
-                    + (*(*x).mode_info_context).bmi[(yoffset + 1 as i32) as usize]
-                        .mv
-                        .as_mv
-                        .col as i32
-                    + (*(*x).mode_info_context).bmi[(yoffset + 4 as i32) as usize]
-                        .mv
-                        .as_mv
-                        .col as i32
-                    + (*(*x).mode_info_context).bmi[(yoffset + 5 as i32) as usize]
-                        .mv
-                        .as_mv
-                        .col as i32;
-                temp += 4 as i32
-                    + (temp
-                        >> (::core::mem::size_of::<i32>() as usize)
-                            .wrapping_mul(CHAR_BIT as usize)
-                            .wrapping_sub(1_usize))
-                        * 8 as i32;
-                (*x).block[uoffset as usize].bmi.mv.as_mv.col =
-                    ((temp / 8 as i32) & (*x).fullpixel_mask) as i16;
-                if (*(*x).mode_info_context).mbmi.need_to_clamp_mvs != 0 {
-                    clamp_uvmv_to_umv_border(
-                        &raw mut (*(&raw mut (*x).block as *mut BLOCKD).offset(uoffset as isize))
-                            .bmi
-                            .mv
-                            .as_mv,
-                        x,
-                    );
-                }
-                (*x).block[voffset as usize].bmi.mv.as_int =
-                    (*x).block[uoffset as usize].bmi.mv.as_int;
-                j += 1;
-            }
-            i += 1;
-        }
-    }
-}
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_build_inter_predictors_mb(mut xd: *mut MACROBLOCKD) {
-    unsafe {
-        if (*(*xd).mode_info_context).mbmi.mode as i32 != SPLITMV as i32 {
-            vp8_build_inter16x16_predictors_mb(
-                xd,
-                (*xd).dst.y_buffer as *mut u8,
-                (*xd).dst.u_buffer as *mut u8,
-                (*xd).dst.v_buffer as *mut u8,
-                (*xd).dst.y_stride,
-                (*xd).dst.uv_stride,
-            );
-        } else {
-            build_4x4uvmvs(xd);
-            build_inter4x4_predictors_mb(xd);
-        };
-    }
+pub fn vp8_build_inter_predictors_mb(
+    xd: &mut MACROBLOCKD,
+    mi: &MODE_INFO,
+    dst_y: &mut [u8],
+    dst_u: &mut [u8],
+    dst_v: &mut [u8],
+    pre_y: &[u8],
+    pre_u: &[u8],
+    pre_v: &[u8],
+) {
+    if mi.mbmi.mode as ::core::ffi::c_int != SPLITMV as ::core::ffi::c_int {
+        vp8_build_inter16x16_predictors_mb(xd, mi, dst_y, dst_u, dst_v, pre_y, pre_u, pre_v);
+    } else {
+        build_4x4uvmvs(xd, mi);
+        build_inter4x4_predictors_mb(xd, mi, dst_y, dst_u, dst_v, pre_y, pre_u, pre_v);
+    };
 }

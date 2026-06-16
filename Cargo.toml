@@ -3,15 +3,5 @@ name = "crabvpx"
 version = "0.1.0"
 edition = "2024"
 
-[workspace]
-members = [
-    ".",
-    "harness",
-    "tools/complexity_analyzer"
-]
-
 [dependencies]
 md5 = "0.7"
-
-[build-dependencies]
-cc = "1.2.62"

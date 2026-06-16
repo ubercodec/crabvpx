@@ -1,30 +1,29 @@
-use crate::vpx_scale::generic::yv12config::Yv12BufferConfig;
+pub use crate::vp8::common::types::*;
+pub type vpx_color_space = ::core::ffi::c_uint;
 
-pub use crate::vpx::src::vpx_image::{
-    VPX_CR_FULL_RANGE, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, VPX_CS_BT_709, VPX_CS_BT_2020,
-    VPX_CS_RESERVED, VPX_CS_SMPTE_170, VPX_CS_SMPTE_240, VPX_CS_SRGB, VPX_CS_UNKNOWN,
-};
-
-/// Swaps the buffer pointers between two YV12 configurations.
-///
-/// This is typically used in the encoder/decoder to swap the current and last frame buffers.
-///
-/// # Safety
-///
-/// Both `new_frame` and `last_frame` must be valid, non-null pointers to `Yv12BufferConfig` structs.
-/// The caller must ensure that the underlying memory is not accessed concurrently.
-#[unsafe(no_mangle)]
-pub unsafe fn vp8_swap_yv12_buffer(
-    new_frame: *mut Yv12BufferConfig,
-    last_frame: *mut Yv12BufferConfig,
+pub const VPX_CS_SRGB: vpx_color_space = 7;
+pub const VPX_CS_RESERVED: vpx_color_space = 6;
+pub const VPX_CS_BT_2020: vpx_color_space = 5;
+pub const VPX_CS_SMPTE_240: vpx_color_space = 4;
+pub const VPX_CS_SMPTE_170: vpx_color_space = 3;
+pub const VPX_CS_BT_709: vpx_color_space = 2;
+pub const VPX_CS_BT_601: vpx_color_space = 1;
+pub const VPX_CS_UNKNOWN: vpx_color_space = 0;
+pub type vpx_color_space_t = vpx_color_space;
+pub type vpx_color_range = ::core::ffi::c_uint;
+pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
+pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
+pub type vpx_color_range_t = vpx_color_range;
+pub type __darwin_size_t = usize;
+pub type size_t = __darwin_size_t;
+pub type uint8_t = u8;
+pub fn vp8_swap_yv12_buffer_safe(
+    new_frame: &mut YV12_BUFFER_CONFIG,
+    last_frame: &mut YV12_BUFFER_CONFIG,
 ) {
-    if new_frame.is_null() || last_frame.is_null() {
-        return;
-    }
-
-    // SAFETY: We checked for null above. The caller must ensure validity.
-    let new_frame = unsafe { &mut *new_frame };
-    let last_frame = unsafe { &mut *last_frame };
-
-    last_frame.swap_buffers(new_frame);
+    core::mem::swap(&mut new_frame.buffer_alloc, &mut last_frame.buffer_alloc);
+    core::mem::swap(&mut new_frame.y_buffer, &mut last_frame.y_buffer);
+    core::mem::swap(&mut new_frame.u_buffer, &mut last_frame.u_buffer);
+    core::mem::swap(&mut new_frame.v_buffer, &mut last_frame.v_buffer);
 }
+

@@ -1,9 +1,38 @@
-#[unsafe(no_mangle)]
-pub static vp8_mode_contexts: [[i32; 4]; 6] = [
-    [7 as i32, 1 as i32, 1 as i32, 143 as i32],
-    [14 as i32, 18 as i32, 14 as i32, 107 as i32],
-    [135 as i32, 64 as i32, 57 as i32, 68 as i32],
-    [60 as i32, 56 as i32, 128 as i32, 65 as i32],
-    [159 as i32, 134 as i32, 128 as i32, 34 as i32],
-    [234 as i32, 188 as i32, 128 as i32, 28 as i32],
+pub static vp8_mode_contexts: [[::core::ffi::c_int; 4]; 6] = [
+    [
+        7 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        1 as ::core::ffi::c_int,
+        143 as ::core::ffi::c_int,
+    ],
+    [
+        14 as ::core::ffi::c_int,
+        18 as ::core::ffi::c_int,
+        14 as ::core::ffi::c_int,
+        107 as ::core::ffi::c_int,
+    ],
+    [
+        135 as ::core::ffi::c_int,
+        64 as ::core::ffi::c_int,
+        57 as ::core::ffi::c_int,
+        68 as ::core::ffi::c_int,
+    ],
+    [
+        60 as ::core::ffi::c_int,
+        56 as ::core::ffi::c_int,
+        128 as ::core::ffi::c_int,
+        65 as ::core::ffi::c_int,
+    ],
+    [
+        159 as ::core::ffi::c_int,
+        134 as ::core::ffi::c_int,
+        128 as ::core::ffi::c_int,
+        34 as ::core::ffi::c_int,
+    ],
+    [
+        234 as ::core::ffi::c_int,
+        188 as ::core::ffi::c_int,
+        128 as ::core::ffi::c_int,
+        28 as ::core::ffi::c_int,
+    ],
 ];

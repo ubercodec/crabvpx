@@ -3,16 +3,16 @@ name = "harness"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-name = "harness"
-path = "src/lib.rs"
+[features]
+default = ["oracle"]
+oracle = []
+rust = ["dep:crabvpx"]
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 indicatif = "0.17"
-crabvpx = { path = "../" }
+crabvpx = { path = "../", optional = true }
 md5 = "0.7"
-libloading = "0.7.0"
 
 [build-dependencies]
-bindgen = "0.71"
+bindgen = "0.69"
