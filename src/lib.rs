@@ -8,7 +8,6 @@
 
 pub mod api;
 pub mod thread_shim;
-pub mod simd_shim;
 pub mod vp8 {
     pub mod common {
         pub mod alloccommon;

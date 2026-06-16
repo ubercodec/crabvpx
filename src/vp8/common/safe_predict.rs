@@ -4,73 +4,6 @@
 
 use crate::vp8::common::types::vp8_subpix_fn_t;
 
-unsafe extern "C" {
-    pub fn vp8_bilinear_predict16x16_neon(
-        src_ptr: *const u8,
-        src_pixels_per_line: core::ffi::c_int,
-        xoffset: core::ffi::c_int,
-        yoffset: core::ffi::c_int,
-        dst_ptr: *mut u8,
-        dst_pitch: core::ffi::c_int,
-    );
-    pub fn vp8_bilinear_predict8x8_neon(
-        src_ptr: *const u8,
-        src_pixels_per_line: core::ffi::c_int,
-        xoffset: core::ffi::c_int,
-        yoffset: core::ffi::c_int,
-        dst_ptr: *mut u8,
-        dst_pitch: core::ffi::c_int,
-    );
-    pub fn vp8_bilinear_predict8x4_neon(
-        src_ptr: *const u8,
-        src_pixels_per_line: core::ffi::c_int,
-        xoffset: core::ffi::c_int,
-        yoffset: core::ffi::c_int,
-        dst_ptr: *mut u8,
-        dst_pitch: core::ffi::c_int,
-    );
-    pub fn vp8_bilinear_predict4x4_neon(
-        src_ptr: *const u8,
-        src_pixels_per_line: core::ffi::c_int,
-        xoffset: core::ffi::c_int,
-        yoffset: core::ffi::c_int,
-        dst_ptr: *mut u8,
-        dst_pitch: core::ffi::c_int,
-    );
-
-    pub fn vp8_sixtap_predict16x16_neon(
-        src_ptr: *const u8,
-        src_pixels_per_line: core::ffi::c_int,
-        xoffset: core::ffi::c_int,
-        yoffset: core::ffi::c_int,
-        dst_ptr: *mut u8,
-        dst_pitch: core::ffi::c_int,
-    );
-    pub fn vp8_sixtap_predict8x8_neon(
-        src_ptr: *const u8,
-        src_pixels_per_line: core::ffi::c_int,
-        xoffset: core::ffi::c_int,
-        yoffset: core::ffi::c_int,
-        dst_ptr: *mut u8,
-        dst_pitch: core::ffi::c_int,
-    );
-    pub fn vp8_sixtap_predict8x4_neon(
-        src_ptr: *const u8,
-        src_pixels_per_line: core::ffi::c_int,
-        xoffset: core::ffi::c_int,
-        yoffset: core::ffi::c_int,
-        dst_ptr: *mut u8,
-        dst_pitch: core::ffi::c_int,
-    );
-    pub fn vp8_sixtap_predict4x4_neon(
-        src_ptr: *const u8,
-        src_pixels_per_line: core::ffi::c_int,
-        xoffset: core::ffi::c_int,
-        yoffset: core::ffi::c_int,
-        dst_ptr: *mut u8,
-        dst_pitch: core::ffi::c_int,
-    );
-}
 
 // Helper macros or functions for assertions
 
@@ -140,18 +73,6 @@ pub fn safe_vp8_bilinear_predict16x16_neon(
         dst_offset,
         dst_stride as usize,
     );
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        vp8_bilinear_predict16x16_neon(
-            src.as_ptr().add(src_offset),
-            src_stride,
-            xoffset,
-            yoffset,
-            dst.as_mut_ptr().add(dst_offset),
-            dst_stride,
-        );
-    }
-    #[cfg(not(target_arch = "aarch64"))]
     {
         let stride = src_stride as usize;
         let dst_stride_usize = dst_stride as usize;
@@ -194,18 +115,6 @@ pub fn safe_vp8_bilinear_predict8x8_neon(
         dst_offset,
         dst_stride as usize,
     );
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        vp8_bilinear_predict8x8_neon(
-            src.as_ptr().add(src_offset),
-            src_stride,
-            xoffset,
-            yoffset,
-            dst.as_mut_ptr().add(dst_offset),
-            dst_stride,
-        );
-    }
-    #[cfg(not(target_arch = "aarch64"))]
     {
         let stride = src_stride as usize;
         let dst_stride_usize = dst_stride as usize;
@@ -248,18 +157,6 @@ pub fn safe_vp8_bilinear_predict8x4_neon(
         dst_offset,
         dst_stride as usize,
     );
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        vp8_bilinear_predict8x4_neon(
-            src.as_ptr().add(src_offset),
-            src_stride,
-            xoffset,
-            yoffset,
-            dst.as_mut_ptr().add(dst_offset),
-            dst_stride,
-        );
-    }
-    #[cfg(not(target_arch = "aarch64"))]
     {
         let stride = src_stride as usize;
         let dst_stride_usize = dst_stride as usize;
@@ -302,18 +199,6 @@ pub fn safe_vp8_bilinear_predict4x4_neon(
         dst_offset,
         dst_stride as usize,
     );
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        vp8_bilinear_predict4x4_neon(
-            src.as_ptr().add(src_offset),
-            src_stride,
-            xoffset,
-            yoffset,
-            dst.as_mut_ptr().add(dst_offset),
-            dst_stride,
-        );
-    }
-    #[cfg(not(target_arch = "aarch64"))]
     {
         let stride = src_stride as usize;
         let dst_stride_usize = dst_stride as usize;
@@ -358,18 +243,6 @@ pub fn safe_vp8_sixtap_predict16x16_neon(
         dst_offset,
         dst_stride as usize,
     );
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        vp8_sixtap_predict16x16_neon(
-            src.as_ptr().add(src_offset),
-            src_stride,
-            xoffset,
-            yoffset,
-            dst.as_mut_ptr().add(dst_offset),
-            dst_stride,
-        );
-    }
-    #[cfg(not(target_arch = "aarch64"))]
     {
         let stride = src_stride as usize;
         let dst_stride_usize = dst_stride as usize;
@@ -413,18 +286,6 @@ pub fn safe_vp8_sixtap_predict8x8_neon(
         dst_offset,
         dst_stride as usize,
     );
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        vp8_sixtap_predict8x8_neon(
-            src.as_ptr().add(src_offset),
-            src_stride,
-            xoffset,
-            yoffset,
-            dst.as_mut_ptr().add(dst_offset),
-            dst_stride,
-        );
-    }
-    #[cfg(not(target_arch = "aarch64"))]
     {
         let stride = src_stride as usize;
         let dst_stride_usize = dst_stride as usize;
@@ -468,18 +329,6 @@ pub fn safe_vp8_sixtap_predict8x4_neon(
         dst_offset,
         dst_stride as usize,
     );
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        vp8_sixtap_predict8x4_neon(
-            src.as_ptr().add(src_offset),
-            src_stride,
-            xoffset,
-            yoffset,
-            dst.as_mut_ptr().add(dst_offset),
-            dst_stride,
-        );
-    }
-    #[cfg(not(target_arch = "aarch64"))]
     {
         let stride = src_stride as usize;
         let dst_stride_usize = dst_stride as usize;
@@ -523,18 +372,6 @@ pub fn safe_vp8_sixtap_predict4x4_neon(
         dst_offset,
         dst_stride as usize,
     );
-    #[cfg(target_arch = "aarch64")]
-    unsafe {
-        vp8_sixtap_predict4x4_neon(
-            src.as_ptr().add(src_offset),
-            src_stride,
-            xoffset,
-            yoffset,
-            dst.as_mut_ptr().add(dst_offset),
-            dst_stride,
-        );
-    }
-    #[cfg(not(target_arch = "aarch64"))]
     {
         let stride = src_stride as usize;
         let dst_stride_usize = dst_stride as usize;
