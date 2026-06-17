@@ -1015,17 +1015,23 @@ fn setup_token_decoder(
         pbi.fragments.sizes[i] = new_sizes[i];
     }
 
-    let mut partition_idx = 1;
-    while partition_idx < new_count {
-        if let Some(slice) = new_slices[partition_idx] {
-            crate::vp8::decoder::dboolhuff::vp8dx_start_decode_safe(
-                &mut pbi.mbc[(partition_idx - 1) as usize],
-                slice,
-                pbi.decrypt_cb,
-                pbi.decrypt_state,
-            );
-        }
-        partition_idx = partition_idx.wrapping_add(1);
+    // Start every token-partition decoder that macroblock decoding may select
+    // (mbc[0..num_token_partitions]), not just the ones that were parsed. On a
+    // truncated/corrupt stream fewer slices may be present than declared; the
+    // missing decoders must still be initialized (start_decode sets range=255)
+    // with an empty slice so reads return zeros instead of leaving range=0,
+    // which would underflow-panic in read_bool. libvpx likewise treats a
+    // missing/empty partition as readable (it longjmps on the corruption error;
+    // here the error is recorded and decoding degrades gracefully). For valid
+    // streams every slice is present, so this matches the previous behavior.
+    for i in 0..num_token_partitions {
+        let slice: &[u8] = new_slices[i + 1].unwrap_or(&[]);
+        crate::vp8::decoder::dboolhuff::vp8dx_start_decode_safe(
+            &mut pbi.mbc[i],
+            slice,
+            pbi.decrypt_cb,
+            pbi.decrypt_state,
+        );
     }
     if pbi.decoding_thread_count > num_token_partitions.wrapping_sub(1) as u32 {
         pbi.decoding_thread_count = num_token_partitions.wrapping_sub(1) as u32;
