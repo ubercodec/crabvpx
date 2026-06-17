@@ -8,6 +8,18 @@ use crate::vp8::common::entropymode::{vp8_default_bmode_probs, vp8_init_mbmode_p
 pub use crate::vp8::common::types::*;
 pub type uint32_t = u32;
 
+/// Allocate a boxed slice of `count` clones of `value` without aborting on OOM.
+///
+/// Dimensions are bitstream-controlled (up to VP8's spec maximum of 16383x16383),
+/// so a hostile header can request a very large `count`. Using `try_reserve`
+/// lets the decoder return an error instead of triggering a process abort.
+fn try_alloc_boxed_slice<T: Clone>(value: T, count: usize) -> Option<Box<[T]>> {
+    let mut v: Vec<T> = Vec::new();
+    v.try_reserve_exact(count).ok()?;
+    v.resize(count, value);
+    Some(v.into_boxed_slice())
+}
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct vpx_internal_error_info {
@@ -131,13 +143,13 @@ pub fn vp8_alloc_frame_buffers(
                 oci.MBs = oci.mb_rows * oci.mb_cols;
                 oci.mode_info_stride = oci.mb_cols + 1 as ::core::ffi::c_int;
                 let mip_count = ((oci.mb_cols + 1) * (oci.mb_rows + 1)) as usize;
-                let mip_box = vec![MODE_INFO::default(); mip_count].into_boxed_slice();
-                oci.mip = Some(mip_box);
-                if oci.mip.is_some() {
+                if let Some(mip_box) = try_alloc_boxed_slice(MODE_INFO::default(), mip_count) {
+                    oci.mip = Some(mip_box);
                     let above_context_count = oci.mb_cols as usize;
-                    let above_context_box = vec![ENTROPY_CONTEXT_PLANES::default(); above_context_count].into_boxed_slice();
-                    oci.above_context = Some(above_context_box);
-                    if oci.above_context.is_some() {
+                    if let Some(above_context_box) =
+                        try_alloc_boxed_slice(ENTROPY_CONTEXT_PLANES::default(), above_context_count)
+                    {
+                        oci.above_context = Some(above_context_box);
                         return 0 as ::core::ffi::c_int;
                     }
                 }

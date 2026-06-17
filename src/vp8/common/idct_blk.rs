@@ -22,7 +22,8 @@ pub fn vp8_dequant_idct_add_y_block_safe(
                 let q_sub: &mut [i16; 16] = (&mut q[q_offset..q_offset + 16]).try_into().unwrap();
                 crate::vp8::common::dequantize::vp8_dequant_idct_add_safe(q_sub, dq, dst_sub, stride);
             } else {
-                let input_dc = q[q_offset] * dq[0];
+                // Wrap to match libvpx's truncation of the int product to `short`.
+                let input_dc = q[q_offset].wrapping_mul(dq[0]);
                 let dst_sub = &mut dst[dst_offset..];
                 
                 // Copy predictor to a safe temporary array to avoid borrow-checker conflicts.
@@ -73,7 +74,8 @@ pub fn vp8_dequant_idct_add_uv_block_safe(
                 let q_sub: &mut [i16; 16] = (&mut q[q_offset..q_offset + 16]).try_into().unwrap();
                 crate::vp8::common::dequantize::vp8_dequant_idct_add_safe(q_sub, dq, dst_sub, stride);
             } else {
-                let input_dc = q[q_offset] * dq[0];
+                // Wrap to match libvpx's truncation of the int product to `short`.
+                let input_dc = q[q_offset].wrapping_mul(dq[0]);
                 let dst_sub = &mut dst_u[dst_offset..];
                 
                 let mut pred = [0u8; 16];
@@ -110,7 +112,8 @@ pub fn vp8_dequant_idct_add_uv_block_safe(
                 let q_sub: &mut [i16; 16] = (&mut q[q_offset..q_offset + 16]).try_into().unwrap();
                 crate::vp8::common::dequantize::vp8_dequant_idct_add_safe(q_sub, dq, dst_sub, stride);
             } else {
-                let input_dc = q[q_offset] * dq[0];
+                // Wrap to match libvpx's truncation of the int product to `short`.
+                let input_dc = q[q_offset].wrapping_mul(dq[0]);
                 let dst_sub = &mut dst_v[dst_offset..];
                 
                 let mut pred = [0u8; 16];
