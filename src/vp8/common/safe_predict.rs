@@ -222,6 +222,34 @@ pub fn safe_vp8_bilinear_predict4x4_neon(
 
 // Safe Sixtap Wrappers
 
+/// Dispatch the 6-tap sub-pixel filter to the NEON kernel on aarch64, falling
+/// back to the scalar twin elsewhere. Both are bit-exact (gated by `neon`'s
+/// unit test and the differential suite).
+#[inline]
+fn sixtap_dispatch(
+    src: &[u8],
+    src_stride: usize,
+    dst: &mut [u8],
+    dst_pitch: usize,
+    width: usize,
+    height: usize,
+    h_filter: &[i16; 6],
+    v_filter: &[i16; 6],
+) {
+    #[cfg(target_arch = "aarch64")]
+    {
+        crate::vp8::common::neon::filter_block2d_sixtap_neon(
+            src, src_stride, dst, dst_pitch, width, height, h_filter, v_filter,
+        );
+    }
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        crate::vp8::common::filter::filter_block2d_sixtap_safe(
+            src, src_stride, dst, dst_pitch, width, height, h_filter, v_filter,
+        );
+    }
+}
+
 pub fn safe_vp8_sixtap_predict16x16_neon(
     src: &[u8],
     src_offset: usize,
@@ -252,7 +280,7 @@ pub fn safe_vp8_sixtap_predict16x16_neon(
         let src_slice = &src[offset as usize..];
         let dst_slice = &mut dst[dst_offset..];
         
-        crate::vp8::common::filter::filter_block2d_sixtap_safe(
+        sixtap_dispatch(
             src_slice,
             stride,
             dst_slice,
@@ -295,7 +323,7 @@ pub fn safe_vp8_sixtap_predict8x8_neon(
         let src_slice = &src[offset as usize..];
         let dst_slice = &mut dst[dst_offset..];
         
-        crate::vp8::common::filter::filter_block2d_sixtap_safe(
+        sixtap_dispatch(
             src_slice,
             stride,
             dst_slice,
@@ -338,7 +366,7 @@ pub fn safe_vp8_sixtap_predict8x4_neon(
         let src_slice = &src[offset as usize..];
         let dst_slice = &mut dst[dst_offset..];
         
-        crate::vp8::common::filter::filter_block2d_sixtap_safe(
+        sixtap_dispatch(
             src_slice,
             stride,
             dst_slice,
@@ -381,7 +409,7 @@ pub fn safe_vp8_sixtap_predict4x4_neon(
         let src_slice = &src[offset as usize..];
         let dst_slice = &mut dst[dst_offset..];
         
-        crate::vp8::common::filter::filter_block2d_sixtap_safe(
+        sixtap_dispatch(
             src_slice,
             stride,
             dst_slice,
