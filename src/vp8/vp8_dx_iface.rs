@@ -934,7 +934,7 @@ pub struct Vp8DecoderInstance {
 }
 
 impl Vp8DecoderInstance {
-    pub fn new(threads: u32) -> Result<Self, String> {
+    pub fn new(threads: u32) -> Result<Self, crate::api::DecodeError> {
         unsafe {
             vp8_rtcd();
             vpx_dsp_rtcd();
@@ -951,7 +951,7 @@ impl Vp8DecoderInstance {
         }
     }
 
-    pub fn decode(&mut self, data: &[u8]) -> Result<(), String> {
+    pub fn decode(&mut self, data: &[u8]) -> Result<(), crate::api::DecodeError> {
         unsafe {
             let res = vp8_decode(
                 self.priv_0,
@@ -962,7 +962,7 @@ impl Vp8DecoderInstance {
             if res == VPX_CODEC_OK {
                 Ok(())
             } else {
-                Err(format!("decode failed: {}", res))
+                Err(crate::api::DecodeError::Decode(res))
             }
         }
     }
