@@ -73,10 +73,42 @@ jobs:
       # Building the targets is a real, always-on compile gate.
       - name: Build fuzz targets
         run: cargo fuzz build
-      # Advisory until the decoder is hardened against malformed input: fuzzing
-      # already finds an unbounded-allocation OOM (decode_frame) and an integer
-      # overflow panic at decodeframe.rs:378 (decode_ivf). Flip continue-on-error
-      # off once those are fixed so regressions block CI.
+      # The earlier known crashes (DC-only IDCT dequant overflow #21,
+      # frame-buffer alloc failure #20, truncated-partition underflow #22) are
+      # fixed. The smoke run stays advisory because a hostile keyframe can
+      # legitimately declare spec-max dimensions (up to 16383x16383) and exceed
+      # rss_limit with a single (fallible, graceful) allocation, and because
+      # fuzzing may always surface new findings.
       - name: Smoke run (decode_frame)
         run: cargo fuzz run decode_frame -- -runs=20000 -max_total_time=60 -rss_limit_mb=2048
         continue-on-error: true
+
+  msrv:
+    name: MSRV (1.85)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Hard gate: the crate must build and pass on its declared
+      # rust-version (Cargo.toml), not just current stable.
+      - uses: dtolnay/rust-toolchain@1.85
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --verbose
+      - name: Test
+        run: cargo test --verbose
+
+  miri:
+    name: Miri (leaf logic)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri, rust-src
+      - uses: Swatinem/rust-cache@v2
+      # Scoped to the safe-Rust leaf logic that is Miri-clean today. The full
+      # decode path is excluded for now: it trips a pre-existing Stacked Borrows
+      # violation in the frame-buffer pointer handling (`AlignedBox`/
+      # `buffer_alloc`). Broaden to `cargo miri test` once that is fixed.
+      - name: Miri (bool decoder)
+        run: cargo miri test --test bool_decoder_test
