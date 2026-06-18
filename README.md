@@ -3,8 +3,9 @@
 A **memory-safe, pure-Rust VP8 video decoder**. Originally lifted from `libvpx`
 with `c2rust` and progressively rewritten into safe Rust.
 
-- **Correct:** decode output is bit-exact with `libvpx` across the 35 WebM VP8
-  conformance vectors, single- and multi-threaded (verified in CI).
+- **Correct:** decode output is bit-exact with `libvpx` across all 62 WebM VP8
+  conformance vectors — comprehensive, intra, inter, segmentation, partitions,
+  sharpness, and smallsize — single- and multi-threaded (verified in CI).
 - **Reasonably fast:** pure safe Rust with no hand-written SIMD — LLVM
   auto-vectorizes the hot loops. On typical content it runs roughly
   1.5–3× slower than `libvpx` (which ships hand-tuned NEON/SSE kernels);
@@ -51,6 +52,6 @@ Multithreaded decoding is opt-in via `CRABVPX_THREADS` (default `1`).
 - [x] Achieve clean `cargo check` on Rust 2021.
 
 ### Phase 4: Stabilization & Upgrade
-- [x] Port/integrate tests (harness) to verify decoding correctness against 35 IVF vectors.
+- [x] Port/integrate tests (harness) to verify decoding correctness against the full 62 IVF vectors.
 - [x] Upgrade codebase to Rust 2024 using `cargo fix --edition`.
 - [ ] Implement Phase 5: Incremental Refactoring to Safe Rust APIs (see `docs/refactor_plan.md`).
