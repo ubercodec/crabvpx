@@ -31,7 +31,6 @@
 //!
 //! VP8 **decoding** only — no encoder, and no VP9/AV1.
 
-#![allow(warnings)]
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]

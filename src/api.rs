@@ -1,4 +1,4 @@
-use crate::vp8::vp8_dx_iface::{Vp8DecoderInstance, YV12_BUFFER_CONFIG};
+use crate::vp8::vp8_dx_iface::Vp8DecoderInstance;
 
 /// A safe wrapper around the decoded image planes.
 pub struct Image<'a> {

@@ -785,7 +785,7 @@ unsafe extern "C" fn vp8_decode(
         }
         (*pbi_0).common.error.setjmp = 1 as ::core::ffi::c_int;
         (*pbi_0).max_threads = (*ctx).cfg.threads as ::core::ffi::c_int;
-        vp8_decoder_create_threads(&mut *pbi_0);
+        let _ = vp8_decoder_create_threads(&mut *pbi_0);
         if vpx_atomic_load_acquire(&(*pbi_0).b_multithreaded_rd) != 0 {
             vp8mt_alloc_temp_buffers(&mut *pbi_0, (*pc).Width, (*pc).mb_rows);
         }
