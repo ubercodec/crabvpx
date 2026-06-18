@@ -1,6 +1,6 @@
 # SIMD architecture: multi-ISA kernels with minimal duplication
 
-Status: **proposed** · Supersedes the ad-hoc `vp8/common/neon.rs` landed in #31.
+Status: **accepted** · Step 2 (the NEON refactor below) implemented alongside this doc.
 
 ## Context
 
@@ -104,10 +104,15 @@ Kernel bodies are untouched.
 ## Sequencing
 
 1. **(#31, done)** NEON kernels, ad-hoc.
-2. **Refactor** `neon.rs` → the `Simd` trait + `kernels.rs`, NEON as the first
-   impl. Pure refactor, differential-gated, no behavior change.
+2. **(done, this PR)** Refactored `neon.rs` → the `Simd` trait (`simd/mod.rs`) +
+   generic kernels (`simd/kernels.rs`), NEON as the first impl (`simd/neon.rs`).
+   Zero-cost (identical codegen via `#[inline(always)]` monomorphization),
+   bit-exact across all 62 vectors ST+MT.
 3. **Add SSE** (`impl Simd for Sse41`, SSE2 fallback) — primitives only; kernels
-   come for free. Gate against the scalar twin on x86 CI.
+   come for free. Gate against the scalar twin on x86 CI. Note: SSE4.1 is not a
+   baseline feature, so its impl/entry points will need the `#[target_feature]`
+   wrapper pattern (the NEON impl needs none — NEON is baseline, and intrinsics
+   are wrapped in `unsafe` justified by that).
 4. Extend to remaining kernels (simple loop filter, IDCT) under the same trait.
 
 ## Alternatives considered

@@ -55,7 +55,7 @@ pub mod vp8 {
         pub mod extend;
         pub mod filter;
         pub mod findnearmv;
-        pub mod neon;
+        pub mod simd;
         pub mod generic {
             pub mod systemdependent;
         } // mod generic

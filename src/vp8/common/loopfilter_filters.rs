@@ -110,7 +110,7 @@ pub(crate) fn loop_filter_horizontal_edge_safe(
 ) {
     #[cfg(target_arch = "aarch64")]
     {
-        crate::vp8::common::neon::loop_filter_horizontal_edge_neon(
+        crate::vp8::common::simd::neon::loop_filter_horizontal_edge_neon(
             s, s_offset, p, blimit[0], limit[0], thresh[0], count,
         );
         return;
@@ -184,7 +184,7 @@ pub(crate) fn loop_filter_vertical_edge_safe(
 ) {
     #[cfg(target_arch = "aarch64")]
     {
-        crate::vp8::common::neon::loop_filter_vertical_edge_neon(
+        crate::vp8::common::simd::neon::loop_filter_vertical_edge_neon(
             s, s_offset, p, blimit[0], limit[0], thresh[0], count,
         );
         return;
@@ -327,7 +327,7 @@ pub(crate) fn mbloop_filter_horizontal_edge_safe(
 ) {
     #[cfg(target_arch = "aarch64")]
     {
-        crate::vp8::common::neon::mbloop_filter_horizontal_edge_neon(
+        crate::vp8::common::simd::neon::mbloop_filter_horizontal_edge_neon(
             s, s_offset, p, blimit[0], limit[0], thresh[0], count,
         );
         return;
@@ -483,7 +483,7 @@ pub(crate) fn mbloop_filter_vertical_edge_safe(
 ) {
     #[cfg(target_arch = "aarch64")]
     {
-        crate::vp8::common::neon::mbloop_filter_vertical_edge_neon(
+        crate::vp8::common::simd::neon::mbloop_filter_vertical_edge_neon(
             s, s_offset, p, blimit[0], limit[0], thresh[0], count,
         );
         return;

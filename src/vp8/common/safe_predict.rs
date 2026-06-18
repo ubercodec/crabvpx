@@ -238,7 +238,7 @@ fn sixtap_dispatch(
 ) {
     #[cfg(target_arch = "aarch64")]
     {
-        crate::vp8::common::neon::filter_block2d_sixtap_neon(
+        crate::vp8::common::simd::neon::filter_block2d_sixtap_neon(
             src, src_stride, dst, dst_pitch, width, height, h_filter, v_filter,
         );
     }
