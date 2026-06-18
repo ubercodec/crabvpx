@@ -6,11 +6,12 @@ with `c2rust` and progressively rewritten into safe Rust.
 - **Correct:** decode output is bit-exact with `libvpx` across all 62 WebM VP8
   conformance vectors — comprehensive, intra, inter, segmentation, partitions,
   sharpness, and smallsize — single- and multi-threaded (verified in CI).
-- **Reasonably fast:** pure safe Rust with no hand-written SIMD — LLVM
-  auto-vectorizes the hot loops. On typical content it runs roughly
-  1.5–3× slower than `libvpx` (which ships hand-tuned NEON/SSE kernels);
-  the gap narrows on low-complexity streams. Closing it is the main
-  open optimization opportunity.
+- **Fast:** on **aarch64**, NEON kernels for the loop filter and sub-pixel
+  filter bring decode to roughly **1.1–1.5× of `libvpx`** on heavy content
+  and *faster* than libvpx on lighter streams. Other targets use the pure-Rust
+  scalar path (LLVM auto-vectorized), ~1.5–3× of libvpx. All SIMD `unsafe`
+  is confined to `vp8/common/neon.rs`, each kernel bit-exact-gated against
+  its scalar twin.
 - **Safe:** builds on stable Rust (no `unsafe`-heavy FFI in the decode path;
   the remaining `unsafe` is confined to the low-level buffer/threading core).
 - **Scope:** VP8 *decoding* only (no encoder, no VP9/AV1).

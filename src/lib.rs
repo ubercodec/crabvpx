@@ -2,9 +2,12 @@
 //!
 //! A memory-safe, pure-Rust VP8 video decoder. Originally lifted from
 //! `libvpx` and progressively rewritten into safe Rust; decode output is
-//! bit-exact with `libvpx`. It uses no hand-written SIMD (LLVM
-//! auto-vectorizes the hot loops) and currently runs roughly 1.5–3× slower
-//! than `libvpx`'s hand-tuned NEON/SSE kernels on typical content.
+//! bit-exact with `libvpx`. On aarch64, NEON kernels (loop filter and
+//! sub-pixel filter, in [`vp8::common::neon`]) bring decode to roughly
+//! 1.1–1.5× of libvpx on heavy content and faster on lighter streams; other
+//! targets use the auto-vectorized scalar path. All SIMD `unsafe` is
+//! confined to the NEON module, each kernel bit-exact-gated against its
+//! scalar twin.
 //!
 //! ## Decoding
 //!
@@ -52,6 +55,7 @@ pub mod vp8 {
         pub mod extend;
         pub mod filter;
         pub mod findnearmv;
+        pub mod neon;
         pub mod generic {
             pub mod systemdependent;
         } // mod generic
