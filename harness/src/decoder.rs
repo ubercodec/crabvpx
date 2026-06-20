@@ -9,6 +9,14 @@ pub mod ffi {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
+/// True if `HARNESS_NO_MD5` is set (checked once). Lets the benchmark time
+/// decode only, excluding the per-frame MD5 hashing the differential mode uses.
+fn md5_disabled() -> bool {
+    use std::sync::OnceLock;
+    static V: OnceLock<bool> = OnceLock::new();
+    *V.get_or_init(|| std::env::var("HARNESS_NO_MD5").is_ok())
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DecodedFrame {
     pub md5: String,
@@ -39,24 +47,31 @@ impl LibVpxOracleDecoder {
     }
 
     unsafe fn calculate_frame_info(img: *const ffi::vpx_image_t) -> DecodedFrame {
-        let mut context = md5::Context::new();
         let img = &*img;
 
-        for plane in 0..3 {
-            let data = img.planes[plane];
-            let stride = img.stride[plane] as usize;
-            let w = if plane == 0 { img.d_w } else { (img.d_w + 1) >> 1 };
-            let h = if plane == 0 { img.d_h } else { (img.d_h + 1) >> 1 };
-
-            for row in 0..h {
-                let row_ptr = data.add(row as usize * stride);
-                let row_data = std::slice::from_raw_parts(row_ptr, w as usize);
-                context.consume(row_data);
+        // Skip per-frame MD5 when HARNESS_NO_MD5 is set so the timed region is
+        // decode-only (hashing is ~40% of frame time and identical for both
+        // decoders, so it dilutes the A/B ratio toward parity).
+        let md5 = if md5_disabled() {
+            String::new()
+        } else {
+            let mut context = md5::Context::new();
+            for plane in 0..3 {
+                let data = img.planes[plane];
+                let stride = img.stride[plane] as usize;
+                let w = if plane == 0 { img.d_w } else { (img.d_w + 1) >> 1 };
+                let h = if plane == 0 { img.d_h } else { (img.d_h + 1) >> 1 };
+                for row in 0..h {
+                    let row_ptr = data.add(row as usize * stride);
+                    let row_data = std::slice::from_raw_parts(row_ptr, w as usize);
+                    context.consume(row_data);
+                }
             }
-        }
+            format!("{:x}", context.compute())
+        };
 
         DecodedFrame {
-            md5: format!("{:x}", context.compute()),
+            md5,
             width: img.d_w,
             height: img.d_h,
             bit_depth: img.bit_depth,
@@ -194,7 +209,11 @@ impl VideoDecoder for CrabVpxDecoder {
                 self.frame_counter += 1;
                 
                 Ok(Some(DecodedFrame {
-                    md5: img.md5(),
+                    md5: if md5_disabled() {
+                        String::new()
+                    } else {
+                        img.md5()
+                    },
                     width: img.width(),
                     height: img.height(),
                     bit_depth: img.bit_depth(),
