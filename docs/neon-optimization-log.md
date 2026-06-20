@@ -103,23 +103,58 @@ butterfly intermediate saturates); full-range fuzzing of those kernels is
 
 ## Current gap composition (~1.24×, ~0.6 ms/frame to libvpx)
 
-The SIMD-able compute is at/near libvpx parity. The residual gap is diffuse and
-mostly **not** more-kernel-SIMD:
+**Measured** per-component (sample-share × each decoder's ms/frame; crab 3.2,
+libvpx 2.6, totals ~equal). The gap is **not diffuse — it's concentrated in three
+SIMD kernels still behind libvpx's deeper hand-tuning, plus control overhead:**
 
-1. **Serial token/MV decode** — the #1 single cost (~1.1+ ms/frame), only at
-   *parity* with libvpx's C. **Investigated and found already optimal-shape:**
-   `read_bool` is inlined into `GetCoeffs` (state in registers; `fill` is rare),
-   and the token tree is a faithful port. We *hypothesized* a safe-Rust
-   bounds-check tax here and tested it (power-of-two index masking, above) — it
-   was a **wash: LLVM already elides those checks.** So there's no removable
-   safety tax in the hot loop; even `unsafe get_unchecked` would not help.
-2. **Per-block dispatch** in the transform-add path (the real "transform gap"),
-   though NEON-ing the idct math didn't move it (wash, above).
-3. **Diffuse implementation-maturity overhead** — after 6 washes targeting the
-   profile's apparent gaps, no single removable lever survived. The residual is
-   cumulative: function-call boundaries, the multi-pass (vs fused-MB) structure,
-   and libvpx being marginally tighter everywhere from 15 years of tuning. Not a
-   single attributable hotspot.
+| component | crab | libvpx | gap |
+| --- | --- | --- | --- |
+| Transform-add (idct/dequant block) | ~0.26 | ~0.10 | **+0.15 (2.5×)** |
+| Sixtap | ~0.73 | ~0.55 | **+0.17 (1.3×)** |
+| Loop filter | ~0.71 | ~0.59 | **+0.12 (1.2×)** |
+| decode_frame / MB control | ~0.11 | ~0.06 | +0.06 (2×) |
+| Inter-pred + buffer views | ~0.12 | ~0.07 | +0.05 |
+| Token decode | ~0.80 | ~0.76 | +0.04 (≈parity) |
+| MV/mode decode | ~0.48 | ~0.48 | parity |
+
+**Correction to an earlier draft of this doc:** the residual is *not* "diffuse
+maturity with no removable lever." The six washes were failures to find the
+*easy* wins, not evidence of parity. libvpx's transform/sixtap/loop-filter
+kernels are still measurably faster from hand-tuning we labeled
+diminishing-returns and walked away from — those are concrete, identifiable
+targets (roadmap below). Token/MV decode genuinely are at parity (the
+bounds-check tax is elided by LLVM, tested above).
+
+## Path to parity (rav1d territory, ~5–10%)
+
+Not a polish — real runway, but with measured ceilings. Ordered by ratio:
+
+1. **Transform-add: batched 2-block NEON** (`idct_dequant_full_2x`-style). The
+   *per-block* NEON idct was a wash (above); the win is processing 2 blocks at
+   once across the whole MB, which is why libvpx is 2.5× here. ~0.15 ceiling.
+2. **Loop filter: finish it** — vertical + UV edges via a `vld4` deinterleaving
+   transpose (the vertical-s8 wash used the naive 8×8-transpose shape). ~0.10.
+3. **Sixtap: size-specialized + `vext` loads** (load each row once, shift for
+   taps; per-size 16×16/8×8/8×4/4×4). ~0.10.
+4. **De-c2rust the MB control loop** — `decode_frame`/per-MB dispatch is ~2×
+   libvpx; idiomatic rewrite so it optimizes like the C. ~0.05–0.1 + diffuse.
+
+### Why parity is plausible here (vs the rav1d comparison)
+
+rav1d (c2rust port of dav1d) lands ~5% slower — but it **links dav1d's hand-
+written assembly**; its 5% is the cost of Rust *glue* with identical kernels.
+crabvpx writes kernels in Rust, so our comparison includes a kernel gap rav1d's
+doesn't. On **aarch64 that's winnable**, because libvpx has *no ARM assembly* —
+its NEON is intrinsics we can match in Rust (the arithmetic-scheme wins prove
+it). Our kernels trail only because the deeper intrinsic tuning isn't finished,
+not a language ceiling. Our control overhead (~2× on decode_frame) is the
+analogue of rav1d's glue tax, and ours is worse — the c2rust-derived code is less
+idiomatic than hand-translated Rust, so it's addressable.
+
+**x86 caveat:** libvpx *does* ship hand asm for SSE/SSSE3 (68 `.asm` files). Pure-
+Rust intrinsics may genuinely trail it there; the rav1d move (link the reference
+asm for the hottest kernels) may be worth considering if pure-Rust can't reach
+parity on x86.
 
 ## Interpreting the gap (do not quote "−24%" bare)
 
@@ -137,7 +172,8 @@ single-thread, decode-only, Apple Silicon NEON, Elephants Dream) — equivalentl
   is *not* meaningfully paying for bounds checks here, and `unsafe get_unchecked`
   would not help. (panic-free `Result` paths and the safe slicing cost something,
   but no single safety feature proved removable across 6 experiments.) The
-  residual is **diffuse implementation maturity**, not a language or safety
+  residual is **unfinished kernel hand-tuning + c2rust control overhead** (see
+  the measured breakdown above) — addressable work, not a language/safety
   penalty.
 - **Worst-isolated case.** Decode-only excludes demux/IO/color-convert/display;
   in a real pipeline decode is a fraction of the work, so end-to-end impact is
@@ -154,13 +190,16 @@ are compiled away)."*
 ## Bottom line (2026-06-20)
 
 **~1.95× → ~1.24× this phase, staying bit-exact, panic-free, safe pure-Rust**
-(~310 fps 1080p single-thread). The SIMD compute is at the practical floor and
-the serial decoder is at parity. We chased the residual through 6 experiments
-(incl. the bounds-check tax, which LLVM already elides) and found **no single
-removable lever** — it's diffuse implementation maturity, not a safety or
-language penalty. Treated as the natural finish line for the NEON phase. Future
-ISA work (x86 SSE) should reuse the *arithmetic-scheme* lessons above, not chase
-lane width.
+(~310 fps 1080p single-thread). The easy arithmetic-scheme wins are banked; the
+remaining ~24% is **not a wall** — the measured breakdown above pins it to three
+under-tuned SIMD kernels (transform-add 2.5×, sixtap 1.3×, loop filter 1.2×) plus
+~2× control overhead, all with concrete techniques left to apply. **Parity
+(rav1d-like ~5–10%) is plausibly reachable on aarch64** (libvpx is intrinsics
+there, matchable in Rust), but it's real runway: the *hard* versions of kernels
+we already touched, plus de-c2rust-ing the control loop. Next build: the batched
+2-block transform (#1 on the path-to-parity list). x86 is a separate, harder
+story (libvpx has hand asm there). Reuse the *arithmetic-scheme* lessons; don't
+chase lane width.
 
 ## Appendix: lessons from libvpx & where Rust can help (for the SSE phase)
 
