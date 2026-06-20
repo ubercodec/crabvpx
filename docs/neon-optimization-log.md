@@ -47,8 +47,9 @@ autovectorization, not merely "the same work, by hand."
 | #48 | transform-add | read predictor in place from `dst`; drop per-4×4-block copy temps | ~6.5% |
 | #49 | sixtap | **u8×u8→u16 MAC** (`vmull/vmlal/vmlsl_u8`): 6 mults/8-out vs 12 i32; fixed sign pattern, two-group split + `vqaddq_s16` + `vqrshrun_n_s16` | **~17%** |
 | #50 | loop filter (horizontal Y) | **s8 saturating arithmetic** (`vqadd/vqsub_s8`): s8 saturation IS the `[-128,127]` clamp, free | ~3% |
+| #52 | transform-add | **batched 2-block** dequant+IDCT+add (`idct_dequant_full_2x`): two adjacent blocks in the full int16x8 width. The per-block shape was a wash — the batching is the win | ~2.7% |
 
-Cumulative: ~1.95× → ~1.24×.
+Cumulative: ~1.95× → ~1.20×.
 
 ## What we tried that did NOT work (do not re-attempt without new insight)
 
@@ -129,9 +130,9 @@ bounds-check tax is elided by LLVM, tested above).
 
 Not a polish — real runway, but with measured ceilings. Ordered by ratio:
 
-1. **Transform-add: batched 2-block NEON** (`idct_dequant_full_2x`-style). The
-   *per-block* NEON idct was a wash (above); the win is processing 2 blocks at
-   once across the whole MB, which is why libvpx is 2.5× here. ~0.15 ceiling.
+1. ~~Transform-add: batched 2-block NEON~~ **DONE (#52, ~2.7%).** Confirmed the
+   thesis: the per-block shape was a wash, the batched 2-block version won. Closed
+   ~0.09 of the ~0.15 transform gap; the rest is per-pair dispatch / chroma.
 2. **Loop filter: finish it** — vertical + UV edges via a `vld4` deinterleaving
    transpose (the vertical-s8 wash used the naive 8×8-transpose shape). ~0.10.
 3. **Sixtap: size-specialized + `vext` loads** (load each row once, shift for
@@ -189,17 +190,16 @@ are compiled away)."*
 
 ## Bottom line (2026-06-20)
 
-**~1.95× → ~1.24× this phase, staying bit-exact, panic-free, safe pure-Rust**
-(~310 fps 1080p single-thread). The easy arithmetic-scheme wins are banked; the
-remaining ~24% is **not a wall** — the measured breakdown above pins it to three
-under-tuned SIMD kernels (transform-add 2.5×, sixtap 1.3×, loop filter 1.2×) plus
-~2× control overhead, all with concrete techniques left to apply. **Parity
-(rav1d-like ~5–10%) is plausibly reachable on aarch64** (libvpx is intrinsics
-there, matchable in Rust), but it's real runway: the *hard* versions of kernels
-we already touched, plus de-c2rust-ing the control loop. Next build: the batched
-2-block transform (#1 on the path-to-parity list). x86 is a separate, harder
-story (libvpx has hand asm there). Reuse the *arithmetic-scheme* lessons; don't
-chase lane width.
+**~1.95× → ~1.20× and counting, staying bit-exact, panic-free, safe pure-Rust**
+(~315 fps 1080p single-thread). The remaining ~20% is **not a wall** — the
+measured breakdown pins it to under-tuned SIMD kernels plus ~2× control overhead,
+with concrete techniques left to apply. **#52 (batched 2-block transform)
+validated the path-to-parity thesis**: a shape labeled "wash" (per-block) became a
+real win (batched), exactly as predicted. Parity (rav1d-like ~5–10%) is plausibly
+reachable on aarch64 (libvpx is intrinsics there, matchable in Rust); next levers
+are loop-filter vertical/UV (`vld4`) and size-specialized sixtap, then
+de-c2rust-ing the control loop. x86 is a separate, harder story (libvpx has hand
+asm there). Reuse the *arithmetic-scheme* lessons; don't chase lane width.
 
 ## Appendix: lessons from libvpx & where Rust can help (for the SSE phase)
 
