@@ -47,8 +47,9 @@ autovectorization, not merely "the same work, by hand."
 | #48 | transform-add | read predictor in place from `dst`; drop per-4×4-block copy temps | ~6.5% |
 | #49 | sixtap | **u8×u8→u16 MAC** (`vmull/vmlal/vmlsl_u8`): 6 mults/8-out vs 12 i32; fixed sign pattern, two-group split + `vqaddq_s16` + `vqrshrun_n_s16` | **~17%** |
 | #50 | loop filter (horizontal Y) | **s8 saturating arithmetic** (`vqadd/vqsub_s8`): s8 saturation IS the `[-128,127]` clamp, free | ~3% |
+| #52 | transform-add | **batched 2-block** dequant+IDCT+add (`idct_dequant_full_2x`): two adjacent blocks in the full int16x8 width. The per-block shape was a wash — the batching is the win | ~2.7% |
 
-Cumulative: ~1.95× → ~1.24×.
+Cumulative: ~1.95× → ~1.20×.
 
 ## What we tried that did NOT work (do not re-attempt without new insight)
 
@@ -76,6 +77,19 @@ Cumulative: ~1.95× → ~1.24×.
   dispatch + wrapper/UV overhead**, not idct math — closing it would need a
   full-MB, 2-blocks-at-once restructure (`idct_dequant_full_2x_neon`), payoff
   uncertain given this result. Discarded.
+- **Per-MB `views_mut` dedup** (hoist the two per-macroblock plane-view
+  constructions in `decodeframe` into one) — **wash, slightly negative.** The
+  sampler attributed ~2% to these view helpers, but they were already nearly free
+  (cheap slicing the compiler had optimized); the self-time was over-attributed.
+  Discarded.
+- **Bounds-check elision in the token decoder** (power-of-two index masking +
+  `first_chunk_mut::<16>()` on `out`, so `out[j]`/`kBands[n]`/`kZigzag[]`/
+  `prob[]` prove in-bounds and drop their checks) — bit-exact (masks are no-ops
+  for the real value ranges), but **wash, slightly negative.** This is the key
+  result: **LLVM already elides those bounds checks** — the hypothesized "safe-
+  Rust bounds-check tax" in the hot loop essentially isn't there, and the added
+  mask instructions cost a hair. Discarded. (Corrects an earlier hypothesis;
+  see "Interpreting the gap".)
 
 ## Notes on bit-exactness for the saturating kernels
 
@@ -90,18 +104,135 @@ butterfly intermediate saturates); full-range fuzzing of those kernels is
 
 ## Current gap composition (~1.24×, ~0.6 ms/frame to libvpx)
 
-The SIMD-able compute is at/near libvpx parity. The residual gap is diffuse and
-mostly **not** more-kernel-SIMD:
+**Measured** per-component (sample-share × each decoder's ms/frame; crab 3.2,
+libvpx 2.6, totals ~equal). The gap is **not diffuse — it's concentrated in three
+SIMD kernels still behind libvpx's deeper hand-tuning, plus control overhead:**
 
-1. **Serial token/MV decode** — the #1 single cost (~1.1+ ms/frame) and only at
-   *parity* with libvpx's C. The main remaining headroom to actually *beat*
-   libvpx: micro-opt the Rust bool decoder (renorm, branch layout, fewer bounds
-   checks). Not SIMD.
-2. **Per-block dispatch** in the transform-add path (the real "transform gap").
-3. **crab-only buffer "views"/bounds overhead** (~2% of decode): per-MB
-   re-derivation of frame-buffer slice views (`views_mut`, `views_with_borders`,
-   `get_ref_and_dst_fb`). Hard to hoist cleanly — the *reference* frame varies
-   per MB, and holding views across the loop conflicts with per-MB buffer access.
+| component | crab | libvpx | gap |
+| --- | --- | --- | --- |
+| Transform-add (idct/dequant block) | ~0.26 | ~0.10 | **+0.15 (2.5×)** |
+| Sixtap | ~0.73 | ~0.55 | **+0.17 (1.3×)** |
+| Loop filter | ~0.71 | ~0.59 | **+0.12 (1.2×)** |
+| decode_frame / MB control | ~0.11 | ~0.06 | +0.06 (2×) |
+| Inter-pred + buffer views | ~0.12 | ~0.07 | +0.05 |
+| Token decode | ~0.80 | ~0.76 | +0.04 (≈parity) |
+| MV/mode decode | ~0.48 | ~0.48 | parity |
+
+**Correction to an earlier draft of this doc:** the residual is *not* "diffuse
+maturity with no removable lever." The six washes were failures to find the
+*easy* wins, not evidence of parity. libvpx's transform/sixtap/loop-filter
+kernels are still measurably faster from hand-tuning we labeled
+diminishing-returns and walked away from — those are concrete, identifiable
+targets (roadmap below). Token/MV decode genuinely are at parity (the
+bounds-check tax is elided by LLVM, tested above).
+
+## Path to parity (rav1d territory, ~5–10%)
+
+Not a polish — real runway, but with measured ceilings. Ordered by ratio:
+
+1. ~~Transform-add: batched 2-block NEON~~ **DONE (#52, ~2.7%).** Confirmed the
+   thesis: the per-block shape was a wash, the batched 2-block version won. Closed
+   ~0.09 of the ~0.15 transform gap; the rest is per-pair dispatch / chroma.
+2. **Loop filter: finish it** — vertical + UV edges via a `vld4` deinterleaving
+   transpose (the vertical-s8 wash used the naive 8×8-transpose shape). ~0.10.
+3. **Sixtap: size-specialized + `vext` loads** (load each row once, shift for
+   taps; per-size 16×16/8×8/8×4/4×4). ~0.10.
+4. **De-c2rust the MB control loop** — `decode_frame`/per-MB dispatch is ~2×
+   libvpx; idiomatic rewrite so it optimizes like the C. ~0.05–0.1 + diffuse.
+
+### Why parity is plausible here (vs the rav1d comparison)
+
+rav1d (c2rust port of dav1d) lands ~5% slower — but it **links dav1d's hand-
+written assembly**; its 5% is the cost of Rust *glue* with identical kernels.
+crabvpx writes kernels in Rust, so our comparison includes a kernel gap rav1d's
+doesn't. On **aarch64 that's winnable**, because libvpx has *no ARM assembly* —
+its NEON is intrinsics we can match in Rust (the arithmetic-scheme wins prove
+it). Our kernels trail only because the deeper intrinsic tuning isn't finished,
+not a language ceiling. Our control overhead (~2× on decode_frame) is the
+analogue of rav1d's glue tax, and ours is worse — the c2rust-derived code is less
+idiomatic than hand-translated Rust, so it's addressable.
+
+**x86 caveat:** libvpx *does* ship hand asm for SSE/SSSE3 (68 `.asm` files). Pure-
+Rust intrinsics may genuinely trail it there; the rav1d move (link the reference
+asm for the hottest kernels) may be worth considering if pure-Rust can't reach
+parity on x86.
+
+## Interpreting the gap (do not quote "−24%" bare)
+
+crabvpx decodes ~24% more CPU per frame than libvpx on this benchmark (1080p,
+single-thread, decode-only, Apple Silicon NEON, Elephants Dream) — equivalently
+~19% lower throughput (1 − 2.6/3.2). That number misleads without its caveats:
+
+- **A young-Rust-port vs mature-C+asm, not "Rust vs C".** libvpx is ~15 years of
+  hand-tuned C and assembly; crabvpx is a young safe-Rust port with NEON
+  intrinsics on the hot kernels. The gap measures implementation maturity, not
+  the language.
+- **It is *not* mainly a safety tax — we tested that.** The intuitive culprit is
+  Rust's bounds checks, but the elision experiment (above) showed **LLVM already
+  removes them** in the hot token loop; forcing elision was a wash. So safe Rust
+  is *not* meaningfully paying for bounds checks here, and `unsafe get_unchecked`
+  would not help. (panic-free `Result` paths and the safe slicing cost something,
+  but no single safety feature proved removable across 6 experiments.) The
+  residual is **unfinished kernel hand-tuning + c2rust control overhead** (see
+  the measured breakdown above) — addressable work, not a language/safety
+  penalty.
+- **Worst-isolated case.** Decode-only excludes demux/IO/color-convert/display;
+  in a real pipeline decode is a fraction of the work, so end-to-end impact is
+  much smaller. Single-thread; both scale with `CRABVPX_THREADS`.
+- **A moving target, already moved.** This phase took it 1.95× → 1.24× (≈95% →
+  ≈24%). Content/config dependent (the sixtap fast-path win depends on the clip's
+  motion-vector distribution).
+
+Fair one-liner: *"a bit-exact, panic-free, safe pure-Rust VP8 decoder runs decode
+~24% slower than libvpx's hand-tuned C+asm on Apple Silicon — and that gap is
+implementation maturity, not the language or its safety checks (the bounds checks
+are compiled away)."*
+
+## Bottom line (2026-06-20)
+
+**~1.95× → ~1.20× and counting, staying bit-exact, panic-free, safe pure-Rust**
+(~315 fps 1080p single-thread). The remaining ~20% is **not a wall** — the
+measured breakdown pins it to under-tuned SIMD kernels plus ~2× control overhead,
+with concrete techniques left to apply. **#52 (batched 2-block transform)
+validated the path-to-parity thesis**: a shape labeled "wash" (per-block) became a
+real win (batched), exactly as predicted. Parity (rav1d-like ~5–10%) is plausibly
+reachable on aarch64 (libvpx is intrinsics there, matchable in Rust); next levers
+are loop-filter vertical/UV (`vld4`) and size-specialized sixtap, then
+de-c2rust-ing the control loop. x86 is a separate, harder story (libvpx has hand
+asm there). Reuse the *arithmetic-scheme* lessons; don't chase lane width.
+
+## Appendix: lessons from libvpx & where Rust can help (for the SSE phase)
+
+**Mining libvpx's "hand assembly" — feasibility by ISA.** For aarch64 there is
+**no raw ARM assembly** in libvpx — the NEON path is C intrinsics
+(`vp8/common/arm/neon/*.c`), which we read directly; the high-value lessons are
+already extracted and shipped (u8-MAC, s8-saturating, `vqdmulhq` rotation
+constants, fused `vqrshrun`/`vqshrn` round+clamp, two-group accumulation,
+identity-pass skipping, in-place residual). What remains unported (2-block
+register blocking `idct_dequant_full_2x`, `vld4` deinterleaving transposes,
+manual scheduling) the compiler already matches — hence the washes. **The 68
+`.asm` files are all x86 (SSE/SSSE3/MMX)** and are a genuinely untapped goldmine
+**for the SSE phase only** (e.g. `vpx_subpixel_8t_ssse3.asm`, `idct_blk_sse2`).
+A feasible confirmation step if ever needed: `otool -tv`/`objdump` a single crab
+kernel and diff instruction count/scheduling vs libvpx's compiled kernel.
+
+**"Things Rust is better at" — what applies.**
+- *`&mut` = `noalias` for free* (C needs `restrict`, often omitted). Already
+  helping (it's why `read_bool` inlines with state in registers). Opportunistic
+  elsewhere.
+- *Whole-crate inlining without LTO.* Already gives libvpx's hand-fused-function
+  effect for free.
+- *Bounds-check elision via types.* Tested (above) — **LLVM already does it**, so
+  no win here, but it's why the safe code isn't paying a check tax. Keep using
+  fixed-size array refs / iterators so it stays that way.
+- *Monomorphization / the `Simd` trait.* Was a perf wash (const-generic sixtap)
+  but is the real **parity multiplier for SSE**: one bit-exact kernel body, two
+  ISAs. The biggest Rust leverage going forward is *productivity/correctness at
+  parity*, not raw single-thread speed.
+- *`const fn` to compute tables → store in a `static`.* Lookup tables must be
+  `static` (one rodata copy, addressed); reserve `const` for register-sized
+  values that lower to immediates. (crab already uses `static` for `kBands`/
+  `kZigzag`/`vp8_norm`/`coef_probs`.)
 
 ## Content caveat
 
