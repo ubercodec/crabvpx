@@ -10,7 +10,8 @@ for the kernel/trait design.
 Close the gap to libvpx 2.29 on Apple Silicon (NEON), single-threaded, decode-only.
 
 - **Start of phase:** 1080p ~4.66 ms/frame, **~1.95× libvpx** (~2.6 ms/frame).
-- **Now:** 1080p ~3.2 ms/frame, **~1.24×**.
+- **Now:** 1080p ~3.0 ms/frame, **~1.14×** (the per-component table below was
+  measured at the ~1.24× point; loop filter has since dropped via #54/#55).
 
 ## Methodology (read before benchmarking)
 
