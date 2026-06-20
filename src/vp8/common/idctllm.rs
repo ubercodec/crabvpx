@@ -1,12 +1,11 @@
 const COSPI8SQRT2MINUS1: i32 = 20091;
 const SINPI8SQRT2: i32 = 35468;
 
-pub fn vp8_short_idct4x4llm_safe(
-    input: &[i16; 16],
-    pred: [u8; 16],
-    dst: &mut [u8],
-    dst_stride: i32,
-) {
+/// Inverse 4x4 DCT added in place: the predictor is the current `dst` content,
+/// so it is read straight from `dst` instead of a separate copy. Each output
+/// pixel depends only on its own predictor pixel, so the read-then-write is
+/// bit-identical to the previous copy-the-predictor form.
+pub fn vp8_short_idct4x4llm_safe(input: &[i16; 16], dst: &mut [u8], dst_stride: i32) {
     let mut output = [0i16; 16];
 
     // First pass: process columns
@@ -50,54 +49,37 @@ pub fn vp8_short_idct4x4llm_safe(
         output[i * 4 + 2] = ((b1 - c1 + 4) >> 3) as i16;
     }
 
-    // Add predictor and clamp
+    // Add predictor (read in place from dst) and clamp.
     for r in 0..4 {
         for c in 0..4 {
-            let a = output[r * 4 + c] as i32 + pred[r * 4 + c] as i32;
-            let clamped = a.clamp(0, 255) as u8;
-            dst[r * dst_stride as usize + c] = clamped;
+            let idx = r * dst_stride as usize + c;
+            let a = output[r * 4 + c] as i32 + dst[idx] as i32;
+            dst[idx] = a.clamp(0, 255) as u8;
         }
     }
 }
 
 /// Add the DC-only inverse transform (a single rounded DC term) to the
-/// predictor and clamp. Dispatches to the NEON kernel on aarch64 (bit-exact
-/// with the scalar twin); scalar elsewhere.
-pub fn vp8_dc_only_idct_add_safe(
-    input_dc: i16,
-    pred: &[u8],
-    pred_stride: i32,
-    dst: &mut [u8],
-    dst_stride: i32,
-) {
+/// predictor and clamp, in place. The predictor is the current `dst` content,
+/// so it is read straight from `dst` (each pixel depends only on itself, so the
+/// read-then-write is bit-identical to the previous copy-the-predictor form).
+/// Dispatches to the NEON kernel on aarch64; scalar elsewhere.
+pub fn vp8_dc_only_idct_add_safe(input_dc: i16, dst: &mut [u8], dst_stride: i32) {
     #[cfg(target_arch = "aarch64")]
     {
-        crate::vp8::common::simd::neon::vp8_dc_only_idct_add_neon(
-            input_dc,
-            pred,
-            pred_stride,
-            dst,
-            dst_stride,
-        );
+        crate::vp8::common::simd::neon::vp8_dc_only_idct_add_neon(input_dc, dst, dst_stride);
     }
     #[cfg(not(target_arch = "aarch64"))]
-    vp8_dc_only_idct_add_scalar(input_dc, pred, pred_stride, dst, dst_stride);
+    vp8_dc_only_idct_add_scalar(input_dc, dst, dst_stride);
 }
 
-pub fn vp8_dc_only_idct_add_scalar(
-    input_dc: i16,
-    pred: &[u8],
-    pred_stride: i32,
-    dst: &mut [u8],
-    dst_stride: i32,
-) {
+pub fn vp8_dc_only_idct_add_scalar(input_dc: i16, dst: &mut [u8], dst_stride: i32) {
     let a1 = (input_dc as i32 + 4) >> 3;
     for r in 0..4 {
         for c in 0..4 {
-            let pred_idx = r * pred_stride as usize + c;
-            let dst_idx = r * dst_stride as usize + c;
-            let a = a1 + pred[pred_idx] as i32;
-            dst[dst_idx] = a.clamp(0, 255) as u8;
+            let idx = r * dst_stride as usize + c;
+            let a = a1 + dst[idx] as i32;
+            dst[idx] = a.clamp(0, 255) as u8;
         }
     }
 }

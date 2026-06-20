@@ -28,17 +28,7 @@ pub fn vp8_dequant_idct_add_y_block_safe(
                 let input_dc = q[q_offset].wrapping_mul(dq[0]);
                 let dst_sub = &mut dst[dst_offset..];
 
-                // Copy predictor to a safe temporary array to avoid borrow-checker conflicts.
-                let mut pred = [0u8; 16];
-                for r in 0..4 {
-                    for c in 0..4 {
-                        pred[r * 4 + c] = dst_sub[r * stride_sz + c];
-                    }
-                }
-
-                crate::vp8::common::idctllm::vp8_dc_only_idct_add_safe(
-                    input_dc, &pred, 4, dst_sub, stride,
-                );
+                crate::vp8::common::idctllm::vp8_dc_only_idct_add_safe(input_dc, dst_sub, stride);
 
                 q[q_offset] = 0;
                 q[q_offset + 1] = 0;
@@ -78,16 +68,7 @@ pub fn vp8_dequant_idct_add_uv_block_safe(
                 let input_dc = q[q_offset].wrapping_mul(dq[0]);
                 let dst_sub = &mut dst_u[dst_offset..];
 
-                let mut pred = [0u8; 16];
-                for r in 0..4 {
-                    for c in 0..4 {
-                        pred[r * 4 + c] = dst_sub[r * stride_sz + c];
-                    }
-                }
-
-                crate::vp8::common::idctllm::vp8_dc_only_idct_add_safe(
-                    input_dc, &pred, 4, dst_sub, stride,
-                );
+                crate::vp8::common::idctllm::vp8_dc_only_idct_add_safe(input_dc, dst_sub, stride);
 
                 q[q_offset] = 0;
                 q[q_offset + 1] = 0;
@@ -114,16 +95,7 @@ pub fn vp8_dequant_idct_add_uv_block_safe(
                 let input_dc = q[q_offset].wrapping_mul(dq[0]);
                 let dst_sub = &mut dst_v[dst_offset..];
 
-                let mut pred = [0u8; 16];
-                for r in 0..4 {
-                    for c in 0..4 {
-                        pred[r * 4 + c] = dst_sub[r * stride_sz + c];
-                    }
-                }
-
-                crate::vp8::common::idctllm::vp8_dc_only_idct_add_safe(
-                    input_dc, &pred, 4, dst_sub, stride,
-                );
+                crate::vp8::common::idctllm::vp8_dc_only_idct_add_safe(input_dc, dst_sub, stride);
 
                 q[q_offset] = 0;
                 q[q_offset + 1] = 0;

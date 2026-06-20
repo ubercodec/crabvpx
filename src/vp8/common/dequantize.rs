@@ -21,16 +21,8 @@ pub fn vp8_dequant_idct_add_safe(
         input[i] = (dq[i] as i32 * input[i] as i32) as i16;
     }
 
-    // copy pred from dest
-    let mut pred = [0u8; 16];
-    for r in 0..4 {
-        for c in 0..4 {
-            pred[r * 4 + c] = dest[r * stride as usize + c];
-        }
-    }
-
-    // Call safe IDCT
-    crate::vp8::common::idctllm::vp8_short_idct4x4llm_safe(input, pred, dest, stride);
+    // Inverse transform, added in place against dest (the predictor).
+    crate::vp8::common::idctllm::vp8_short_idct4x4llm_safe(input, dest, stride);
 
     // Clear input
     input.fill(0);
