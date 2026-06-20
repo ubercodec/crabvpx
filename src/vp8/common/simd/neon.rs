@@ -481,32 +481,27 @@ fn sixtap_store_u8(dst: &mut [u8], v: uint8x8_t, n: usize) {
 }
 
 // ===========================================================================
-// NEON DC-only inverse transform add (vp8_dc_only_idct_add). The whole 4x4
-// transform of a DC-only block reduces to adding the single rounded DC term
-// `(input_dc + 4) >> 3` to every predictor pixel and clamping to 0..=255.
-// Bit-exact with vp8_dc_only_idct_add_scalar: the per-row vector add in i16
-// followed by `vqmovun_s16` (unsigned saturating narrow) reproduces the scalar
-// `clamp(a1 + pred, 0, 255)` exactly. `a1` fits in i16 (|input_dc| <= 32767 so
-// |a1| <= ~4100) and pred is 0..=255, so the i16 add never overflows.
+// NEON DC-only inverse transform add (vp8_dc_only_idct_add), in place. The
+// whole 4x4 transform of a DC-only block reduces to adding the single rounded
+// DC term `(input_dc + 4) >> 3` to every predictor pixel and clamping to
+// 0..=255. The predictor is the current `dst` content. Bit-exact with
+// vp8_dc_only_idct_add_scalar: the per-row vector add in i16 followed by
+// `vqmovun_s16` (unsigned saturating narrow) reproduces the scalar
+// `clamp(a1 + dst, 0, 255)` exactly. `a1` fits in i16 (|input_dc| <= 32767 so
+// |a1| <= ~4100) and dst is 0..=255, so the i16 add never overflows.
 // ===========================================================================
 
-pub(crate) fn vp8_dc_only_idct_add_neon(
-    input_dc: i16,
-    pred: &[u8],
-    pred_stride: i32,
-    dst: &mut [u8],
-    dst_stride: i32,
-) {
+pub(crate) fn vp8_dc_only_idct_add_neon(input_dc: i16, dst: &mut [u8], dst_stride: i32) {
     let a1 = ((input_dc as i32 + 4) >> 3) as i16;
-    let ps = pred_stride as usize;
     let ds = dst_stride as usize;
-    // SAFETY: NEON baseline. Each row touches 4 valid pred/dst bytes; the loads
-    // read an 8-byte register but only the low 4 lanes are stored back, and the
-    // callers always provide >= 3*stride + 4 bytes (a full 4x4 block).
+    // SAFETY: NEON baseline. Each row touches 4 valid dst bytes; the load reads
+    // an 8-byte register but only the low 4 lanes are stored back, and callers
+    // always provide >= 3*stride + 4 bytes (a full 4x4 block). The read of a row
+    // completes before that row is written, so the in-place update is sound.
     unsafe {
         let dc = vdupq_n_s16(a1);
         for r in 0..4 {
-            let p = vld1_u8(pred.as_ptr().add(r * ps));
+            let p = vld1_u8(dst.as_ptr().add(r * ds));
             let widened = vreinterpretq_s16_u16(vmovl_u8(p));
             let sum = vaddq_s16(widened, dc);
             let bytes = vqmovun_s16(sum);
@@ -536,7 +531,6 @@ mod tests {
     #[test]
     fn neon_dc_only_idct_add_matches_scalar_bit_exact() {
         use crate::vp8::common::idctllm::vp8_dc_only_idct_add_scalar;
-        let pred_stride = 4i32;
         let dst_stride = 24i32;
         for trial in 0..20000 {
             let mut seed = (trial as u64)
@@ -545,18 +539,17 @@ mod tests {
             // Cover the full DC range, including values that drive a1 out of
             // 0..=255 so the saturation paths are exercised.
             let input_dc = (((lcg(&mut seed) as u16) << 8) | lcg(&mut seed) as u16) as i16;
-            let mut pred = [0u8; 16];
-            for p in pred.iter_mut() {
-                *p = lcg(&mut seed);
-            }
+            // Identical strided predictor content in both buffers (read in place).
             let mut a = vec![0u8; 4 * dst_stride as usize];
-            let mut b = vec![0u8; 4 * dst_stride as usize];
-            vp8_dc_only_idct_add_scalar(input_dc, &pred, pred_stride, &mut a, dst_stride);
-            vp8_dc_only_idct_add_neon(input_dc, &pred, pred_stride, &mut b, dst_stride);
-            assert_eq!(
-                a, b,
-                "dc_only trial={trial} input_dc={input_dc} pred={pred:?}"
-            );
+            for r in 0..4 {
+                for c in 0..4 {
+                    a[r * dst_stride as usize + c] = lcg(&mut seed);
+                }
+            }
+            let mut b = a.clone();
+            vp8_dc_only_idct_add_scalar(input_dc, &mut a, dst_stride);
+            vp8_dc_only_idct_add_neon(input_dc, &mut b, dst_stride);
+            assert_eq!(a, b, "dc_only trial={trial} input_dc={input_dc}");
         }
     }
 

@@ -379,14 +379,7 @@ fn decode_macroblock(
                         // instead of panicking on overflow from hostile coeffs.
                         let input_dc = q_sub[0].wrapping_mul(dq_ref[0]);
 
-                        let mut pred = [0u8; 16];
-                        for r in 0..4 {
-                            for c in 0..4 {
-                                pred[r * 4 + c] = dst_sub_slice[r * dst_stride as usize + c];
-                            }
-                        }
-
-                        vp8_dc_only_idct_add_safe(input_dc, &pred, 4, dst_sub_slice, dst_stride);
+                        vp8_dc_only_idct_add_safe(input_dc, dst_sub_slice, dst_stride);
 
                         q_sub[0] = 0;
                         q_sub[1] = 0;

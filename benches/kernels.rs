@@ -37,16 +37,18 @@ fn bench_transforms(c: &mut Criterion) {
 
     g.bench_function("short_idct4x4llm", |b| {
         b.iter(|| {
-            let mut dst = [0u8; 16];
-            vp8_short_idct4x4llm_safe(black_box(&COEFFS), black_box(PRED4), &mut dst, 4);
+            // In-place: dst holds the predictor on entry.
+            let mut dst = black_box(PRED4);
+            vp8_short_idct4x4llm_safe(black_box(&COEFFS), &mut dst, 4);
             black_box(dst)
         })
     });
 
     g.bench_function("dc_only_idct_add", |b| {
         b.iter(|| {
-            let mut dst = [0u8; 16];
-            vp8_dc_only_idct_add_safe(black_box(96), black_box(&PRED4), 4, &mut dst, 4);
+            // In-place: dst holds the predictor on entry.
+            let mut dst = black_box(PRED4);
+            vp8_dc_only_idct_add_safe(black_box(96), &mut dst, 4);
             black_box(dst)
         })
     });
