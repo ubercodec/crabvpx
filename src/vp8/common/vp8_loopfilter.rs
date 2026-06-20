@@ -275,26 +275,16 @@ pub fn vp8_loop_filter_row_normal_safe(
                     thresh_slice,
                     2,
                 );
-                if let Some(u) = u_slice.as_deref_mut() {
-                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(
+                if let (Some(u), Some(v)) = (u_slice.as_deref_mut(), v_slice.as_deref_mut()) {
+                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_uv_safe(
                         u,
                         cur_u_offset,
-                        uv_stride_usize,
-                        mblim_slice,
-                        lim_slice,
-                        thresh_slice,
-                        1,
-                    );
-                }
-                if let Some(v) = v_slice.as_deref_mut() {
-                    crate::vp8::common::loopfilter_filters::mbloop_filter_vertical_edge_safe(
                         v,
                         cur_v_offset,
                         uv_stride_usize,
                         mblim_slice,
                         lim_slice,
                         thresh_slice,
-                        1,
                     );
                 }
             }
@@ -328,26 +318,16 @@ pub fn vp8_loop_filter_row_normal_safe(
                     2,
                 );
 
-                if let Some(u) = u_slice.as_deref_mut() {
-                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
+                if let (Some(u), Some(v)) = (u_slice.as_deref_mut(), v_slice.as_deref_mut()) {
+                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_uv_safe(
                         u,
                         cur_u_offset + 4,
-                        uv_stride_usize,
-                        blim_slice,
-                        lim_slice,
-                        thresh_slice,
-                        1,
-                    );
-                }
-                if let Some(v) = v_slice.as_deref_mut() {
-                    crate::vp8::common::loopfilter_filters::loop_filter_vertical_edge_safe(
                         v,
                         cur_v_offset + 4,
                         uv_stride_usize,
                         blim_slice,
                         lim_slice,
                         thresh_slice,
-                        1,
                     );
                 }
             }
@@ -362,26 +342,16 @@ pub fn vp8_loop_filter_row_normal_safe(
                     thresh_slice,
                     2,
                 );
-                if let Some(u) = u_slice.as_deref_mut() {
-                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(
+                if let (Some(u), Some(v)) = (u_slice.as_deref_mut(), v_slice.as_deref_mut()) {
+                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_uv_safe(
                         u,
                         cur_u_offset,
-                        uv_stride_usize,
-                        mblim_slice,
-                        lim_slice,
-                        thresh_slice,
-                        1,
-                    );
-                }
-                if let Some(v) = v_slice.as_deref_mut() {
-                    crate::vp8::common::loopfilter_filters::mbloop_filter_horizontal_edge_safe(
                         v,
                         cur_v_offset,
                         uv_stride_usize,
                         mblim_slice,
                         lim_slice,
                         thresh_slice,
-                        1,
                     );
                 }
             }
@@ -415,26 +385,16 @@ pub fn vp8_loop_filter_row_normal_safe(
                     2,
                 );
 
-                if let Some(u) = u_slice.as_deref_mut() {
-                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
+                if let (Some(u), Some(v)) = (u_slice.as_deref_mut(), v_slice.as_deref_mut()) {
+                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_uv_safe(
                         u,
                         cur_u_offset + 4 * uv_stride_usize,
-                        uv_stride_usize,
-                        blim_slice,
-                        lim_slice,
-                        thresh_slice,
-                        1,
-                    );
-                }
-                if let Some(v) = v_slice.as_deref_mut() {
-                    crate::vp8::common::loopfilter_filters::loop_filter_horizontal_edge_safe(
                         v,
                         cur_v_offset + 4 * uv_stride_usize,
                         uv_stride_usize,
                         blim_slice,
                         lim_slice,
                         thresh_slice,
-                        1,
                     );
                 }
             }

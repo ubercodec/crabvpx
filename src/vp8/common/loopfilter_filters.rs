@@ -104,6 +104,96 @@ pub(crate) fn loop_filter_horizontal_edge_safe(
     loop_filter_horizontal_edge_scalar(s, s_offset, p, blimit, limit, thresh, count);
 }
 
+// Chroma edges, U and V filtered together. On aarch64 they pack into one 16-wide
+// s8 pass (libvpx's scheme); elsewhere they fall back to two 8-wide scalar calls.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn loop_filter_horizontal_edge_uv_safe(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: &[u8],
+    limit: &[u8],
+    thresh: &[u8],
+) {
+    #[cfg(target_arch = "aarch64")]
+    crate::vp8::common::simd::neon::loop_filter_horizontal_edge_uv_neon(
+        u, u_off, v, v_off, p, blimit[0], limit[0], thresh[0],
+    );
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        loop_filter_horizontal_edge_scalar(u, u_off, p, blimit, limit, thresh, 1);
+        loop_filter_horizontal_edge_scalar(v, v_off, p, blimit, limit, thresh, 1);
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn mbloop_filter_horizontal_edge_uv_safe(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: &[u8],
+    limit: &[u8],
+    thresh: &[u8],
+) {
+    #[cfg(target_arch = "aarch64")]
+    crate::vp8::common::simd::neon::mbloop_filter_horizontal_edge_uv_neon(
+        u, u_off, v, v_off, p, blimit[0], limit[0], thresh[0],
+    );
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        mbloop_filter_horizontal_edge_scalar(u, u_off, p, blimit, limit, thresh, 1);
+        mbloop_filter_horizontal_edge_scalar(v, v_off, p, blimit, limit, thresh, 1);
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn loop_filter_vertical_edge_uv_safe(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: &[u8],
+    limit: &[u8],
+    thresh: &[u8],
+) {
+    #[cfg(target_arch = "aarch64")]
+    crate::vp8::common::simd::neon::loop_filter_vertical_edge_uv_neon(
+        u, u_off, v, v_off, p, blimit[0], limit[0], thresh[0],
+    );
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        loop_filter_vertical_edge_scalar(u, u_off, p, blimit, limit, thresh, 1);
+        loop_filter_vertical_edge_scalar(v, v_off, p, blimit, limit, thresh, 1);
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn mbloop_filter_vertical_edge_uv_safe(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: &[u8],
+    limit: &[u8],
+    thresh: &[u8],
+) {
+    #[cfg(target_arch = "aarch64")]
+    crate::vp8::common::simd::neon::mbloop_filter_vertical_edge_uv_neon(
+        u, u_off, v, v_off, p, blimit[0], limit[0], thresh[0],
+    );
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        mbloop_filter_vertical_edge_scalar(u, u_off, p, blimit, limit, thresh, 1);
+        mbloop_filter_vertical_edge_scalar(v, v_off, p, blimit, limit, thresh, 1);
+    }
+}
+
 pub(crate) fn loop_filter_horizontal_edge_scalar(
     s: &mut [u8],
     s_offset: usize,

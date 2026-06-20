@@ -618,6 +618,193 @@ fn mbloop_filter_vertical_y_s8(
     }
 }
 
+// --- s8 loop filter, UV edges with U and V packed into one 16-wide pass ---
+// libvpx filters both chroma planes together: U in the low 8 lanes, V in the
+// high 8. Horizontal needs no transpose (each tap row is vcombine(u_row,
+// v_row)); vertical reuses lf_transpose_q (low = U's 8 rows, high = V's).
+
+/// Horizontal UV edge: 8 tap rows, each `[u_row | v_row]`. `f_mb` selects the MB
+/// filter (6 changed columns) vs the normal filter (4).
+#[target_feature(enable = "neon")]
+fn lf_uv_horizontal(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: u8,
+    limit: u8,
+    thresh: u8,
+    f_mb: bool,
+) {
+    let up = u.as_mut_ptr();
+    let vp = v.as_mut_ptr();
+    // SAFETY: NEON baseline; rows off-4p..off+3p of u and v are in-bounds per the
+    // bordered chroma buffers (same elements the 8-wide kernel touched).
+    unsafe {
+        // taps p3..q3 at rows off-4p .. off+3p, each [u_row | v_row].
+        let t: [uint8x16_t; 8] = [
+            vcombine_u8(
+                vld1_u8(up.add(u_off - 4 * p)),
+                vld1_u8(vp.add(v_off - 4 * p)),
+            ),
+            vcombine_u8(
+                vld1_u8(up.add(u_off - 3 * p)),
+                vld1_u8(vp.add(v_off - 3 * p)),
+            ),
+            vcombine_u8(
+                vld1_u8(up.add(u_off - 2 * p)),
+                vld1_u8(vp.add(v_off - 2 * p)),
+            ),
+            vcombine_u8(vld1_u8(up.add(u_off - p)), vld1_u8(vp.add(v_off - p))),
+            vcombine_u8(vld1_u8(up.add(u_off)), vld1_u8(vp.add(v_off))),
+            vcombine_u8(vld1_u8(up.add(u_off + p)), vld1_u8(vp.add(v_off + p))),
+            vcombine_u8(
+                vld1_u8(up.add(u_off + 2 * p)),
+                vld1_u8(vp.add(v_off + 2 * p)),
+            ),
+            vcombine_u8(
+                vld1_u8(up.add(u_off + 3 * p)),
+                vld1_u8(vp.add(v_off + 3 * p)),
+            ),
+        ];
+        let (mask, hev) = lf_mask_hev(
+            blimit, limit, thresh, t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7],
+        );
+        let mut st = |k: usize, val: uint8x16_t| {
+            vst1_u8(
+                up.add((u_off as isize + (k as isize - 4) * p as isize) as usize),
+                vget_low_u8(val),
+            );
+            vst1_u8(
+                vp.add((v_off as isize + (k as isize - 4) * p as isize) as usize),
+                vget_high_u8(val),
+            );
+        };
+        if f_mb {
+            let (np2, np1, np0, nq0, nq1, nq2) =
+                lf_mb_s8(mask, hev, t[1], t[2], t[3], t[4], t[5], t[6]);
+            st(1, np2);
+            st(2, np1);
+            st(3, np0);
+            st(4, nq0);
+            st(5, nq1);
+            st(6, nq2);
+        } else {
+            let (np1, np0, nq0, nq1) = lf_normal_s8(mask, hev, t[2], t[3], t[4], t[5]);
+            st(2, np1);
+            st(3, np0);
+            st(4, nq0);
+            st(5, nq1);
+        }
+    }
+}
+
+/// Vertical UV edge: load `[u_row | v_row]` for 8 rows, transpose (low = U's 8
+/// rows, high = V's), filter, transpose back, store split.
+#[target_feature(enable = "neon")]
+fn lf_uv_vertical(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: u8,
+    limit: u8,
+    thresh: u8,
+    f_mb: bool,
+) {
+    let up = u.as_mut_ptr();
+    let vp = v.as_mut_ptr();
+    // SAFETY: NEON baseline; cols off-4..off+3 of 8 rows of u and v are in-bounds.
+    unsafe {
+        let us = up.add(u_off - 4);
+        let vs = vp.add(v_off - 4);
+        let qs: [uint8x16_t; 8] = [
+            vcombine_u8(vld1_u8(us), vld1_u8(vs)),
+            vcombine_u8(vld1_u8(us.add(p)), vld1_u8(vs.add(p))),
+            vcombine_u8(vld1_u8(us.add(2 * p)), vld1_u8(vs.add(2 * p))),
+            vcombine_u8(vld1_u8(us.add(3 * p)), vld1_u8(vs.add(3 * p))),
+            vcombine_u8(vld1_u8(us.add(4 * p)), vld1_u8(vs.add(4 * p))),
+            vcombine_u8(vld1_u8(us.add(5 * p)), vld1_u8(vs.add(5 * p))),
+            vcombine_u8(vld1_u8(us.add(6 * p)), vld1_u8(vs.add(6 * p))),
+            vcombine_u8(vld1_u8(us.add(7 * p)), vld1_u8(vs.add(7 * p))),
+        ];
+        let t = lf_transpose_q(&qs);
+        let (mask, hev) = lf_mask_hev(
+            blimit, limit, thresh, t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7],
+        );
+        let out = if f_mb {
+            let (np2, np1, np0, nq0, nq1, nq2) =
+                lf_mb_s8(mask, hev, t[1], t[2], t[3], t[4], t[5], t[6]);
+            lf_transpose_q(&[t[0], np2, np1, np0, nq0, nq1, nq2, t[7]])
+        } else {
+            let (np1, np0, nq0, nq1) = lf_normal_s8(mask, hev, t[2], t[3], t[4], t[5]);
+            lf_transpose_q(&[t[0], t[1], np1, np0, nq0, nq1, t[6], t[7]])
+        };
+        for (k, q) in out.iter().enumerate() {
+            vst1_u8(us.add(k * p), vget_low_u8(*q));
+            vst1_u8(vs.add(k * p), vget_high_u8(*q));
+        }
+    }
+}
+
+pub(crate) fn loop_filter_horizontal_edge_uv_neon(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: u8,
+    limit: u8,
+    thresh: u8,
+) {
+    // SAFETY: NEON baseline.
+    unsafe { lf_uv_horizontal(u, u_off, v, v_off, p, blimit, limit, thresh, false) };
+}
+
+pub(crate) fn mbloop_filter_horizontal_edge_uv_neon(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: u8,
+    limit: u8,
+    thresh: u8,
+) {
+    // SAFETY: NEON baseline.
+    unsafe { lf_uv_horizontal(u, u_off, v, v_off, p, blimit, limit, thresh, true) };
+}
+
+pub(crate) fn loop_filter_vertical_edge_uv_neon(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: u8,
+    limit: u8,
+    thresh: u8,
+) {
+    // SAFETY: NEON baseline.
+    unsafe { lf_uv_vertical(u, u_off, v, v_off, p, blimit, limit, thresh, false) };
+}
+
+pub(crate) fn mbloop_filter_vertical_edge_uv_neon(
+    u: &mut [u8],
+    u_off: usize,
+    v: &mut [u8],
+    v_off: usize,
+    p: usize,
+    blimit: u8,
+    limit: u8,
+    thresh: u8,
+) {
+    // SAFETY: NEON baseline.
+    unsafe { lf_uv_vertical(u, u_off, v, v_off, p, blimit, limit, thresh, true) };
+}
+
 // ===========================================================================
 // NEON dequant + 4x4 IDCT + add, processing TWO horizontally-adjacent blocks at
 // once (libvpx's idct_dequant_full_2x / _0_2x). Twice the throughput per
