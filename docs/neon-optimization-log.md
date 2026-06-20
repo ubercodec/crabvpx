@@ -108,6 +108,31 @@ mostly **not** more-kernel-SIMD:
    the per-MB `views_mut` calls measured as a wash** (the calls were already
    nearly free; the self-time was over-attributed). Not worth pursuing.
 
+## Interpreting the gap (do not quote "−24%" bare)
+
+crabvpx decodes ~24% more CPU per frame than libvpx on this benchmark (1080p,
+single-thread, decode-only, Apple Silicon NEON, Elephants Dream) — equivalently
+~19% lower throughput (1 − 2.6/3.2). That number misleads without its caveats:
+
+- **A young-Rust-port vs mature-C+asm, not "Rust vs C".** libvpx is ~15 years of
+  hand-tuned C and assembly; crabvpx is a young safe-Rust port with NEON
+  intrinsics on the hot kernels. The gap measures implementation maturity, not
+  the language.
+- **Most of the residual is a *deliberate* safety tax**, not an inherent penalty:
+  bounds checks, panic-free `Result` handling, zero `unsafe` in scalar/decode
+  paths. C with the same checks would also slow down; Rust with `unsafe
+  get_unchecked` could recover much of it. So ~24% is the cost of *safe* Rust.
+- **Worst-isolated case.** Decode-only excludes demux/IO/color-convert/display;
+  in a real pipeline decode is a fraction of the work, so end-to-end impact is
+  much smaller. Single-thread; both scale with `CRABVPX_THREADS`.
+- **A moving target, already moved.** This phase took it 1.95× → 1.24× (≈95% →
+  ≈24%). Content/config dependent (the sixtap fast-path win depends on the clip's
+  motion-vector distribution).
+
+Fair one-liner: *"a bit-exact, panic-free, safe pure-Rust VP8 decoder runs decode
+~24% slower than libvpx's hand-tuned C+asm on Apple Silicon, and most of that
+remaining gap is the price of the safety guarantees, not the language."*
+
 ## Bottom line (2026-06-20)
 
 **~1.95× → ~1.24× this phase, staying bit-exact, panic-free, safe pure-Rust**
