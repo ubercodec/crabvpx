@@ -1,3 +1,8 @@
+//! YV12 border extension — port of `vpx_scale/generic/yv12extend.c`.
+//!
+//! Replicates plane edges into the YV12 border so motion compensation can read
+//! outside the visible frame.
+
 pub use crate::vp8::common::types::*;
 pub type vpx_color_range_t = vpx_color_range;
 pub type vpx_color_range = u32;

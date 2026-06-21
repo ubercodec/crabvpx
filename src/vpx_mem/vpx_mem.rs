@@ -1,3 +1,7 @@
+//! Memory allocation shim — port of `vpx_mem/vpx_mem.c`.
+//!
+//! Allocation helpers libvpx code expects; thin wrappers over the Rust allocator.
+
 pub const DEFAULT_ALIGNMENT: usize = 32;
 
 pub struct AlignedBox {

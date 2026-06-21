@@ -1,3 +1,8 @@
+//! YV12 buffer configuration — port of `vpx_scale/generic/yv12config.c`.
+//!
+//! Allocation/layout of the bordered YV12 frame buffers (strides, plane offsets,
+//! border pixels) used throughout the decoder.
+
 pub use crate::vp8::common::types::*;
 use crate::vpx_mem::vpx_mem::AlignedBox;
 

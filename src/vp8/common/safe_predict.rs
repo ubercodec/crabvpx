@@ -1,3 +1,8 @@
+//! Safe sub-pixel predict wrappers (crabvpx-native).
+//!
+//! Bounds-checked slice front ends over the NEON/scalar sixtap & bilinear
+//! kernels, so callers never pass raw pointers.
+
 // Safe subpixel prediction wrappers
 // This file provides safe Rust interfaces to the unsafe FFI predictor functions.
 // It performs necessary bounds checks prior to calling the unsafe FFI.

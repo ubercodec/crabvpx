@@ -1,3 +1,9 @@
+//! Frame decode driver — port of `vp8/decoder/decodeframe.c`.
+//!
+//! Parses the frame header, then walks every macroblock: entropy-decode tokens,
+//! reconstruct (intra/inter prediction + residual), and in-loop deblock. The
+//! per-MB control loop that ties the codec together.
+
 use crate::vp8::common::alloccommon::vp8_setup_version;
 use crate::vp8::common::dequantize::vp8_dequant_idct_add_safe;
 use crate::vp8::common::dequantize::vp8_dequantize_b_safe;
@@ -131,6 +137,8 @@ pub(crate) fn setup_intra_recon_left(ybf: &mut YV12_BUFFER_CONFIG, mb_row: i32) 
         }
     }
 }
+/// `vp8cx_init_de_quantizer` — vp8/decoder/decodeframe.c. Precomputes the dequant
+/// factor tables for every quantizer index.
 pub fn vp8cx_init_de_quantizer(pbi: &mut VP8D_COMP) {
     let pc = &mut pbi.common;
     let mut Q: i32 = 0;
@@ -144,6 +152,8 @@ pub fn vp8cx_init_de_quantizer(pbi: &mut VP8D_COMP) {
         Q += 1;
     }
 }
+/// `vp8_mb_init_dequantizer` — vp8/decoder/decodeframe.c. Selects the per-MB
+/// dequant factors from the segment-adjusted quantizer.
 pub fn vp8_mb_init_dequantizer(pc: &VP8_COMMON, xd: &mut MACROBLOCKD) {
     let mut i: i32 = 0;
     let mut QIndex: i32 = 0;
@@ -1021,6 +1031,8 @@ fn init_frame(pbi: &mut VP8D_COMP) {
         pbi.mb.fullpixel_mask = !7_i32;
     }
 }
+/// `vp8_decode_frame` — vp8/decoder/decodeframe.c:879. Decodes one whole frame:
+/// header parse, then the per-macroblock decode/reconstruct/deblock loop.
 pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> Result<i32, Vp8Bail> {
     let fragments = pbi.fragments;
     let data_slice = fragments.get_slice(0).unwrap_or(&[]);

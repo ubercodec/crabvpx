@@ -1,3 +1,7 @@
+//! Platform-dependent init — port of `vp8/common/generic/systemdependent.c`.
+//!
+//! One-time machine-specific setup (CPU feature probe, rtcd wiring).
+
 pub use crate::vp8::common::types::*;
 
 #[derive(Copy, Clone)]

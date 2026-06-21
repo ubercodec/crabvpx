@@ -1,3 +1,9 @@
+//! Public decode API (crabvpx-native).
+//!
+//! The ergonomic Rust front end: the [`Decoder`] trait and [`Vp8Decoder`] wrapper
+//! over the internal libvpx-derived decoder, exposing plane views without the C
+//! `vpx_codec_*` surface.
+
 use crate::vp8::vp8_dx_iface::Vp8DecoderInstance;
 
 /// A safe wrapper around the decoded image planes.

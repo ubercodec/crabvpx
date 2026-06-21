@@ -1,3 +1,9 @@
+//! Shared decoder types — ported from libvpx headers (`blockd.h`, `onyxd_int.h`,
+//! `onyxc_int.h`, `loopfilter.h`, ...).
+//!
+//! The struct/enum definitions threaded through the decoder (MACROBLOCKD,
+//! VP8_COMMON, MODE_INFO, frame buffers, entropy contexts, ...).
+
 #[derive(Copy, Clone, Default)]
 #[repr(C)]
 pub struct MV {

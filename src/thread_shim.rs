@@ -1,3 +1,8 @@
+//! Threading shim (crabvpx-native).
+//!
+//! Thin abstraction over the worker-thread primitives used by the threaded
+//! decode path, so the core stays independent of the concrete pool.
+
 use std::sync::{Condvar, Mutex};
 
 // Opaque struct for semaphore

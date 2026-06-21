@@ -1,3 +1,7 @@
+//! Generic intra predictors — port of `vpx_dsp/intrapred.c`.
+//!
+//! Shared DC/V/H/TM intra-prediction primitives used by reconstruction.
+
 pub fn vpx_d207_predictor_safe(dst: &mut [u8], stride: usize, bs: usize, left: &[u8]) {
     for r in 0..bs - 1 {
         dst[r * stride] = ((left[r] as i32 + left[r + 1] as i32 + 1) >> 1) as u8;

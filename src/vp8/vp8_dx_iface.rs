@@ -1,3 +1,9 @@
+//! libvpx C decoder API shim — port of `vp8/vp8_dx_iface.c`.
+//!
+//! The `vpx_codec_*` entry points (init/decode/get_frame/control) and the
+//! `repr(C)` structs of the public libvpx decoder interface, bridged to the
+//! internal decoder and (on the cascadia path) the external frame allocator.
+
 unsafe extern "C" {
     fn memset(__b: *mut ::core::ffi::c_void, __c: i32, __len: usize) -> *mut ::core::ffi::c_void;
 }

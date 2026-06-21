@@ -1,3 +1,8 @@
+//! Decoder instance lifecycle — port of `vp8/decoder/onyxd_if.c`.
+//!
+//! Top-level decoder object: receive a compressed frame, drive `vp8_decode_frame`,
+//! manage reference buffers and hand back the decoded picture.
+
 use crate::vp8::common::reconintra::vp8_init_intra_predictors;
 use crate::vp8::common::vp8_loopfilter::vp8_loop_filter_init;
 use crate::vp8::decoder::decodeframe::{vp8_decode_frame, vp8cx_init_de_quantizer};
@@ -241,6 +246,8 @@ fn check_fragments_for_errors(pbi: &mut VP8D_COMP) -> i32 {
     }
     1
 }
+/// `vp8dx_receive_compressed_data` — vp8/decoder/onyxd_if.c:305. Decodes one
+/// compressed frame and rolls the reference buffers forward.
 pub fn vp8dx_receive_compressed_data_safe(pbi: &mut VP8D_COMP) -> Result<i32, Vp8Bail> {
     let mut retcode: i32;
     pbi.common.error.error_code = VPX_CODEC_OK;
@@ -277,6 +284,8 @@ pub fn vp8dx_receive_compressed_data_safe(pbi: &mut VP8D_COMP) -> Result<i32, Vp
     Ok(retcode)
 }
 
+/// `vp8dx_get_raw_frame` — vp8/decoder/onyxd_if.c. Returns the decoded frame for
+/// display (post-processing is disabled in this build).
 pub fn vp8dx_get_raw_frame(pbi: &mut VP8D_COMP, sd: &mut YV12_BUFFER_CONFIG) -> i32 {
     let mut ret: i32 = -1_i32;
     if pbi.ready_for_new_data == 1_i32 {
@@ -315,6 +324,8 @@ pub fn vp8dx_references_buffer(oci: &VP8_COMMON, mip_slice: &[MODE_INFO], ref_fr
     }
     0_i32
 }
+/// `vp8_create_decoder_instances` — vp8/decoder/onyxd_if.c:424. Allocates the
+/// decoder object(s) for the frame-buffer set.
 pub fn vp8_create_decoder_instances(fb: &mut frame_buffers, oxcf: &VP8D_CONFIG) -> i32 {
     let mut pbi = match create_decompressor() {
         Some(p) => p,

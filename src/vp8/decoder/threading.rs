@@ -1,3 +1,9 @@
+//! Multi-threaded frame decode — port of `vp8/decoder/threading.c`.
+//!
+//! Row-parallel macroblock decoding across worker threads (gated by the cascadia
+//! scheduler / CRABVPX_THREADS); each thread decodes MB rows with sync on the
+//! row above.
+
 use crate::vp8::common::dequantize::vp8_dequant_idct_add_safe;
 use crate::vp8::common::dequantize::vp8_dequantize_b_safe;
 use crate::vp8::common::idct_blk::{
@@ -1172,6 +1178,8 @@ fn thread_decoding_proc(
         }
     }
 }
+/// `vp8_decoder_create_threads` — vp8/decoder/threading.c:615. Spins up the
+/// decode worker threads and their per-thread state.
 pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) -> Result<(), &'static str> {
     let pbi_raw = SendPtr(pbi as *const VP8D_COMP);
     let mut core_count: i32 = 0_i32;
@@ -1258,6 +1266,8 @@ pub fn vp8mt_de_alloc_temp_buffers(pbi: &mut VP8D_COMP, _mb_rows: i32) {
     pbi.mt_sync.mt_uleft_col_allocs = None;
     pbi.mt_sync.mt_vleft_col_allocs = None;
 }
+/// `vp8mt_alloc_temp_buffers` — vp8/decoder/threading.c:737. Allocates the
+/// per-row scratch/entropy buffers the threaded path needs.
 pub fn vp8mt_alloc_temp_buffers(
     pbi: &mut VP8D_COMP,
     mut width: i32,
@@ -1444,6 +1454,8 @@ pub fn vp8_decoder_remove_threads(pbi: &mut VP8D_COMP) {
         vp8mt_de_alloc_temp_buffers(pbi, mb_rows);
     }
 }
+/// `vp8mt_decode_mb_rows` — vp8/decoder/threading.c:845. The worker loop: decode
+/// assigned MB rows with above-row synchronization.
 pub fn vp8mt_decode_mb_rows(pbi: &mut VP8D_COMP) -> i32 {
     let num_part = 1_i32 << pbi.common.multi_token_partition;
     println!(
