@@ -1,3 +1,7 @@
+//! Macroblock block-pointer setup — port of `vp8/common/mbpitch.c`.
+//!
+//! Computes the per-subblock destination offsets into the MB recon buffers.
+
 pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
 pub const VPX_CS_RESERVED: vpx_color_space = 6;
@@ -14,6 +18,8 @@ pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
 pub use crate::vp8::common::types::*;
 
+/// `vp8_build_block_doffsets` — vp8/common/mbpitch.c:43. Fills the 16 luma + 8
+/// chroma per-block dst offsets used during reconstruction.
 pub fn vp8_build_block_doffsets(x: &mut MACROBLOCKD) {
     let mut block: i32 = 0;
     block = 0_i32;
