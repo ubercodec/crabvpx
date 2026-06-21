@@ -1,3 +1,8 @@
+//! Reference-buffer swap — port of `vp8/common/swapyv12buffer.c`.
+//!
+//! One helper used during reference-frame management to exchange two YV12
+//! frame buffers (e.g. rolling the just-decoded frame into the last-frame slot).
+
 pub use crate::vp8::common::types::*;
 pub type vpx_color_space = u32;
 
@@ -14,6 +19,10 @@ pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
+/// `vp8_swap_yv12_buffer` — vp8/common/swapyv12buffer.c:13.
+///
+/// Swaps the alloc and the three plane pointers between two YV12 buffers. C
+/// swaps raw pointers; here it swaps the owning fields, same net effect.
 pub fn vp8_swap_yv12_buffer_safe(
     new_frame: &mut YV12_BUFFER_CONFIG,
     last_frame: &mut YV12_BUFFER_CONFIG,

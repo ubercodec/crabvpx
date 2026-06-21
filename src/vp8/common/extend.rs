@@ -1,3 +1,8 @@
+//! Frame border extension — port of `vp8/common/extend.c`.
+//!
+//! Replicates edge pixels into the YV12 border region so motion compensation
+//! can read past the visible frame without bounds issues.
+
 pub use crate::vp8::common::types::*;
 pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
@@ -79,6 +84,8 @@ fn copy_and_extend_plane_safe(
     }
 }
 
+/// `vp8_copy_and_extend_frame` — vp8/common/extend.c:75. Copies a frame and
+/// extends all four borders by edge replication.
 pub fn vp8_copy_and_extend_frame_safe(src: &YV12_BUFFER_CONFIG, dst: &mut YV12_BUFFER_CONFIG) {
     let et = dst.border;
     let el = dst.border;
@@ -179,6 +186,8 @@ pub fn vp8_copy_and_extend_frame_safe(src: &YV12_BUFFER_CONFIG, dst: &mut YV12_B
     }
 }
 
+/// `vp8_copy_and_extend_frame_with_rect` — vp8/common/extend.c:103. As above for
+/// a sub-rectangle (used by partial/error-concealed updates).
 pub fn vp8_copy_and_extend_frame_with_rect_safe(
     src: &YV12_BUFFER_CONFIG,
     dst: &mut YV12_BUFFER_CONFIG,
@@ -325,6 +334,8 @@ pub fn vp8_copy_and_extend_frame_with_rect_safe(
     }
 }
 
+/// `vp8_extend_mb_row` — vp8/common/extend.c:144. Extends the left/right borders
+/// of one just-reconstructed MB row (threaded decode path).
 pub fn vp8_extend_mb_row(ybf: &mut YV12_BUFFER_CONFIG, mb_row: i32) {
     let y_stride = ybf.y_stride as usize;
     let uv_stride = ybf.uv_stride as usize;

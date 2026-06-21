@@ -1,3 +1,9 @@
+//! Inverse transforms — port of `vp8/common/idctllm.c`.
+//!
+//! 4×4 inverse DCT (full + DC-only) and 4×4 inverse Walsh-Hadamard (full +
+//! DC-only, for the Y2 second-order block); each adds onto the predictor in
+//! place. NEON variants in [`crate::vp8::common::simd`] stay bit-exact.
+
 const COSPI8SQRT2MINUS1: i32 = 20091;
 const SINPI8SQRT2: i32 = 35468;
 
@@ -84,6 +90,8 @@ pub fn vp8_dc_only_idct_add_scalar(input_dc: i16, dst: &mut [u8], dst_stride: i3
     }
 }
 
+/// `vp8_short_inv_walsh4x4_1_c` — vp8/common/idctllm.c:177. DC-only inverse WHT
+/// for the Y2 block: scatters one rounded DC term across all 16 outputs.
 pub fn vp8_short_inv_walsh4x4_1_safe(input: &[i16], mb_dqcoeff: &mut [i16]) {
     let a1 = (input[0] as i32 + 3) >> 3;
     for i in 0..16 {
@@ -91,6 +99,8 @@ pub fn vp8_short_inv_walsh4x4_1_safe(input: &[i16], mb_dqcoeff: &mut [i16]) {
     }
 }
 
+/// `vp8_short_inv_walsh4x4_c` — vp8/common/idctllm.c:127. Full inverse WHT for
+/// the Y2 second-order block; writes the 16 second-order DC coefficients.
 pub fn vp8_short_inv_walsh4x4_safe(input: &[i16; 16], mb_dqcoeff: &mut [i16]) {
     let mut output = [0i16; 16];
 

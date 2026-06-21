@@ -1,3 +1,8 @@
+//! Inter-mode probability contexts — port of `vp8/common/modecont.c`.
+//!
+//! The static `vp8_mode_contexts` table: per-context default probabilities for
+//! the inter prediction-mode tree.
+
 pub static vp8_mode_contexts: [[i32; 4]; 6] = [
     [7_i32, 1_i32, 1_i32, 143_i32],
     [14_i32, 18_i32, 14_i32, 107_i32],

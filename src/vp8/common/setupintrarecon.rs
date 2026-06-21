@@ -1,3 +1,8 @@
+//! Intra-recon border setup — port of `vp8/common/setupintrarecon.c`.
+//!
+//! Seeds top/left border pixels so edge intra prediction reads the defined
+//! 127/129 values libvpx uses.
+
 pub use crate::vp8::common::types::*;
 pub type vpx_color_space = u32;
 pub const VPX_CS_SRGB: vpx_color_space = 7;
@@ -13,6 +18,8 @@ pub type vpx_color_range = u32;
 pub const VPX_CR_FULL_RANGE: vpx_color_range = 1;
 pub const VPX_CR_STUDIO_RANGE: vpx_color_range = 0;
 pub type vpx_color_range_t = vpx_color_range;
+/// `vp8_setup_intra_recon_top_line` — vp8/common/setupintrarecon.c:34. Fills the
+/// above-row border (127) for the first MB row's intra prediction.
 pub fn vp8_setup_intra_recon_top_line(ybf: &YV12_BUFFER_CONFIG, full: &mut [u8]) {
     let y_border = ybf.border as usize;
     let y_stride = ybf.y_stride as usize;
