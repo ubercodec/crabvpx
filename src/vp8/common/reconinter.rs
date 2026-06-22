@@ -259,9 +259,9 @@ fn clamp_uvmv_to_umv_border(
 pub fn vp8_build_inter16x16_predictors_mb(
     x: &mut MACROBLOCKD,
     mi: &MODE_INFO,
-    mut dst_y_slice: &mut [u8],
-    mut dst_u_slice: &mut [u8],
-    mut dst_v_slice: &mut [u8],
+    dst_y_slice: &mut [u8],
+    dst_u_slice: &mut [u8],
+    dst_v_slice: &mut [u8],
     pre_y_slice: &[u8],
     pre_u_slice: &[u8],
     pre_v_slice: &[u8],
@@ -404,9 +404,9 @@ pub fn vp8_build_inter16x16_predictors_mb(
 fn build_inter4x4_predictors_mb(
     x: &mut MACROBLOCKD,
     mi: &MODE_INFO,
-    mut dst_y_slice: &mut [u8],
-    mut dst_u_slice: &mut [u8],
-    mut dst_v_slice: &mut [u8],
+    dst_y_slice: &mut [u8],
+    dst_u_slice: &mut [u8],
+    dst_v_slice: &mut [u8],
     pre_y_slice: &[u8],
     pre_u_slice: &[u8],
     pre_v_slice: &[u8],
@@ -675,16 +675,16 @@ fn build_inter4x4_predictors_mb(
     }
 }
 fn build_4x4uvmvs(x: &mut MACROBLOCKD, mi: &MODE_INFO) {
-    let mut i: i32 = 0;
-    let mut j: i32 = 0;
+    let mut i: i32;
+    let mut j: i32;
     i = 0_i32;
     while i < 2_i32 {
         j = 0_i32;
         while j < 2_i32 {
-            let mut yoffset: i32 = i * 8_i32 + j * 2_i32;
-            let mut uoffset: i32 = 16_i32 + i * 2_i32 + j;
-            let mut voffset: i32 = 20_i32 + i * 2_i32 + j;
-            let mut temp: i32 = 0;
+            let yoffset: i32 = i * 8_i32 + j * 2_i32;
+            let uoffset: i32 = 16_i32 + i * 2_i32 + j;
+            let voffset: i32 = 20_i32 + i * 2_i32 + j;
+            let mut temp: i32;
             temp = mi.bmi[yoffset as usize].mv().as_mv().row as i32
                 + mi.bmi[(yoffset + 1_i32) as usize].mv().as_mv().row as i32
                 + mi.bmi[(yoffset + 4_i32) as usize].mv().as_mv().row as i32

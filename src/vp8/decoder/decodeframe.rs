@@ -145,8 +145,8 @@ pub fn vp8cx_init_de_quantizer(pbi: &mut VP8D_COMP) {
     }
 }
 pub fn vp8_mb_init_dequantizer(pc: &VP8_COMMON, xd: &mut MACROBLOCKD) {
-    let mut i: i32 = 0;
-    let mut QIndex: i32 = 0;
+    let mut i: i32;
+    let mut QIndex: i32;
     let mbmi = &xd.mode_info(pc.mip_slice()).mbmi;
     if xd.segmentation_enabled != 0 {
         if xd.mb_segment_abs_delta as i32 == SEGMENT_ABSDATA {
@@ -186,8 +186,7 @@ fn decode_macroblock(
     above: &mut ENTROPY_CONTEXT_PLANES,
     left: &mut ENTROPY_CONTEXT_PLANES,
 ) {
-    let mut mode: MB_PREDICTION_MODE = DC_PRED;
-    let mut i: i32 = 0;
+    let mut i: i32;
 
     let mut mi = *xd.mode_info(common.mip_slice());
 
@@ -200,12 +199,11 @@ fn decode_macroblock(
         let is_4x4 = mi.mbmi.is_4x4 != 0;
         vp8_reset_mb_tokens_context(above, left, is_4x4);
     } else if vp8dx_safe_bool_error(&safe_decoders[xd.current_bc_idx]) == 0 {
-        let mut eobtotal: i32 = 0;
         let is_4x4 = mi.mbmi.is_4x4 != 0;
         let bc_idx = xd.current_bc_idx;
         let qcoeff = &mut xd.qcoeff;
         let eobs = &mut xd.eobs;
-        eobtotal = vp8_decode_mb_tokens(
+        let eobtotal: i32 = vp8_decode_mb_tokens(
             &mut safe_decoders[bc_idx],
             &common.fc,
             qcoeff,
@@ -218,7 +216,7 @@ fn decode_macroblock(
         common.mip_slice_mut()[xd.mode_info_idx].mbmi.mb_skip_coeff = skip_coeff;
         mi.mbmi.mb_skip_coeff = skip_coeff;
     }
-    mode = mi.mbmi.mode as MB_PREDICTION_MODE;
+    let mode: MB_PREDICTION_MODE = mi.mbmi.mode as MB_PREDICTION_MODE;
 
     if xd.segmentation_enabled != 0 {
         vp8_mb_init_dequantizer(common, xd);
@@ -607,19 +605,19 @@ fn decode_mb_rows(pbi: &mut VP8D_COMP) {
         })
         .collect();
     let mut ibc: i32 = 0_i32;
-    let mut num_part: i32 = num_active_partitions;
-    let mut mb_row: i32 = 0;
-    let mut mb_col: i32 = 0;
+    let num_part: i32 = num_active_partitions;
+    let mut mb_row: i32;
+    let mut mb_col: i32;
     let mut mb_idx: i32 = 0_i32;
 
     let new_fb_idx = pc.new_fb_idx as usize;
-    let mut recon_y_stride: i32 = pc.yv12_fb[new_fb_idx].y_stride;
-    let mut recon_uv_stride: i32 = pc.yv12_fb[new_fb_idx].uv_stride;
+    let recon_y_stride: i32 = pc.yv12_fb[new_fb_idx].y_stride;
+    let recon_uv_stride: i32 = pc.yv12_fb[new_fb_idx].uv_stride;
     let mut y_offset: usize = 0;
     let mut u_offset: usize = 0;
     let mut v_offset: usize = 0;
     let mut extended_row: i32 = 0;
-    let mut i: i32 = 0;
+    let mut i: i32;
     let mut ref_fb_corrupted: [i32; 4] = [0; 4];
     ref_fb_corrupted[INTRA_FRAME as i32 as usize] = 0_i32;
     i = 1_i32;
@@ -827,7 +825,7 @@ fn read_available_partition_size(
     i: i32,
     num_part: i32,
 ) -> Result<u32, Vp8Bail> {
-    let mut partition_size: u32 = 0;
+    let mut partition_size: u32;
     let bytes_left = fragment.len();
     if i < num_part - 1 {
         let size_offset = (i * 3) as usize;
@@ -863,8 +861,7 @@ fn setup_token_decoder(
     first_partition_length: usize,
     safe_decoder: &mut SafeBoolDecoder,
 ) -> Result<(), Vp8Bail> {
-    let mut multi_token_partition: TOKEN_PARTITION =
-        safe_decoder.read_literal(2) as TOKEN_PARTITION;
+    let multi_token_partition: TOKEN_PARTITION = safe_decoder.read_literal(2) as TOKEN_PARTITION;
     if safe_decoder.count <= VP8_BD_VALUE_SIZE || safe_decoder.count >= VP8_LOTS_OF_BITS {
         pbi.common.multi_token_partition = multi_token_partition;
     }
@@ -1026,14 +1023,14 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> Result<i32, Vp8Bail> {
     let data_slice = fragments.get_slice(0).unwrap_or(&[]);
 
     let mut data_idx = 0;
-    let mut first_partition_length_in_bytes: i32 = 0;
-    let mut i: i32 = 0;
-    let mut j: i32 = 0;
-    let mut k: i32 = 0;
-    let mut l: i32 = 0;
+    let first_partition_length_in_bytes: i32;
+    let mut i: i32;
+    let mut j: i32;
+    let mut k: i32;
+    let mut l: i32;
 
     let mut corrupt_tokens: i32 = 0_i32;
-    let mut prev_independent_partitions: i32 = pbi.independent_partitions;
+    let prev_independent_partitions: i32 = pbi.independent_partitions;
 
     let new_fb_idx = pbi.common.new_fb_idx as usize;
     pbi.mb.dst_fb_idx = new_fb_idx;
@@ -1241,9 +1238,8 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> Result<i32, Vp8Bail> {
     )?;
     pbi.mb.current_bc_idx = 0;
 
-    let mut Q: i32 = 0;
-    let mut q_update: i32 = 0;
-    Q = safe_decoder.read_literal(7);
+    let mut q_update: i32;
+    let Q: i32 = safe_decoder.read_literal(7);
     pbi.common.base_qindex = Q;
     q_update = 0_i32;
     pbi.common.y1dc_delta_q =
@@ -1336,7 +1332,7 @@ pub fn vp8_decode_frame(pbi: &mut VP8D_COMP) -> Result<i32, Vp8Bail> {
     if vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0
         && pbi.common.multi_token_partition != ONE_PARTITION as i32 as u32
     {
-        let mut thread: u32 = 0;
+        let mut thread: u32;
         if vp8mt_decode_mb_rows(pbi) != 0 {
             vp8_decoder_remove_threads(pbi);
             pbi.restart_threads = 1_i32;

@@ -155,8 +155,7 @@ fn mt_decode_macroblock(
     // projections and raw context pointer dereferencing. Safety is mathematically guaranteed at
     // the macro-architecture level by atomic column spinlock synchronization. DO NOT REMOVE.
     unsafe {
-        let mut mode: MB_PREDICTION_MODE = DC_PRED;
-        let mut i: i32 = 0;
+        let mut i: i32;
         let mut mi = *xd.mode_info(common.mip_slice());
 
         let mb_row = (-xd.mb_to_top_edge / 128) as usize;
@@ -171,20 +170,19 @@ fn mt_decode_macroblock(
             let (above, left) = xd.contexts_mut(above_context_slice, left_context);
             vp8_reset_mb_tokens_context(above, left, is_4x4);
         } else if vp8dx_safe_bool_error(safe_decoder) == 0 {
-            let mut eobtotal: i32 = 0;
             let is_4x4 = mi.mbmi.is_4x4 != 0;
             let above_context_slice =
                 std::slice::from_raw_parts_mut(above_context_raw, common.mb_cols as usize);
             let (above, left, qcoeff, eobs) =
                 xd.decode_tokens_inputs_mut(above_context_slice, left_context);
-            eobtotal =
+            let eobtotal: i32 =
                 vp8_decode_mb_tokens(safe_decoder, &common.fc, qcoeff, eobs, above, left, is_4x4);
             let skip_coeff = (eobtotal == 0_i32) as i32 as u8;
             let mip_slice = std::slice::from_raw_parts_mut(mip_raw, common.mip_slice().len());
             mip_slice[xd.mode_info_idx].mbmi.mb_skip_coeff = skip_coeff;
             mi.mbmi.mb_skip_coeff = skip_coeff;
         }
-        mode = mi.mbmi.mode as MB_PREDICTION_MODE;
+        let mode: MB_PREDICTION_MODE = mi.mbmi.mode as MB_PREDICTION_MODE;
 
         if xd.segmentation_enabled != 0 {
             vp8_mb_init_dequantizer(common, xd);
@@ -477,6 +475,10 @@ fn mt_decode_macroblock(
         }
     }
 }
+// `dst_buffer[2]` (the V plane pointer) is set for parity with libvpx's
+// mt_decode_mb_rows but isn't read back on this path, so the store reads as dead.
+// Kept as a 3-plane group for clarity; scoped allow instead of an asymmetric drop.
+#[allow(unused_assignments)]
 fn mt_decode_mb_rows(
     common: &VP8_COMMON,
     mbc_raw: *mut vp8_reader,
@@ -486,13 +488,13 @@ fn mt_decode_mb_rows(
     decoding_thread_count: u32,
     fragments: FRAGMENT_DATA,
 ) -> Result<(), vpx_codec_err_t> {
-    let mut mb_row: i32 = 0;
+    let mut mb_row: i32;
     let pc = common;
     let nsync: i32 = mt_sync.sync_range;
     let first_row_no_sync_above: vpx_atomic_int = vpx_atomic_int {
         value: core::sync::atomic::AtomicI32::new(pc.mb_cols + nsync),
     };
-    let mut num_part: i32 = 1_i32 << pc.multi_token_partition;
+    let num_part: i32 = 1_i32 << pc.multi_token_partition;
     let mut last_mb_row: i32 = start_mb_row;
 
     let new_fb_idx = pc.new_fb_idx as usize;
@@ -503,7 +505,7 @@ fn mt_decode_mb_rows(
 
     let mut ref_buffer: [[*mut u8; 3]; 4] = [[::core::ptr::null_mut::<u8>(); 3]; 4];
     let mut dst_buffer: [*mut u8; 3] = [::core::ptr::null_mut::<u8>(); 3];
-    let mut i: i32 = 0;
+    let mut i: i32;
     let mut ref_fb_corrupted: [i32; 4] = [0; 4];
     ref_fb_corrupted[INTRA_FRAME as i32 as usize] = 0_i32;
 
@@ -538,10 +540,10 @@ fn mt_decode_mb_rows(
         // and raw context indexing. Concurrency is mathematically synchronized via atomic column
         // spinlocks at the macro-architecture level. DO NOT REMOVE this safety boundary.
         unsafe {
-            let mut recon_yoffset: i32 = 0;
-            let mut recon_uvoffset: i32 = 0;
-            let mut mb_col: i32 = 0;
-            let mut filter_level: i32 = 0;
+            let mut recon_yoffset: i32;
+            let mut recon_uvoffset: i32;
+            let mut mb_col: i32;
+            let mut filter_level: i32;
 
             last_mb_row = mb_row;
             xd.current_bc_idx = (mb_row % num_part) as usize;
@@ -1061,9 +1063,8 @@ fn mt_decode_mb_rows(
 
             if pc.filter_level != 0 {
                 if mb_row != pc.mb_rows - 1 {
-                    let mut lasty = pc.yv12_fb[lst_fb_idx].y_width + VP8BORDERINPIXELS;
-                    let mut lastuv =
-                        (pc.yv12_fb[lst_fb_idx].y_width >> 1) + (VP8BORDERINPIXELS >> 1);
+                    let lasty = pc.yv12_fb[lst_fb_idx].y_width + VP8BORDERINPIXELS;
+                    let lastuv = (pc.yv12_fb[lst_fb_idx].y_width >> 1) + (VP8BORDERINPIXELS >> 1);
 
                     let dst_ab = mt_sync.mt_yabove_row.as_ref().unwrap()[(mb_row + 1) as usize];
                     let dst_ab_u = mt_sync.mt_uabove_row.as_ref().unwrap()[(mb_row + 1) as usize];
@@ -1174,8 +1175,8 @@ fn thread_decoding_proc(
 }
 pub fn vp8_decoder_create_threads(pbi: &mut VP8D_COMP) -> Result<(), &'static str> {
     let pbi_raw = SendPtr(pbi as *const VP8D_COMP);
-    let mut core_count: i32 = 0_i32;
-    let mut ithread: u32 = 0;
+    let mut core_count: i32;
+    let mut ithread: u32;
     vpx_atomic_init(&pbi.b_multithreaded_rd, 0_i32);
     pbi.allocated_decoding_thread_count = 0_i32;
     core_count = if pbi.max_threads > 8_i32 {
@@ -1263,7 +1264,7 @@ pub fn vp8mt_alloc_temp_buffers(
     mut width: i32,
     prev_mb_rows: i32,
 ) -> Result<(), Vp8Bail> {
-    let mut uv_width: i32 = 0;
+    let uv_width: i32;
     if vpx_atomic_load_acquire(&pbi.b_multithreaded_rd) != 0 {
         vp8mt_de_alloc_temp_buffers(pbi, prev_mb_rows);
         if width & 0xf_i32 != 0_i32 {
@@ -1281,7 +1282,7 @@ pub fn vp8mt_alloc_temp_buffers(
         uv_width = width >> 1_i32;
         let mb_rows_usize = pbi.common.mb_rows as usize;
 
-        let mut current_mb_col_vec = vec![
+        let current_mb_col_vec = vec![
             vpx_atomic_int {
                 value: core::sync::atomic::AtomicI32::new(0)
             };
@@ -1452,8 +1453,8 @@ pub fn vp8mt_decode_mb_rows(pbi: &mut VP8D_COMP) -> i32 {
         pbi.decoding_thread_count + 1
     );
     let pc_ref = &mut pbi.common;
-    let mut i: u32 = 0;
-    let mut j: i32 = 0;
+    let mut i: u32;
+    let mut j: i32;
     let filter_level: i32 = pc_ref.filter_level;
 
     let new_fb_idx = pc_ref.new_fb_idx as usize;

@@ -481,11 +481,11 @@ fn vpx_atomic_load_acquire(atomic: &vpx_atomic_int) -> i32 {
     atomic.value.load(core::sync::atomic::Ordering::Acquire)
 }
 unsafe extern "C" fn vp8_peek_si_internal(
-    mut data: *const u8,
-    mut data_sz: u32,
-    mut si: *mut vpx_codec_stream_info_t,
-    mut decrypt_cb: vpx_decrypt_cb,
-    mut decrypt_state: *mut ::core::ffi::c_void,
+    data: *const u8,
+    data_sz: u32,
+    si: *mut vpx_codec_stream_info_t,
+    decrypt_cb: vpx_decrypt_cb,
+    decrypt_state: *mut ::core::ffi::c_void,
 ) -> vpx_codec_err_t {
     unsafe {
         let mut res: vpx_codec_err_t = VPX_CODEC_OK;
@@ -534,12 +534,11 @@ unsafe extern "C" fn vp8_peek_si_internal(
     }
 }
 unsafe extern "C" fn update_error_state(
-    mut ctx: *mut vpx_codec_alg_priv_t,
-    mut error: *const vpx_internal_error_info,
+    ctx: *mut vpx_codec_alg_priv_t,
+    error: *const vpx_internal_error_info,
 ) -> vpx_codec_err_t {
     unsafe {
-        let mut res: vpx_codec_err_t = VPX_CODEC_OK;
-        res = (*error).error_code;
+        let res: vpx_codec_err_t = (*error).error_code;
         if res as u64 != 0 {
             (*ctx).base.err_detail = if (*error).has_detail != 0 {
                 &raw const (*error).detail as *const ::core::ffi::c_char
@@ -551,10 +550,10 @@ unsafe extern "C" fn update_error_state(
     }
 }
 unsafe extern "C" fn update_fragments(
-    mut ctx: *mut vpx_codec_alg_priv_t,
-    mut data: *const u8,
-    mut data_sz: u32,
-    mut res: *mut vpx_codec_err_t,
+    ctx: *mut vpx_codec_alg_priv_t,
+    data: *const u8,
+    data_sz: u32,
+    res: *mut vpx_codec_err_t,
 ) -> i32 {
     unsafe {
         ::core::ptr::write_volatile(res, VPX_CODEC_OK);
@@ -600,10 +599,10 @@ unsafe extern "C" fn update_fragments(
     }
 }
 unsafe extern "C" fn vp8_decode(
-    mut ctx: *mut vpx_codec_alg_priv_t,
-    mut data: *const u8,
-    mut data_sz: u32,
-    mut user_priv: *mut ::core::ffi::c_void,
+    ctx: *mut vpx_codec_alg_priv_t,
+    data: *const u8,
+    data_sz: u32,
+    user_priv: *mut ::core::ffi::c_void,
 ) -> vpx_codec_err_t {
     unsafe {
         let mut res: vpx_codec_err_t = VPX_CODEC_OK;
@@ -644,7 +643,7 @@ unsafe extern "C" fn vp8_decode(
             && (*ctx).si.h == 0_u32
             && (*ctx).si.w == 0_u32
         {
-            let mut pbi: *mut VP8D_COMP = (*ctx).yv12_frame_buffers.pbi[0_i32 as usize];
+            let pbi: *mut VP8D_COMP = (*ctx).yv12_frame_buffers.pbi[0_i32 as usize];
             ::core::ptr::write_volatile(&mut res as *mut vpx_codec_err_t, VPX_CODEC_CORRUPT_FRAME);
             let _ = (*pbi).common.error.trigger(
                 res,
@@ -655,7 +654,7 @@ unsafe extern "C" fn vp8_decode(
             ::core::ptr::write_volatile(&mut resolution_change as *mut u32, 1_u32);
         }
         if res as u64 == 0 && (*ctx).restart_threads != 0 {
-            let mut pbi_0: *mut VP8D_COMP = (*ctx).yv12_frame_buffers.pbi[0_i32 as usize];
+            let pbi_0: *mut VP8D_COMP = (*ctx).yv12_frame_buffers.pbi[0_i32 as usize];
             let pc: *mut VP8_COMMON = &raw mut (*pbi_0).common;
             (*pbi_0).max_threads = (*ctx).cfg.threads as i32;
             let _ = vp8_decoder_create_threads(&mut *pbi_0);
@@ -713,7 +712,7 @@ unsafe extern "C" fn vp8_decode(
             (*(*ctx).yv12_frame_buffers.pbi[0_i32 as usize]).decrypt_state = (*ctx).decrypt_state;
         }
         if res as u64 == 0 {
-            let mut pbi_1: *mut VP8D_COMP = (*ctx).yv12_frame_buffers.pbi[0_i32 as usize];
+            let pbi_1: *mut VP8D_COMP = (*ctx).yv12_frame_buffers.pbi[0_i32 as usize];
             let pc_0: *mut VP8_COMMON = &raw mut (*pbi_1).common;
             if resolution_change != 0 {
                 let xd: *mut MACROBLOCKD = &raw mut (*pbi_1).mb;
