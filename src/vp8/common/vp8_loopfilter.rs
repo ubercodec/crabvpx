@@ -50,7 +50,7 @@ pub const SIMD_WIDTH: i32 = 1_i32;
 pub const MAX_MB_SEGMENTS: i32 = 4_i32;
 pub const SEGMENT_ABSDATA: i32 = 1_i32;
 fn lf_init_lut(lfi: &mut loop_filter_info_n) {
-    let mut filt_lvl: i32 = 0;
+    let mut filt_lvl: i32;
     filt_lvl = 0_i32;
     while filt_lvl <= MAX_LOOP_FILTER {
         if filt_lvl >= 40_i32 {
@@ -80,11 +80,11 @@ fn lf_init_lut(lfi: &mut loop_filter_info_n) {
     lfi.mode_lf_lut[SPLITMV as i32 as usize] = 3_u8;
 }
 pub fn vp8_loop_filter_update_sharpness(lfi: &mut loop_filter_info_n, sharpness_lvl: i32) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i <= MAX_LOOP_FILTER {
-        let mut filt_lvl: i32 = i;
-        let mut block_inside_limit: i32 = 0_i32;
+        let filt_lvl: i32 = i;
+        let mut block_inside_limit: i32;
         block_inside_limit = filt_lvl >> (sharpness_lvl > 0_i32) as i32;
         block_inside_limit >>= (sharpness_lvl > 4_i32) as i32;
         if sharpness_lvl > 0_i32 && block_inside_limit > 9_i32 - sharpness_lvl {
@@ -108,9 +108,9 @@ pub fn vp8_loop_filter_init(cm: &mut VP8_COMMON) {
     }
 }
 pub fn vp8_loop_filter_frame_init(cm: &mut VP8_COMMON, mbd: &MACROBLOCKD, default_filt_lvl: i32) {
-    let mut seg: i32 = 0;
-    let mut ref_0: i32 = 0;
-    let mut mode: i32 = 0;
+    let mut seg: i32;
+    let mut ref_0: i32;
+    let mut mode: i32;
     let lfi: &mut loop_filter_info_n = &mut cm.lf_info;
     if cm.last_sharpness_level != cm.sharpness_level {
         vp8_loop_filter_update_sharpness(lfi, cm.sharpness_level);
@@ -119,8 +119,8 @@ pub fn vp8_loop_filter_frame_init(cm: &mut VP8_COMMON, mbd: &MACROBLOCKD, defaul
     seg = 0_i32;
     while seg < MAX_MB_SEGMENTS {
         let mut lvl_seg: i32 = default_filt_lvl;
-        let mut lvl_ref: i32 = 0;
-        let mut lvl_mode: i32 = 0;
+        let mut lvl_ref: i32;
+        let mut lvl_mode: i32;
         if mbd.segmentation_enabled != 0 {
             if mbd.mb_segment_abs_delta as i32 == SEGMENT_ABSDATA {
                 lvl_seg =
@@ -191,8 +191,8 @@ pub fn vp8_loop_filter_row_normal_safe(
     mut v_slice: Option<&mut [u8]>,
     v_offset: usize,
 ) {
-    let mut mb_col: i32 = 0;
-    let mut filter_level: i32 = 0;
+    let mut mb_col: i32;
+    let mut filter_level: i32;
     let lfi_n = lf_info;
     mb_col = 0_i32;
     let mut cur_mi_idx = mode_info_idx;
@@ -373,8 +373,8 @@ pub fn vp8_loop_filter_row_simple_safe(
     y_slice: &mut [u8],
     y_offset: usize,
 ) {
-    let mut mb_col: i32 = 0;
-    let mut filter_level: i32 = 0;
+    let mut mb_col: i32;
+    let mut filter_level: i32;
     let lfi_n = lf_info;
     mb_col = 0_i32;
     let mut cur_mi_idx = mode_info_idx;
@@ -382,7 +382,7 @@ pub fn vp8_loop_filter_row_simple_safe(
 
     while mb_col < mb_cols {
         let mi = &mode_info_slice[cur_mi_idx];
-        let mut skip_lf: i32 = (mi.mbmi.mode as i32 != B_PRED as i32
+        let skip_lf: i32 = (mi.mbmi.mode as i32 != B_PRED as i32
             && mi.mbmi.mode as i32 != SPLITMV as i32
             && mi.mbmi.mb_skip_coeff as i32 != 0) as i32;
         let mode_index: i32 = lfi_n.mode_lf_lut[mi.mbmi.mode as usize] as i32;

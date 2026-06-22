@@ -64,7 +64,7 @@ pub const NULL: *mut ::core::ffi::c_void = __DARWIN_NULL;
 pub const VP8BORDERINPIXELS: i32 = 32_i32;
 pub const NUM_YV12_BUFFERS: i32 = 4_i32;
 pub fn vp8_de_alloc_frame_buffers(oci: &mut VP8_COMMON) {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < NUM_YV12_BUFFERS {
         let (fb, alloc) = (
@@ -84,8 +84,6 @@ pub fn vp8_de_alloc_frame_buffers(oci: &mut VP8_COMMON) {
 }
 
 pub fn vp8_alloc_frame_buffers(oci: &mut VP8_COMMON, mut width: i32, mut height: i32) -> i32 {
-    let mut current_block: u64;
-    let mut i: i32 = 0;
     vp8_de_alloc_frame_buffers(oci);
     if width & 0xf_i32 != 0_i32 {
         width += 16_i32 - (width & 0xf_i32);
@@ -93,52 +91,50 @@ pub fn vp8_alloc_frame_buffers(oci: &mut VP8_COMMON, mut width: i32, mut height:
     if height & 0xf_i32 != 0_i32 {
         height += 16_i32 - (height & 0xf_i32);
     }
-    i = 0_i32;
-    loop {
-        if i >= NUM_YV12_BUFFERS {
-            current_block = 10886091980245723256;
-            break;
-        }
+
+    // Allocate every reference frame buffer; bail (freeing what we took) on the
+    // first failure.
+    for i in 0..NUM_YV12_BUFFERS {
         let (fb, alloc) = (
             &mut oci.yv12_fb[i as usize],
             &mut oci.yv12_fb_allocs[i as usize],
         );
         if vp8_yv12_alloc_frame_buffer_safe(fb, width, height, VP8BORDERINPIXELS, alloc).is_err() {
-            current_block = 9271424053274658668;
-            break;
+            vp8_de_alloc_frame_buffers(oci);
+            return 1_i32;
         }
-        i += 1;
     }
-    if current_block == 10886091980245723256 {
-        oci.new_fb_idx = 0_i32;
-        oci.lst_fb_idx = 1_i32;
-        oci.gld_fb_idx = 2_i32;
-        oci.alt_fb_idx = 3_i32;
-        oci.fb_idx_ref_cnt[0_i32 as usize] = 1_i32;
-        oci.fb_idx_ref_cnt[1_i32 as usize] = 1_i32;
-        oci.fb_idx_ref_cnt[2_i32 as usize] = 1_i32;
-        oci.fb_idx_ref_cnt[3_i32 as usize] = 1_i32;
-        let (temp_fb, temp_alloc) = (&mut oci.temp_scale_frame, &mut oci.temp_scale_frame_alloc);
-        if vp8_yv12_alloc_frame_buffer_safe(temp_fb, width, 16_i32, VP8BORDERINPIXELS, temp_alloc)
-            .is_ok()
-        {
-            oci.mb_rows = height >> 4_i32;
-            oci.mb_cols = width >> 4_i32;
-            oci.MBs = oci.mb_rows * oci.mb_cols;
-            oci.mode_info_stride = oci.mb_cols + 1_i32;
-            let mip_count = ((oci.mb_cols + 1) * (oci.mb_rows + 1)) as usize;
-            if let Some(mip_box) = try_alloc_boxed_slice(MODE_INFO::default(), mip_count) {
-                oci.mip = Some(mip_box);
-                let above_context_count = oci.mb_cols as usize;
-                if let Some(above_context_box) =
-                    try_alloc_boxed_slice(ENTROPY_CONTEXT_PLANES::default(), above_context_count)
-                {
-                    oci.above_context = Some(above_context_box);
-                    return 0_i32;
-                }
+
+    oci.new_fb_idx = 0_i32;
+    oci.lst_fb_idx = 1_i32;
+    oci.gld_fb_idx = 2_i32;
+    oci.alt_fb_idx = 3_i32;
+    oci.fb_idx_ref_cnt[0_i32 as usize] = 1_i32;
+    oci.fb_idx_ref_cnt[1_i32 as usize] = 1_i32;
+    oci.fb_idx_ref_cnt[2_i32 as usize] = 1_i32;
+    oci.fb_idx_ref_cnt[3_i32 as usize] = 1_i32;
+
+    let (temp_fb, temp_alloc) = (&mut oci.temp_scale_frame, &mut oci.temp_scale_frame_alloc);
+    if vp8_yv12_alloc_frame_buffer_safe(temp_fb, width, 16_i32, VP8BORDERINPIXELS, temp_alloc)
+        .is_ok()
+    {
+        oci.mb_rows = height >> 4_i32;
+        oci.mb_cols = width >> 4_i32;
+        oci.MBs = oci.mb_rows * oci.mb_cols;
+        oci.mode_info_stride = oci.mb_cols + 1_i32;
+        let mip_count = ((oci.mb_cols + 1) * (oci.mb_rows + 1)) as usize;
+        if let Some(mip_box) = try_alloc_boxed_slice(MODE_INFO::default(), mip_count) {
+            oci.mip = Some(mip_box);
+            let above_context_count = oci.mb_cols as usize;
+            if let Some(above_context_box) =
+                try_alloc_boxed_slice(ENTROPY_CONTEXT_PLANES::default(), above_context_count)
+            {
+                oci.above_context = Some(above_context_box);
+                return 0_i32;
             }
         }
     }
+
     vp8_de_alloc_frame_buffers(oci);
     1_i32
 }

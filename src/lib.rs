@@ -35,15 +35,24 @@
 //!
 //! VP8 **decoding** only — no encoder, and no VP9/AV1.
 
-#![allow(dead_code)]
+// === Deliberate, documented lint exemptions ===
+// rustc and clippy are otherwise blocking CI gates; everything below is a
+// justified exception. (`unused_mut` / `unused_assignments` — the bulk of the
+// original c2rust noise — were removed, not exempted.)
+//
+// Naming: this is a faithful port of libvpx's C and the identifiers are kept
+// byte-for-byte (`MACROBLOCKD`, `vp8_prob`, `QIndex`, `vp8_default_zig_zag1d`,
+// …) so the source-citation doc comments (`// vp8/common/foo.c:NN`) line up with
+// the upstream symbol names. Renaming to Rust conventions would sever that
+// cross-referencing across the whole tree, so these stay by design:
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
-#![allow(unused_assignments)]
-#![allow(unused_mut)]
+// dead_code: a few ported-but-currently-unused helpers/fields kept for structural
+// parity with the C. Deferred cleanup (not principled) — a candidate to remove.
+#![allow(dead_code)]
 // Structural lints that don't fit this libvpx-derived numeric code and are not
-// worth churning the whole tree for. Clippy is otherwise a blocking gate (CI),
-// so this list is the deliberate, documented exception — keep it small.
+// worth churning the whole tree for. Keep this list small.
 //   - too_many_arguments: kernel/codec signatures inherited from the C source.
 //   - needless_range_loop: index loops over strided / multi-array pixel data
 //     read clearer than iterator chains.

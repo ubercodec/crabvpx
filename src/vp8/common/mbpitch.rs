@@ -21,7 +21,7 @@ pub use crate::vp8::common::types::*;
 /// `vp8_build_block_doffsets` — vp8/common/mbpitch.c:43. Fills the 16 luma + 8
 /// chroma per-block dst offsets used during reconstruction.
 pub fn vp8_build_block_doffsets(x: &mut MACROBLOCKD) {
-    let mut block: i32 = 0;
+    let mut block: i32;
     block = 0_i32;
     while block < 16_i32 {
         x.block[block as usize].offset =

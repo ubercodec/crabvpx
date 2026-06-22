@@ -32,24 +32,22 @@ static ac_qlookup: [i32; 128] = [
     264_i32, 269_i32, 274_i32, 279_i32, 284_i32,
 ];
 /// `vp8_dc_quant` — vp8/common/quant_common.c:37. DC factor for Y blocks.
-pub fn vp8_dc_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    let mut retval: i32 = 0;
+pub fn vp8_dc_quant(mut QIndex: i32, Delta: i32) -> i32 {
     QIndex += Delta;
     QIndex = QIndex.clamp(0, 127);
-    retval = dc_qlookup[QIndex as usize];
+    let retval: i32 = dc_qlookup[QIndex as usize];
     retval
 }
 /// `vp8_dc2quant` — vp8/common/quant_common.c:52. DC factor for the Y2 block (2x).
-pub fn vp8_dc2quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    let mut retval: i32 = 0;
+pub fn vp8_dc2quant(mut QIndex: i32, Delta: i32) -> i32 {
     QIndex += Delta;
     QIndex = QIndex.clamp(0, 127);
-    retval = dc_qlookup[QIndex as usize] * 2_i32;
+    let retval: i32 = dc_qlookup[QIndex as usize] * 2_i32;
     retval
 }
 /// `vp8_dc_uv_quant` — vp8/common/quant_common.c:66. Chroma DC factor (capped 132).
-pub fn vp8_dc_uv_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    let mut retval: i32 = 0;
+pub fn vp8_dc_uv_quant(mut QIndex: i32, Delta: i32) -> i32 {
+    let mut retval: i32;
     QIndex += Delta;
     QIndex = QIndex.clamp(0, 127);
     retval = dc_qlookup[QIndex as usize];
@@ -60,14 +58,13 @@ pub fn vp8_dc_uv_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
 }
 /// `vp8_ac_yquant` — vp8/common/quant_common.c:84. AC factor for Y blocks.
 pub fn vp8_ac_yquant(mut QIndex: i32) -> i32 {
-    let mut retval: i32 = 0;
     QIndex = QIndex.clamp(0, 127);
-    retval = ac_qlookup[QIndex as usize];
+    let retval: i32 = ac_qlookup[QIndex as usize];
     retval
 }
 /// `vp8_ac2quant` — vp8/common/quant_common.c:97. AC factor for the Y2 block (floor 8).
-pub fn vp8_ac2quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    let mut retval: i32 = 0;
+pub fn vp8_ac2quant(mut QIndex: i32, Delta: i32) -> i32 {
+    let mut retval: i32;
     QIndex += Delta;
     QIndex = QIndex.clamp(0, 127);
     retval = (ac_qlookup[QIndex as usize] * 101581_i32) >> 16_i32;
@@ -77,10 +74,9 @@ pub fn vp8_ac2quant(mut QIndex: i32, mut Delta: i32) -> i32 {
     retval
 }
 /// `vp8_ac_uv_quant` — vp8/common/quant_common.c:117. Chroma AC factor.
-pub fn vp8_ac_uv_quant(mut QIndex: i32, mut Delta: i32) -> i32 {
-    let mut retval: i32 = 0;
+pub fn vp8_ac_uv_quant(mut QIndex: i32, Delta: i32) -> i32 {
     QIndex += Delta;
     QIndex = QIndex.clamp(0, 127);
-    retval = ac_qlookup[QIndex as usize];
+    let retval: i32 = ac_qlookup[QIndex as usize];
     retval
 }

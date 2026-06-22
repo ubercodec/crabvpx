@@ -78,7 +78,7 @@ pub fn vp8dx_get_reference(
     sd: &mut YV12_BUFFER_CONFIG,
 ) -> vpx_codec_err_t {
     let cm = &mut pbi.common;
-    let mut ref_fb_idx: i32 = 0;
+    let ref_fb_idx: i32;
     if ref_frame_flag == VP8_LAST_FRAME as i32 as u32 {
         ref_fb_idx = cm.lst_fb_idx;
     } else if ref_frame_flag == VP8_GOLD_FRAME as i32 as u32 {
@@ -159,7 +159,7 @@ pub fn vp8dx_set_reference(
     cm.error.error_code
 }
 fn get_free_fb(cm: &mut VP8_COMMON) -> i32 {
-    let mut i: i32 = 0;
+    let mut i: i32;
     i = 0_i32;
     while i < NUM_YV12_BUFFERS {
         if cm.fb_idx_ref_cnt[i as usize] == 0_i32 {

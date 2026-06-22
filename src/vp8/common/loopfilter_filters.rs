@@ -43,19 +43,15 @@ fn vp8_hevmask(thresh: u8, p1: u8, p0: u8, q0: u8, q1: u8) -> i8 {
     hev as i8
 }
 fn vp8_filter(mask: i8, hev: u8, op1: &mut u8, op0: &mut u8, oq0: &mut u8, oq1: &mut u8) {
-    let mut ps0: i8;
-    let mut qs0: i8;
-    let mut ps1: i8;
-    let mut qs1: i8;
     let mut filter_value: i8;
     let mut filter1: i8;
     let mut filter2: i8;
     let mut u: i8;
 
-    ps1 = (*op1 ^ 0x80) as i8;
-    ps0 = (*op0 ^ 0x80) as i8;
-    qs0 = (*oq0 ^ 0x80) as i8;
-    qs1 = (*oq1 ^ 0x80) as i8;
+    let ps1: i8 = (*op1 ^ 0x80) as i8;
+    let ps0: i8 = (*op0 ^ 0x80) as i8;
+    let qs0: i8 = (*oq0 ^ 0x80) as i8;
+    let qs1: i8 = (*oq1 ^ 0x80) as i8;
 
     filter_value = vp8_signed_char_clamp(ps1 as i32 - qs1 as i32);
     filter_value = (filter_value as i32 & hev as i32) as i8;
@@ -203,8 +199,8 @@ pub(crate) fn loop_filter_horizontal_edge_scalar(
     thresh: &[u8],
     count: usize,
 ) {
-    let mut hev: uc = 0;
-    let mut mask: i8 = 0;
+    let mut hev: uc;
+    let mut mask: i8;
     let count_8 = count * 8;
     for i in 0..count_8 {
         let idx = s_offset + i;
@@ -270,8 +266,8 @@ pub(crate) fn loop_filter_vertical_edge_scalar(
     thresh: &[u8],
     count: usize,
 ) {
-    let mut hev: uc = 0;
-    let mut mask: i8 = 0;
+    let mut hev: uc;
+    let mut mask: i8;
     let count_8 = count * 8;
     for i in 0..count_8 {
         let idx = s_offset + i * p;
@@ -326,12 +322,12 @@ fn vp8_mbfilter(
     let mut filter1: i8;
     let mut filter2: i8;
 
-    let mut ps2 = (*op2 ^ 0x80) as i8;
-    let mut ps1 = (*op1 ^ 0x80) as i8;
+    let ps2 = (*op2 ^ 0x80) as i8;
+    let ps1 = (*op1 ^ 0x80) as i8;
     let mut ps0 = (*op0 ^ 0x80) as i8;
     let mut qs0 = (*oq0 ^ 0x80) as i8;
-    let mut qs1 = (*oq1 ^ 0x80) as i8;
-    let mut qs2 = (*oq2 ^ 0x80) as i8;
+    let qs1 = (*oq1 ^ 0x80) as i8;
+    let qs2 = (*oq2 ^ 0x80) as i8;
 
     filter_value = vp8_signed_char_clamp(ps1 as i32 - qs1 as i32);
     filter_value = vp8_signed_char_clamp(filter_value as i32 + 3 * (qs0 as i32 - ps0 as i32));
@@ -398,8 +394,8 @@ pub(crate) fn mbloop_filter_horizontal_edge_scalar(
     thresh: &[u8],
     count: usize,
 ) {
-    let mut hev: uc = 0;
-    let mut mask: i8 = 0;
+    let mut hev: uc;
+    let mut mask: i8;
     let count_8 = count * 8;
     for i in 0..count_8 {
         let idx = s_offset + i;
@@ -454,8 +450,8 @@ pub(crate) fn mbloop_filter_horizontal_edge_split_safe(
     thresh: &[u8],
     count: usize,
 ) {
-    let mut hev: uc = 0;
-    let mut mask: i8 = 0;
+    let mut hev: uc;
+    let mut mask: i8;
     let count_8 = count * 8;
     let row_height = count_8; // row height is count * 8
 
@@ -547,8 +543,8 @@ pub(crate) fn mbloop_filter_vertical_edge_scalar(
     thresh: &[u8],
     count: usize,
 ) {
-    let mut hev: uc = 0;
-    let mut mask: i8 = 0;
+    let mut hev: uc;
+    let mut mask: i8;
     let count_8 = count * 8;
     for i in 0..count_8 {
         let idx = s_offset + i * p;

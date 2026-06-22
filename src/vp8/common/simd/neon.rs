@@ -671,7 +671,7 @@ fn lf_uv_horizontal(
         let (mask, hev) = lf_mask_hev(
             blimit, limit, thresh, t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7],
         );
-        let mut st = |k: usize, val: uint8x16_t| {
+        let st = |k: usize, val: uint8x16_t| {
             vst1_u8(
                 up.add((u_off as isize + (k as isize - 4) * p as isize) as usize),
                 vget_low_u8(val),

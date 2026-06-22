@@ -80,7 +80,7 @@ fn vp8_check_mv_bounds(
     mb_to_top_edge: i32,
     mb_to_bottom_edge: i32,
 ) -> u32 {
-    let mut need_to_clamp: u32 = 0;
+    let mut need_to_clamp: u32;
     need_to_clamp = ((mv.col as i32) < mb_to_left_edge) as i32 as u32;
     need_to_clamp |= (mv.col as i32 > mb_to_right_edge) as i32 as u32;
     need_to_clamp |= ((mv.row as i32) < mb_to_top_edge) as i32 as u32;
@@ -356,9 +356,9 @@ fn decode_split_mv(
         }
     }
     loop {
-        let mut leftmv: int_mv = int_mv::default();
-        let mut abovemv: int_mv = int_mv::default();
-        let mut blockmv: int_mv = int_mv::default();
+        let leftmv: int_mv;
+        let abovemv: int_mv;
+        let mut blockmv: int_mv;
         let k = vp8_mbsplit_offset[s as usize][j as usize] as i32;
         if k & 3 == 0 {
             if left_mb.mbmi.mode as i32 != SPLITMV as i32 {
@@ -461,7 +461,7 @@ fn read_mb_modes_mv(
         }
         if left_mi.mbmi.ref_frame as i32 != INTRA_FRAME as i32 {
             if left_mi.mbmi.mv.as_int() != 0 {
-                let mut this_mv: int_mv = int_mv::default();
+                let mut this_mv: int_mv;
                 this_mv = left_mi.mbmi.mv;
                 mv_bias(
                     ref_frame_sign_bias[left_mi.mbmi.ref_frame as usize],
@@ -481,7 +481,7 @@ fn read_mb_modes_mv(
         }
         if aboveleft_mi.mbmi.ref_frame as i32 != INTRA_FRAME as i32 {
             if aboveleft_mi.mbmi.mv.as_int() != 0 {
-                let mut this_mv_0: int_mv = int_mv::default();
+                let mut this_mv_0: int_mv;
                 this_mv_0 = aboveleft_mi.mbmi.mv;
                 mv_bias(
                     ref_frame_sign_bias[aboveleft_mi.mbmi.ref_frame as usize],
@@ -638,12 +638,11 @@ pub fn vp8_decode_mode_mvs(
     let mut cur_idx = stride + 1;
 
     let mut mb_row: i32 = -1_i32;
-    let mut mb_to_right_edge_start: i32 = 0;
 
     mb_mode_mv_init(pbi, safe_decoder);
     pbi.mb.mb_to_top_edge = 0_i32;
     pbi.mb.mb_to_bottom_edge = ((pbi.common.mb_rows - 1_i32) * 16_i32) << 3_i32;
-    mb_to_right_edge_start = ((pbi.common.mb_cols - 1_i32) * 16_i32) << 3_i32;
+    let mb_to_right_edge_start: i32 = ((pbi.common.mb_cols - 1_i32) * 16_i32) << 3_i32;
     loop {
         mb_row += 1;
         if mb_row >= pbi.common.mb_rows {

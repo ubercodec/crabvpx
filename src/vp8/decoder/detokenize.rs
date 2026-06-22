@@ -73,8 +73,8 @@ fn GetCoeffs(
         if br.read_bool(p[1] as i32) == 0 {
             p = &prob[kBands[n as usize] as usize][0];
         } else {
-            let mut v: i32 = 0;
-            let mut j: i32 = 0;
+            let mut v: i32;
+
             if br.read_bool(p[2] as i32) == 0 {
                 p = &prob[kBands[n as usize] as usize][1];
                 v = 1;
@@ -105,7 +105,7 @@ fn GetCoeffs(
                 }
                 p = &prob[kBands[n as usize] as usize][2];
             }
-            j = kZigzag[(n - 1) as usize] as i32;
+            let j: i32 = kZigzag[(n - 1) as usize] as i32;
             out[j as usize] = GetSigned(br, v) as i16;
             if n == 16 || br.read_bool(p[0] as i32) == 0 {
                 return n;
@@ -120,7 +120,7 @@ fn GetCoeffs(
 /// a macroblock (Y2 if present, 16 Y, 8 UV), updating entropy contexts and the
 /// per-block `eobs`. Returns the total nonzero-coefficient count.
 pub fn vp8_decode_mb_tokens(
-    mut safe_decoder: &mut crate::vp8::decoder::dboolhuff::SafeBoolDecoder,
+    safe_decoder: &mut crate::vp8::decoder::dboolhuff::SafeBoolDecoder,
     fc_ref: &FRAME_CONTEXT,
     qcoeff: &mut [i16; 400],
     eobs: &mut [::core::ffi::c_char; 25],
@@ -130,7 +130,7 @@ pub fn vp8_decode_mb_tokens(
 ) -> i32 {
     let mut eobtotal: i32 = 0;
 
-    let mut skip_dc: i32 = 0;
+    let skip_dc: i32;
     if !is_4x4 {
         let coef_probs = &fc_ref.coef_probs[1];
         let ctx = a_ctx.y2 as i32 + l_ctx.y2 as i32;
